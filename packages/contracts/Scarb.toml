@@ -12,6 +12,8 @@ migrate = "sozo build && sozo migrate"
 [dependencies]
 dojo = "1.8.0"
 starknet = "2.13.1"
+openzeppelin = "3.0.0"
+nft_combo = { git = "https://github.com/underware-gg/cairo-nft-combo" }
 
 [[target.starknet-contract]]
 build-external-contracts = ["dojo::world::world_contract::world"]

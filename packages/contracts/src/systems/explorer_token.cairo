@@ -1,7 +1,9 @@
 use d20::types::{ExplorerClass, Skill};
 
+// ── Public interface ────────────────────────────────────────────────────────
+
 #[starknet::interface]
-pub trait IExplorerActions<T> {
+pub trait IExplorerToken<TState> {
     /// Mint a new Explorer NFT.
     ///
     /// Parameters:
@@ -11,28 +13,44 @@ pub trait IExplorerActions<T> {
     /// - `skill_choices`: class-specific optional skill picks
     /// - `expertise_choices`: Rogue only — 2 skills for double proficiency (Expertise)
     ///
-    /// Returns the new explorer's token ID (u128).
+    /// Returns the new explorer's token ID (u256, ERC-721 standard).
     fn mint_explorer(
-        ref self: T,
+        ref self: TState,
         class: ExplorerClass,
         stat_assignment: Span<u8>,
         skill_choices: Span<Skill>,
         expertise_choices: Span<Skill>,
-    ) -> u128;
+    ) -> u256;
 
     /// Restore HP to max, reset spell slots to class/level values,
     /// and reset `second_wind_used` / `action_surge_used`.
-    fn rest(ref self: T, explorer_id: u128);
+    fn rest(ref self: TState, explorer_id: u128);
 }
+
+// ── Contract ────────────────────────────────────────────────────────────────
 
 #[dojo::contract]
 pub mod explorer_token {
-    use super::IExplorerActions;
+    use super::IExplorerToken;
     use starknet::get_caller_address;
     use dojo::model::ModelStorage;
     use dojo::event::EventStorage;
-    use dojo::world::{WorldStorage, IWorldDispatcherTrait};
+    use dojo::world::WorldStorage;
 
+    // ERC-721 components (OpenZeppelin + cairo-nft-combo)
+    use openzeppelin::introspection::src5::SRC5Component;
+    use openzeppelin::token::erc721::ERC721Component;
+    use nft_combo::erc721::erc721_combo::ERC721ComboComponent;
+    use nft_combo::erc721::erc721_combo::ERC721ComboComponent::ERC721HooksImpl;
+    component!(path: SRC5Component, storage: src5, event: SRC5Event);
+    component!(path: ERC721Component, storage: erc721, event: ERC721Event);
+    component!(path: ERC721ComboComponent, storage: erc721_combo, event: ERC721ComboEvent);
+    impl ERC721InternalImpl = ERC721Component::InternalImpl<ContractState>;
+    impl ERC721ComboInternalImpl = ERC721ComboComponent::InternalImpl<ContractState>;
+    #[abi(embed_v0)]
+    impl ERC721ComboMixinImpl = ERC721ComboComponent::ERC721ComboMixinImpl<ContractState>;
+
+    // Game types and models
     use d20::types::{ExplorerClass, Skill, WeaponType, ArmorType};
     use d20::models::explorer::{
         ExplorerStats, ExplorerHealth, ExplorerCombat, ExplorerInventory,
@@ -41,7 +59,49 @@ pub mod explorer_token {
     use d20::events::ExplorerMinted;
     use d20::utils::d20::{ability_modifier, calculate_ac};
 
-    // ── world_default helper ────────────────────────────────────────────────
+    // ── Storage ─────────────────────────────────────────────────────────────
+
+    #[storage]
+    struct Storage {
+        #[substorage(v0)]
+        src5: SRC5Component::Storage,
+        #[substorage(v0)]
+        erc721: ERC721Component::Storage,
+        #[substorage(v0)]
+        erc721_combo: ERC721ComboComponent::Storage,
+    }
+
+    // ── Events ───────────────────────────────────────────────────────────────
+
+    #[event]
+    #[derive(Drop, starknet::Event)]
+    enum Event {
+        #[flat]
+        SRC5Event: SRC5Component::Event,
+        #[flat]
+        ERC721Event: ERC721Component::Event,
+        #[flat]
+        ERC721ComboEvent: ERC721ComboComponent::Event,
+    }
+
+    // ── Token defaults ───────────────────────────────────────────────────────
+
+    pub fn TOKEN_NAME() -> ByteArray { "D20 Explorer" }
+    pub fn TOKEN_SYMBOL() -> ByteArray { "EXPLORER" }
+
+    // ── Initializer ──────────────────────────────────────────────────────────
+
+    fn dojo_init(ref self: ContractState) {
+        self.erc721_combo.initializer(
+            TOKEN_NAME(),
+            TOKEN_SYMBOL(),
+            Option::None, // base_uri: use hooks for on-chain metadata
+            Option::None, // contract_uri: use hooks
+            Option::None, // max_supply: unlimited
+        );
+    }
+
+    // ── Internal helpers ─────────────────────────────────────────────────────
 
     #[generate_trait]
     impl InternalImpl of InternalTrait {
@@ -50,80 +110,53 @@ pub mod explorer_token {
         }
     }
 
-    // ── Standard array validation ───────────────────────────────────────────
+    // ── Standard array validation ────────────────────────────────────────────
 
-    /// Validate that stat_assignment is a permutation of [15, 14, 13, 12, 10, 8].
-    /// Panics if the assignment is invalid.
     fn validate_standard_array(stat_assignment: Span<u8>) {
         assert(stat_assignment.len() == 6, 'need exactly 6 stats');
-
-        // Expected counts: 8×1, 10×1, 12×1, 13×1, 14×1, 15×1
         let mut count_8: u8 = 0;
         let mut count_10: u8 = 0;
         let mut count_12: u8 = 0;
         let mut count_13: u8 = 0;
         let mut count_14: u8 = 0;
         let mut count_15: u8 = 0;
-
         let mut i: u32 = 0;
         loop {
-            if i >= stat_assignment.len() {
-                break;
-            }
+            if i >= stat_assignment.len() { break; }
             let v = *stat_assignment.at(i);
-            if v == 8 {
-                count_8 += 1;
-            } else if v == 10 {
-                count_10 += 1;
-            } else if v == 12 {
-                count_12 += 1;
-            } else if v == 13 {
-                count_13 += 1;
-            } else if v == 14 {
-                count_14 += 1;
-            } else if v == 15 {
-                count_15 += 1;
-            } else {
-                panic!("invalid stat value");
-            }
+            if v == 8 { count_8 += 1; }
+            else if v == 10 { count_10 += 1; }
+            else if v == 12 { count_12 += 1; }
+            else if v == 13 { count_13 += 1; }
+            else if v == 14 { count_14 += 1; }
+            else if v == 15 { count_15 += 1; }
+            else { panic!("invalid stat value"); }
             i += 1;
         };
-
         assert(
-            count_8 == 1
-                && count_10 == 1
-                && count_12 == 1
-                && count_13 == 1
-                && count_14 == 1
-                && count_15 == 1,
+            count_8 == 1 && count_10 == 1 && count_12 == 1
+                && count_13 == 1 && count_14 == 1 && count_15 == 1,
             'not standard array'
         );
     }
 
-    // ── Spell slot initialization by class and level ────────────────────────
+    // ── Spell slots by class and level ───────────────────────────────────────
 
     fn spell_slots_for(class: ExplorerClass, level: u8) -> (u8, u8, u8) {
         match class {
             ExplorerClass::Wizard => {
-                if level >= 5 {
-                    (4, 3, 2)
-                } else if level >= 4 {
-                    (4, 3, 0)
-                } else if level >= 3 {
-                    (4, 2, 0)
-                } else if level >= 2 {
-                    (3, 0, 0)
-                } else {
-                    (2, 0, 0) // level 1
-                }
+                if level >= 5 { (4, 3, 2) }
+                else if level >= 4 { (4, 3, 0) }
+                else if level >= 3 { (4, 2, 0) }
+                else if level >= 2 { (3, 0, 0) }
+                else { (2, 0, 0) }
             },
-            _ => (0, 0, 0), // Fighter and Rogue have no spell slots
+            _ => (0, 0, 0),
         }
     }
 
-    // ── Starting HP by class ────────────────────────────────────────────────
+    // ── Hit die max by class ─────────────────────────────────────────────────
 
-    /// Hit die maximum for each class (used for level-1 HP).
     fn hit_die_max(class: ExplorerClass) -> u8 {
         match class {
             ExplorerClass::Fighter => 10,
@@ -133,10 +166,8 @@ pub mod explorer_token {
         }
     }
 
-    // ── Skill initialization by class and choices ───────────────────────────
+    // ── Skill initialization ─────────────────────────────────────────────────
 
-    /// Build skill flags for an explorer given class and optional skill choices.
-    /// Returns (athletics, stealth, perception, persuasion, arcana, acrobatics).
     fn build_skills(
         class: ExplorerClass,
         skill_choices: Span<Skill>,
@@ -148,27 +179,16 @@ pub mod explorer_token {
         let mut arcana: bool = false;
         let mut acrobatics: bool = false;
 
-        // Set automatic proficiencies by class
         match class {
-            ExplorerClass::Fighter => {
-                athletics = true; // Fighter: Athletics is automatic
-            },
-            ExplorerClass::Rogue => {
-                stealth = true;
-                acrobatics = true;
-            },
-            ExplorerClass::Wizard => {
-                arcana = true;
-            },
+            ExplorerClass::Fighter => { athletics = true; },
+            ExplorerClass::Rogue => { stealth = true; acrobatics = true; },
+            ExplorerClass::Wizard => { arcana = true; },
             ExplorerClass::None => {},
         }
 
-        // Apply optional skill choices
         let mut i: u32 = 0;
         loop {
-            if i >= skill_choices.len() {
-                break;
-            }
+            if i >= skill_choices.len() { break; }
             let skill = *skill_choices.at(i);
             match skill {
                 Skill::Athletics => { athletics = true; },
@@ -185,23 +205,14 @@ pub mod explorer_token {
         (athletics, stealth, perception, persuasion, arcana, acrobatics)
     }
 
-    // ── Class-specific skill choice validation ──────────────────────────────
+    // ── Class-specific skill choice validation ───────────────────────────────
 
-    /// Validate optional skill choices against the class's allowed pick list,
-    /// and enforce the correct number of picks per class.
-    ///
-    /// Fighter:  1 pick from [Perception, Acrobatics]
-    /// Rogue:    2 picks from [Perception, Persuasion, Athletics, Arcana]
-    /// Wizard:   1 pick from [Perception, Persuasion]
     fn validate_skill_choices(class: ExplorerClass, skill_choices: Span<Skill>) {
         match class {
             ExplorerClass::Fighter => {
                 assert(skill_choices.len() == 1, 'fighter needs 1 skill choice');
                 let s = *skill_choices.at(0);
-                assert(
-                    s == Skill::Perception || s == Skill::Acrobatics,
-                    'invalid fighter skill choice'
-                );
+                assert(s == Skill::Perception || s == Skill::Acrobatics, 'invalid fighter skill choice');
             },
             ExplorerClass::Rogue => {
                 assert(skill_choices.len() == 2, 'rogue needs 2 skill choices');
@@ -210,31 +221,23 @@ pub mod explorer_token {
                     if i >= skill_choices.len() { break; }
                     let s = *skill_choices.at(i);
                     assert(
-                        s == Skill::Perception
-                            || s == Skill::Persuasion
-                            || s == Skill::Athletics
-                            || s == Skill::Arcana,
+                        s == Skill::Perception || s == Skill::Persuasion
+                            || s == Skill::Athletics || s == Skill::Arcana,
                         'invalid rogue skill choice'
                     );
                     i += 1;
                 };
-                // No duplicates
                 assert(*skill_choices.at(0) != *skill_choices.at(1), 'duplicate skill choice');
             },
             ExplorerClass::Wizard => {
                 assert(skill_choices.len() == 1, 'wizard needs 1 skill choice');
                 let s = *skill_choices.at(0);
-                assert(
-                    s == Skill::Perception || s == Skill::Persuasion,
-                    'invalid wizard skill choice'
-                );
+                assert(s == Skill::Perception || s == Skill::Persuasion, 'invalid wizard skill choice');
             },
             ExplorerClass::None => {},
         }
     }
 
-    /// Validate expertise choices (Rogue only): must be 2 distinct skills
-    /// from the Rogue's full proficiency set (automatic + chosen).
     fn validate_expertise(
         class: ExplorerClass,
         expertise_choices: Span<Skill>,
@@ -243,8 +246,6 @@ pub mod explorer_token {
         match class {
             ExplorerClass::Rogue => {
                 assert(expertise_choices.len() == 2, 'rogue needs 2 expertise');
-                // Each expertise pick must be a skill the Rogue is proficient in.
-                // Rogue is proficient in: Stealth, Acrobatics + the 2 chosen skills.
                 let mut i: u32 = 0;
                 loop {
                     if i >= expertise_choices.len() { break; }
@@ -257,14 +258,9 @@ pub mod explorer_token {
                     assert(is_auto || is_chosen, 'expertise not in proficiencies');
                     i += 1;
                 };
-                // No duplicate expertise
-                assert(
-                    *expertise_choices.at(0) != *expertise_choices.at(1),
-                    'duplicate expertise choice'
-                );
+                assert(*expertise_choices.at(0) != *expertise_choices.at(1), 'duplicate expertise choice');
             },
             _ => {
-                // Non-Rogues must pass empty expertise_choices
                 assert(expertise_choices.len() == 0, 'only rogue gets expertise');
             },
         }
@@ -278,20 +274,19 @@ pub mod explorer_token {
         }
     }
 
-    // ── Interface implementation ────────────────────────────────────────────
+    // ── Public interface implementation ──────────────────────────────────────
 
     #[abi(embed_v0)]
-    impl ExplorerActionsImpl of IExplorerActions<ContractState> {
+    impl ExplorerTokenImpl of IExplorerToken<ContractState> {
         fn mint_explorer(
             ref self: ContractState,
             class: ExplorerClass,
             stat_assignment: Span<u8>,
             skill_choices: Span<Skill>,
             expertise_choices: Span<Skill>,
-        ) -> u128 {
+        ) -> u256 {
             assert(class != ExplorerClass::None, 'must choose a class');
 
-            // Validate stats and class-specific skill/expertise choices
             validate_standard_array(stat_assignment);
             validate_skill_choices(class, skill_choices);
             validate_expertise(class, expertise_choices, skill_choices);
@@ -299,8 +294,11 @@ pub mod explorer_token {
             let mut world = self.world_default();
             let caller = get_caller_address();
 
-            // Mint sequential ID via world dispatcher uuid()
-            let explorer_id: u128 = world.dispatcher.uuid().into();
+            // Mint the ERC-721 token via cairo-nft-combo sequential minter
+            let token_id: u256 = self.erc721_combo._mint_next(caller);
+
+            // Dojo models use u128 keys — high part is always 0 for counter-minted IDs
+            let explorer_id: u128 = token_id.low;
 
             // Unpack stats [STR, DEX, CON, INT, WIS, CHA]
             let strength: u8 = *stat_assignment.at(0);
@@ -316,11 +314,7 @@ pub mod explorer_token {
             // Starting HP: hit die max + CON modifier (minimum 1)
             let hit_die = hit_die_max(class);
             let raw_hp: i16 = hit_die.into() + con_mod.into();
-            let max_hp: u16 = if raw_hp < 1 {
-                1
-            } else {
-                raw_hp.try_into().unwrap()
-            };
+            let max_hp: u16 = if raw_hp < 1 { 1 } else { raw_hp.try_into().unwrap() };
 
             // Starting equipment and AC by class
             let (primary_weapon, secondary_weapon, armor, has_shield, armor_class) = match class {
@@ -348,18 +342,13 @@ pub mod explorer_token {
             let (athletics, stealth, perception, persuasion, arcana, acrobatics) =
                 build_skills(class, skill_choices);
 
-            // Expertise (Rogue only — already validated above)
+            // Expertise (Rogue only)
             let (expertise_1, expertise_2) = get_expertise(expertise_choices);
 
-            // Write all explorer models
+            // Write all explorer Dojo models
             world.write_model(@ExplorerStats {
                 explorer_id,
-                strength,
-                dexterity,
-                constitution,
-                intelligence,
-                wisdom,
-                charisma,
+                strength, dexterity, constitution, intelligence, wisdom, charisma,
                 level: 1,
                 xp: 0,
                 class,
@@ -403,38 +392,30 @@ pub mod explorer_token {
 
             world.write_model(@ExplorerSkills {
                 explorer_id,
-                athletics,
-                stealth,
-                perception,
-                persuasion,
-                arcana,
-                acrobatics,
+                athletics, stealth, perception, persuasion, arcana, acrobatics,
                 expertise_1,
                 expertise_2,
             });
 
-            // Emit ExplorerMinted event
+            // Emit Dojo event
             world.emit_event(@ExplorerMinted {
                 explorer_id,
                 class,
                 player: caller,
             });
 
-            explorer_id
+            token_id
         }
 
         fn rest(ref self: ContractState, explorer_id: u128) {
             let mut world = self.world_default();
 
-            // Load stats to get class and level
             let stats: ExplorerStats = world.read_model(explorer_id);
             assert(stats.class != ExplorerClass::None, 'explorer does not exist');
 
-            // Load health — must not be dead
             let health: ExplorerHealth = world.read_model(explorer_id);
             assert(!health.is_dead, 'dead explorers cannot rest');
 
-            // Restore HP to max
             world.write_model(@ExplorerHealth {
                 explorer_id,
                 current_hp: health.max_hp.try_into().unwrap(),
@@ -442,10 +423,7 @@ pub mod explorer_token {
                 is_dead: false,
             });
 
-            // Reset spell slots to class/level values
             let (slots_1, slots_2, slots_3) = spell_slots_for(stats.class, stats.level);
-
-            // Load and reset combat state
             let combat: ExplorerCombat = world.read_model(explorer_id);
             world.write_model(@ExplorerCombat {
                 explorer_id,
@@ -456,6 +434,51 @@ pub mod explorer_token {
                 second_wind_used: false,
                 action_surge_used: false,
             });
+        }
+    }
+
+    // ── ERC721ComboHooksTrait ────────────────────────────────────────────────
+    // Minimal no-op implementation — metadata rendering will be added later.
+
+    pub impl ERC721ComboHooksImpl of ERC721ComboComponent::ERC721ComboHooksTrait<ContractState> {
+        fn render_contract_uri(
+            self: @ERC721ComboComponent::ComponentState<ContractState>
+        ) -> Option<nft_combo::utils::renderer::ContractMetadata> {
+            Option::None
+        }
+
+        fn contract_uri(
+            self: @ERC721ComboComponent::ComponentState<ContractState>
+        ) -> Option<ByteArray> {
+            Option::None
+        }
+
+        fn render_token_uri(
+            self: @ERC721ComboComponent::ComponentState<ContractState>,
+            token_id: u256,
+        ) -> Option<nft_combo::utils::renderer::TokenMetadata> {
+            Option::None
+        }
+
+        fn token_uri(
+            self: @ERC721ComboComponent::ComponentState<ContractState>,
+            token_id: u256,
+        ) -> Option<ByteArray> {
+            Option::None
+        }
+
+        fn default_royalty(
+            self: @ERC721ComboComponent::ComponentState<ContractState>,
+            token_id: u256,
+        ) -> Option<nft_combo::erc721::erc721_combo::ERC721ComboComponent::RoyaltyInfo> {
+            Option::None
+        }
+
+        fn token_royalty(
+            self: @ERC721ComboComponent::ComponentState<ContractState>,
+            token_id: u256,
+        ) -> Option<nft_combo::erc721::erc721_combo::ERC721ComboComponent::RoyaltyInfo> {
+            Option::None
         }
     }
 }
