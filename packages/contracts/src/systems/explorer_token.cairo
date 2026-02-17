@@ -185,18 +185,96 @@ pub mod explorer_token {
         (athletics, stealth, perception, persuasion, arcana, acrobatics)
     }
 
-    // ── Validate expertise choices (Rogue only) ─────────────────────────────
+    // ── Class-specific skill choice validation ──────────────────────────────
 
-    fn get_expertise(
+    /// Validate optional skill choices against the class's allowed pick list,
+    /// and enforce the correct number of picks per class.
+    ///
+    /// Fighter:  1 pick from [Perception, Acrobatics]
+    /// Rogue:    2 picks from [Perception, Persuasion, Athletics, Arcana]
+    /// Wizard:   1 pick from [Perception, Persuasion]
+    fn validate_skill_choices(class: ExplorerClass, skill_choices: Span<Skill>) {
+        match class {
+            ExplorerClass::Fighter => {
+                assert(skill_choices.len() == 1, 'fighter needs 1 skill choice');
+                let s = *skill_choices.at(0);
+                assert(
+                    s == Skill::Perception || s == Skill::Acrobatics,
+                    'invalid fighter skill choice'
+                );
+            },
+            ExplorerClass::Rogue => {
+                assert(skill_choices.len() == 2, 'rogue needs 2 skill choices');
+                let mut i: u32 = 0;
+                loop {
+                    if i >= skill_choices.len() { break; }
+                    let s = *skill_choices.at(i);
+                    assert(
+                        s == Skill::Perception
+                            || s == Skill::Persuasion
+                            || s == Skill::Athletics
+                            || s == Skill::Arcana,
+                        'invalid rogue skill choice'
+                    );
+                    i += 1;
+                };
+                // No duplicates
+                assert(*skill_choices.at(0) != *skill_choices.at(1), 'duplicate skill choice');
+            },
+            ExplorerClass::Wizard => {
+                assert(skill_choices.len() == 1, 'wizard needs 1 skill choice');
+                let s = *skill_choices.at(0);
+                assert(
+                    s == Skill::Perception || s == Skill::Persuasion,
+                    'invalid wizard skill choice'
+                );
+            },
+            ExplorerClass::None => {},
+        }
+    }
+
+    /// Validate expertise choices (Rogue only): must be 2 distinct skills
+    /// from the Rogue's full proficiency set (automatic + chosen).
+    fn validate_expertise(
         class: ExplorerClass,
         expertise_choices: Span<Skill>,
-    ) -> (Skill, Skill) {
+        skill_choices: Span<Skill>,
+    ) {
         match class {
             ExplorerClass::Rogue => {
                 assert(expertise_choices.len() == 2, 'rogue needs 2 expertise');
-                (*expertise_choices.at(0), *expertise_choices.at(1))
+                // Each expertise pick must be a skill the Rogue is proficient in.
+                // Rogue is proficient in: Stealth, Acrobatics + the 2 chosen skills.
+                let mut i: u32 = 0;
+                loop {
+                    if i >= expertise_choices.len() { break; }
+                    let e = *expertise_choices.at(i);
+                    assert(e != Skill::None, 'expertise cannot be None');
+                    let is_auto = e == Skill::Stealth || e == Skill::Acrobatics;
+                    let is_chosen = skill_choices.len() >= 1
+                        && (*skill_choices.at(0) == e
+                            || (skill_choices.len() >= 2 && *skill_choices.at(1) == e));
+                    assert(is_auto || is_chosen, 'expertise not in proficiencies');
+                    i += 1;
+                };
+                // No duplicate expertise
+                assert(
+                    *expertise_choices.at(0) != *expertise_choices.at(1),
+                    'duplicate expertise choice'
+                );
             },
-            _ => (Skill::None, Skill::None),
+            _ => {
+                // Non-Rogues must pass empty expertise_choices
+                assert(expertise_choices.len() == 0, 'only rogue gets expertise');
+            },
+        }
+    }
+
+    fn get_expertise(expertise_choices: Span<Skill>) -> (Skill, Skill) {
+        if expertise_choices.len() == 2 {
+            (*expertise_choices.at(0), *expertise_choices.at(1))
+        } else {
+            (Skill::None, Skill::None)
         }
     }
 
@@ -213,8 +291,10 @@ pub mod explorer_token {
         ) -> u128 {
             assert(class != ExplorerClass::None, 'must choose a class');
 
-            // Validate stats
+            // Validate stats and class-specific skill/expertise choices
             validate_standard_array(stat_assignment);
+            validate_skill_choices(class, skill_choices);
+            validate_expertise(class, expertise_choices, skill_choices);
 
             let mut world = self.world_default();
             let caller = get_caller_address();
@@ -268,8 +348,8 @@ pub mod explorer_token {
             let (athletics, stealth, perception, persuasion, arcana, acrobatics) =
                 build_skills(class, skill_choices);
 
-            // Expertise (Rogue only)
-            let (expertise_1, expertise_2) = get_expertise(class, expertise_choices);
+            // Expertise (Rogue only — already validated above)
+            let (expertise_1, expertise_2) = get_expertise(expertise_choices);
 
             // Write all explorer models
             world.write_model(@ExplorerStats {
