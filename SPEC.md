@@ -1,24 +1,5 @@
 # D20 On-Chain: Spec Document
 
-## What is the D20 System?
-
-The D20 System is the core rules engine behind Dungeons & Dragons (5th edition). It was released by Wizards of the Coast as the **System Reference Document (SRD 5.1)** under the **Creative Commons Attribution 4.0 International License (CC-BY-4.0)**, making it freely available for anyone to use and build upon.
-
-The entire system revolves around one mechanic: **when the outcome is uncertain, roll a 20-sided die, add a modifier, and compare against a target number.** Every skill check, attack roll, and saving throw in the game reduces to this single resolution formula: `d20 + modifier >= target number`. The richness comes from what modifiers apply (ability scores, proficiency, class features) and what the target number represents (Difficulty Class, Armor Class, spell save DC).
-
-This game implements a focused subset of the D20 SRD as fully on-chain smart contracts on Starknet.
-
-### Reference Sources
-- **SRD 5.1 (CC-BY-4.0 PDF):** https://media.wizards.com/2016/downloads/DND/SRD-OGL_V5.1.pdf
-- **SRD 5.1 Online Reference:** https://5thsrd.org/
-- **SRD on D&D Beyond:** https://www.dndbeyond.com/srd
-- **Machine-Readable SRD (GitHub):** https://github.com/Tabyltop/CC-SRD
-
-### Attribution
-This work includes material taken from the System Reference Document 5.1 ("SRD 5.1") by Wizards of the Coast LLC and available at https://dnd.wizards.com/resources/systems-reference-document. The SRD 5.1 is licensed under the Creative Commons Attribution 4.0 International License available at https://creativecommons.org/licenses/by/4.0/legalcode.
-
----
-
 ## Overview
 
 A fully on-chain text-based RPG built on Starknet using Cairo and the Dojo framework. The game implements a subset of the D20 SRD as smart contracts — the contracts act as the rules engine and referee. There is no central game server. Players interact through a local AI agent (LLM-powered) that translates natural language into contract calls and narrates the results as a story.
@@ -252,22 +233,29 @@ Simple milestone XP thresholds:
 
 XP is awarded for defeating monsters (based on CR) and completing objectives.
 
-### Monsters (v1 set)
+### Monsters (v1 set — Ancient Temple theme)
+
+All monsters are from the **SRD 5.1 (CC-BY-4.0)**. Selected for thematic fit with ancient temple exploration.
 
 **CR scaling:** Cairo has no fractions. CR is stored as `cr_x4: u8` (CR multiplied by 4). So CR 1/8 = 0, CR 1/4 = 1, CR 1/2 = 2, CR 1 = 4, CR 2 = 8, etc. This is only used for XP calculation and encounter difficulty.
 
-| Monster        | AC | HP  | Attack        | Damage  | CR   | cr_x4 | XP   | STR | DEX | CON | INT | WIS | CHA |
-|---------------|-----|-----|---------------|---------|------|--------|------|-----|-----|-----|-----|-----|-----|
-| Goblin        | 15  | 7   | Scimitar +4   | 1d6+2   | 1/4  | 1      | 50   | 8   | 14  | 10  | 10  | 8   | 8   |
-| Skeleton      | 13  | 13  | Shortsword +4 | 1d6+2   | 1/4  | 1      | 50   | 10  | 14  | 15  | 6   | 8   | 5   |
-| Giant Rat     | 12  | 7   | Bite +4       | 1d4+2   | 1/8  | 0      | 25   | 7   | 15  | 11  | 2   | 10  | 4   |
-| Orc           | 13  | 15  | Greataxe +5   | 1d12+3  | 1/2  | 2      | 100  | 16  | 12  | 16  | 7   | 11  | 10  |
-| Ogre          | 11  | 59  | Greatclub +6  | 2d8+4   | 2    | 8      | 450  | 19  | 8   | 16  | 5   | 7   | 7   |
-| Minotaur      | 14  | 76  | Greataxe +6   | 2d12+4  | 3    | 12     | 700  | 18  | 11  | 16  | 6   | 16  | 9   |
-| Young Dragon  | 18  | 110 | Bite +10      | 2d10+5  | 5    | 20     | 1800 | 19  | 10  | 17  | 12  | 11  | 15  |
+| Monster          | AC | HP  | Attack              | Damage          | Special                                                        | CR   | cr_x4 | XP   | STR | DEX | CON | INT | WIS | CHA |
+|-----------------|-----|-----|---------------------|-----------------|----------------------------------------------------------------|------|--------|------|-----|-----|-----|-----|-----|-----|
+| Poisonous Snake | 13  | 2   | Bite +5             | 1d1+0 piercing  | DC 10 CON save or 2d4 poison damage                            | 1/8  | 0      | 25   | 2   | 16  | 11  | 1   | 10  | 3   |
+| Skeleton        | 13  | 13  | Shortsword +4       | 1d6+2           | —                                                              | 1/4  | 1      | 50   | 10  | 14  | 15  | 6   | 8   | 5   |
+| Shadow          | 12  | 16  | Strength Drain +4   | 2d6+2 necrotic  | Target STR reduced by 1d4 on hit; dies if STR reaches 0       | 1/2  | 2      | 100  | 6   | 14  | 13  | 6   | 10  | 8   |
+| Animated Armor  | 18  | 33  | Slam +4 (×2)        | 1d6+2           | Multiattack (two slams per turn)                               | 1    | 4      | 200  | 14  | 11  | 13  | 1   | 3   | 1   |
+| Gargoyle        | 15  | 52  | Bite +4 / Claws +4  | 1d6+2 / 1d6+2   | Multiattack (bite + claws); resistant to nonmagical physical   | 2    | 8      | 450  | 15  | 11  | 16  | 6   | 11  | 7   |
+| Mummy           | 11  | 58  | Rotting Fist +5     | 2d6+3           | DC 12 CON save or mummy rot curse; Dreadful Glare: DC 11 WIS save or frightened | 3    | 12     | 700  | 16  | 8   | 15  | 6   | 10  | 12  |
+| Wraith          | 13  | 67  | Life Drain +6       | 4d8+3 necrotic  | DC 14 CON save or max HP reduced by damage dealt; incorporeal | 5    | 20     | 1800 | 6   | 16  | 16  | 12  | 14  | 15  |
 
 Monster ability scores are used for saving throws and contested checks (e.g., monster STR vs explorer STR for grapple). Monster stats are stored as **compile-time constants** in a lookup function, not as mutable models — they're templates instantiated into `MonsterInstance` models when a chamber is generated.
 
+**Thematic progression as explorers go deeper:**
+- **Entrance (yonder 0-2):** Poisonous Snakes nesting in overgrown cracks, Skeletons of former worshippers
+- **Outer chambers (yonder 3-5):** Shadows lurking in dark corridors, Animated Armor standing vigil at sealed doors
+- **Inner sanctum (yonder 6-9):** Gargoyles perched on pillars awakening, Mummies in sealed sarcophagi
+- **Boss chamber:** Wraith — the spirit of the temple's high priest, still guarding the sacred heart
 ---
 
 ## Randomness: Cartridge VRF
@@ -319,15 +307,15 @@ All rolls — ability checks, attack rolls, saving throws, damage dice, initiati
 
 ### Namespace
 
-All resources live under the **`d2_0_1`** namespace. This replaces the default `dojo_starter` namespace from the template.
+All resources live under the **`d20_0_1`** namespace. This replaces the default `dojo_starter` namespace from the template.
 
 ```toml
 # dojo_dev.toml
 [namespace]
-default = "d2_0_1"
+default = "d20_0_1"
 
 [writers]
-"d2_0_1" = ["d2_0_1-explorer_actions", "d2_0_1-combat_actions", "d2_0_1-temple_actions"]
+"d20_0_1" = ["d20_0_1-explorer_token", "d20_0_1-combat_system", "d20_0_1-temple_token"]
 ```
 
 ### Models (Components)
@@ -536,6 +524,7 @@ All enums stored in Dojo models must derive `Introspect`, `DojoStore`, and `Defa
 #[derive(Serde, Copy, Drop, Introspect, PartialEq, Debug, DojoStore, Default)]
 pub enum ExplorerClass {
     #[default]
+    None,
     Fighter,
     Rogue,
     Wizard,
@@ -556,6 +545,7 @@ pub enum Skill {
 #[derive(Serde, Copy, Drop, Introspect, PartialEq, Debug, DojoStore, Default)]
 pub enum AbilityScore {
     #[default]
+    None,
     Strength,
     Dexterity,
     Constitution,
@@ -589,6 +579,7 @@ pub enum ArmorType {
 #[derive(Serde, Copy, Drop, Introspect, PartialEq, Debug, DojoStore, Default)]
 pub enum DamageType {
     #[default]
+    None,
     Slashing,
     Piercing,
     Bludgeoning,
@@ -602,6 +593,7 @@ pub enum DamageType {
 #[derive(Serde, Copy, Drop, Introspect, PartialEq, Debug, DojoStore, Default)]
 pub enum ChamberType {
     #[default]
+    None,
     Entrance,     // starting chamber, safe
     Empty,        // nothing special
     Monster,      // contains a monster encounter
@@ -614,13 +606,13 @@ pub enum ChamberType {
 pub enum MonsterType {
     #[default]
     None,
-    Goblin,       // CR 1 (scaled)
-    Skeleton,     // CR 1 (scaled)
-    GiantRat,     // CR 0 (scaled)
-    Orc,          // CR 2 (scaled)
-    Ogre,         // CR 8 (scaled)
-    Minotaur,     // CR 12 (scaled)
-    YoungDragon,  // CR 20 (scaled) — boss-tier
+    PoisonousSnake,  // CR 0
+    Skeleton,        // CR 1
+    Shadow,          // CR 2
+    AnimatedArmor,   // CR 4
+    Gargoyle,        // CR 8
+    Mummy,           // CR 12
+    Wraith,          // CR 20 -- boss tier
 }
 
 #[derive(Serde, Copy, Drop, Introspect, PartialEq, Debug, DojoStore, Default)]
@@ -645,6 +637,7 @@ pub enum SpellId {
 #[derive(Serde, Copy, Drop, Introspect, PartialEq, Debug, DojoStore, Default)]
 pub enum CombatAction {
     #[default]
+    None,
     Attack,
     CastSpell,
     UseItem,
@@ -670,9 +663,9 @@ Systems are `#[dojo::contract]` modules, not free functions. Each contract has a
 
 | Contract | Tag | Writes to |
 |----------|-----|-----------|
-| `explorer_actions` | `d2_0_1-explorer_actions` | ExplorerStats, ExplorerHealth, ExplorerCombat, ExplorerInventory, ExplorerSkills |
-| `combat_actions` | `d2_0_1-combat_actions` | ExplorerHealth, ExplorerCombat, ExplorerInventory, ExplorerPosition, MonsterInstance, FallenExplorer, ChamberFallenCount |
-| `temple_actions` | `d2_0_1-temple_actions` | ExplorerPosition, ExplorerTempleProgress, ExplorerStats, ExplorerHealth, ExplorerInventory, TempleState, Chamber, MonsterInstance, ChamberExit, FallenExplorer, ChamberFallenCount |
+| `explorer_token` | `d20_0_1-explorer_token` | ExplorerStats, ExplorerHealth, ExplorerCombat, ExplorerInventory, ExplorerSkills |
+| `combat_system` | `d20_0_1-combat_system` | ExplorerHealth, ExplorerCombat, ExplorerInventory, ExplorerPosition, MonsterInstance, FallenExplorer, ChamberFallenCount |
+| `temple_token` | `d20_0_1-temple_token` | ExplorerPosition, ExplorerTempleProgress, ExplorerStats, ExplorerHealth, ExplorerInventory, TempleState, Chamber, MonsterInstance, ChamberExit, FallenExplorer, ChamberFallenCount |
 
 ```cairo
 // ──────────────────────────────────────────────
@@ -693,7 +686,7 @@ fn calculate_ac(armor: ArmorType, has_shield: bool, dex_mod: i8) -> u8
 // This handles negative modifiers naturally without bool/abs gymnastics.
 
 // ──────────────────────────────────────────────
-// explorer_actions contract
+// explorer_token contract
 // ──────────────────────────────────────────────
 #[starknet::interface]
 trait IExplorerActions<T> {
@@ -712,7 +705,7 @@ trait IExplorerActions<T> {
 // not exposed as external entry points. They live in an InternalImpl.
 
 // ──────────────────────────────────────────────
-// combat_actions contract
+// combat_system contract
 // ──────────────────────────────────────────────
 #[starknet::interface]
 trait ICombatActions<T> {
@@ -731,7 +724,7 @@ trait ICombatActions<T> {
 // - emits ExplorerDied event
 
 // ──────────────────────────────────────────────
-// temple_actions contract
+// temple_token contract
 // ──────────────────────────────────────────────
 #[starknet::interface]
 trait ITempleActions<T> {
@@ -881,7 +874,7 @@ xp_component: u32 = xp_earned * XP_WEIGHT
 boss_probability_bps: u32 = min(MAX_PROB, yonder_component + xp_component)
 ```
 
-**Why `XP_WEIGHT = 2` instead of `(xp / 100) * 200`?** In Cairo, `xp_earned / 100` would truncate to zero for any XP below 100 — which covers most early encounters (Goblins give 50 XP, Giant Rats give 25). By using `xp_earned * 2` directly, every point of XP contributes to boss probability without any precision loss. The constant `2` is algebraically equivalent to `200 / 100` but safe for integer math.
+**Why `XP_WEIGHT = 2` instead of `(xp / 100) * 200`?** In Cairo, `xp_earned / 100` would truncate to zero for any XP below 100 — which covers most early encounters (Poisonous Snakes give 25 XP, Skeletons give 50 XP). By using `xp_earned * 2` directly, every point of XP contributes to boss probability without any precision loss. The constant `2` is algebraically equivalent to `200 / 100` but safe for integer math.
 
 ### Probability Table (examples, assuming XP earned from typical combat)
 
@@ -968,7 +961,7 @@ The AI agent is NOT part of the on-chain system. It runs locally on the explorer
 2. Accept natural language input from the player
 3. Map player intent to the correct system call:
    - "I sneak down the hallway" → `move_to_chamber(explorer_id, exit_index)` then `skill_check(stealth, chamber_dc)`
-   - "I attack the goblin with my sword" → `attack(explorer_id)`
+   - "I attack the Skeleton with my sword" → `attack(explorer_id)`
    - "I cast fireball" → `cast_spell(explorer_id, FIREBALL)`
    - "I search for traps" → `search_chamber(explorer_id)` (Perception check)
    - "I check the dead body" → `loot_fallen(explorer_id, fallen_index)`
