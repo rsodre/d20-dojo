@@ -14,12 +14,12 @@
 - [x] **1.6** Implement monster stat lookup (`src/utils/monsters.cairo`): pure function returning stats for each MonsterType
 - [x] **1.7** Define all events (`src/events.cairo`): ExplorerMinted, CombatResult, ExplorerDied, ChamberRevealed, LevelUp, BossDefeated
 - [x] **1.8** Write unit tests for all D20 math (modifier calculation for all 18 scores, proficiency by level, roll bounds)
-- [ ] **1.9** Configure `dojo_dev.toml` writer permissions for all 3 contracts
+- [x] **1.9** Configure `dojo_dev.toml` writer permissions for all 3 contracts
 - [x] **1.10** Set up Cartridge VRF integration (import VRF contract interface, configure provider)
 
 ## Day 2: Explorer & Combat Systems
 
-- [ ] **2.1** Implement `explorer_token` contract (`src/systems/explorer_token.cairo`): `mint_explorer` via cairo-nft-combo `_mint_next()`, validate standard array assignment, initialize all explorer models based on class, emit ExplorerMinted event
+- [x] **2.1** Implement `explorer_token` contract (`src/systems/explorer_token.cairo`): `mint_explorer` via cairo-nft-combo `_mint_next()`, validate standard array assignment, initialize all explorer models based on class, emit ExplorerMinted event
 - [ ] **2.2** Implement class-specific initialization: Fighter (Longsword primary, None secondary, Chain Mail, AC 16, Athletics + choice), Rogue (Dagger primary, Shortbow secondary, Leather, AC 11+DEX, Stealth/Acrobatics + 2 choices + expertise), Wizard (Staff primary, None secondary, no armor, AC 10+DEX, Arcana + choice, spell slots)
 - [ ] **2.3** Implement `rest` on `explorer_token`: restore `current_hp` to `max_hp`, reset spell slots to class/level values, reset `second_wind_used` and `action_surge_used`
 - [ ] **2.4** Implement `combat_system` contract (`src/systems/combat_system.cairo`): `attack` with attack rolls vs monster AC, damage rolls, HP deduction on MonsterInstance, emit CombatResult event
