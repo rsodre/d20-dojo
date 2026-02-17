@@ -16,6 +16,7 @@ pub mod events;
 pub mod utils {
     pub mod d20;
     pub mod monsters;
+    pub mod vrf;
 }
 
 #[cfg(test)]

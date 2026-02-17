@@ -10,12 +10,12 @@
 - [x] **1.2** Define all enums in `src/types.cairo` with correct derives (`Serde, Copy, Drop, Introspect, PartialEq, Debug, DojoStore, Default`)
 - [x] **1.3** Implement explorer models in `src/models/` (ExplorerStats, ExplorerHealth, ExplorerCombat, ExplorerInventory, ExplorerPosition, ExplorerSkills) with `#[dojo::model]` and `#[derive(Copy, Drop, Serde)]`
 - [x] **1.4** Implement temple/chamber models (TempleState, Chamber, MonsterInstance, ChamberExit, FallenExplorer, ChamberFallenCount, ExplorerTempleProgress)
-- [ ] **1.5** Implement D20 utility module (`src/utils/d20.cairo`): `roll_d20`, `roll_dice`, `ability_modifier`, `proficiency_bonus`, `calculate_ac`
+- [x] **1.5** Implement D20 utility module (`src/utils/d20.cairo`): `roll_d20`, `roll_dice`, `ability_modifier`, `proficiency_bonus`, `calculate_ac`
 - [ ] **1.6** Implement monster stat lookup (`src/utils/monsters.cairo`): pure function returning stats for each MonsterType
 - [ ] **1.7** Define all events (`src/events.cairo`): ExplorerMinted, CombatResult, ExplorerDied, ChamberRevealed, LevelUp, BossDefeated
 - [ ] **1.8** Write unit tests for all D20 math (modifier calculation for all 18 scores, proficiency by level, roll bounds)
 - [ ] **1.9** Configure `dojo_dev.toml` writer permissions for all 3 contracts
-- [ ] **1.10** Set up Cartridge VRF integration (import VRF contract interface, configure provider)
+- [x] **1.10** Set up Cartridge VRF integration (import VRF contract interface, configure provider)
 - [ ] **1.11** Test VRF integration with Katana locally
 
 ## Day 2: Explorer & Combat Systems
