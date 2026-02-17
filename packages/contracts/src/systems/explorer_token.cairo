@@ -58,6 +58,10 @@ pub mod explorer_token {
     };
     use d20::events::ExplorerMinted;
     use d20::utils::d20::{ability_modifier, calculate_ac};
+    use d20::constants::{EXPLORER_TOKEN_DESCRIPTION, EXPLORER_TOKEN_EXTERNAL_LINK};
+
+    // Metadata types
+    use nft_combo::utils::renderer::{ContractMetadata, TokenMetadata, Attribute};
 
     // ── Storage ─────────────────────────────────────────────────────────────
 
@@ -130,7 +134,7 @@ pub mod explorer_token {
             else if v == 13 { count_13 += 1; }
             else if v == 14 { count_14 += 1; }
             else if v == 15 { count_15 += 1; }
-            else { panic!("invalid stat value"); }
+            else { assert(false, 'not standard array'); }
             i += 1;
         };
         assert(
@@ -438,13 +442,24 @@ pub mod explorer_token {
     }
 
     // ── ERC721ComboHooksTrait ────────────────────────────────────────────────
-    // Minimal no-op implementation — metadata rendering will be added later.
 
     pub impl ERC721ComboHooksImpl of ERC721ComboComponent::ERC721ComboHooksTrait<ContractState> {
         fn render_contract_uri(
             self: @ERC721ComboComponent::ComponentState<ContractState>
-        ) -> Option<nft_combo::utils::renderer::ContractMetadata> {
-            Option::None
+        ) -> Option<ContractMetadata> {
+            let s = self.get_contract();
+            let metadata = ContractMetadata {
+                name: s.name(),
+                symbol: s.symbol(),
+                description: EXPLORER_TOKEN_DESCRIPTION(),
+                image: Option::None,
+                banner_image: Option::None,
+                featured_image: Option::None,
+                external_link: Option::Some(EXPLORER_TOKEN_EXTERNAL_LINK()),
+                collaborators: Option::None,
+                background_color: Option::None,
+            };
+            Option::Some(metadata)
         }
 
         fn contract_uri(
@@ -456,8 +471,52 @@ pub mod explorer_token {
         fn render_token_uri(
             self: @ERC721ComboComponent::ComponentState<ContractState>,
             token_id: u256,
-        ) -> Option<nft_combo::utils::renderer::TokenMetadata> {
-            Option::None
+        ) -> Option<TokenMetadata> {
+            let s = self.get_contract();
+            let mut world = s.world_default();
+            let explorer_id: u128 = token_id.low;
+
+            let stats: ExplorerStats = world.read_model(explorer_id);
+            let health: ExplorerHealth = world.read_model(explorer_id);
+            let combat: ExplorerCombat = world.read_model(explorer_id);
+
+            let class_name: ByteArray = match stats.class {
+                ExplorerClass::None => "None",
+                ExplorerClass::Fighter => "Fighter",
+                ExplorerClass::Rogue => "Rogue",
+                ExplorerClass::Wizard => "Wizard",
+            };
+
+            let status: ByteArray = if health.is_dead { "Dead" } else { "Alive" };
+
+            let attributes: Array<Attribute> = array![
+                Attribute { key: "Class", value: class_name.clone() },
+                Attribute { key: "Level", value: format!("{}", stats.level) },
+                Attribute { key: "HP", value: format!("{}/{}", health.current_hp, health.max_hp) },
+                Attribute { key: "AC", value: format!("{}", combat.armor_class) },
+                Attribute { key: "STR", value: format!("{}", stats.strength) },
+                Attribute { key: "DEX", value: format!("{}", stats.dexterity) },
+                Attribute { key: "CON", value: format!("{}", stats.constitution) },
+                Attribute { key: "INT", value: format!("{}", stats.intelligence) },
+                Attribute { key: "WIS", value: format!("{}", stats.wisdom) },
+                Attribute { key: "CHA", value: format!("{}", stats.charisma) },
+                Attribute { key: "Status", value: status },
+            ];
+
+            let metadata = TokenMetadata {
+                token_id,
+                name: format!("{} #{}", class_name, token_id.low),
+                description: EXPLORER_TOKEN_DESCRIPTION(),
+                image: Option::None,
+                image_data: Option::None,
+                external_url: Option::None,
+                background_color: Option::None,
+                animation_url: Option::None,
+                youtube_url: Option::None,
+                attributes: Option::Some(attributes.span()),
+                additional_metadata: Option::None,
+            };
+            Option::Some(metadata)
         }
 
         fn token_uri(

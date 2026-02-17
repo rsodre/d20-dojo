@@ -13,6 +13,8 @@ pub mod types;
 
 pub mod events;
 
+pub mod constants;
+
 pub mod utils {
     pub mod d20;
     pub mod monsters;
@@ -20,4 +22,6 @@ pub mod utils {
 }
 
 #[cfg(test)]
-pub mod tests {}
+pub mod tests {
+    pub mod test_explorer_token;
+}
