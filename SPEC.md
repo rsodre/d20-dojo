@@ -78,9 +78,15 @@ Every formula in this spec is written with integer math in mind. When implementi
 
 ## NFT System
 
-All NFTs use dedicated ERC-721 contracts built with **OpenZeppelin ERC-721 components** and **cairo-nft-combo**.
+All NFTs use dedicated ERC-721 contracts built with **OpenZeppelin ERC-721 components** and **[cairo-nft-combo](https://github.com/underware-gg/cairo-nft-combo)**.
 
-**Important:** OpenZeppelin's ERC-721 uses `u256` for token IDs. In this game, all token IDs are represented as `u128` — we use only the low part and ignore the high part of the `u256`.
+**cairo-nft-combo** provides:
+- `_mint_next()` — sequential minting with an internal counter (no need for `world.uuid()`)
+- Supply management (`max_supply`, `minted_supply`, `available_supply`)
+- On-chain metadata rendering via `ERC721ComboHooksTrait`
+- ERC-7572, ERC-4906, ERC-2981 extensions
+
+**Token IDs** are `u256` (OpenZeppelin standard). The internal counter auto-increments on each `_mint_next()` call. All Dojo models use `u128` keys — conversion: `let explorer_id: u128 = token_id.low;` (high part is always 0 for counter-minted IDs).
 
 ### Explorer NFT
 - Each explorer is an NFT minted when a player creates a character
@@ -130,7 +136,7 @@ Everything resolves as: **d20 + modifier >= target number (DC or AC)**
 ### Ability Scores
 Six scores per explorer: STR, DEX, CON, INT, WIS, CHA
 - Range: 3-20
-- Modifier formula: `(score - 10) / 2` — integer division, always rounds toward zero. **Cairo note:** since scores below 10 produce negative modifiers, use `i8` for the result. Implementation: `if score >= 10 { ((score - 10) / 2) as i8 } else { -((10 - score + 1) / 2) as i8 }` to handle the asymmetry correctly (score 9 → -1, score 8 → -1, score 7 → -2).
+- Modifier formula: `floor((score - 10) / 2)` — always rounds **down** (floor division), matching the SRD. Returns `i8`. Implementation: `if score >= 10 { ((score - 10) / 2).try_into().unwrap() } else { -(((11 - score) / 2).try_into().unwrap()) }`. Verification: score 9 → -1 ✓, score 8 → -1 ✓, score 7 → -2 ✓, score 10 → 0 ✓, score 11 → 0 ✓, score 12 → +1 ✓.
 - Character creation: standard array [15, 14, 13, 12, 10, 8] assigned by player
 
 ### Proficiency Bonus
@@ -167,7 +173,11 @@ Each skill is tied to an ability score. An explorer can be proficient in some sk
 - Natural 20 = critical hit (double damage dice)
 - Natural 1 = automatic miss
 
-**Armor Class (AC)**: `10 + DEX modifier + armor_bonus`
+**Armor Class (AC)**: Depends on armor type:
+- No armor: `10 + DEX modifier`
+- Leather: `11 + DEX modifier`
+- Chain Mail: `16` (no DEX bonus)
+- Shield adds `+2` to any of the above (tracked separately via `has_shield`)
 
 **Damage roll**: weapon damage die + ability modifier
 | Weapon      | Damage | Type     | Properties |
@@ -203,9 +213,9 @@ Used to resist effects (traps, spells, poison, etc.)
 - Hit die: d8
 - Proficient saves: DEX, INT
 - Proficient skills: Stealth, Acrobatics + 2 choices
-- Starting equipment: Dagger, Shortbow, Leather Armor (AC 11 + DEX)
+- Starting equipment: Dagger (primary), Shortbow (secondary), Leather Armor (AC 11 + DEX)
 - Features:
-  - Level 1: Sneak Attack (extra 1d6 damage when you have advantage, scales to 3d6 at level 5)
+  - Level 1: Sneak Attack (extra damage when you have advantage; 1d6 at levels 1-2, 2d6 at levels 3-4, 3d6 at level 5)
   - Level 1: Expertise (double proficiency bonus on 2 skills)
   - Level 2: Cunning Action (dash, disengage, or hide as bonus action)
   - Level 5: Uncanny Dodge (halve damage from one attack)
@@ -244,17 +254,19 @@ XP is awarded for defeating monsters (based on CR) and completing objectives.
 
 ### Monsters (v1 set)
 
-| Monster        | AC | HP  | Attack        | Damage | CR  | XP  |
-|---------------|-----|-----|---------------|--------|-----|-----|
-| Goblin        | 15  | 7   | Scimitar +4   | 1d6+2  | 1/4 | 50  |
-| Skeleton      | 13  | 13  | Shortsword +4 | 1d6+2  | 1/4 | 50  |
-| Giant Rat     | 12  | 7   | Bite +4       | 1d4+2  | 1/8 | 25  |
-| Orc           | 13  | 15  | Greataxe +5   | 1d12+3 | 1/2 | 100 |
-| Ogre          | 11  | 59  | Greatclub +6  | 2d8+4  | 2   | 450 |
-| Minotaur      | 14  | 76  | Greataxe +6   | 2d12+4 | 3   | 700 |
-| Young Dragon  | 18  | 110 | Bite +10      | 2d10+5 | 5   | 1800|
+**CR scaling:** Cairo has no fractions. CR is stored as `cr_x4: u8` (CR multiplied by 4). So CR 1/8 = 0, CR 1/4 = 1, CR 1/2 = 2, CR 1 = 4, CR 2 = 8, etc. This is only used for XP calculation and encounter difficulty.
 
-Each monster also has ability scores (for saves and checks) and a challenge-appropriate DC for any special abilities.
+| Monster        | AC | HP  | Attack        | Damage  | CR   | cr_x4 | XP   | STR | DEX | CON | INT | WIS | CHA |
+|---------------|-----|-----|---------------|---------|------|--------|------|-----|-----|-----|-----|-----|-----|
+| Goblin        | 15  | 7   | Scimitar +4   | 1d6+2   | 1/4  | 1      | 50   | 8   | 14  | 10  | 10  | 8   | 8   |
+| Skeleton      | 13  | 13  | Shortsword +4 | 1d6+2   | 1/4  | 1      | 50   | 10  | 14  | 15  | 6   | 8   | 5   |
+| Giant Rat     | 12  | 7   | Bite +4       | 1d4+2   | 1/8  | 0      | 25   | 7   | 15  | 11  | 2   | 10  | 4   |
+| Orc           | 13  | 15  | Greataxe +5   | 1d12+3  | 1/2  | 2      | 100  | 16  | 12  | 16  | 7   | 11  | 10  |
+| Ogre          | 11  | 59  | Greatclub +6  | 2d8+4   | 2    | 8      | 450  | 19  | 8   | 16  | 5   | 7   | 7   |
+| Minotaur      | 14  | 76  | Greataxe +6   | 2d12+4  | 3    | 12     | 700  | 18  | 11  | 16  | 6   | 16  | 9   |
+| Young Dragon  | 18  | 110 | Bite +10      | 2d10+5  | 5    | 20     | 1800 | 19  | 10  | 17  | 12  | 11  | 15  |
+
+Monster ability scores are used for saving throws and contested checks (e.g., monster STR vs explorer STR for grapple). Monster stats are stored as **compile-time constants** in a lookup function, not as mutable models — they're templates instantiated into `MonsterInstance` models when a chamber is generated.
 
 ---
 
@@ -270,10 +282,28 @@ All dice rolls use the **Cartridge VRF (Verifiable Random Function)** service fo
 5. The VRF Proof is verified on-chain, ensuring the integrity of the random value
 
 ### D20 Roll Implementation
-```
-fn roll_d20(ref vrf: IVRFDispatcher, source: felt252) -> u8 {
-    let random = vrf.consume_random(source);
-    (random % 20 + 1).try_into().unwrap()
+
+Inside a `#[dojo::contract]`, the VRF is accessed through the world storage. The Cartridge Paymaster injects the random value into the transaction automatically.
+
+```cairo
+// In a #[dojo::contract] system:
+fn roll_d20(ref world: WorldStorage) -> u8 {
+    let seed: felt252 = world.uuid().into(); // unique entropy source
+    let random: u256 = vrf.consume_random(seed);
+    ((random % 20) + 1).try_into().unwrap()   // 1-20
+}
+
+fn roll_dice(ref world: WorldStorage, sides: u8, count: u8) -> u16 {
+    let mut total: u16 = 0;
+    let mut i: u8 = 0;
+    loop {
+        if i >= count { break; }
+        let seed: felt252 = world.uuid().into();
+        let random: u256 = vrf.consume_random(seed);
+        total += ((random % sides.into()) + 1).try_into().unwrap();
+        i += 1;
+    };
+    total
 }
 ```
 
@@ -287,188 +317,233 @@ All rolls — ability checks, attack rolls, saving throws, damage dice, initiati
 
 ## Dojo Architecture
 
+### Namespace
+
+All resources live under the **`d2_0_1`** namespace. This replaces the default `dojo_starter` namespace from the template.
+
+```toml
+# dojo_dev.toml
+[namespace]
+default = "d2_0_1"
+
+[writers]
+"d2_0_1" = ["d2_0_1-explorer_actions", "d2_0_1-combat_actions", "d2_0_1-temple_actions"]
+```
+
 ### Models (Components)
 
+All models use the Dojo 1.8+ `#[dojo::model]` attribute (not the old `#[derive(Model)]`). Every model requires `#[derive(Drop, Serde)]` at minimum. Models with all-primitive fields add `Copy`. Custom nested types (enums, structs) must derive `Introspect`, `DojoStore`, and `Default`.
+
+**Signed integers where D20 demands them.** The D20 system has many naturally negative values: ability modifiers (score 8 → -1), initiative rolls with negative DEX mods, and damage calculations. Cairo supports `i8`, `i16`, `i32`, `i64`, `i128` — use them where the game logic requires negative values. Store HP as `i16` (can go negative to detect overkill), modifiers as `i8` (range -5 to +5 for our score range). Keep unsigned types for values that are never negative (XP, gold, level, ability scores themselves).
+
 ```cairo
-#[derive(Model)]
-struct ExplorerStats {
+#[derive(Copy, Drop, Serde)]
+#[dojo::model]
+pub struct ExplorerStats {
     #[key]
-    explorer_id: u128,    // Explorer NFT token ID
+    pub explorer_id: u128,    // Explorer NFT token ID (from cairo-nft-combo _mint_next())
     // Ability scores (each 3-20)
-    strength: u8,
-    dexterity: u8,
-    constitution: u8,
-    intelligence: u8,
-    wisdom: u8,
-    charisma: u8,
+    pub strength: u8,
+    pub dexterity: u8,
+    pub constitution: u8,
+    pub intelligence: u8,
+    pub wisdom: u8,
+    pub charisma: u8,
     // Progression
-    level: u8,
-    xp: u32,
-    class: ExplorerClass,
+    pub level: u8,
+    pub xp: u32,
+    pub class: ExplorerClass,
     // Achievements
-    temples_conquered: u16,   // how many temple bosses killed
+    pub temples_conquered: u16,   // how many temple bosses killed
 }
 
-#[derive(Model)]
-struct ExplorerHealth {
+#[derive(Copy, Drop, Serde)]
+#[dojo::model]
+pub struct ExplorerHealth {
     #[key]
-    explorer_id: u128,
-    current_hp: i16,
-    max_hp: u16,
-    is_dead: bool,
+    pub explorer_id: u128,
+    pub current_hp: i16,      // signed — can go negative (overkill detection, then clamped to 0)
+    pub max_hp: u16,
+    pub is_dead: bool,
 }
 
-#[derive(Model)]
-struct ExplorerCombat {
+#[derive(Copy, Drop, Serde)]
+#[dojo::model]
+pub struct ExplorerCombat {
     #[key]
-    explorer_id: u128,
-    armor_class: u8,
-    initiative: i8,
+    pub explorer_id: u128,
+    pub armor_class: u8,
     // Class resources
-    spell_slots_1: u8,
-    spell_slots_2: u8,
-    spell_slots_3: u8,
-    second_wind_used: bool,
-    action_surge_used: bool,
+    pub spell_slots_1: u8,
+    pub spell_slots_2: u8,
+    pub spell_slots_3: u8,
+    pub second_wind_used: bool,
+    pub action_surge_used: bool,
 }
 
-#[derive(Model)]
-struct ExplorerInventory {
+#[derive(Copy, Drop, Serde)]
+#[dojo::model]
+pub struct ExplorerInventory {
     #[key]
-    explorer_id: u128,
-    weapon: WeaponType,
-    armor: ArmorType,
-    gold: u32,
-    potions: u8,
+    pub explorer_id: u128,
+    pub primary_weapon: WeaponType,
+    pub secondary_weapon: WeaponType,   // Rogue starts with Dagger + Shortbow
+    pub armor: ArmorType,
+    pub has_shield: bool,               // +2 AC, separate from armor
+    pub gold: u32,
+    pub potions: u8,
 }
 
-#[derive(Model)]
-struct ExplorerPosition {
+#[derive(Copy, Drop, Serde)]
+#[dojo::model]
+pub struct ExplorerPosition {
     #[key]
-    explorer_id: u128,
-    temple_id: u128,      // 0 if not in any temple
-    chamber_id: u32,      // 0 if not in any temple
-    in_combat: bool,
-    combat_target: u32,   // monster instance id within chamber
+    pub explorer_id: u128,
+    pub temple_id: u128,      // 0 if not in any temple
+    pub chamber_id: u32,      // 0 if not in any temple
+    pub in_combat: bool,
+    pub combat_monster_id: u32,   // MonsterInstance key within chamber (0 if not in combat)
 }
 
-#[derive(Model)]
-struct ExplorerSkills {
+#[derive(Copy, Drop, Serde)]
+#[dojo::model]
+pub struct ExplorerSkills {
     #[key]
-    explorer_id: u128,
+    pub explorer_id: u128,
     // Proficiency flags for each skill
-    athletics: bool,
-    stealth: bool,
-    perception: bool,
-    persuasion: bool,
-    arcana: bool,
-    acrobatics: bool,
+    pub athletics: bool,
+    pub stealth: bool,
+    pub perception: bool,
+    pub persuasion: bool,
+    pub arcana: bool,
+    pub acrobatics: bool,
     // Expertise (double proficiency, Rogue feature)
-    expertise_1: Skill,
-    expertise_2: Skill,
+    pub expertise_1: Skill,
+    pub expertise_2: Skill,
 }
 
-// Tracks an explorer's progress within a specific temple
-#[derive(Model)]
-struct ExplorerTempleProgress {
+// Tracks an explorer's progress within a specific temple (composite key)
+#[derive(Copy, Drop, Serde)]
+#[dojo::model]
+pub struct ExplorerTempleProgress {
     #[key]
-    explorer_id: u128,
+    pub explorer_id: u128,
     #[key]
-    temple_id: u128,
-    chambers_explored: u16,   // how many chambers this explorer has opened
-    xp_earned: u32,           // XP earned in this temple (used for boss probability)
+    pub temple_id: u128,
+    pub chambers_explored: u16,   // how many chambers this explorer has opened
+    pub xp_earned: u32,           // XP earned in this temple (used for boss probability)
 }
 
-#[derive(Model)]
-struct Chamber {
+// Chamber structure — split from monster/environment state for ECS cleanliness.
+// This model stores structural data only.
+#[derive(Copy, Drop, Serde)]
+#[dojo::model]
+pub struct Chamber {
     #[key]
-    temple_id: u128,
+    pub temple_id: u128,
     #[key]
-    chamber_id: u32,
-    chamber_type: ChamberType,
-    yonder: u8,               // distance from entrance (0 = entrance)
-    // Monster state
-    monster_type: MonsterType,
-    monster_alive: bool,
-    monster_current_hp: i16,
-    // Environment
-    treasure_looted: bool,
-    trap_disarmed: bool,
-    // Exits (number of exits from this chamber)
-    exit_count: u8,
-    // Whether this chamber has been generated
-    is_revealed: bool,
+    pub chamber_id: u32,
+    pub chamber_type: ChamberType,
+    pub yonder: u8,               // distance from entrance (0 = entrance)
+    pub exit_count: u8,           // number of exits from this chamber
+    pub is_revealed: bool,        // whether this chamber has been generated
+    pub treasure_looted: bool,
+    pub trap_disarmed: bool,
+    pub trap_dc: u8,              // 0 if no trap
+}
+
+// Separate model for monster instances in chambers.
+// Allows a chamber to have one monster (v1) and cleanly extends to multiple (v2).
+#[derive(Copy, Drop, Serde)]
+#[dojo::model]
+pub struct MonsterInstance {
+    #[key]
+    pub temple_id: u128,
+    #[key]
+    pub chamber_id: u32,
+    #[key]
+    pub monster_id: u32,          // sequential ID within chamber (1 for v1)
+    pub monster_type: MonsterType,
+    pub current_hp: i16,          // signed — can go negative (overkill), then clamped
+    pub max_hp: u16,
+    pub is_alive: bool,
 }
 
 // Each exit from a chamber. Chambers can have 0 to N exits.
 // Chambers are aware of each other through these bidirectional links.
-#[derive(Model)]
-struct ChamberExit {
+#[derive(Copy, Drop, Serde)]
+#[dojo::model]
+pub struct ChamberExit {
     #[key]
-    temple_id: u128,
+    pub temple_id: u128,
     #[key]
-    from_chamber_id: u32,
+    pub from_chamber_id: u32,
     #[key]
-    exit_index: u8,           // 0, 1, 2, ... up to exit_count-1
-    to_chamber_id: u32,       // the chamber this exit leads to (0 if unexplored)
-    is_discovered: bool,      // true once an explorer has opened this exit
-    // Future: locked exits requiring items
-    // required_item: ItemType,  // None if no key needed
+    pub exit_index: u8,           // 0, 1, 2, ... up to exit_count-1
+    pub to_chamber_id: u32,       // the chamber this exit leads to (0 if unexplored)
+    pub is_discovered: bool,      // true once an explorer has opened this exit
 }
 
 // Tracks fallen explorers in a chamber.
 // A single chamber can contain many fallen explorers.
-#[derive(Model)]
-struct FallenExplorer {
+#[derive(Copy, Drop, Serde)]
+#[dojo::model]
+pub struct FallenExplorer {
     #[key]
-    temple_id: u128,
+    pub temple_id: u128,
     #[key]
-    chamber_id: u32,
+    pub chamber_id: u32,
     #[key]
-    fallen_index: u32,        // sequential index per chamber
-    explorer_id: u128,        // the dead explorer's NFT token ID
+    pub fallen_index: u32,        // sequential index per chamber
+    pub explorer_id: u128,        // the dead explorer's token ID
     // Dropped loot
-    dropped_weapon: WeaponType,
-    dropped_armor: ArmorType,
-    dropped_gold: u32,
-    dropped_potions: u8,
-    is_looted: bool,          // true once another explorer picks up the loot
+    pub dropped_weapon: WeaponType,
+    pub dropped_armor: ArmorType,
+    pub dropped_gold: u32,
+    pub dropped_potions: u8,
+    pub is_looted: bool,          // true once another explorer picks up the loot
 }
 
 // Counter for how many explorers have fallen in a chamber
-#[derive(Model)]
-struct ChamberFallenCount {
+#[derive(Copy, Drop, Serde)]
+#[dojo::model]
+pub struct ChamberFallenCount {
     #[key]
-    temple_id: u128,
+    pub temple_id: u128,
     #[key]
-    chamber_id: u32,
-    count: u32,
+    pub chamber_id: u32,
+    pub count: u32,
 }
 
-#[derive(Model)]
-struct TempleState {
+#[derive(Copy, Drop, Serde)]
+#[dojo::model]
+pub struct TempleState {
     #[key]
-    temple_id: u128,          // Temple NFT token ID
-    seed: felt252,
-    difficulty_tier: u8,
-    next_chamber_id: u32,     // auto-incrementing ID for new chambers
-    boss_chamber_id: u32,     // 0 until boss chamber is generated
-    boss_alive: bool,
+    pub temple_id: u128,          // Temple NFT token ID (from cairo-nft-combo _mint_next())
+    pub seed: felt252,
+    pub difficulty_tier: u8,
+    pub next_chamber_id: u32,     // auto-incrementing ID for new chambers
+    pub boss_chamber_id: u32,     // 0 until boss chamber is generated
+    pub boss_alive: bool,
 }
 ```
 
 ### Enums
 
+All enums stored in Dojo models must derive `Introspect`, `DojoStore`, and `Default` (in addition to `Serde`, `Copy`, `Drop`). The `Default` variant is the first listed variant (or explicitly annotated with `#[default]`).
+
 ```cairo
-#[derive(Serde, Copy, Drop, Introspect, PartialEq)]
-enum ExplorerClass {
+#[derive(Serde, Copy, Drop, Introspect, PartialEq, Debug, DojoStore, Default)]
+pub enum ExplorerClass {
+    #[default]
     Fighter,
     Rogue,
     Wizard,
 }
 
-#[derive(Serde, Copy, Drop, Introspect, PartialEq)]
-enum Skill {
+#[derive(Serde, Copy, Drop, Introspect, PartialEq, Debug, DojoStore, Default)]
+pub enum Skill {
+    #[default]
     None,
     Athletics,
     Stealth,
@@ -478,8 +553,9 @@ enum Skill {
     Acrobatics,
 }
 
-#[derive(Serde, Copy, Drop, Introspect, PartialEq)]
-enum AbilityScore {
+#[derive(Serde, Copy, Drop, Introspect, PartialEq, Debug, DojoStore, Default)]
+pub enum AbilityScore {
+    #[default]
     Strength,
     Dexterity,
     Constitution,
@@ -488,8 +564,9 @@ enum AbilityScore {
     Charisma,
 }
 
-#[derive(Serde, Copy, Drop, Introspect, PartialEq)]
-enum WeaponType {
+#[derive(Serde, Copy, Drop, Introspect, PartialEq, Debug, DojoStore, Default)]
+pub enum WeaponType {
+    #[default]
     None,
     Longsword,    // 1d8 slashing, melee, STR
     Dagger,       // 1d4 piercing, melee/thrown, DEX or STR
@@ -498,16 +575,20 @@ enum WeaponType {
     Staff,        // 1d6 bludgeoning, melee, STR
 }
 
-#[derive(Serde, Copy, Drop, Introspect, PartialEq)]
-enum ArmorType {
-    None,         // AC 10 + DEX
-    Leather,      // AC 11 + DEX
+// ArmorType does NOT include Shield — shields are tracked separately
+// via `has_shield: bool` on ExplorerInventory. In D&D, shields stack
+// with armor (e.g., Chain Mail + Shield = AC 18).
+#[derive(Serde, Copy, Drop, Introspect, PartialEq, Debug, DojoStore, Default)]
+pub enum ArmorType {
+    #[default]
+    None,         // AC 10 + DEX mod
+    Leather,      // AC 11 + DEX mod
     ChainMail,    // AC 16 (no DEX bonus)
-    Shield,       // +2 AC (can combine with armor)
 }
 
-#[derive(Serde, Copy, Drop, Introspect, PartialEq)]
-enum DamageType {
+#[derive(Serde, Copy, Drop, Introspect, PartialEq, Debug, DojoStore, Default)]
+pub enum DamageType {
+    #[default]
     Slashing,
     Piercing,
     Bludgeoning,
@@ -518,8 +599,9 @@ enum DamageType {
     Necrotic,
 }
 
-#[derive(Serde, Copy, Drop, Introspect, PartialEq)]
-enum ChamberType {
+#[derive(Serde, Copy, Drop, Introspect, PartialEq, Debug, DojoStore, Default)]
+pub enum ChamberType {
+    #[default]
     Entrance,     // starting chamber, safe
     Empty,        // nothing special
     Monster,      // contains a monster encounter
@@ -528,20 +610,23 @@ enum ChamberType {
     Boss,         // the boss chamber (generated probabilistically)
 }
 
-#[derive(Serde, Copy, Drop, Introspect, PartialEq)]
-enum MonsterType {
+#[derive(Serde, Copy, Drop, Introspect, PartialEq, Debug, DojoStore, Default)]
+pub enum MonsterType {
+    #[default]
     None,
-    Goblin,
-    Skeleton,
-    GiantRat,
-    Orc,
-    Ogre,
-    Minotaur,
-    YoungDragon,  // boss-tier
+    Goblin,       // CR 1 (scaled)
+    Skeleton,     // CR 1 (scaled)
+    GiantRat,     // CR 0 (scaled)
+    Orc,          // CR 2 (scaled)
+    Ogre,         // CR 8 (scaled)
+    Minotaur,     // CR 12 (scaled)
+    YoungDragon,  // CR 20 (scaled) — boss-tier
 }
 
-#[derive(Serde, Copy, Drop, Introspect, PartialEq)]
-enum SpellId {
+#[derive(Serde, Copy, Drop, Introspect, PartialEq, Debug, DojoStore, Default)]
+pub enum SpellId {
+    #[default]
+    None,
     // Cantrips
     FireBolt,
     MageHand,
@@ -557,16 +642,9 @@ enum SpellId {
     Fireball,
 }
 
-#[derive(Serde, Copy, Drop, Introspect, PartialEq)]
-enum SpellLevel {
-    Cantrip,
-    First,
-    Second,
-    Third,
-}
-
-#[derive(Serde, Copy, Drop, Introspect, PartialEq)]
-enum CombatAction {
+#[derive(Serde, Copy, Drop, Introspect, PartialEq, Debug, DojoStore, Default)]
+pub enum CombatAction {
+    #[default]
     Attack,
     CastSpell,
     UseItem,
@@ -576,76 +654,165 @@ enum CombatAction {
     CunningAction,  // Rogue
 }
 
-#[derive(Serde, Copy, Drop, Introspect, PartialEq)]
-enum ItemType {
+#[derive(Serde, Copy, Drop, Introspect, PartialEq, Debug, DojoStore, Default)]
+pub enum ItemType {
+    #[default]
     None,
     HealthPotion,   // heals 2d4+2
 }
 ```
 
-### Systems (Game Logic)
+### Systems (Dojo Contracts)
 
-```
+Systems are `#[dojo::contract]` modules, not free functions. Each contract has an `#[starknet::interface]` trait. Helper functions (dice math, modifiers) live in a shared utility module imported by the contracts.
+
+**Contract layout** — 3 contracts to minimize permission complexity:
+
+| Contract | Tag | Writes to |
+|----------|-----|-----------|
+| `explorer_actions` | `d2_0_1-explorer_actions` | ExplorerStats, ExplorerHealth, ExplorerCombat, ExplorerInventory, ExplorerSkills |
+| `combat_actions` | `d2_0_1-combat_actions` | ExplorerHealth, ExplorerCombat, ExplorerInventory, ExplorerPosition, MonsterInstance, FallenExplorer, ChamberFallenCount |
+| `temple_actions` | `d2_0_1-temple_actions` | ExplorerPosition, ExplorerTempleProgress, ExplorerStats, ExplorerHealth, ExplorerInventory, TempleState, Chamber, MonsterInstance, ChamberExit, FallenExplorer, ChamberFallenCount |
+
+```cairo
 // ──────────────────────────────────────────────
-// Core D20 Resolver — used by all other systems
+// Shared utility module (not a contract — pure functions)
+// Located at src/utils/d20.cairo
 // ──────────────────────────────────────────────
-fn roll_d20(ref vrf, source) -> u8
-fn roll_dice(ref vrf, source, sides: u8, count: u8) -> u16
-fn ability_modifier(score: u8) -> i8
+// These are helper functions imported by the contracts above.
+// They do NOT access the world — they take values and return values.
+fn roll_d20(ref world: WorldStorage) -> u8            // consume VRF, mod 20 + 1
+fn roll_dice(ref world: WorldStorage, sides: u8, count: u8) -> u16
+fn ability_modifier(score: u8) -> i8                  // D20 modifier: (score-10)/2, range -1 to +5
 fn proficiency_bonus(level: u8) -> u8
-fn skill_check(explorer_id, skill, dc) -> (bool, u8)  // (success, roll)
-fn attack_roll(attacker_id, target_id) -> (bool, u8, bool)  // (hit, roll, crit)
-fn saving_throw(entity_id, ability, dc) -> (bool, u8)
-fn roll_damage(weapon, crit) -> u16
+fn calculate_ac(armor: ArmorType, has_shield: bool, dex_mod: i8) -> u8
+
+// NOTE on signed math: when adding i8 modifier to u8 roll, cast to i16 first:
+//   let result: i16 = roll.into() + modifier.into();
+//   let clamped: u8 = if result < 1 { 1 } else { result.try_into().unwrap() };
+// This handles negative modifiers naturally without bool/abs gymnastics.
 
 // ──────────────────────────────────────────────
-// Explorer System
+// explorer_actions contract
 // ──────────────────────────────────────────────
-fn mint_explorer(class, stat_assignment, skill_choices) -> u128  // mints NFT, returns token ID
-fn gain_xp(explorer_id, amount)
-fn level_up(explorer_id)
-fn rest(explorer_id)  // restore HP, spell slots, class features
+#[starknet::interface]
+trait IExplorerActions<T> {
+    fn mint_explorer(
+        ref self: T,
+        class: ExplorerClass,
+        stat_assignment: Span<u8>,      // 6 values mapping to [STR, DEX, CON, INT, WIS, CHA]
+        skill_choices: Span<Skill>,     // optional proficiency picks
+        expertise_choices: Span<Skill>, // Rogue only: 2 skills for double proficiency
+    ) -> u128;  // returns explorer token ID
+
+    fn rest(ref self: T, explorer_id: u128);  // restore HP, spell slots, class features
+}
+
+// gain_xp and level_up are internal helpers called by combat/temple systems,
+// not exposed as external entry points. They live in an InternalImpl.
 
 // ──────────────────────────────────────────────
-// Combat System
+// combat_actions contract
 // ──────────────────────────────────────────────
-fn initiate_combat(explorer_id, monster_type)
-fn attack(explorer_id)
-fn cast_spell(explorer_id, spell_id)
-fn use_item(explorer_id, item_type)
-fn flee(explorer_id)  // contested DEX check
+#[starknet::interface]
+trait ICombatActions<T> {
+    fn attack(ref self: T, explorer_id: u128);
+    fn cast_spell(ref self: T, explorer_id: u128, spell_id: SpellId);
+    fn use_item(ref self: T, explorer_id: u128, item_type: ItemType);
+    fn flee(ref self: T, explorer_id: u128);   // contested DEX check
+    fn second_wind(ref self: T, explorer_id: u128);   // Fighter: heal 1d10+level
+    fn cunning_action(ref self: T, explorer_id: u128); // Rogue: disengage/hide
+}
 
-// ──────────────────────────────────────────────
-// Death System — permadeath
-// ──────────────────────────────────────────────
-fn die(explorer_id)
-// - marks explorer as dead (is_dead = true, frozen permanently)
-// - creates FallenExplorer record in current chamber with dropped loot
+// Death logic is an internal function called when HP reaches 0:
+// - sets is_dead = true on ExplorerHealth
+// - creates FallenExplorer with dropped loot in current chamber
 // - increments ChamberFallenCount
-// - explorer NFT remains on-chain (visible, never usable again)
+// - emits ExplorerDied event
 
 // ──────────────────────────────────────────────
-// Loot System
+// temple_actions contract
 // ──────────────────────────────────────────────
-fn loot_treasure(explorer_id)                                  // pick up chamber treasure
-fn loot_fallen(explorer_id, fallen_index)                      // pick up a fallen explorer's items
+#[starknet::interface]
+trait ITempleActions<T> {
+    fn mint_temple(ref self: T, seed: felt252, difficulty: u8) -> u128;
+    fn enter_temple(ref self: T, explorer_id: u128, temple_id: u128);
+    fn exit_temple(ref self: T, explorer_id: u128);
+    fn open_exit(ref self: T, explorer_id: u128, exit_index: u8);
+    fn move_to_chamber(ref self: T, explorer_id: u128, exit_index: u8);
+    fn search_chamber(ref self: T, explorer_id: u128);  // Perception check
+    fn disarm_trap(ref self: T, explorer_id: u128);      // DEX/skill check
+    fn loot_treasure(ref self: T, explorer_id: u128);
+    fn loot_fallen(ref self: T, explorer_id: u128, fallen_index: u32);
+}
 
-// ──────────────────────────────────────────────
-// Exploration System
-// ──────────────────────────────────────────────
-fn open_exit(explorer_id, exit_index)  // generates new chamber if undiscovered
-fn move_to_chamber(explorer_id, exit_index)  // move through a discovered exit
-fn search_chamber(explorer_id)  // Perception check for hidden traps/treasure
-fn disarm_trap(explorer_id)     // DEX check or appropriate skill
+// generate_chamber and calculate_boss_probability are internal helpers,
+// not exposed as external entry points.
+```
 
-// ──────────────────────────────────────────────
-// Temple System
-// ──────────────────────────────────────────────
-fn mint_temple(seed: felt252, difficulty: u8) -> u128  // mints Temple NFT
-fn enter_temple(explorer_id, temple_id)  // places explorer in entrance chamber
-fn exit_temple(explorer_id)              // removes explorer from temple (can enter another)
-fn generate_chamber(temple_id, from_chamber_id, exit_index) -> u32  // creates new chamber
-fn calculate_boss_probability(temple_id, explorer_id, yonder) -> u16  // bps
+### Events
+
+Events are critical for Torii indexing and for the AI agent to narrate outcomes. All events use `#[dojo::event]` and are emitted via `world.emit_event(...)`.
+
+```cairo
+#[derive(Copy, Drop, Serde)]
+#[dojo::event]
+pub struct ExplorerMinted {
+    #[key]
+    pub explorer_id: u128,
+    pub class: ExplorerClass,
+    pub player: ContractAddress,
+}
+
+#[derive(Copy, Drop, Serde)]
+#[dojo::event]
+pub struct CombatResult {
+    #[key]
+    pub explorer_id: u128,
+    pub action: CombatAction,
+    pub roll: u8,
+    pub damage_dealt: u16,
+    pub damage_taken: u16,
+    pub monster_killed: bool,
+}
+
+#[derive(Copy, Drop, Serde)]
+#[dojo::event]
+pub struct ExplorerDied {
+    #[key]
+    pub explorer_id: u128,
+    pub temple_id: u128,
+    pub chamber_id: u32,
+    pub killed_by: MonsterType,
+}
+
+#[derive(Copy, Drop, Serde)]
+#[dojo::event]
+pub struct ChamberRevealed {
+    #[key]
+    pub temple_id: u128,
+    pub chamber_id: u32,
+    pub chamber_type: ChamberType,
+    pub yonder: u8,
+    pub revealed_by: u128,    // explorer who opened the exit
+}
+
+#[derive(Copy, Drop, Serde)]
+#[dojo::event]
+pub struct LevelUp {
+    #[key]
+    pub explorer_id: u128,
+    pub new_level: u8,
+}
+
+#[derive(Copy, Drop, Serde)]
+#[dojo::event]
+pub struct BossDefeated {
+    #[key]
+    pub temple_id: u128,
+    pub explorer_id: u128,
+    pub monster_type: MonsterType,
+}
 ```
 
 ---
@@ -823,71 +990,7 @@ The AI agent is NOT part of the on-chain system. It runs locally on the explorer
 
 ## 5-Day Build Plan
 
-### Day 1: Foundation & Models
-- **1.1** Scaffold Dojo project with `sozo init`
-- **1.2** Set up Cartridge VRF integration (import VRF contract interface, configure provider)
-- **1.3** Define all enums (ExplorerClass, Skill, AbilityScore, WeaponType, ArmorType, DamageType, ChamberType, MonsterType, SpellId, SpellLevel, CombatAction, ItemType)
-- **1.4** Implement explorer models (ExplorerStats, ExplorerHealth, ExplorerCombat, ExplorerInventory, ExplorerPosition, ExplorerSkills)
-- **1.5** Implement temple/chamber models (TempleState, Chamber, ChamberExit, FallenExplorer, ChamberFallenCount, ExplorerTempleProgress)
-- **1.6** Implement core D20 resolver functions: `roll_d20`, `roll_dice`, `ability_modifier`, `proficiency_bonus`
-- **1.7** Implement skill check, attack roll, and saving throw resolution logic
-- **1.8** Write unit tests for all D20 math (modifier calculation, proficiency by level, roll bounds)
-- **1.9** Test VRF integration with Katana locally
-
-### Day 2: Explorer & Combat Systems
-- **2.1** Set up Explorer NFT contract (OpenZeppelin ERC-721 + cairo-nft-combo, u128 token IDs)
-- **2.2** Implement `mint_explorer` system (mint NFT, validate standard array assignment, initialize stats/HP/equipment based on class, set skill proficiencies from choices)
-- **2.3** Implement class-specific initialization: Fighter (Longsword, Chain Mail, AC 16, Athletics + choice), Rogue (Dagger, Shortbow, Leather, AC 11+DEX, Stealth/Acrobatics + 2 choices + expertise), Wizard (Staff, no armor, AC 10+DEX, Arcana + choice, spell slots)
-- **2.4** Implement basic combat loop: initiative roll, attack rolls vs AC, damage rolls, HP deduction
-- **2.5** Implement Fighter features (Second Wind heal, Action Surge extra action, Champion crit on 19-20 at level 3, Extra Attack at level 5)
-- **2.6** Implement Rogue features (Sneak Attack bonus dice, Expertise double proficiency, Cunning Action, Uncanny Dodge at level 5)
-- **2.7** Implement Wizard spell casting: spell slot tracking per level, cantrip resolution (Fire Bolt attack roll + 1d10), leveled spell resolution (Magic Missile auto-hit 3×1d4+1, Shield +5 AC reaction, Sleep 5d8 HP, Scorching Ray 3×2d6, Misty Step, Fireball 8d6 DEX save)
-- **2.8** Implement death system: set `is_dead`, create `FallenExplorer` with loot, increment `ChamberFallenCount`
-- **2.9** Implement rest mechanic: restore `current_hp` to `max_hp`, reset spell slots to class/level values, reset `second_wind_used` and `action_surge_used`
-- **2.10** Implement `flee` mechanic: contested DEX check, on success move back to previous chamber
-- **2.11** Write unit tests for combat math, each class feature, and death flow
-
-### Day 3: Temple & Exploration
-- **3.1** Set up Temple NFT contract (OpenZeppelin ERC-721 + cairo-nft-combo, u128 token IDs)
-- **3.2** Implement `mint_temple`: mint NFT, create entrance chamber (chamber_id=1, yonder=0, type=Entrance), generate entrance exits from seed
-- **3.3** Implement `enter_temple`: validate explorer is alive and not in another temple, place at entrance chamber, initialize `ExplorerTempleProgress`
-- **3.4** Implement `exit_temple`: remove explorer from temple (set temple_id=0, chamber_id=0), retain stats/inventory/XP
-- **3.5** Implement `generate_chamber`: derive chamber properties from temple seed + chamber position, calculate boss probability via Yonder Formula, determine chamber type / monster type / exit count / trap DC
-- **3.6** Implement `open_exit`: call `generate_chamber` for undiscovered exits, create bidirectional `ChamberExit` links, increment `chambers_explored` on `ExplorerTempleProgress`
-- **3.7** Implement `move_to_chamber`: validate exit is discovered, move explorer, trigger chamber events (monster encounter / trap)
-- **3.8** Implement `search_chamber`: Perception skill check, reveal hidden traps or treasure
-- **3.9** Implement trap mechanics: saving throw to avoid, damage on failure, `disarm_trap` skill check
-- **3.10** Implement `loot_treasure` and `loot_fallen`: pick up chamber treasure or fallen explorer's items, update inventory
-- **3.11** Implement XP gain and level-up: check thresholds, increase max HP (roll hit die + CON), update proficiency bonus, unlock class features, add spell slots for Wizard
-- **3.12** Implement boss defeat: on boss kill, increment `temples_conquered`, mark `boss_alive = false`
-- **3.13** Implement `calculate_boss_probability` with the Yonder Formula (quadratic yonder + XP component)
-- **3.14** Write integration tests: full explorer-mints → enters-temple → opens-exits → explores → fights → loots → levels-up → finds-boss flow
-
-### Day 4: AI Agent & Client
-- **4.1** Set up client project (TypeScript or Python)
-- **4.2** Implement Torii GraphQL client: query explorer state (stats, HP, inventory, position, skills), chamber state (type, yonder, monster, exits, fallen explorers), temple state (seed, difficulty, boss status)
-- **4.3** Implement Starknet transaction submission wrapper: build and sign transactions for each game action
-- **4.4** Design the AI agent system prompt: D20 rules summary, available actions per context (exploring vs combat vs at entrance), narration style guidelines, examples of NL → action mapping
-- **4.5** Implement action mapping layer: LLM parses natural language → structured action (enum + params), validate action is legal given current state
-- **4.6** Implement narration layer: LLM reads transaction results + world state → atmospheric text describing what happened
-- **4.7** Implement game loop: read state → show context → player input → AI maps action → submit tx → wait for result → AI narrates → repeat
-- **4.8** Build simple chat UI (terminal CLI or minimal web interface with chat history)
-- **4.9** Handle edge cases: invalid actions (AI retries with guidance), ambiguous input (AI asks for clarification), death (narrate death scene, prompt for new explorer)
-- **4.10** Implement temple selection flow: list available temples, show difficulty tier, let player choose or mint new
-
-### Day 5: Integration, Testing & Deploy
-- **5.1** End-to-end playtest: mint explorer → enter temple → explore → open exits → fight → loot → level up → find boss → die or conquer
-- **5.2** Test permadeath flow: verify fallen explorer body visible, loot droppable, loot pickable by others, dead NFT frozen
-- **5.3** Test cross-temple flow: enter temple A → level up → exit → enter temple B → verify stats carry over
-- **5.4** Multiplayer testing: two explorers in same temple, verify shared chamber state, shared monster kills, shared chamber generation
-- **5.5** Test boss probability: verify Yonder Formula produces expected distribution over many runs
-- **5.6** Test all three classes through full temple runs, verify class features work correctly
-- **5.7** Balance tuning: adjust monster stats, XP rewards, treasure distribution, trap DCs, boss probability constants
-- **5.8** Edge case testing: death at level 1 with empty inventory, chamber with many fallen explorers, dead-end chambers, exiting temple mid-combat
-- **5.9** Deploy contracts to Starknet testnet (Sepolia) via `sozo migrate`
-- **5.10** Configure Torii indexer on testnet, verify GraphQL queries return correct state
-- **5.11** Smoke test the full flow on testnet with live VRF
-- **5.12** Document setup instructions, known limitations, and tuning constants
+See **[TASKS.md](TASKS.md)** for the full tickable task list.
 
 ---
 
