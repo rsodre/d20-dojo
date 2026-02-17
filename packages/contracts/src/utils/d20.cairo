@@ -185,8 +185,18 @@ mod tests {
     }
 
     #[test]
+    fn test_modifier_score_17() {
+        assert(ability_modifier(17) == 3, 'score 17 should be +3');
+    }
+
+    #[test]
     fn test_modifier_score_18() {
         assert(ability_modifier(18) == 4, 'score 18 should be +4');
+    }
+
+    #[test]
+    fn test_modifier_score_19() {
+        assert(ability_modifier(19) == 4, 'score 19 should be +4');
     }
 
     #[test]
