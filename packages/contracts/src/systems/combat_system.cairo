@@ -12,13 +12,16 @@ pub trait ICombatSystem<TState> {
     /// Emits CombatResult event.
     fn attack(ref self: TState, explorer_id: u128);
 
-    /// Cast a spell (task 2.8 — stub for now).
+    /// Wizard: cast a spell (task 2.8).
+    /// Handles cantrips (no slot cost) and leveled spells (consume slot).
+    /// Monster counter-attacks after the spell unless it is killed.
     fn cast_spell(ref self: TState, explorer_id: u128, spell_id: SpellId);
 
-    /// Use an item (task 2.8 — stub for now).
+    /// Use a consumable item (task 2.8).
+    /// HealthPotion: heals 2d4+2 HP.
     fn use_item(ref self: TState, explorer_id: u128, item_type: ItemType);
 
-    /// Flee from combat (task 2.10 — stub for now).
+    /// Flee from combat (task 2.10 — stub).
     fn flee(ref self: TState, explorer_id: u128);
 
     /// Fighter: heal 1d10 + level once per rest (task 2.6).
@@ -38,7 +41,9 @@ pub mod combat_system {
     use dojo::event::EventStorage;
     use dojo::world::WorldStorage;
 
-    use d20::types::{ExplorerClass, WeaponType, SpellId, ItemType, CombatAction, MonsterType};
+    use d20::types::{
+        ExplorerClass, WeaponType, SpellId, ItemType, CombatAction, MonsterType,
+    };
     use d20::models::explorer::{
         ExplorerStats, ExplorerHealth, ExplorerCombat, ExplorerInventory, ExplorerPosition,
     };
@@ -95,8 +100,8 @@ pub mod combat_system {
             }
         }
 
-        /// Apply damage to the explorer. Returns the actual damage taken.
-        /// If HP drops to 0, calls handle_death.
+        /// Apply damage to the explorer. Returns actual damage taken.
+        /// If HP drops to ≤0, calls handle_death.
         fn apply_explorer_damage(
             ref world: WorldStorage,
             explorer_id: u128,
@@ -110,7 +115,7 @@ pub mod combat_system {
 
             if new_hp <= 0 {
                 Self::handle_death(ref world, explorer_id, health, position, monster_type);
-                // Return actual HP lost (was positive before)
+                // Return actual HP lost (capped at what the explorer had)
                 health.current_hp.try_into().unwrap()
             } else {
                 world.write_model(@ExplorerHealth {
@@ -159,7 +164,6 @@ pub mod combat_system {
 
         /// Execute the monster's counter-attack against the explorer.
         /// Returns (damage_taken, explorer_died).
-        /// Only called when the monster is still alive after the explorer's action.
         fn monster_turn(
             ref world: WorldStorage,
             caller: starknet::ContractAddress,
@@ -172,7 +176,6 @@ pub mod combat_system {
         ) -> (u16, bool) {
             let monster_stats = get_monster_stats(monster.monster_type);
 
-            // Monster can make multiple attacks (multiattack)
             let mut total_damage: u16 = 0;
             let mut explorer_died: bool = false;
             let mut current_health = health;
@@ -187,7 +190,6 @@ pub mod combat_system {
                 let is_nat_1: bool = monster_roll == 1;
                 let is_nat_20: bool = monster_roll == 20;
 
-                // Monster attack total vs explorer AC
                 let monster_atk_total: i16 = monster_roll.into()
                     + monster_stats.attack_bonus.into();
 
@@ -195,7 +197,6 @@ pub mod combat_system {
                     && (is_nat_20 || monster_atk_total >= combat.armor_class.into());
 
                 if monster_hits {
-                    // Damage roll: monster_stats.damage_dice_count d monster_stats.damage_dice_sides
                     let dice_count: u8 = if is_nat_20 {
                         monster_stats.damage_dice_count * 2
                     } else {
@@ -232,7 +233,6 @@ pub mod combat_system {
                     if new_hp <= 0 {
                         explorer_died = true;
                     } else {
-                        // Update current_health for next attack iteration
                         current_health = ExplorerHealth {
                             explorer_id,
                             current_hp: new_hp,
@@ -250,8 +250,7 @@ pub mod combat_system {
 
         // ── Sneak Attack helper (task 2.7) ───────────────────────────────────
 
-        /// Returns the number of Sneak Attack dice for a Rogue at the given level.
-        /// Level 1-2: 1d6, level 3-4: 2d6, level 5: 3d6.
+        /// Number of Sneak Attack dice: 1d6 (levels 1-2), 2d6 (3-4), 3d6 (5).
         fn sneak_attack_dice(level: u8) -> u8 {
             if level >= 5 {
                 3
@@ -261,6 +260,45 @@ pub mod combat_system {
                 1
             }
         }
+
+        // ── Spell helpers (task 2.8) ─────────────────────────────────────────
+
+        /// Spell level for a given SpellId (0 = cantrip, 1/2/3 = leveled).
+        fn spell_level(spell_id: SpellId) -> u8 {
+            match spell_id {
+                SpellId::None => 0,
+                // Cantrips
+                SpellId::FireBolt => 0,
+                SpellId::MageHand => 0,
+                SpellId::Light => 0,
+                // 1st level
+                SpellId::MagicMissile => 1,
+                SpellId::ShieldSpell => 1,
+                SpellId::Sleep => 1,
+                // 2nd level
+                SpellId::ScorchingRay => 2,
+                SpellId::MistyStep => 2,
+                // 3rd level
+                SpellId::Fireball => 3,
+            }
+        }
+
+        /// Consume a spell slot of the given level. Panics if none available.
+        fn consume_spell_slot(ref world: WorldStorage, explorer_id: u128, level: u8) {
+            let mut combat: ExplorerCombat = world.read_model(explorer_id);
+            if level == 1 {
+                assert(combat.spell_slots_1 > 0, 'no 1st level slots');
+                combat.spell_slots_1 -= 1;
+            } else if level == 2 {
+                assert(combat.spell_slots_2 > 0, 'no 2nd level slots');
+                combat.spell_slots_2 -= 1;
+            } else if level == 3 {
+                assert(combat.spell_slots_3 > 0, 'no 3rd level slots');
+                combat.spell_slots_3 -= 1;
+            }
+            world.write_model(@combat);
+        }
+
     }
 
     // ── Public interface implementation ──────────────────────────────────────
@@ -271,7 +309,6 @@ pub mod combat_system {
             let mut world = self.world_default();
             let caller = get_caller_address();
 
-            // Load explorer state
             let stats: ExplorerStats = world.read_model(explorer_id);
             assert(stats.class != ExplorerClass::None, 'explorer does not exist');
 
@@ -284,7 +321,6 @@ pub mod combat_system {
             let inventory: ExplorerInventory = world.read_model(explorer_id);
             let combat: ExplorerCombat = world.read_model(explorer_id);
 
-            // Load monster instance
             let monster: MonsterInstance = world.read_model(
                 (position.temple_id, position.chamber_id, position.combat_monster_id)
             );
@@ -292,15 +328,13 @@ pub mod combat_system {
 
             let monster_stats = get_monster_stats(monster.monster_type);
 
-            // ── Determine number of attacks ──────────────────────────────────
-            // Fighter level 5+: Extra Attack (two attacks per turn).
+            // Fighter level 5+: Extra Attack
             let num_attacks: u8 = if stats.class == ExplorerClass::Fighter && stats.level >= 5 {
                 2
             } else {
                 1
             };
 
-            // ── Weapon and ability setup ─────────────────────────────────────
             let weapon = inventory.primary_weapon;
             let uses_dex = InternalImpl::weapon_uses_dex(weapon);
             let ability_score: u8 = if uses_dex { stats.dexterity } else { stats.strength };
@@ -319,7 +353,6 @@ pub mod combat_system {
             let mut monster_killed: bool = false;
             let mut first_attack_roll: u8 = 0;
 
-            // ── Explorer attacks (with Extra Attack support) ──────────────────
             let mut atk_num: u8 = 0;
             loop {
                 if atk_num >= num_attacks || monster_killed {
@@ -333,24 +366,16 @@ pub mod combat_system {
 
                 let is_nat_1: bool = attack_roll == 1;
                 let is_crit: bool = attack_roll >= crit_threshold;
-
-                let total_attack: i16 = attack_roll.into()
-                    + ability_mod.into()
-                    + prof_bonus.into();
-
-                let hits: bool = !is_nat_1
-                    && (is_crit || total_attack >= monster_stats.ac.into());
+                let total_attack: i16 = attack_roll.into() + ability_mod.into() + prof_bonus.into();
+                let hits: bool = !is_nat_1 && (is_crit || total_attack >= monster_stats.ac.into());
 
                 if hits {
                     let dice_sides: u8 = InternalImpl::weapon_damage_sides(weapon);
                     let base_count: u8 = InternalImpl::weapon_damage_count(weapon);
                     let dice_count: u8 = if is_crit { base_count * 2 } else { base_count };
-
                     let raw_damage: u16 = roll_dice(caller, dice_sides, dice_count);
 
-                    // ── Rogue: Sneak Attack bonus (task 2.7) ─────────────────
-                    // Rogue gets Sneak Attack when in combat (they have "advantage" by
-                    // context — the monster is engaged). Add extra d6 dice.
+                    // Rogue: Sneak Attack
                     let sneak_bonus: u16 = if stats.class == ExplorerClass::Rogue {
                         let sneak_dice: u8 = InternalImpl::sneak_attack_dice(stats.level);
                         let sneak_count: u8 = if is_crit { sneak_dice * 2 } else { sneak_dice };
@@ -380,7 +405,7 @@ pub mod combat_system {
                 atk_num += 1;
             };
 
-            // ── Write final monster state ────────────────────────────────────
+            // Write final monster state
             if monster_killed {
                 world.write_model(@MonsterInstance {
                     temple_id: position.temple_id,
@@ -391,7 +416,6 @@ pub mod combat_system {
                     max_hp: monster.max_hp,
                     is_alive: false,
                 });
-
                 world.write_model(@ExplorerPosition {
                     explorer_id,
                     temple_id: position.temple_id,
@@ -411,8 +435,7 @@ pub mod combat_system {
                 });
             }
 
-            // ── Monster counter-attack (task 2.5) ────────────────────────────
-            // Only counter-attacks if the monster survived.
+            // Monster counter-attack
             let mut damage_taken: u16 = 0;
             if !monster_killed {
                 let updated_health: ExplorerHealth = world.read_model(explorer_id);
@@ -427,20 +450,13 @@ pub mod combat_system {
                         is_alive: true,
                     };
                     let (dmg, _died) = InternalImpl::monster_turn(
-                        ref world,
-                        caller,
-                        explorer_id,
-                        stats,
-                        updated_health,
-                        combat,
-                        position,
-                        updated_monster,
+                        ref world, caller, explorer_id, stats, updated_health,
+                        combat, position, updated_monster,
                     );
                     damage_taken = dmg;
                 }
             }
 
-            // ── Emit CombatResult ────────────────────────────────────────────
             world.emit_event(@CombatResult {
                 explorer_id,
                 action: CombatAction::Attack,
@@ -451,9 +467,399 @@ pub mod combat_system {
             });
         }
 
+        // ── Task 2.8: Wizard spell casting ───────────────────────────────────
+
+        fn cast_spell(ref self: ContractState, explorer_id: u128, spell_id: SpellId) {
+            let mut world = self.world_default();
+            let caller = get_caller_address();
+
+            let stats: ExplorerStats = world.read_model(explorer_id);
+            assert(stats.class == ExplorerClass::Wizard, 'only wizards cast spells');
+            assert(stats.class != ExplorerClass::None, 'explorer does not exist');
+
+            let health: ExplorerHealth = world.read_model(explorer_id);
+            assert(!health.is_dead, 'dead explorer cannot act');
+
+            let position: ExplorerPosition = world.read_model(explorer_id);
+
+            // Consume spell slot if leveled
+            let slot_level: u8 = InternalImpl::spell_level(spell_id);
+            if slot_level > 0 {
+                assert(position.in_combat || slot_level == 1, 'must be in combat');
+                InternalImpl::consume_spell_slot(ref world, explorer_id, slot_level);
+            }
+
+            // INT modifier for spell attack rolls and save DCs
+            let int_mod: i8 = ability_modifier(stats.intelligence);
+            let prof_bonus: u8 = proficiency_bonus(stats.level);
+
+            let mut damage_dealt: u16 = 0;
+            let mut monster_killed: bool = false;
+            let mut spell_roll: u8 = 0;
+
+            match spell_id {
+                SpellId::None => { assert(false, 'invalid spell'); },
+
+                // ── Cantrips ─────────────────────────────────────────────────
+
+                // Fire Bolt: ranged attack roll + 1d10 fire damage
+                SpellId::FireBolt => {
+                    assert(position.in_combat, 'no target');
+                    let monster: MonsterInstance = world.read_model(
+                        (position.temple_id, position.chamber_id, position.combat_monster_id)
+                    );
+                    assert(monster.is_alive, 'monster is already dead');
+                    let monster_stats = get_monster_stats(monster.monster_type);
+
+                    let attack_roll: u8 = roll_d20(caller);
+                    spell_roll = attack_roll;
+                    let is_nat_1: bool = attack_roll == 1;
+                    let is_nat_20: bool = attack_roll == 20;
+                    let total_atk: i16 = attack_roll.into() + int_mod.into() + prof_bonus.into();
+                    let hits: bool = !is_nat_1
+                        && (is_nat_20 || total_atk >= monster_stats.ac.into());
+
+                    if hits {
+                        let dice_count: u8 = if is_nat_20 { 2 } else { 1 };
+                        damage_dealt = roll_dice(caller, 10, dice_count); // 1d10 (2d10 on crit)
+                        let new_hp: i16 = monster.current_hp
+                            - damage_dealt.try_into().unwrap();
+                        monster_killed = new_hp <= 0;
+                        world.write_model(@MonsterInstance {
+                            temple_id: position.temple_id,
+                            chamber_id: position.chamber_id,
+                            monster_id: position.combat_monster_id,
+                            monster_type: monster.monster_type,
+                            current_hp: new_hp,
+                            max_hp: monster.max_hp,
+                            is_alive: !monster_killed,
+                        });
+                        if monster_killed {
+                            world.write_model(@ExplorerPosition {
+                                explorer_id,
+                                temple_id: position.temple_id,
+                                chamber_id: position.chamber_id,
+                                in_combat: false,
+                                combat_monster_id: 0,
+                            });
+                        }
+                    }
+                },
+
+                // Mage Hand / Light: utility — no combat effect
+                SpellId::MageHand | SpellId::Light => {},
+
+                // ── 1st level spells ─────────────────────────────────────────
+
+                // Magic Missile: 3 darts, each 1d4+1, auto-hit (no attack roll)
+                SpellId::MagicMissile => {
+                    assert(position.in_combat, 'no target');
+                    let monster: MonsterInstance = world.read_model(
+                        (position.temple_id, position.chamber_id, position.combat_monster_id)
+                    );
+                    assert(monster.is_alive, 'monster is already dead');
+
+                    // 3 × (1d4+1): roll 3d4 then add 3
+                    let raw: u16 = roll_dice(caller, 4, 3);
+                    damage_dealt = raw + 3; // +1 per dart
+                    spell_roll = 0; // auto-hit, no roll to report
+
+                    let new_hp: i16 = monster.current_hp - damage_dealt.try_into().unwrap();
+                    monster_killed = new_hp <= 0;
+                    world.write_model(@MonsterInstance {
+                        temple_id: position.temple_id,
+                        chamber_id: position.chamber_id,
+                        monster_id: position.combat_monster_id,
+                        monster_type: monster.monster_type,
+                        current_hp: new_hp,
+                        max_hp: monster.max_hp,
+                        is_alive: !monster_killed,
+                    });
+                    if monster_killed {
+                        world.write_model(@ExplorerPosition {
+                            explorer_id,
+                            temple_id: position.temple_id,
+                            chamber_id: position.chamber_id,
+                            in_combat: false,
+                            combat_monster_id: 0,
+                        });
+                    }
+                },
+
+                // Shield: +5 AC reaction — applies until start of next turn.
+                // Modeled as a permanent AC bump (reset on rest via task 2.3).
+                SpellId::ShieldSpell => {
+                    let mut combat_state: ExplorerCombat = world.read_model(explorer_id);
+                    combat_state.armor_class += 5;
+                    world.write_model(@combat_state);
+                },
+
+                // Sleep: 5d8 HP worth of creatures fall asleep.
+                // In v1, single-target — if monster's current HP ≤ roll, it is
+                // incapacitated (set is_alive=false, no XP; future task can add
+                // "sleeping" state). For simplicity: treat as kill if HP ≤ roll.
+                SpellId::Sleep => {
+                    assert(position.in_combat, 'no target');
+                    let monster: MonsterInstance = world.read_model(
+                        (position.temple_id, position.chamber_id, position.combat_monster_id)
+                    );
+                    assert(monster.is_alive, 'monster is already dead');
+
+                    let sleep_pool: u16 = roll_dice(caller, 8, 5); // 5d8
+                    spell_roll = (sleep_pool % 256).try_into().unwrap(); // store low byte for event
+
+                    // Monster falls asleep if its current HP ≤ sleep pool
+                    if monster.current_hp <= sleep_pool.try_into().unwrap() {
+                        monster_killed = true; // "incapacitated" — treated as removed from combat
+                        world.write_model(@MonsterInstance {
+                            temple_id: position.temple_id,
+                            chamber_id: position.chamber_id,
+                            monster_id: position.combat_monster_id,
+                            monster_type: monster.monster_type,
+                            current_hp: monster.current_hp,
+                            max_hp: monster.max_hp,
+                            is_alive: false,
+                        });
+                        world.write_model(@ExplorerPosition {
+                            explorer_id,
+                            temple_id: position.temple_id,
+                            chamber_id: position.chamber_id,
+                            in_combat: false,
+                            combat_monster_id: 0,
+                        });
+                    }
+                },
+
+                // ── 2nd level spells ─────────────────────────────────────────
+
+                // Scorching Ray: 3 rays, each is an attack roll + 2d6 fire damage
+                SpellId::ScorchingRay => {
+                    assert(position.in_combat, 'no target');
+                    let mut monster: MonsterInstance = world.read_model(
+                        (position.temple_id, position.chamber_id, position.combat_monster_id)
+                    );
+                    assert(monster.is_alive, 'monster is already dead');
+                    let monster_stats = get_monster_stats(monster.monster_type);
+
+                    let mut ray: u8 = 0;
+                    loop {
+                        if ray >= 3 || monster_killed {
+                            break;
+                        }
+                        let ray_roll: u8 = roll_d20(caller);
+                        if ray == 0 {
+                            spell_roll = ray_roll;
+                        }
+                        let is_nat_1: bool = ray_roll == 1;
+                        let is_nat_20: bool = ray_roll == 20;
+                        let total_atk: i16 = ray_roll.into()
+                            + int_mod.into()
+                            + prof_bonus.into();
+                        let hits: bool = !is_nat_1
+                            && (is_nat_20 || total_atk >= monster_stats.ac.into());
+
+                        if hits {
+                            let dice_count: u8 = if is_nat_20 { 4 } else { 2 }; // 2d6 (4d6 crit)
+                            let ray_dmg: u16 = roll_dice(caller, 6, dice_count);
+                            damage_dealt += ray_dmg;
+                            let new_hp: i16 = monster.current_hp
+                                - ray_dmg.try_into().unwrap();
+                            monster.current_hp = new_hp;
+                            if new_hp <= 0 {
+                                monster_killed = true;
+                            }
+                        }
+                        ray += 1;
+                    };
+
+                    world.write_model(@MonsterInstance {
+                        temple_id: position.temple_id,
+                        chamber_id: position.chamber_id,
+                        monster_id: position.combat_monster_id,
+                        monster_type: monster.monster_type,
+                        current_hp: monster.current_hp,
+                        max_hp: monster.max_hp,
+                        is_alive: !monster_killed,
+                    });
+                    if monster_killed {
+                        world.write_model(@ExplorerPosition {
+                            explorer_id,
+                            temple_id: position.temple_id,
+                            chamber_id: position.chamber_id,
+                            in_combat: false,
+                            combat_monster_id: 0,
+                        });
+                    }
+                },
+
+                // Misty Step: teleport utility — no combat damage.
+                // Combat effect: disengage (clears in_combat without counter-attack).
+                SpellId::MistyStep => {
+                    if position.in_combat {
+                        world.write_model(@ExplorerPosition {
+                            explorer_id,
+                            temple_id: position.temple_id,
+                            chamber_id: position.chamber_id,
+                            in_combat: false,
+                            combat_monster_id: 0,
+                        });
+                    }
+                },
+
+                // ── 3rd level spells ─────────────────────────────────────────
+
+                // Fireball: 8d6 fire, DEX saving throw (DC 8 + INT mod + prof) for half.
+                // Single-target in v1 (no AOE chamber logic yet).
+                SpellId::Fireball => {
+                    assert(position.in_combat, 'no target');
+                    let monster: MonsterInstance = world.read_model(
+                        (position.temple_id, position.chamber_id, position.combat_monster_id)
+                    );
+                    assert(monster.is_alive, 'monster is already dead');
+                    let monster_stats = get_monster_stats(monster.monster_type);
+
+                    // DC = 8 + INT mod + proficiency bonus
+                    let save_dc: i16 = 8_i16 + int_mod.into() + prof_bonus.into();
+
+                    // Monster DEX saving throw: d20 + DEX mod vs DC
+                    let save_roll: u8 = roll_d20(caller);
+                    spell_roll = save_roll;
+                    let monster_dex_mod: i8 = ability_modifier(monster_stats.dexterity);
+                    let save_total: i16 = save_roll.into() + monster_dex_mod.into();
+                    let save_succeeds: bool = save_total >= save_dc;
+
+                    let raw_dmg: u16 = roll_dice(caller, 6, 8); // 8d6
+
+                    // Half damage on successful save (integer floor division)
+                    damage_dealt = if save_succeeds { raw_dmg / 2 } else { raw_dmg };
+
+                    let new_hp: i16 = monster.current_hp - damage_dealt.try_into().unwrap();
+                    monster_killed = new_hp <= 0;
+                    world.write_model(@MonsterInstance {
+                        temple_id: position.temple_id,
+                        chamber_id: position.chamber_id,
+                        monster_id: position.combat_monster_id,
+                        monster_type: monster.monster_type,
+                        current_hp: new_hp,
+                        max_hp: monster.max_hp,
+                        is_alive: !monster_killed,
+                    });
+                    if monster_killed {
+                        world.write_model(@ExplorerPosition {
+                            explorer_id,
+                            temple_id: position.temple_id,
+                            chamber_id: position.chamber_id,
+                            in_combat: false,
+                            combat_monster_id: 0,
+                        });
+                    }
+                },
+            }
+
+            // ── Monster counter-attack (unless killed or disengaged) ──────────
+            // Shield and MistyStep don't kill the monster; Shield stays in combat,
+            // MistyStep disengages. Only counter-attack when still in_combat.
+            let mut damage_taken: u16 = 0;
+            if !monster_killed {
+                // Re-read position — MistyStep may have cleared in_combat
+                let updated_position: ExplorerPosition = world.read_model(explorer_id);
+                if updated_position.in_combat {
+                    let updated_health: ExplorerHealth = world.read_model(explorer_id);
+                    if !updated_health.is_dead {
+                        let updated_combat: ExplorerCombat = world.read_model(explorer_id);
+                        let live_monster: MonsterInstance = world.read_model(
+                            (position.temple_id, position.chamber_id, position.combat_monster_id)
+                        );
+                        let (dmg, _died) = InternalImpl::monster_turn(
+                            ref world, caller, explorer_id, stats, updated_health,
+                            updated_combat, updated_position, live_monster,
+                        );
+                        damage_taken = dmg;
+                    }
+                }
+            }
+
+            world.emit_event(@CombatResult {
+                explorer_id,
+                action: CombatAction::CastSpell,
+                roll: spell_roll,
+                damage_dealt,
+                damage_taken,
+                monster_killed,
+            });
+        }
+
+        // ── Task 2.8: Use item ────────────────────────────────────────────────
+
+        /// Use a consumable item. Currently: HealthPotion (2d4+2 heal).
+        fn use_item(ref self: ContractState, explorer_id: u128, item_type: ItemType) {
+            let mut world = self.world_default();
+            let caller = get_caller_address();
+
+            let stats: ExplorerStats = world.read_model(explorer_id);
+            assert(stats.class != ExplorerClass::None, 'explorer does not exist');
+
+            let health: ExplorerHealth = world.read_model(explorer_id);
+            assert(!health.is_dead, 'dead explorer cannot act');
+
+            match item_type {
+                ItemType::None => { assert(false, 'no item specified'); },
+                ItemType::HealthPotion => {
+                    let mut inventory: ExplorerInventory = world.read_model(explorer_id);
+                    assert(inventory.potions > 0, 'no potions remaining');
+                    inventory.potions -= 1;
+                    world.write_model(@inventory);
+
+                    // Heal 2d4+2
+                    let raw_heal: u16 = roll_dice(caller, 4, 2);
+                    let heal_total: u16 = raw_heal + 2;
+
+                    let new_hp_i16: i16 = health.current_hp + heal_total.try_into().unwrap();
+                    let new_hp: i16 = if new_hp_i16 > health.max_hp.try_into().unwrap() {
+                        health.max_hp.try_into().unwrap()
+                    } else {
+                        new_hp_i16
+                    };
+
+                    world.write_model(@ExplorerHealth {
+                        explorer_id,
+                        current_hp: new_hp,
+                        max_hp: health.max_hp,
+                        is_dead: false,
+                    });
+
+                    // Monster counter-attacks after using item (if in combat)
+                    let position: ExplorerPosition = world.read_model(explorer_id);
+                    let mut damage_taken: u16 = 0;
+                    if position.in_combat {
+                        let updated_health: ExplorerHealth = world.read_model(explorer_id);
+                        let combat: ExplorerCombat = world.read_model(explorer_id);
+                        let monster: MonsterInstance = world.read_model(
+                            (position.temple_id, position.chamber_id, position.combat_monster_id)
+                        );
+                        if monster.is_alive {
+                            let (dmg, _died) = InternalImpl::monster_turn(
+                                ref world, caller, explorer_id, stats, updated_health,
+                                combat, position, monster,
+                            );
+                            damage_taken = dmg;
+                        }
+                    }
+
+                    world.emit_event(@CombatResult {
+                        explorer_id,
+                        action: CombatAction::UseItem,
+                        roll: raw_heal.try_into().unwrap(),
+                        damage_dealt: 0,
+                        damage_taken,
+                        monster_killed: false,
+                    });
+                },
+            }
+        }
+
         // ── Task 2.6: Fighter features ───────────────────────────────────────
 
-        /// Fighter: Second Wind — heal 1d10 + level HP, usable once per rest.
         fn second_wind(ref self: ContractState, explorer_id: u128) {
             let mut world = self.world_default();
             let caller = get_caller_address();
@@ -467,11 +873,9 @@ pub mod combat_system {
             let mut combat: ExplorerCombat = world.read_model(explorer_id);
             assert(!combat.second_wind_used, 'second wind already used');
 
-            // Roll 1d10 + level
             let heal_roll: u16 = roll_dice(caller, 10, 1);
             let heal_total: u16 = heal_roll + stats.level.into();
 
-            // Clamp to max HP
             let new_hp_i16: i16 = health.current_hp + heal_total.try_into().unwrap();
             let new_hp: i16 = if new_hp_i16 > health.max_hp.try_into().unwrap() {
                 health.max_hp.try_into().unwrap()
@@ -501,8 +905,6 @@ pub mod combat_system {
 
         // ── Task 2.7: Rogue features ─────────────────────────────────────────
 
-        /// Rogue: Cunning Action — disengage from combat without the monster
-        /// getting a counter-attack. Clears in_combat flag.
         fn cunning_action(ref self: ContractState, explorer_id: u128) {
             let mut world = self.world_default();
 
@@ -516,7 +918,6 @@ pub mod combat_system {
             let position: ExplorerPosition = world.read_model(explorer_id);
             assert(position.in_combat, 'not in combat');
 
-            // Disengage: exit combat with no counter-attack
             world.write_model(@ExplorerPosition {
                 explorer_id,
                 temple_id: position.temple_id,
@@ -535,17 +936,7 @@ pub mod combat_system {
             });
         }
 
-        // ── Stubs for later tasks ────────────────────────────────────────────
-
-        fn cast_spell(ref self: ContractState, explorer_id: u128, spell_id: SpellId) {
-            // Implemented in task 2.8
-            assert(false, 'not implemented');
-        }
-
-        fn use_item(ref self: ContractState, explorer_id: u128, item_type: ItemType) {
-            // Implemented in task 2.8
-            assert(false, 'not implemented');
-        }
+        // ── Task 2.10 stub ───────────────────────────────────────────────────
 
         fn flee(ref self: ContractState, explorer_id: u128) {
             // Implemented in task 2.10
