@@ -8,3 +8,4 @@ Cartridge AI Hackathon Project
 3. [x] Initialize Dojo project: `sozo init contracts` in `packages/`
 4. [x] Review and fix SPEC.md: Dojo model syntax, architecture, game logic inconsistencies
 5. [x] Apply user feedback: OZ + cairo-nft-combo NFTs, namespace `d2_0_1`, signed integers for D20, extract TASKS.md
+6. [x] Task 1.1: Replace starter code — updated namespace to `d20_0_1`, renamed package to `d20`, updated world name/seed, set up new module structure (types, events, models, systems, utils), removed starter models/systems/tests
