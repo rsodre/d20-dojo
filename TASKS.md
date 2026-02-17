@@ -33,7 +33,7 @@
 
 ## Day 3: Temple & Exploration
 
-- [ ] **3.1** Implement `temple_token` contract (`src/systems/temple_token.cairo`)
+- [x] **3.1** Implement `temple_token` contract (`src/systems/temple_token.cairo`)
 - [ ] **3.2** Implement `mint_temple`: mint Temple NFT via cairo-nft-combo `_mint_next()`, create TempleState, create entrance chamber (chamber_id=1, yonder=0, type=Entrance), generate entrance exits from seed
 - [ ] **3.3** Implement `enter_temple`: validate explorer is alive and not in another temple, place at entrance chamber, initialize `ExplorerTempleProgress`
 - [ ] **3.4** Implement `exit_temple`: remove explorer from temple (set temple_id=0, chamber_id=0), retain stats/inventory/XP
