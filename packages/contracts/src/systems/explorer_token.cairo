@@ -462,12 +462,6 @@ pub mod explorer_token {
             Option::Some(metadata)
         }
 
-        fn contract_uri(
-            self: @ERC721ComboComponent::ComponentState<ContractState>
-        ) -> Option<ByteArray> {
-            Option::None
-        }
-
         fn render_token_uri(
             self: @ERC721ComboComponent::ComponentState<ContractState>,
             token_id: u256,
@@ -517,27 +511,6 @@ pub mod explorer_token {
                 additional_metadata: Option::None,
             };
             Option::Some(metadata)
-        }
-
-        fn token_uri(
-            self: @ERC721ComboComponent::ComponentState<ContractState>,
-            token_id: u256,
-        ) -> Option<ByteArray> {
-            Option::None
-        }
-
-        fn default_royalty(
-            self: @ERC721ComboComponent::ComponentState<ContractState>,
-            token_id: u256,
-        ) -> Option<nft_combo::erc721::erc721_combo::ERC721ComboComponent::RoyaltyInfo> {
-            Option::None
-        }
-
-        fn token_royalty(
-            self: @ERC721ComboComponent::ComponentState<ContractState>,
-            token_id: u256,
-        ) -> Option<nft_combo::erc721::erc721_combo::ERC721ComboComponent::RoyaltyInfo> {
-            Option::None
         }
     }
 }
