@@ -47,7 +47,7 @@ pub mod combat_system {
     use d20::models::explorer::{
         ExplorerStats, ExplorerHealth, ExplorerCombat, ExplorerInventory, ExplorerPosition,
     };
-    use d20::models::temple::MonsterInstance;
+    use d20::models::temple::{MonsterInstance, FallenExplorer, ChamberFallenCount};
     use d20::events::{CombatResult, ExplorerDied};
     use d20::utils::d20::{roll_d20, roll_dice, ability_modifier, proficiency_bonus};
     use d20::utils::monsters::get_monster_stats;
@@ -128,8 +128,13 @@ pub mod combat_system {
             }
         }
 
-        /// Handle explorer death: set is_dead, clear combat, emit ExplorerDied.
-        /// FallenExplorer creation and ChamberFallenCount are handled in task 2.9.
+        /// Handle explorer death (task 2.9):
+        ///   1. Set is_dead on ExplorerHealth, clear HP to 0.
+        ///   2. Clear combat state on ExplorerPosition.
+        ///   3. Read inventory and create FallenExplorer with dropped loot.
+        ///   4. Increment ChamberFallenCount.
+        ///   5. Zero out inventory (items are now on the ground).
+        ///   6. Emit ExplorerDied event.
         fn handle_death(
             ref world: WorldStorage,
             explorer_id: u128,
@@ -137,6 +142,7 @@ pub mod combat_system {
             position: ExplorerPosition,
             monster_type: MonsterType,
         ) {
+            // 1. Mark explorer dead
             world.write_model(@ExplorerHealth {
                 explorer_id,
                 current_hp: 0,
@@ -144,6 +150,7 @@ pub mod combat_system {
                 is_dead: true,
             });
 
+            // 2. Clear combat state
             world.write_model(@ExplorerPosition {
                 explorer_id,
                 temple_id: position.temple_id,
@@ -152,6 +159,47 @@ pub mod combat_system {
                 combat_monster_id: 0,
             });
 
+            // 3. Read inventory for loot drop
+            let inventory: ExplorerInventory = world.read_model(explorer_id);
+
+            // 4. Determine fallen_index from ChamberFallenCount (read-then-increment)
+            let fallen_count: ChamberFallenCount = world.read_model(
+                (position.temple_id, position.chamber_id)
+            );
+            let fallen_index: u32 = fallen_count.count;
+
+            // 5. Create FallenExplorer loot record
+            world.write_model(@FallenExplorer {
+                temple_id: position.temple_id,
+                chamber_id: position.chamber_id,
+                fallen_index,
+                explorer_id,
+                dropped_weapon: inventory.primary_weapon,
+                dropped_armor: inventory.armor,
+                dropped_gold: inventory.gold,
+                dropped_potions: inventory.potions,
+                is_looted: false,
+            });
+
+            // 6. Increment ChamberFallenCount
+            world.write_model(@ChamberFallenCount {
+                temple_id: position.temple_id,
+                chamber_id: position.chamber_id,
+                count: fallen_count.count + 1,
+            });
+
+            // 7. Zero out explorer inventory (loot is now on the ground)
+            world.write_model(@ExplorerInventory {
+                explorer_id,
+                primary_weapon: inventory.primary_weapon, // NFT retains weapon type for record
+                secondary_weapon: inventory.secondary_weapon,
+                armor: inventory.armor,                   // armor type retained for record
+                has_shield: inventory.has_shield,
+                gold: 0,
+                potions: 0,
+            });
+
+            // 8. Emit ExplorerDied event
             world.emit_event(@ExplorerDied {
                 explorer_id,
                 temple_id: position.temple_id,
