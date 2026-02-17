@@ -16,14 +16,13 @@
 - [x] **1.8** Write unit tests for all D20 math (modifier calculation for all 18 scores, proficiency by level, roll bounds)
 - [ ] **1.9** Configure `dojo_dev.toml` writer permissions for all 3 contracts
 - [x] **1.10** Set up Cartridge VRF integration (import VRF contract interface, configure provider)
-- [ ] **1.11** Test VRF integration with Katana locally
 
 ## Day 2: Explorer & Combat Systems
 
-- [ ] **2.1** Implement `explorer_actions` contract (`src/systems/explorer_actions.cairo`): `mint_explorer` via cairo-nft-combo `_mint_next()`, validate standard array assignment, initialize all explorer models based on class, emit ExplorerMinted event
+- [ ] **2.1** Implement `explorer_token` contract (`src/systems/explorer_token.cairo`): `mint_explorer` via cairo-nft-combo `_mint_next()`, validate standard array assignment, initialize all explorer models based on class, emit ExplorerMinted event
 - [ ] **2.2** Implement class-specific initialization: Fighter (Longsword primary, None secondary, Chain Mail, AC 16, Athletics + choice), Rogue (Dagger primary, Shortbow secondary, Leather, AC 11+DEX, Stealth/Acrobatics + 2 choices + expertise), Wizard (Staff primary, None secondary, no armor, AC 10+DEX, Arcana + choice, spell slots)
-- [ ] **2.3** Implement `rest` on `explorer_actions`: restore `current_hp` to `max_hp`, reset spell slots to class/level values, reset `second_wind_used` and `action_surge_used`
-- [ ] **2.4** Implement `combat_actions` contract (`src/systems/combat_actions.cairo`): `attack` with attack rolls vs monster AC, damage rolls, HP deduction on MonsterInstance, emit CombatResult event
+- [ ] **2.3** Implement `rest` on `explorer_token`: restore `current_hp` to `max_hp`, reset spell slots to class/level values, reset `second_wind_used` and `action_surge_used`
+- [ ] **2.4** Implement `combat_system` contract (`src/systems/combat_system.cairo`): `attack` with attack rolls vs monster AC, damage rolls, HP deduction on MonsterInstance, emit CombatResult event
 - [ ] **2.5** Implement monster turn: after explorer action, monster attacks back (attack roll vs explorer AC, damage to explorer HP)
 - [ ] **2.6** Implement Fighter features (second_wind heal 1d10+level, Action Surge extra action, Champion crit on 19-20 at level 3, Extra Attack at level 5)
 - [ ] **2.7** Implement Rogue features (Sneak Attack bonus dice 1d6/2d6/3d6 by level, Expertise double proficiency, cunning_action disengage/hide, Uncanny Dodge halve damage at level 5)
@@ -34,7 +33,7 @@
 
 ## Day 3: Temple & Exploration
 
-- [ ] **3.1** Implement `temple_actions` contract (`src/systems/temple_actions.cairo`)
+- [ ] **3.1** Implement `temple_token` contract (`src/systems/temple_token.cairo`)
 - [ ] **3.2** Implement `mint_temple`: mint Temple NFT via cairo-nft-combo `_mint_next()`, create TempleState, create entrance chamber (chamber_id=1, yonder=0, type=Entrance), generate entrance exits from seed
 - [ ] **3.3** Implement `enter_temple`: validate explorer is alive and not in another temple, place at entrance chamber, initialize `ExplorerTempleProgress`
 - [ ] **3.4** Implement `exit_temple`: remove explorer from temple (set temple_id=0, chamber_id=0), retain stats/inventory/XP
