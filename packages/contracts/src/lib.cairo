@@ -4,7 +4,10 @@ pub mod systems {
     pub mod temple_token;
 }
 
-pub mod models {}
+pub mod models {
+    pub mod explorer;
+    pub mod temple;
+}
 
 pub mod types;
 
