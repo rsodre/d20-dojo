@@ -23,9 +23,9 @@
 - [x] **2.2** Implement class-specific initialization: Fighter (Longsword primary, None secondary, Chain Mail, AC 16, Athletics + choice), Rogue (Dagger primary, Shortbow secondary, Leather, AC 11+DEX, Stealth/Acrobatics + 2 choices + expertise), Wizard (Staff primary, None secondary, no armor, AC 10+DEX, Arcana + choice, spell slots)
 - [x] **2.3** Implement `rest` on `explorer_token`: restore `current_hp` to `max_hp`, reset spell slots to class/level values, reset `second_wind_used` and `action_surge_used`
 - [x] **2.4** Implement `combat_system` contract (`src/systems/combat_system.cairo`): `attack` with attack rolls vs monster AC, damage rolls, HP deduction on MonsterInstance, emit CombatResult event
-- [ ] **2.5** Implement monster turn: after explorer action, monster attacks back (attack roll vs explorer AC, damage to explorer HP)
-- [ ] **2.6** Implement Fighter features (second_wind heal 1d10+level, Action Surge extra action, Champion crit on 19-20 at level 3, Extra Attack at level 5)
-- [ ] **2.7** Implement Rogue features (Sneak Attack bonus dice 1d6/2d6/3d6 by level, Expertise double proficiency, cunning_action disengage/hide, Uncanny Dodge halve damage at level 5)
+- [x] **2.5** Implement monster turn: after explorer action, monster attacks back (attack roll vs explorer AC, damage to explorer HP)
+- [x] **2.6** Implement Fighter features (second_wind heal 1d10+level, Action Surge extra action, Champion crit on 19-20 at level 3, Extra Attack at level 5)
+- [x] **2.7** Implement Rogue features (Sneak Attack bonus dice 1d6/2d6/3d6 by level, Expertise double proficiency, cunning_action disengage/hide, Uncanny Dodge halve damage at level 5)
 - [ ] **2.8** Implement Wizard spell casting: spell slot tracking per level, cantrip resolution (Fire Bolt attack roll + 1d10), leveled spell resolution (Magic Missile auto-hit 3x1d4+1, Shield +5 AC reaction, Sleep 5d8 HP, Scorching Ray 3x2d6, Misty Step, Fireball 8d6 DEX save using monster ability scores)
 - [ ] **2.9** Implement death (internal fn): set `is_dead`, create `FallenExplorer` with dropped loot, increment `ChamberFallenCount`, emit ExplorerDied event
 - [ ] **2.10** Implement `flee` mechanic: contested DEX check (explorer DEX vs monster DEX), on success move back to previous chamber
