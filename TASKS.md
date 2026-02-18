@@ -46,7 +46,7 @@
 - [x] **3.11** Implement XP gain and level-up: check thresholds, increase max HP (roll hit die + CON), update proficiency bonus, unlock class features, add spell slots for Wizard
 - [x] **3.12** Implement boss defeat: on boss kill, increment `temples_conquered`, mark `boss_alive = false`, emit BossDefeated event
 - [x] **3.13** Implement `calculate_boss_probability` with the Yonder Formula (quadratic yonder + XP component)
-- [ ] **3.14** Write integration tests: full explorer-mints -> enters-temple -> opens-exits -> explores -> fights -> loots -> levels-up -> finds-boss flow
+- [x] **3.14** Write integration tests: full explorer-mints -> enters-temple -> opens-exits -> explores -> fights -> loots -> levels-up -> finds-boss flow
 
 ## Day 4: AI Agent & Client
 

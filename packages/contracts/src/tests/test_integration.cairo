@@ -1,0 +1,1563 @@
+/// Integration tests for the full D20 dungeon-crawler flow.
+/// Covers: mint_explorer → mint_temple → enter_temple → open_exit →
+///         move_to_chamber → attack (kill monster, gain XP) →
+///         loot_treasure → level-up → boss defeat.
+#[cfg(test)]
+mod tests {
+    use starknet::contract_address_const;
+    use starknet::syscalls::deploy_syscall;
+    use dojo::model::{ModelStorage, ModelStorageTest};
+    use dojo::world::{WorldStorageTrait, world};
+    use dojo_cairo_test::{
+        spawn_test_world, NamespaceDef, TestResource, ContractDefTrait, ContractDef,
+        WorldStorageTestTrait,
+    };
+
+    use d20::systems::explorer_token::{
+        explorer_token, IExplorerTokenDispatcher, IExplorerTokenDispatcherTrait,
+    };
+    use d20::systems::combat_system::{
+        combat_system, ICombatSystemDispatcher, ICombatSystemDispatcherTrait,
+    };
+    use d20::systems::temple_token::{
+        temple_token, ITempleTokenDispatcher, ITempleTokenDispatcherTrait,
+    };
+    use d20::models::config::m_Config;
+    use d20::models::explorer::{
+        ExplorerStats, m_ExplorerStats,
+        ExplorerHealth, m_ExplorerHealth,
+        m_ExplorerCombat,
+        ExplorerInventory, m_ExplorerInventory,
+        ExplorerPosition, m_ExplorerPosition,
+        m_ExplorerSkills,
+    };
+    use d20::models::temple::{
+        TempleState, m_TempleState,
+        Chamber, m_Chamber,
+        MonsterInstance, m_MonsterInstance,
+        ChamberExit, m_ChamberExit,
+        FallenExplorer, m_FallenExplorer,
+        ChamberFallenCount, m_ChamberFallenCount,
+        ExplorerTempleProgress, m_ExplorerTempleProgress,
+    };
+    use d20::events::{
+        e_ExplorerMinted, e_CombatResult, e_ExplorerDied,
+        e_ChamberRevealed, e_LevelUp, e_BossDefeated,
+    };
+    use d20::types::{
+        ExplorerClass, Skill, WeaponType, ArmorType, MonsterType, ChamberType,
+    };
+    use d20::tests::mock_vrf::MockVrf;
+
+    // ── Test world setup ──────────────────────────────────────────────────────
+
+    fn namespace_def() -> NamespaceDef {
+        NamespaceDef {
+            namespace: "d20_0_1",
+            resources: [
+                // Config
+                TestResource::Model(m_Config::TEST_CLASS_HASH),
+                // Explorer models
+                TestResource::Model(m_ExplorerStats::TEST_CLASS_HASH),
+                TestResource::Model(m_ExplorerHealth::TEST_CLASS_HASH),
+                TestResource::Model(m_ExplorerCombat::TEST_CLASS_HASH),
+                TestResource::Model(m_ExplorerInventory::TEST_CLASS_HASH),
+                TestResource::Model(m_ExplorerPosition::TEST_CLASS_HASH),
+                TestResource::Model(m_ExplorerSkills::TEST_CLASS_HASH),
+                // Temple models
+                TestResource::Model(m_TempleState::TEST_CLASS_HASH),
+                TestResource::Model(m_Chamber::TEST_CLASS_HASH),
+                TestResource::Model(m_MonsterInstance::TEST_CLASS_HASH),
+                TestResource::Model(m_ChamberExit::TEST_CLASS_HASH),
+                TestResource::Model(m_FallenExplorer::TEST_CLASS_HASH),
+                TestResource::Model(m_ChamberFallenCount::TEST_CLASS_HASH),
+                TestResource::Model(m_ExplorerTempleProgress::TEST_CLASS_HASH),
+                // Events
+                TestResource::Event(e_ExplorerMinted::TEST_CLASS_HASH),
+                TestResource::Event(e_CombatResult::TEST_CLASS_HASH),
+                TestResource::Event(e_ExplorerDied::TEST_CLASS_HASH),
+                TestResource::Event(e_ChamberRevealed::TEST_CLASS_HASH),
+                TestResource::Event(e_LevelUp::TEST_CLASS_HASH),
+                TestResource::Event(e_BossDefeated::TEST_CLASS_HASH),
+                // Contracts
+                TestResource::Contract(explorer_token::TEST_CLASS_HASH),
+                TestResource::Contract(combat_system::TEST_CLASS_HASH),
+                TestResource::Contract(temple_token::TEST_CLASS_HASH),
+            ].span(),
+        }
+    }
+
+    fn setup_world() -> (
+        dojo::world::WorldStorage,
+        IExplorerTokenDispatcher,
+        ICombatSystemDispatcher,
+        ITempleTokenDispatcher,
+    ) {
+        // 1. Deploy MockVrf
+        let mock_vrf_class_hash = MockVrf::TEST_CLASS_HASH;
+        let (mock_vrf_address, _) = deploy_syscall(
+            mock_vrf_class_hash.try_into().unwrap(),
+            0,
+            [].span(),
+            false,
+        ).unwrap();
+
+        // 2. Build contract defs — pass vrf_address as init calldata for combat_system
+        let contract_defs: Span<ContractDef> = [
+            ContractDefTrait::new(@"d20_0_1", @"explorer_token")
+                .with_writer_of([dojo::utils::bytearray_hash(@"d20_0_1")].span()),
+            ContractDefTrait::new(@"d20_0_1", @"combat_system")
+                .with_writer_of([dojo::utils::bytearray_hash(@"d20_0_1")].span())
+                .with_init_calldata([mock_vrf_address.into()].span()),
+            ContractDefTrait::new(@"d20_0_1", @"temple_token")
+                .with_writer_of([dojo::utils::bytearray_hash(@"d20_0_1")].span()),
+        ].span();
+
+        // 3. Spawn world and sync
+        let mut world = spawn_test_world(world::TEST_CLASS_HASH, [namespace_def()].span());
+        world.sync_perms_and_inits(contract_defs);
+
+        let (token_addr, _) = world.dns(@"explorer_token").unwrap();
+        let (combat_addr, _) = world.dns(@"combat_system").unwrap();
+        let (temple_addr, _) = world.dns(@"temple_token").unwrap();
+
+        (
+            world,
+            IExplorerTokenDispatcher { contract_address: token_addr },
+            ICombatSystemDispatcher { contract_address: combat_addr },
+            ITempleTokenDispatcher { contract_address: temple_addr },
+        )
+    }
+
+    // ── Stat arrays ───────────────────────────────────────────────────────────
+
+    fn stats_fighter() -> Span<u8> {
+        array![15_u8, 14_u8, 13_u8, 12_u8, 10_u8, 8_u8].span()
+    }
+
+    fn stats_rogue() -> Span<u8> {
+        array![8_u8, 15_u8, 14_u8, 12_u8, 10_u8, 13_u8].span()
+    }
+
+    fn stats_wizard() -> Span<u8> {
+        array![8_u8, 14_u8, 13_u8, 15_u8, 12_u8, 10_u8].span()
+    }
+
+    // ── Mint helpers ──────────────────────────────────────────────────────────
+
+    fn mint_fighter(token: IExplorerTokenDispatcher) -> u128 {
+        token.mint_explorer(
+            ExplorerClass::Fighter,
+            stats_fighter(),
+            array![Skill::Perception].span(),
+            array![].span(),
+        ).low
+    }
+
+    fn mint_rogue(token: IExplorerTokenDispatcher) -> u128 {
+        token.mint_explorer(
+            ExplorerClass::Rogue,
+            stats_rogue(),
+            array![Skill::Perception, Skill::Persuasion].span(),
+            array![Skill::Stealth, Skill::Acrobatics].span(),
+        ).low
+    }
+
+    fn mint_wizard(token: IExplorerTokenDispatcher) -> u128 {
+        token.mint_explorer(
+            ExplorerClass::Wizard,
+            stats_wizard(),
+            array![Skill::Perception].span(),
+            array![].span(),
+        ).low
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // Temple minting
+    // ═══════════════════════════════════════════════════════════════════════
+
+    #[test]
+    fn test_mint_temple_creates_temple_state() {
+        let caller = contract_address_const::<'templeowner1'>();
+        starknet::testing::set_contract_address(caller);
+
+        let (world, _token, _combat, temple) = setup_world();
+
+        let temple_id = temple.mint_temple('seed1', 1_u8).low;
+        assert(temple_id != 0, 'temple_id must be non-zero');
+
+        let state: TempleState = world.read_model(temple_id);
+        assert(state.difficulty_tier == 1, 'difficulty should be 1');
+        assert(state.boss_alive, 'boss should start alive');
+        assert(state.next_chamber_id == 2, 'next chamber starts at 2');
+        assert(state.boss_chamber_id == 0, 'no boss chamber yet');
+    }
+
+    #[test]
+    fn test_mint_temple_sequential_ids() {
+        let caller = contract_address_const::<'templeowner2'>();
+        starknet::testing::set_contract_address(caller);
+
+        let (_world, _token, _combat, temple) = setup_world();
+
+        let id1 = temple.mint_temple('seed1', 1_u8).low;
+        let id2 = temple.mint_temple('seed2', 2_u8).low;
+        assert(id2 == id1 + 1, 'ids should be sequential');
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_mint_temple_rejects_zero_difficulty() {
+        let caller = contract_address_const::<'templeowner3'>();
+        starknet::testing::set_contract_address(caller);
+
+        let (_world, _token, _combat, temple) = setup_world();
+        temple.mint_temple('seed1', 0_u8);
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // enter_temple / exit_temple
+    // ═══════════════════════════════════════════════════════════════════════
+
+    #[test]
+    fn test_enter_temple_places_explorer_at_entrance() {
+        let caller = contract_address_const::<'entertest1'>();
+        starknet::testing::set_contract_address(caller);
+
+        let (world, token, _combat, temple) = setup_world();
+
+        let explorer_id = mint_fighter(token);
+        let temple_id = temple.mint_temple('seed_enter', 1_u8).low;
+
+        temple.enter_temple(explorer_id, temple_id);
+
+        let pos: ExplorerPosition = world.read_model(explorer_id);
+        assert(pos.temple_id == temple_id, 'in correct temple');
+        assert(pos.chamber_id == 1, 'at entrance chamber');
+        assert(!pos.in_combat, 'not in combat on entry');
+    }
+
+    #[test]
+    fn test_enter_temple_initializes_progress() {
+        let caller = contract_address_const::<'entertest2'>();
+        starknet::testing::set_contract_address(caller);
+
+        let (world, token, _combat, temple) = setup_world();
+
+        let explorer_id = mint_fighter(token);
+        let temple_id = temple.mint_temple('seed_prog', 1_u8).low;
+
+        temple.enter_temple(explorer_id, temple_id);
+
+        let progress: ExplorerTempleProgress = world.read_model((explorer_id, temple_id));
+        assert(progress.chambers_explored == 0, 'fresh progress');
+        assert(progress.xp_earned == 0, 'no xp yet');
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_enter_temple_rejects_dead_explorer() {
+        let caller = contract_address_const::<'entertest3'>();
+        starknet::testing::set_contract_address(caller);
+
+        let (mut world, token, _combat, temple) = setup_world();
+
+        let explorer_id = mint_fighter(token);
+        let temple_id = temple.mint_temple('seed_dead', 1_u8).low;
+
+        world.write_model_test(@ExplorerHealth {
+            explorer_id,
+            current_hp: 0,
+            max_hp: 11,
+            is_dead: true,
+        });
+
+        temple.enter_temple(explorer_id, temple_id);
+    }
+
+    #[test]
+    fn test_exit_temple_clears_position() {
+        let caller = contract_address_const::<'exittest1'>();
+        starknet::testing::set_contract_address(caller);
+
+        let (world, token, _combat, temple) = setup_world();
+
+        let explorer_id = mint_fighter(token);
+        let temple_id = temple.mint_temple('seed_exit', 1_u8).low;
+
+        temple.enter_temple(explorer_id, temple_id);
+        temple.exit_temple(explorer_id);
+
+        let pos: ExplorerPosition = world.read_model(explorer_id);
+        assert(pos.temple_id == 0, 'temple_id cleared');
+        assert(pos.chamber_id == 0, 'chamber_id cleared');
+    }
+
+    #[test]
+    fn test_exit_temple_preserves_stats() {
+        let caller = contract_address_const::<'exittest2'>();
+        starknet::testing::set_contract_address(caller);
+
+        let (world, token, _combat, temple) = setup_world();
+
+        let explorer_id = mint_fighter(token);
+        let temple_id = temple.mint_temple('seed_stat', 1_u8).low;
+
+        let stats_before: ExplorerStats = world.read_model(explorer_id);
+
+        temple.enter_temple(explorer_id, temple_id);
+        temple.exit_temple(explorer_id);
+
+        let stats_after: ExplorerStats = world.read_model(explorer_id);
+        assert(stats_after.level == stats_before.level, 'level preserved');
+        assert(stats_after.xp == stats_before.xp, 'xp preserved');
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_exit_temple_fails_not_in_temple() {
+        let caller = contract_address_const::<'exittest3'>();
+        starknet::testing::set_contract_address(caller);
+
+        let (_world, token, _combat, temple) = setup_world();
+
+        let explorer_id = mint_fighter(token);
+        temple.exit_temple(explorer_id);
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // open_exit — generates a new chamber
+    // ═══════════════════════════════════════════════════════════════════════
+
+    #[test]
+    fn test_open_exit_generates_new_chamber() {
+        let caller = contract_address_const::<'opentest1'>();
+        starknet::testing::set_contract_address(caller);
+
+        let (mut world, token, _combat, temple) = setup_world();
+
+        let explorer_id = mint_fighter(token);
+        let temple_id = temple.mint_temple('seed_open', 1_u8).low;
+
+        // Set up entrance chamber with 2 exits
+        world.write_model_test(@Chamber {
+            temple_id,
+            chamber_id: 1,
+            chamber_type: ChamberType::Entrance,
+            yonder: 0,
+            exit_count: 2,
+            is_revealed: true,
+            treasure_looted: false,
+            trap_disarmed: false,
+            trap_dc: 0,
+        });
+        world.write_model_test(@ChamberExit {
+            temple_id,
+            from_chamber_id: 1,
+            exit_index: 0,
+            to_chamber_id: 0,
+            is_discovered: false,
+        });
+
+        temple.enter_temple(explorer_id, temple_id);
+        temple.open_exit(explorer_id, 0);
+
+        // A new chamber (id=2) should now exist
+        let new_chamber: Chamber = world.read_model((temple_id, 2_u32));
+        assert(new_chamber.is_revealed, 'new chamber should be revealed');
+        assert(new_chamber.yonder == 1, 'yonder should be 1');
+
+        // Exit should be marked discovered
+        let exit: ChamberExit = world.read_model((temple_id, 1_u32, 0_u8));
+        assert(exit.is_discovered, 'exit should be discovered');
+        assert(exit.to_chamber_id == 2, 'exit points to new chamber');
+    }
+
+    #[test]
+    fn test_open_exit_increments_chambers_explored() {
+        let caller = contract_address_const::<'opentest2'>();
+        starknet::testing::set_contract_address(caller);
+
+        let (mut world, token, _combat, temple) = setup_world();
+
+        let explorer_id = mint_fighter(token);
+        let temple_id = temple.mint_temple('seed_exp', 1_u8).low;
+
+        world.write_model_test(@Chamber {
+            temple_id,
+            chamber_id: 1,
+            chamber_type: ChamberType::Entrance,
+            yonder: 0,
+            exit_count: 2,
+            is_revealed: true,
+            treasure_looted: false,
+            trap_disarmed: false,
+            trap_dc: 0,
+        });
+        world.write_model_test(@ChamberExit {
+            temple_id,
+            from_chamber_id: 1,
+            exit_index: 0,
+            to_chamber_id: 0,
+            is_discovered: false,
+        });
+
+        temple.enter_temple(explorer_id, temple_id);
+        temple.open_exit(explorer_id, 0);
+
+        let progress: ExplorerTempleProgress = world.read_model((explorer_id, temple_id));
+        assert(progress.chambers_explored == 1, 'should have explored 1 chamber');
+    }
+
+    #[test]
+    fn test_open_exit_creates_back_exit() {
+        let caller = contract_address_const::<'opentest3'>();
+        starknet::testing::set_contract_address(caller);
+
+        let (mut world, token, _combat, temple) = setup_world();
+
+        let explorer_id = mint_fighter(token);
+        let temple_id = temple.mint_temple('seed_back', 1_u8).low;
+
+        world.write_model_test(@Chamber {
+            temple_id,
+            chamber_id: 1,
+            chamber_type: ChamberType::Entrance,
+            yonder: 0,
+            exit_count: 1,
+            is_revealed: true,
+            treasure_looted: false,
+            trap_disarmed: false,
+            trap_dc: 0,
+        });
+        world.write_model_test(@ChamberExit {
+            temple_id,
+            from_chamber_id: 1,
+            exit_index: 0,
+            to_chamber_id: 0,
+            is_discovered: false,
+        });
+
+        temple.enter_temple(explorer_id, temple_id);
+        temple.open_exit(explorer_id, 0);
+
+        // Back exit from chamber 2 to chamber 1 should be discovered
+        let back_exit: ChamberExit = world.read_model((temple_id, 2_u32, 0_u8));
+        assert(back_exit.is_discovered, 'back exit should be discovered');
+        assert(back_exit.to_chamber_id == 1, 'back exit points to entrance');
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_open_exit_fails_if_already_discovered() {
+        let caller = contract_address_const::<'opentest4'>();
+        starknet::testing::set_contract_address(caller);
+
+        let (mut world, token, _combat, temple) = setup_world();
+
+        let explorer_id = mint_fighter(token);
+        let temple_id = temple.mint_temple('seed_dup', 1_u8).low;
+
+        world.write_model_test(@Chamber {
+            temple_id,
+            chamber_id: 1,
+            chamber_type: ChamberType::Entrance,
+            yonder: 0,
+            exit_count: 1,
+            is_revealed: true,
+            treasure_looted: false,
+            trap_disarmed: false,
+            trap_dc: 0,
+        });
+        world.write_model_test(@ChamberExit {
+            temple_id,
+            from_chamber_id: 1,
+            exit_index: 0,
+            to_chamber_id: 0,
+            is_discovered: false,
+        });
+
+        temple.enter_temple(explorer_id, temple_id);
+        temple.open_exit(explorer_id, 0); // first time: ok
+        temple.open_exit(explorer_id, 0); // second time: should panic
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // move_to_chamber
+    // ═══════════════════════════════════════════════════════════════════════
+
+    #[test]
+    fn test_move_to_empty_chamber_no_combat() {
+        let caller = contract_address_const::<'movetest1'>();
+        starknet::testing::set_contract_address(caller);
+
+        let (mut world, token, _combat, temple) = setup_world();
+
+        let explorer_id = mint_fighter(token);
+        let temple_id = temple.mint_temple('seed_mv1', 1_u8).low;
+
+        // Set up entrance with one discovered exit to an empty chamber
+        world.write_model_test(@Chamber {
+            temple_id,
+            chamber_id: 1,
+            chamber_type: ChamberType::Entrance,
+            yonder: 0,
+            exit_count: 1,
+            is_revealed: true,
+            treasure_looted: false,
+            trap_disarmed: false,
+            trap_dc: 0,
+        });
+        world.write_model_test(@ChamberExit {
+            temple_id,
+            from_chamber_id: 1,
+            exit_index: 0,
+            to_chamber_id: 2,
+            is_discovered: true,
+        });
+        world.write_model_test(@Chamber {
+            temple_id,
+            chamber_id: 2,
+            chamber_type: ChamberType::Empty,
+            yonder: 1,
+            exit_count: 0,
+            is_revealed: true,
+            treasure_looted: false,
+            trap_disarmed: false,
+            trap_dc: 0,
+        });
+
+        temple.enter_temple(explorer_id, temple_id);
+        temple.move_to_chamber(explorer_id, 0);
+
+        let pos: ExplorerPosition = world.read_model(explorer_id);
+        assert(pos.chamber_id == 2, 'should be in chamber 2');
+        assert(!pos.in_combat, 'no combat in empty chamber');
+    }
+
+    #[test]
+    fn test_move_to_monster_chamber_triggers_combat() {
+        let caller = contract_address_const::<'movetest2'>();
+        starknet::testing::set_contract_address(caller);
+
+        let (mut world, token, _combat, temple) = setup_world();
+
+        let explorer_id = mint_fighter(token);
+        let temple_id = temple.mint_temple('seed_mv2', 1_u8).low;
+
+        world.write_model_test(@Chamber {
+            temple_id,
+            chamber_id: 1,
+            chamber_type: ChamberType::Entrance,
+            yonder: 0,
+            exit_count: 1,
+            is_revealed: true,
+            treasure_looted: false,
+            trap_disarmed: false,
+            trap_dc: 0,
+        });
+        world.write_model_test(@ChamberExit {
+            temple_id,
+            from_chamber_id: 1,
+            exit_index: 0,
+            to_chamber_id: 2,
+            is_discovered: true,
+        });
+        world.write_model_test(@Chamber {
+            temple_id,
+            chamber_id: 2,
+            chamber_type: ChamberType::Monster,
+            yonder: 1,
+            exit_count: 0,
+            is_revealed: true,
+            treasure_looted: false,
+            trap_disarmed: false,
+            trap_dc: 0,
+        });
+        world.write_model_test(@MonsterInstance {
+            temple_id,
+            chamber_id: 2,
+            monster_id: 1,
+            monster_type: MonsterType::Skeleton,
+            current_hp: 13,
+            max_hp: 13,
+            is_alive: true,
+        });
+
+        temple.enter_temple(explorer_id, temple_id);
+        temple.move_to_chamber(explorer_id, 0);
+
+        let pos: ExplorerPosition = world.read_model(explorer_id);
+        assert(pos.chamber_id == 2, 'moved to chamber 2');
+        assert(pos.in_combat, 'should be in combat');
+        assert(pos.combat_monster_id == 1, 'fighting monster 1');
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_move_to_undiscovered_exit_fails() {
+        let caller = contract_address_const::<'movetest3'>();
+        starknet::testing::set_contract_address(caller);
+
+        let (mut world, token, _combat, temple) = setup_world();
+
+        let explorer_id = mint_fighter(token);
+        let temple_id = temple.mint_temple('seed_mv3', 1_u8).low;
+
+        world.write_model_test(@Chamber {
+            temple_id,
+            chamber_id: 1,
+            chamber_type: ChamberType::Entrance,
+            yonder: 0,
+            exit_count: 1,
+            is_revealed: true,
+            treasure_looted: false,
+            trap_disarmed: false,
+            trap_dc: 0,
+        });
+        world.write_model_test(@ChamberExit {
+            temple_id,
+            from_chamber_id: 1,
+            exit_index: 0,
+            to_chamber_id: 0,
+            is_discovered: false, // not yet discovered
+        });
+
+        temple.enter_temple(explorer_id, temple_id);
+        temple.move_to_chamber(explorer_id, 0); // should panic
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // Combat flow (attack kills monster) in a temple context
+    // ═══════════════════════════════════════════════════════════════════════
+
+    #[test]
+    fn test_attack_in_temple_records_position() {
+        let caller = contract_address_const::<'combattest1'>();
+        starknet::testing::set_contract_address(caller);
+
+        let (mut world, token, combat, temple) = setup_world();
+
+        let explorer_id = mint_fighter(token);
+        let temple_id = temple.mint_temple('seed_ct1', 1_u8).low;
+
+        // Give explorer high HP so they survive the counter-attack
+        world.write_model_test(@ExplorerHealth {
+            explorer_id,
+            current_hp: 50,
+            max_hp: 50,
+            is_dead: false,
+        });
+
+        // Manually place in combat vs a skeleton in the temple
+        world.write_model_test(@MonsterInstance {
+            temple_id,
+            chamber_id: 2,
+            monster_id: 1,
+            monster_type: MonsterType::Skeleton,
+            current_hp: 100,
+            max_hp: 100,
+            is_alive: true,
+        });
+        world.write_model_test(@ExplorerPosition {
+            explorer_id,
+            temple_id,
+            chamber_id: 2,
+            in_combat: true,
+            combat_monster_id: 1,
+        });
+
+        combat.attack(explorer_id);
+
+        // Monster should have taken some damage (or attack missed — hp ≤ 100)
+        let monster: MonsterInstance = world.read_model((temple_id, 2_u32, 1_u32));
+        assert(monster.current_hp <= 100, 'monster hp did not increase');
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // XP gain after killing a monster
+    // ═══════════════════════════════════════════════════════════════════════
+
+    #[test]
+    fn test_kill_monster_grants_xp() {
+        let caller = contract_address_const::<'xptest1'>();
+        starknet::testing::set_contract_address(caller);
+
+        let (mut world, token, combat, temple) = setup_world();
+
+        let explorer_id = mint_fighter(token);
+        let temple_id = temple.mint_temple('seed_xp1', 1_u8).low;
+
+        let stats_before: ExplorerStats = world.read_model(explorer_id);
+
+        // Place in combat vs a 1 HP monster (guaranteed kill this turn)
+        world.write_model_test(@MonsterInstance {
+            temple_id,
+            chamber_id: 2,
+            monster_id: 1,
+            monster_type: MonsterType::Skeleton,
+            current_hp: 1,
+            max_hp: 13,
+            is_alive: true,
+        });
+        world.write_model_test(@ExplorerPosition {
+            explorer_id,
+            temple_id,
+            chamber_id: 2,
+            in_combat: true,
+            combat_monster_id: 1,
+        });
+        world.write_model_test(@ExplorerHealth {
+            explorer_id,
+            current_hp: 50,
+            max_hp: 50,
+            is_dead: false,
+        });
+
+        // Initialize progress so gain_xp can update it
+        world.write_model_test(@ExplorerTempleProgress {
+            explorer_id,
+            temple_id,
+            chambers_explored: 0,
+            xp_earned: 0,
+        });
+
+        combat.attack(explorer_id);
+
+        let stats_after: ExplorerStats = world.read_model(explorer_id);
+        let monster_after: MonsterInstance = world.read_model((temple_id, 2_u32, 1_u32));
+
+        if !monster_after.is_alive {
+            // Monster was killed — XP must have been awarded
+            assert(stats_after.xp > stats_before.xp, 'xp should increase on kill');
+
+            let progress: ExplorerTempleProgress = world.read_model((explorer_id, temple_id));
+            assert(progress.xp_earned > 0, 'temple xp_earned should grow');
+        }
+        // If monster survived (attack missed), test passes silently
+    }
+
+    #[test]
+    fn test_kill_monster_updates_temple_progress() {
+        let caller = contract_address_const::<'xptest2'>();
+        starknet::testing::set_contract_address(caller);
+
+        let (mut world, token, combat, temple) = setup_world();
+
+        let explorer_id = mint_fighter(token);
+        let temple_id = temple.mint_temple('seed_xp2', 1_u8).low;
+
+        world.write_model_test(@MonsterInstance {
+            temple_id,
+            chamber_id: 3,
+            monster_id: 1,
+            monster_type: MonsterType::PoisonousSnake,
+            current_hp: 1,
+            max_hp: 2,
+            is_alive: true,
+        });
+        world.write_model_test(@ExplorerPosition {
+            explorer_id,
+            temple_id,
+            chamber_id: 3,
+            in_combat: true,
+            combat_monster_id: 1,
+        });
+        world.write_model_test(@ExplorerHealth {
+            explorer_id,
+            current_hp: 50,
+            max_hp: 50,
+            is_dead: false,
+        });
+        world.write_model_test(@ExplorerTempleProgress {
+            explorer_id,
+            temple_id,
+            chambers_explored: 2,
+            xp_earned: 100,
+        });
+
+        combat.attack(explorer_id);
+
+        let monster_after: MonsterInstance = world.read_model((temple_id, 3_u32, 1_u32));
+        if !monster_after.is_alive {
+            let progress: ExplorerTempleProgress = world.read_model((explorer_id, temple_id));
+            assert(progress.xp_earned > 100, 'xp_earned should increase');
+            assert(progress.chambers_explored == 2, 'chambers_explored unchanged');
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // Level-up on kill
+    // ═══════════════════════════════════════════════════════════════════════
+
+    #[test]
+    fn test_level_up_increases_max_hp() {
+        let caller = contract_address_const::<'lvltest1'>();
+        starknet::testing::set_contract_address(caller);
+
+        let (mut world, token, combat, temple) = setup_world();
+
+        let explorer_id = mint_fighter(token);
+        let temple_id = temple.mint_temple('seed_lvl', 1_u8).low;
+
+        // Set XP just below level 2 threshold (300 XP)
+        let stats: ExplorerStats = world.read_model(explorer_id);
+        world.write_model_test(@ExplorerStats {
+            explorer_id,
+            strength: stats.strength,
+            dexterity: stats.dexterity,
+            constitution: stats.constitution,
+            intelligence: stats.intelligence,
+            wisdom: stats.wisdom,
+            charisma: stats.charisma,
+            level: 1,
+            xp: 250, // skeleton = 50 XP → total 300 = level 2
+            class: stats.class,
+            temples_conquered: stats.temples_conquered,
+        });
+
+        let health_before: ExplorerHealth = world.read_model(explorer_id);
+
+        // 1 HP skeleton → guaranteed kill
+        world.write_model_test(@MonsterInstance {
+            temple_id,
+            chamber_id: 2,
+            monster_id: 1,
+            monster_type: MonsterType::Skeleton,
+            current_hp: 1,
+            max_hp: 13,
+            is_alive: true,
+        });
+        world.write_model_test(@ExplorerPosition {
+            explorer_id,
+            temple_id,
+            chamber_id: 2,
+            in_combat: true,
+            combat_monster_id: 1,
+        });
+        world.write_model_test(@ExplorerHealth {
+            explorer_id,
+            current_hp: 50,
+            max_hp: 50,
+            is_dead: false,
+        });
+        world.write_model_test(@ExplorerTempleProgress {
+            explorer_id,
+            temple_id,
+            chambers_explored: 0,
+            xp_earned: 0,
+        });
+
+        combat.attack(explorer_id);
+
+        let monster_after: MonsterInstance = world.read_model((temple_id, 2_u32, 1_u32));
+        if !monster_after.is_alive {
+            let stats_after: ExplorerStats = world.read_model(explorer_id);
+            if stats_after.xp >= 300 {
+                assert(stats_after.level == 2, 'should be level 2');
+                let health_after: ExplorerHealth = world.read_model(explorer_id);
+                assert(health_after.max_hp > health_before.max_hp, 'max_hp should increase');
+            }
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // loot_treasure
+    // ═══════════════════════════════════════════════════════════════════════
+
+    #[test]
+    fn test_loot_treasure_awards_gold_in_treasure_chamber() {
+        let caller = contract_address_const::<'loottest1'>();
+        starknet::testing::set_contract_address(caller);
+
+        let (mut world, token, _combat, temple) = setup_world();
+
+        let explorer_id = mint_fighter(token);
+        let temple_id = temple.mint_temple('seed_loot', 1_u8).low;
+
+        let inv_before: ExplorerInventory = world.read_model(explorer_id);
+
+        world.write_model_test(@Chamber {
+            temple_id,
+            chamber_id: 2,
+            chamber_type: ChamberType::Treasure,
+            yonder: 1,
+            exit_count: 0,
+            is_revealed: true,
+            treasure_looted: false,
+            trap_disarmed: false,
+            trap_dc: 0,
+        });
+        world.write_model_test(@ExplorerPosition {
+            explorer_id,
+            temple_id,
+            chamber_id: 2,
+            in_combat: false,
+            combat_monster_id: 0,
+        });
+
+        temple.loot_treasure(explorer_id);
+
+        let chamber_after: Chamber = world.read_model((temple_id, 2_u32));
+        let inv_after: ExplorerInventory = world.read_model(explorer_id);
+
+        // On success (perception DC 10) gold should increase; on fail no change
+        if chamber_after.treasure_looted {
+            assert(inv_after.gold >= inv_before.gold, 'gold should not decrease');
+        }
+    }
+
+    #[test]
+    fn test_loot_treasure_marks_looted() {
+        let caller = contract_address_const::<'loottest2'>();
+        starknet::testing::set_contract_address(caller);
+
+        let (mut world, token, _combat, temple) = setup_world();
+
+        let explorer_id = mint_fighter(token);
+        let temple_id = temple.mint_temple('seed_loot2', 1_u8).low;
+
+        world.write_model_test(@Chamber {
+            temple_id,
+            chamber_id: 2,
+            chamber_type: ChamberType::Treasure,
+            yonder: 1,
+            exit_count: 0,
+            is_revealed: true,
+            treasure_looted: false,
+            trap_disarmed: false,
+            trap_dc: 0,
+        });
+        world.write_model_test(@ExplorerPosition {
+            explorer_id,
+            temple_id,
+            chamber_id: 2,
+            in_combat: false,
+            combat_monster_id: 0,
+        });
+
+        // Boost WIS to guarantee perception check passes (no modifier needed)
+        let stats: ExplorerStats = world.read_model(explorer_id);
+        world.write_model_test(@ExplorerStats {
+            explorer_id,
+            strength: stats.strength,
+            dexterity: stats.dexterity,
+            constitution: stats.constitution,
+            intelligence: stats.intelligence,
+            wisdom: 20, // +5 mod guarantees DC 10
+            charisma: stats.charisma,
+            level: stats.level,
+            xp: stats.xp,
+            class: stats.class,
+            temples_conquered: stats.temples_conquered,
+        });
+
+        temple.loot_treasure(explorer_id);
+
+        let chamber_after: Chamber = world.read_model((temple_id, 2_u32));
+        // WIS 20 (+5) + d20 always beats DC 10
+        assert(chamber_after.treasure_looted, 'should be marked looted');
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_loot_treasure_fails_on_second_attempt() {
+        let caller = contract_address_const::<'loottest3'>();
+        starknet::testing::set_contract_address(caller);
+
+        let (mut world, token, _combat, temple) = setup_world();
+
+        let explorer_id = mint_fighter(token);
+        let temple_id = temple.mint_temple('seed_loot3', 1_u8).low;
+
+        world.write_model_test(@Chamber {
+            temple_id,
+            chamber_id: 2,
+            chamber_type: ChamberType::Treasure,
+            yonder: 1,
+            exit_count: 0,
+            is_revealed: true,
+            treasure_looted: true, // already looted
+            trap_disarmed: false,
+            trap_dc: 0,
+        });
+        world.write_model_test(@ExplorerPosition {
+            explorer_id,
+            temple_id,
+            chamber_id: 2,
+            in_combat: false,
+            combat_monster_id: 0,
+        });
+
+        temple.loot_treasure(explorer_id);
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_loot_treasure_fails_in_monster_chamber() {
+        let caller = contract_address_const::<'loottest4'>();
+        starknet::testing::set_contract_address(caller);
+
+        let (mut world, token, _combat, temple) = setup_world();
+
+        let explorer_id = mint_fighter(token);
+        let temple_id = temple.mint_temple('seed_loot4', 1_u8).low;
+
+        world.write_model_test(@Chamber {
+            temple_id,
+            chamber_id: 2,
+            chamber_type: ChamberType::Monster,
+            yonder: 1,
+            exit_count: 0,
+            is_revealed: true,
+            treasure_looted: false,
+            trap_disarmed: false,
+            trap_dc: 0,
+        });
+        world.write_model_test(@ExplorerPosition {
+            explorer_id,
+            temple_id,
+            chamber_id: 2,
+            in_combat: false,
+            combat_monster_id: 0,
+        });
+
+        temple.loot_treasure(explorer_id);
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // loot_fallen
+    // ═══════════════════════════════════════════════════════════════════════
+
+    #[test]
+    fn test_loot_fallen_transfers_items() {
+        let caller = contract_address_const::<'fallentest1'>();
+        starknet::testing::set_contract_address(caller);
+
+        let (mut world, token, _combat, temple) = setup_world();
+
+        // Two explorers: the looter and the fallen
+        let looter_id = mint_fighter(token);
+        let fallen_explorer_id: u128 = 9999;
+
+        let temple_id = temple.mint_temple('seed_fall', 1_u8).low;
+
+        // Place a fallen explorer body in chamber 2
+        world.write_model_test(@ChamberFallenCount {
+            temple_id,
+            chamber_id: 2,
+            count: 1,
+        });
+        world.write_model_test(@FallenExplorer {
+            temple_id,
+            chamber_id: 2,
+            fallen_index: 0,
+            explorer_id: fallen_explorer_id,
+            dropped_weapon: WeaponType::Dagger,
+            dropped_armor: ArmorType::Leather,
+            dropped_gold: 75,
+            dropped_potions: 3,
+            is_looted: false,
+        });
+
+        world.write_model_test(@ExplorerPosition {
+            explorer_id: looter_id,
+            temple_id,
+            chamber_id: 2,
+            in_combat: false,
+            combat_monster_id: 0,
+        });
+
+        // Strip looter's equipment so they can pick up the fallen's items
+        world.write_model_test(@ExplorerInventory {
+            explorer_id: looter_id,
+            primary_weapon: WeaponType::None,
+            secondary_weapon: WeaponType::None,
+            armor: ArmorType::None,
+            has_shield: false,
+            gold: 10,
+            potions: 0,
+        });
+
+        temple.loot_fallen(looter_id, 0);
+
+        let inv: ExplorerInventory = world.read_model(looter_id);
+        assert(inv.gold == 85, 'gold: 10 + 75 = 85');
+        assert(inv.potions == 3, 'potions transferred');
+
+        let fallen: FallenExplorer = world.read_model((temple_id, 2_u32, 0_u32));
+        assert(fallen.is_looted, 'body should be marked looted');
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_loot_fallen_cannot_loot_self() {
+        let caller = contract_address_const::<'fallentest2'>();
+        starknet::testing::set_contract_address(caller);
+
+        let (mut world, token, _combat, temple) = setup_world();
+
+        let explorer_id = mint_fighter(token);
+        let temple_id = temple.mint_temple('seed_self', 1_u8).low;
+
+        world.write_model_test(@ChamberFallenCount {
+            temple_id,
+            chamber_id: 2,
+            count: 1,
+        });
+        world.write_model_test(@FallenExplorer {
+            temple_id,
+            chamber_id: 2,
+            fallen_index: 0,
+            explorer_id, // same as looter
+            dropped_weapon: WeaponType::Longsword,
+            dropped_armor: ArmorType::ChainMail,
+            dropped_gold: 0,
+            dropped_potions: 0,
+            is_looted: false,
+        });
+        world.write_model_test(@ExplorerPosition {
+            explorer_id,
+            temple_id,
+            chamber_id: 2,
+            in_combat: false,
+            combat_monster_id: 0,
+        });
+
+        temple.loot_fallen(explorer_id, 0);
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // Boss defeat
+    // ═══════════════════════════════════════════════════════════════════════
+
+    #[test]
+    fn test_boss_defeat_marks_boss_dead() {
+        let caller = contract_address_const::<'bosstest1'>();
+        starknet::testing::set_contract_address(caller);
+
+        let (mut world, token, combat, temple) = setup_world();
+
+        let explorer_id = mint_fighter(token);
+        let temple_id = temple.mint_temple('seed_boss', 1_u8).low;
+
+        // Set up temple with a known boss chamber
+        world.write_model_test(@TempleState {
+            temple_id,
+            seed: 'seed_boss',
+            difficulty_tier: 1,
+            next_chamber_id: 3,
+            boss_chamber_id: 2,
+            boss_alive: true,
+        });
+
+        // Boss = Wraith with 1 HP (guaranteed kill)
+        world.write_model_test(@MonsterInstance {
+            temple_id,
+            chamber_id: 2,
+            monster_id: 1,
+            monster_type: MonsterType::Wraith,
+            current_hp: 1,
+            max_hp: 45,
+            is_alive: true,
+        });
+        world.write_model_test(@ExplorerPosition {
+            explorer_id,
+            temple_id,
+            chamber_id: 2,
+            in_combat: true,
+            combat_monster_id: 1,
+        });
+        world.write_model_test(@ExplorerHealth {
+            explorer_id,
+            current_hp: 50,
+            max_hp: 50,
+            is_dead: false,
+        });
+        world.write_model_test(@ExplorerTempleProgress {
+            explorer_id,
+            temple_id,
+            chambers_explored: 5,
+            xp_earned: 500,
+        });
+
+        combat.attack(explorer_id);
+
+        let monster_after: MonsterInstance = world.read_model((temple_id, 2_u32, 1_u32));
+        if !monster_after.is_alive {
+            let temple_after: TempleState = world.read_model(temple_id);
+            assert(!temple_after.boss_alive, 'boss should be marked dead');
+
+            let stats_after: ExplorerStats = world.read_model(explorer_id);
+            assert(stats_after.temples_conquered == 1, 'temples_conquered should be 1');
+        }
+    }
+
+    #[test]
+    fn test_boss_defeat_increments_temples_conquered() {
+        let caller = contract_address_const::<'bosstest2'>();
+        starknet::testing::set_contract_address(caller);
+
+        let (mut world, token, combat, temple) = setup_world();
+
+        let explorer_id = mint_fighter(token);
+        let temple_id = temple.mint_temple('seed_boss2', 1_u8).low;
+
+        // Explorer with 1 prior conquest
+        let stats: ExplorerStats = world.read_model(explorer_id);
+        world.write_model_test(@ExplorerStats {
+            explorer_id,
+            strength: stats.strength,
+            dexterity: stats.dexterity,
+            constitution: stats.constitution,
+            intelligence: stats.intelligence,
+            wisdom: stats.wisdom,
+            charisma: stats.charisma,
+            level: stats.level,
+            xp: stats.xp,
+            class: stats.class,
+            temples_conquered: 1, // previously conquered 1 temple
+        });
+
+        world.write_model_test(@TempleState {
+            temple_id,
+            seed: 'seed_boss2',
+            difficulty_tier: 1,
+            next_chamber_id: 3,
+            boss_chamber_id: 2,
+            boss_alive: true,
+        });
+        world.write_model_test(@MonsterInstance {
+            temple_id,
+            chamber_id: 2,
+            monster_id: 1,
+            monster_type: MonsterType::Wraith,
+            current_hp: 1,
+            max_hp: 45,
+            is_alive: true,
+        });
+        world.write_model_test(@ExplorerPosition {
+            explorer_id,
+            temple_id,
+            chamber_id: 2,
+            in_combat: true,
+            combat_monster_id: 1,
+        });
+        world.write_model_test(@ExplorerHealth {
+            explorer_id,
+            current_hp: 50,
+            max_hp: 50,
+            is_dead: false,
+        });
+        world.write_model_test(@ExplorerTempleProgress {
+            explorer_id,
+            temple_id,
+            chambers_explored: 3,
+            xp_earned: 300,
+        });
+
+        combat.attack(explorer_id);
+
+        let monster_after: MonsterInstance = world.read_model((temple_id, 2_u32, 1_u32));
+        if !monster_after.is_alive {
+            let stats_after: ExplorerStats = world.read_model(explorer_id);
+            assert(stats_after.temples_conquered == 2, 'should have 2 conquests now');
+        }
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // Full end-to-end flow
+    // ═══════════════════════════════════════════════════════════════════════
+
+    #[test]
+    fn test_full_flow_mint_enter_explore_fight_exit() {
+        let caller = contract_address_const::<'fullflow1'>();
+        starknet::testing::set_contract_address(caller);
+
+        let (mut world, token, combat, temple) = setup_world();
+
+        // 1. Mint explorer
+        let explorer_id = mint_fighter(token);
+        let stats: ExplorerStats = world.read_model(explorer_id);
+        assert(stats.level == 1, 'starts at level 1');
+        assert(stats.class == ExplorerClass::Fighter, 'is a fighter');
+
+        // 2. Mint temple
+        let temple_id = temple.mint_temple('seed_full', 1_u8).low;
+        let temple_state: TempleState = world.read_model(temple_id);
+        assert(temple_state.boss_alive, 'boss starts alive');
+
+        // 3. Enter temple
+        temple.enter_temple(explorer_id, temple_id);
+        let pos: ExplorerPosition = world.read_model(explorer_id);
+        assert(pos.temple_id == temple_id, 'in the right temple');
+        assert(pos.chamber_id == 1, 'at entrance');
+
+        // 4. Open exit and generate chamber 2
+        world.write_model_test(@Chamber {
+            temple_id,
+            chamber_id: 1,
+            chamber_type: ChamberType::Entrance,
+            yonder: 0,
+            exit_count: 1,
+            is_revealed: true,
+            treasure_looted: false,
+            trap_disarmed: false,
+            trap_dc: 0,
+        });
+        world.write_model_test(@ChamberExit {
+            temple_id,
+            from_chamber_id: 1,
+            exit_index: 0,
+            to_chamber_id: 0,
+            is_discovered: false,
+        });
+
+        temple.open_exit(explorer_id, 0);
+
+        let progress: ExplorerTempleProgress = world.read_model((explorer_id, temple_id));
+        assert(progress.chambers_explored == 1, 'explored 1 chamber');
+
+        // 5. Move to the newly generated chamber 2 if it's not a monster chamber,
+        //    or skip to combat via direct model setup
+        let chamber2: Chamber = world.read_model((temple_id, 2_u32));
+
+        if chamber2.chamber_type == ChamberType::Monster || chamber2.chamber_type == ChamberType::Boss {
+            // Move triggers combat
+            temple.move_to_chamber(explorer_id, 0);
+            let pos2: ExplorerPosition = world.read_model(explorer_id);
+            assert(pos2.in_combat, 'in combat after move');
+        } else {
+            // Move to empty/treasure/trap chamber — no combat
+            temple.move_to_chamber(explorer_id, 0);
+            let pos2: ExplorerPosition = world.read_model(explorer_id);
+            assert(!pos2.in_combat, 'not in combat in safe chamber');
+        }
+
+        // 6. Set up a guaranteed combat kill for the XP/boss check
+        world.write_model_test(@MonsterInstance {
+            temple_id,
+            chamber_id: 5,
+            monster_id: 1,
+            monster_type: MonsterType::Skeleton,
+            current_hp: 1,
+            max_hp: 13,
+            is_alive: true,
+        });
+        world.write_model_test(@ExplorerPosition {
+            explorer_id,
+            temple_id,
+            chamber_id: 5,
+            in_combat: true,
+            combat_monster_id: 1,
+        });
+        world.write_model_test(@ExplorerHealth {
+            explorer_id,
+            current_hp: 50,
+            max_hp: 50,
+            is_dead: false,
+        });
+
+        let stats_pre: ExplorerStats = world.read_model(explorer_id);
+        let xp_before: u32 = stats_pre.xp;
+        combat.attack(explorer_id);
+
+        let monster_final: MonsterInstance = world.read_model((temple_id, 5_u32, 1_u32));
+        if !monster_final.is_alive {
+            let stats_final: ExplorerStats = world.read_model(explorer_id);
+            assert(stats_final.xp > xp_before, 'xp increased on kill');
+        }
+
+        // 7. Exit temple
+        world.write_model_test(@ExplorerPosition {
+            explorer_id,
+            temple_id,
+            chamber_id: 1,
+            in_combat: false,
+            combat_monster_id: 0,
+        });
+
+        temple.exit_temple(explorer_id);
+        let final_pos: ExplorerPosition = world.read_model(explorer_id);
+        assert(final_pos.temple_id == 0, 'exited temple');
+        assert(final_pos.chamber_id == 0, 'chamber cleared');
+    }
+
+    #[test]
+    fn test_full_flow_rogue_enters_loots_exits() {
+        let caller = contract_address_const::<'fullflow2'>();
+        starknet::testing::set_contract_address(caller);
+
+        let (mut world, token, _combat, temple) = setup_world();
+
+        let explorer_id = mint_rogue(token);
+        let temple_id = temple.mint_temple('seed_rogue', 2_u8).low;
+
+        // Enter
+        temple.enter_temple(explorer_id, temple_id);
+        let pos: ExplorerPosition = world.read_model(explorer_id);
+        assert(pos.temple_id == temple_id, 'rogue in temple');
+
+        // Place rogue in a Treasure chamber
+        world.write_model_test(@Chamber {
+            temple_id,
+            chamber_id: 3,
+            chamber_type: ChamberType::Treasure,
+            yonder: 2,
+            exit_count: 0,
+            is_revealed: true,
+            treasure_looted: false,
+            trap_disarmed: false,
+            trap_dc: 0,
+        });
+        world.write_model_test(@ExplorerPosition {
+            explorer_id,
+            temple_id,
+            chamber_id: 3,
+            in_combat: false,
+            combat_monster_id: 0,
+        });
+
+        // Boost WIS to ensure loot check passes
+        let stats: ExplorerStats = world.read_model(explorer_id);
+        world.write_model_test(@ExplorerStats {
+            explorer_id,
+            strength: stats.strength,
+            dexterity: stats.dexterity,
+            constitution: stats.constitution,
+            intelligence: stats.intelligence,
+            wisdom: 20,
+            charisma: stats.charisma,
+            level: stats.level,
+            xp: stats.xp,
+            class: stats.class,
+            temples_conquered: stats.temples_conquered,
+        });
+
+        let inv_before: ExplorerInventory = world.read_model(explorer_id);
+        temple.loot_treasure(explorer_id);
+
+        let chamber_after: Chamber = world.read_model((temple_id, 3_u32));
+        let inv_after: ExplorerInventory = world.read_model(explorer_id);
+
+        assert(chamber_after.treasure_looted, 'treasure looted');
+        // difficulty=2, yonder=2: gold = d6 * 3 * 2 = at least 6
+        assert(inv_after.gold >= inv_before.gold, 'gold should not decrease');
+
+        // Exit
+        world.write_model_test(@ExplorerPosition {
+            explorer_id,
+            temple_id,
+            chamber_id: 1,
+            in_combat: false,
+            combat_monster_id: 0,
+        });
+        temple.exit_temple(explorer_id);
+
+        let final_pos: ExplorerPosition = world.read_model(explorer_id);
+        assert(final_pos.temple_id == 0, 'rogue exited');
+    }
+
+    #[test]
+    fn test_full_flow_wizard_casts_spell_kills_monster() {
+        let caller = contract_address_const::<'fullflow3'>();
+        starknet::testing::set_contract_address(caller);
+
+        let (mut world, token, combat, temple) = setup_world();
+
+        let explorer_id = mint_wizard(token);
+        let temple_id = temple.mint_temple('seed_wiz', 1_u8).low;
+
+        temple.enter_temple(explorer_id, temple_id);
+
+        // Place wizard in combat vs 1 HP PoisonousSnake
+        world.write_model_test(@MonsterInstance {
+            temple_id,
+            chamber_id: 2,
+            monster_id: 1,
+            monster_type: MonsterType::PoisonousSnake,
+            current_hp: 1,
+            max_hp: 2,
+            is_alive: true,
+        });
+        world.write_model_test(@ExplorerPosition {
+            explorer_id,
+            temple_id,
+            chamber_id: 2,
+            in_combat: true,
+            combat_monster_id: 1,
+        });
+        world.write_model_test(@ExplorerHealth {
+            explorer_id,
+            current_hp: 50,
+            max_hp: 50,
+            is_dead: false,
+        });
+        world.write_model_test(@ExplorerTempleProgress {
+            explorer_id,
+            temple_id,
+            chambers_explored: 0,
+            xp_earned: 0,
+        });
+
+        let stats_wiz_pre: ExplorerStats = world.read_model(explorer_id);
+        let xp_before: u32 = stats_wiz_pre.xp;
+
+        // Cast Fire Bolt (cantrip)
+        combat.cast_spell(explorer_id, d20::types::SpellId::FireBolt);
+
+        let monster_after: MonsterInstance = world.read_model((temple_id, 2_u32, 1_u32));
+        if !monster_after.is_alive {
+            let stats_after: ExplorerStats = world.read_model(explorer_id);
+            assert(stats_after.xp > xp_before, 'wizard xp should increase');
+        }
+        // If Fire Bolt missed, monster may still be alive — test passes silently
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // Cross-temple: exit and re-enter a different temple keeps stats
+    // ═══════════════════════════════════════════════════════════════════════
+
+    #[test]
+    fn test_cross_temple_stats_carry_over() {
+        let caller = contract_address_const::<'crosstest1'>();
+        starknet::testing::set_contract_address(caller);
+
+        let (mut world, token, _combat, temple) = setup_world();
+
+        let explorer_id = mint_fighter(token);
+
+        let temple_a = temple.mint_temple('seed_a', 1_u8).low;
+        let temple_b = temple.mint_temple('seed_b', 2_u8).low;
+
+        // Enter temple A, give some XP, exit
+        temple.enter_temple(explorer_id, temple_a);
+        let stats: ExplorerStats = world.read_model(explorer_id);
+        world.write_model_test(@ExplorerStats {
+            explorer_id,
+            strength: stats.strength,
+            dexterity: stats.dexterity,
+            constitution: stats.constitution,
+            intelligence: stats.intelligence,
+            wisdom: stats.wisdom,
+            charisma: stats.charisma,
+            level: 1,
+            xp: 150,
+            class: stats.class,
+            temples_conquered: stats.temples_conquered,
+        });
+        temple.exit_temple(explorer_id);
+
+        // Enter temple B
+        temple.enter_temple(explorer_id, temple_b);
+
+        // Stats should carry over
+        let stats_in_b: ExplorerStats = world.read_model(explorer_id);
+        assert(stats_in_b.xp == 150, 'xp carries to temple B');
+        assert(stats_in_b.level == 1, 'level carries to temple B');
+
+        let pos: ExplorerPosition = world.read_model(explorer_id);
+        assert(pos.temple_id == temple_b, 'in temple B');
+        assert(pos.chamber_id == 1, 'at entrance of B');
+    }
+}

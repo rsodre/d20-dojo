@@ -27,4 +27,5 @@ pub mod tests {
     pub mod mock_vrf;
     pub mod test_explorer_token;
     pub mod test_combat_system;
+    pub mod test_integration;
 }
