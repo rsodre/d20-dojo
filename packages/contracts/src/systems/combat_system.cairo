@@ -55,6 +55,8 @@ pub mod combat_system {
     use d20::utils::seeder::{Seeder, SeederTrait};
     use d20::types::monster::{MonsterType, MonsterTypeTrait};
     use starknet::ContractAddress;
+    use d20::utils::dns::{DnsTrait};
+    use d20::systems::explorer_token::{IExplorerTokenDispatcherTrait};
 
     // ── Storage ──────────────────────────────────────────────────────────────
 
@@ -457,6 +459,10 @@ pub mod combat_system {
             let caller = get_caller_address();
             let mut seeder = SeederTrait::from_consume_vrf(world, caller);
 
+            // Verify ownership
+            let explorer_token = world.explorer_token_dispatcher();
+            assert(explorer_token.owner_of(explorer_id.into()) == caller, 'not owner');
+
             let stats: ExplorerStats = world.read_model(explorer_id);
             assert(stats.class != ExplorerClass::None, 'explorer does not exist');
 
@@ -627,6 +633,10 @@ pub mod combat_system {
             let mut world = self.world_default();
             let caller = get_caller_address();
             let mut seeder = SeederTrait::from_consume_vrf(world, caller);
+
+            // Verify ownership
+            let explorer_token = world.explorer_token_dispatcher();
+            assert(explorer_token.owner_of(explorer_id.into()) == caller, 'not owner');
 
             let stats: ExplorerStats = world.read_model(explorer_id);
             assert(stats.class == ExplorerClass::Wizard, 'only wizards cast spells');
@@ -974,6 +984,10 @@ pub mod combat_system {
             let caller = get_caller_address();
             let mut seeder = SeederTrait::from_consume_vrf(world, caller);
 
+            // Verify ownership
+            let explorer_token = world.explorer_token_dispatcher();
+            assert(explorer_token.owner_of(explorer_id.into()) == caller, 'not owner');
+
             let stats: ExplorerStats = world.read_model(explorer_id);
             assert(stats.class != ExplorerClass::None, 'explorer does not exist');
 
@@ -1043,6 +1057,10 @@ pub mod combat_system {
             let caller = get_caller_address();
             let mut seeder = SeederTrait::from_consume_vrf(world, caller);
 
+            // Verify ownership
+            let explorer_token = world.explorer_token_dispatcher();
+            assert(explorer_token.owner_of(explorer_id.into()) == caller, 'not owner');
+
             let stats: ExplorerStats = world.read_model(explorer_id);
             assert(stats.class == ExplorerClass::Fighter, 'only fighters can second wind');
 
@@ -1086,6 +1104,9 @@ pub mod combat_system {
 
         fn cunning_action(ref self: ContractState, explorer_id: u128) {
             let mut world = self.world_default();
+            // Verify ownership
+            let explorer_token = world.explorer_token_dispatcher();
+            assert(explorer_token.owner_of(explorer_id.into()) == get_caller_address(), 'not owner');
 
             let stats: ExplorerStats = world.read_model(explorer_id);
             assert(stats.class == ExplorerClass::Rogue, 'only rogues can cunning action');
@@ -1126,6 +1147,10 @@ pub mod combat_system {
             let mut world = self.world_default();
             let caller = get_caller_address();
             let mut seeder = SeederTrait::from_consume_vrf(world, caller);
+
+            // Verify ownership
+            let explorer_token = world.explorer_token_dispatcher();
+            assert(explorer_token.owner_of(explorer_id.into()) == caller, 'not owner');
 
             let stats: ExplorerStats = world.read_model(explorer_id);
             assert(stats.class != ExplorerClass::None, 'explorer does not exist');

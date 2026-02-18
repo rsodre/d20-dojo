@@ -155,6 +155,8 @@ pub mod temple_token {
     // use d20::utils::monsters::MonsterTypeTrait; // Removed as it is now in types::monster
     use d20::models::explorer::{ExplorerStats, ExplorerInventory, ExplorerSkills};
     use d20::constants::{TEMPLE_TOKEN_DESCRIPTION, TEMPLE_TOKEN_EXTERNAL_LINK};
+    use d20::utils::dns::{DnsTrait};
+    use d20::systems::explorer_token::{IExplorerTokenDispatcherTrait};
 
     // Metadata types
     use nft_combo::utils::renderer::{ContractMetadata, TokenMetadata, Attribute};
@@ -420,6 +422,10 @@ pub mod temple_token {
         fn enter_temple(ref self: ContractState, explorer_id: u128, temple_id: u128) {
             let mut world = self.world_default();
 
+            // Verify ownership
+            let explorer_token = world.explorer_token_dispatcher();
+            assert(explorer_token.owner_of(explorer_id.into()) == get_caller_address(), 'not owner');
+
             // Validate temple exists
             let temple: TempleState = world.read_model(temple_id);
             assert(temple.difficulty_tier >= 1, 'temple does not exist');
@@ -458,6 +464,10 @@ pub mod temple_token {
         fn exit_temple(ref self: ContractState, explorer_id: u128) {
             let mut world = self.world_default();
 
+            // Verify ownership
+            let explorer_token = world.explorer_token_dispatcher();
+            assert(explorer_token.owner_of(explorer_id.into()) == get_caller_address(), 'not owner');
+
             // Validate explorer is in a temple
             let position: ExplorerPosition = world.read_model(explorer_id);
             assert(position.temple_id != 0, 'not inside any temple');
@@ -477,6 +487,10 @@ pub mod temple_token {
         fn open_exit(ref self: ContractState, explorer_id: u128, exit_index: u8) {
             let mut world = self.world_default();
             let caller = get_caller_address();
+
+            // Verify ownership
+            let explorer_token = world.explorer_token_dispatcher();
+            assert(explorer_token.owner_of(explorer_id.into()) == caller, 'not owner');
 
             // ── Validate explorer state ──────────────────────────────────────
             let health: ExplorerHealth = world.read_model(explorer_id);
@@ -555,6 +569,10 @@ pub mod temple_token {
             let mut world = self.world_default();
             let caller = get_caller_address();
 
+            // Verify ownership
+            let explorer_token = world.explorer_token_dispatcher();
+            assert(explorer_token.owner_of(explorer_id.into()) == caller, 'not owner');
+
             // ── Validate explorer state ──────────────────────────────────────
             let health: ExplorerHealth = world.read_model(explorer_id);
             assert(!health.is_dead, 'dead explorers cannot move');
@@ -632,6 +650,10 @@ pub mod temple_token {
         fn disarm_trap(ref self: ContractState, explorer_id: u128) {
             let mut world = self.world_default();
             let caller = get_caller_address();
+
+            // Verify ownership
+            let explorer_token = world.explorer_token_dispatcher();
+            assert(explorer_token.owner_of(explorer_id.into()) == caller, 'not owner');
 
             // ── Validate explorer state ──────────────────────────────────────
             let health: ExplorerHealth = world.read_model(explorer_id);
@@ -734,6 +756,10 @@ pub mod temple_token {
             let mut world = self.world_default();
             let caller = get_caller_address();
 
+            // Verify ownership
+            let explorer_token = world.explorer_token_dispatcher();
+            assert(explorer_token.owner_of(explorer_id.into()) == caller, 'not owner');
+
             // ── Validate explorer state ──────────────────────────────────────
             let health: ExplorerHealth = world.read_model(explorer_id);
             assert(!health.is_dead, 'dead explorers cannot loot');
@@ -811,6 +837,10 @@ pub mod temple_token {
 
         fn loot_fallen(ref self: ContractState, explorer_id: u128, fallen_index: u32) {
             let mut world = self.world_default();
+
+            // Verify ownership
+            let explorer_token = world.explorer_token_dispatcher();
+            assert(explorer_token.owner_of(explorer_id.into()) == get_caller_address(), 'not owner');
 
             // ── Validate explorer state ──────────────────────────────────────
             let health: ExplorerHealth = world.read_model(explorer_id);

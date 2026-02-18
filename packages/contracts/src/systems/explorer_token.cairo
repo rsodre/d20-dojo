@@ -118,6 +118,8 @@ pub mod explorer_token {
         ExplorerStats, ExplorerHealth, ExplorerCombat, ExplorerInventory,
         ExplorerPosition, ExplorerSkills,
     };
+    use d20::utils::dns::{DnsTrait};
+    use super::{IExplorerTokenDispatcherTrait};
     use d20::events::ExplorerMinted;
     use d20::utils::dice::{ability_modifier, calculate_ac};
     use d20::constants::{EXPLORER_TOKEN_DESCRIPTION, EXPLORER_TOKEN_EXTERNAL_LINK};
@@ -338,6 +340,10 @@ pub mod explorer_token {
 
         fn rest(ref self: ContractState, explorer_id: u128) {
             let mut world = self.world_default();
+
+            // Verify ownership
+            let explorer_token = world.explorer_token_dispatcher();
+            assert(explorer_token.owner_of(explorer_id.into()) == get_caller_address(), 'not owner');
 
             let stats: ExplorerStats = world.read_model(explorer_id);
             assert(stats.class != ExplorerClass::None, 'explorer does not exist');

@@ -26,6 +26,7 @@ pub mod utils {
     pub mod dice;
     pub mod vrf;
     pub mod seeder;
+    pub mod dns;
 }
 
 #[cfg(test)]
@@ -34,4 +35,5 @@ pub mod tests {
     pub mod test_explorer_token;
     pub mod test_combat_system;
     pub mod test_integration;
+    pub mod test_ownership;
 }
