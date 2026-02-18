@@ -59,9 +59,10 @@ pub mod temple_token {
     impl ERC721ComboMixinImpl = ERC721ComboComponent::ERC721ComboMixinImpl<ContractState>;
 
     // Game types and models
-    use d20::types::{ChamberType, MonsterType};
+    use d20::types::{ChamberType, MonsterType, ExplorerClass};
     use d20::models::temple::{
         TempleState, Chamber, MonsterInstance, ChamberExit, ExplorerTempleProgress,
+        FallenExplorer, ChamberFallenCount,
     };
     use d20::models::explorer::{ExplorerHealth, ExplorerPosition};
     use d20::models::config::Config;
@@ -552,8 +553,103 @@ pub mod temple_token {
         }
 
         fn disarm_trap(ref self: ContractState, explorer_id: u128) {
-            // Full implementation in task 3.9
-            assert(false, 'not yet implemented');
+            let mut world = self.world_default();
+            let caller = get_caller_address();
+
+            // ── Validate explorer state ──────────────────────────────────────
+            let health: ExplorerHealth = world.read_model(explorer_id);
+            assert(!health.is_dead, 'dead explorers cannot disarm');
+
+            let position: ExplorerPosition = world.read_model(explorer_id);
+            assert(position.temple_id != 0, 'not inside any temple');
+            assert(!position.in_combat, 'cannot disarm during combat');
+
+            let temple_id = position.temple_id;
+            let chamber_id = position.chamber_id;
+
+            // ── Must be a Trap chamber with an active trap ───────────────────
+            let chamber: Chamber = world.read_model((temple_id, chamber_id));
+            assert(chamber.chamber_type == ChamberType::Trap, 'no trap in this chamber');
+            assert(!chamber.trap_disarmed, 'trap already disarmed');
+            assert(chamber.trap_dc > 0, 'no trap in this chamber');
+
+            // ── Disarm check: DEX (Rogue) or INT (others) + proficiency ──────
+            // Rogues use DEX + proficiency (with expertise on Stealth/Acrobatics if selected).
+            // All other classes use INT + proficiency only if proficient in Arcana.
+            // Expertise on the relevant skill doubles the proficiency bonus.
+            let config: Config = world.read_model(1_u8);
+            let vrf_addr = config.vrf_address;
+            let stats: ExplorerStats = world.read_model(explorer_id);
+            let skills: ExplorerSkills = world.read_model(explorer_id);
+            let prof: u8 = proficiency_bonus(stats.level);
+
+            // Determine ability score and proficiency multiplier by class
+            // Rogue: DEX-based, always proficient (Thieves' Tools), expertise doubles if
+            //        acrobatics expertise chosen (acrobatics is a dex skill, close enough).
+            // Others: INT-based, proficient only if Arcana trained.
+            use d20::types::Skill;
+            let (ability_score, prof_mult): (u8, u8) = match stats.class {
+                ExplorerClass::Rogue => {
+                    // Check for expertise on Acrobatics (DEX skill → applies to fine motor work)
+                    let expertise_mult: u8 = if skills.expertise_1 == Skill::Acrobatics
+                        || skills.expertise_2 == Skill::Acrobatics { 2 } else { 1 };
+                    (stats.dexterity, expertise_mult)
+                },
+                _ => {
+                    // INT check; proficient only if Arcana trained
+                    let arcana_mult: u8 = if skills.arcana { 1 } else { 0 };
+                    (stats.intelligence, arcana_mult)
+                },
+            };
+
+            let ability_mod: i8 = ability_modifier(ability_score);
+            let prof_bonus: i8 = (prof * prof_mult).try_into().unwrap();
+            let roll: u8 = roll_d20(vrf_addr, caller);
+            let total: i16 = roll.into() + ability_mod.into() + prof_bonus.into();
+            let dc: i16 = chamber.trap_dc.into();
+
+            if total >= dc {
+                // ── Success: mark trap disarmed ──────────────────────────────
+                world.write_model(@Chamber {
+                    temple_id,
+                    chamber_id,
+                    chamber_type: chamber.chamber_type,
+                    yonder: chamber.yonder,
+                    exit_count: chamber.exit_count,
+                    is_revealed: chamber.is_revealed,
+                    treasure_looted: chamber.treasure_looted,
+                    trap_disarmed: true,
+                    trap_dc: chamber.trap_dc,
+                });
+            } else {
+                // ── Failure: trap fires — DEX save or take damage ────────────
+                // Failed disarm attempt triggers the trap:
+                // DEX saving throw vs trap_dc; fail → 1d6 + yonder/2 damage.
+                let dex_mod: i8 = ability_modifier(stats.dexterity);
+                let save_roll: i16 = roll_d20(vrf_addr, caller).into() + dex_mod.into();
+                if save_roll < dc {
+                    let base_dmg: u16 = roll_dice(vrf_addr, caller, 6, 1);
+                    let bonus: u16 = (chamber.yonder / 2).into();
+                    let damage: u16 = base_dmg + bonus;
+                    let new_hp: i16 = health.current_hp - damage.try_into().unwrap();
+                    if new_hp <= 0 {
+                        world.write_model(@ExplorerHealth {
+                            explorer_id,
+                            current_hp: 0,
+                            max_hp: health.max_hp,
+                            is_dead: true,
+                        });
+                    } else {
+                        world.write_model(@ExplorerHealth {
+                            explorer_id,
+                            current_hp: new_hp,
+                            max_hp: health.max_hp,
+                            is_dead: false,
+                        });
+                    }
+                }
+                // On success of the DEX save: no damage, but trap still armed (can retry)
+            }
         }
 
         fn loot_treasure(ref self: ContractState, explorer_id: u128) {
@@ -637,8 +733,81 @@ pub mod temple_token {
         }
 
         fn loot_fallen(ref self: ContractState, explorer_id: u128, fallen_index: u32) {
-            // Full implementation in task 3.10
-            assert(false, 'not yet implemented');
+            let mut world = self.world_default();
+
+            // ── Validate explorer state ──────────────────────────────────────
+            let health: ExplorerHealth = world.read_model(explorer_id);
+            assert(!health.is_dead, 'dead explorers cannot loot');
+
+            let position: ExplorerPosition = world.read_model(explorer_id);
+            assert(position.temple_id != 0, 'not inside any temple');
+            assert(!position.in_combat, 'cannot loot during combat');
+
+            let temple_id = position.temple_id;
+            let chamber_id = position.chamber_id;
+
+            // ── Validate fallen_index is in range ────────────────────────────
+            let fallen_count: ChamberFallenCount = world.read_model((temple_id, chamber_id));
+            assert(fallen_index < fallen_count.count, 'no body at that index');
+
+            // ── Read the FallenExplorer record ───────────────────────────────
+            let fallen: FallenExplorer = world.read_model((temple_id, chamber_id, fallen_index));
+            assert(!fallen.is_looted, 'already looted');
+
+            // ── Cannot loot yourself (edge case: somehow same explorer_id) ───
+            assert(fallen.explorer_id != explorer_id, 'cannot loot yourself');
+
+            // ── Merge dropped loot into explorer's inventory ─────────────────
+            // Weapons: only take if explorer has None in that slot
+            // Armor:   only upgrade if dropped armor > current (or current is None)
+            // Gold + potions: always add
+            let inventory: ExplorerInventory = world.read_model(explorer_id);
+
+            use d20::types::{WeaponType, ArmorType};
+
+            let new_primary: WeaponType = if inventory.primary_weapon == WeaponType::None {
+                fallen.dropped_weapon
+            } else {
+                inventory.primary_weapon
+            };
+
+            // Secondary slot: take dropped weapon if secondary is empty and primary already used it
+            let new_secondary: WeaponType = if inventory.secondary_weapon == WeaponType::None
+                && new_primary != fallen.dropped_weapon {
+                fallen.dropped_weapon
+            } else {
+                inventory.secondary_weapon
+            };
+
+            // Armor: upgrade if currently wearing nothing and fallen had armor
+            let new_armor: ArmorType = if inventory.armor == ArmorType::None {
+                fallen.dropped_armor
+            } else {
+                inventory.armor
+            };
+
+            world.write_model(@ExplorerInventory {
+                explorer_id,
+                primary_weapon: new_primary,
+                secondary_weapon: new_secondary,
+                armor: new_armor,
+                has_shield: inventory.has_shield,
+                gold: inventory.gold + fallen.dropped_gold,
+                potions: inventory.potions + fallen.dropped_potions,
+            });
+
+            // ── Mark fallen explorer as looted ───────────────────────────────
+            world.write_model(@FallenExplorer {
+                temple_id,
+                chamber_id,
+                fallen_index,
+                explorer_id: fallen.explorer_id,
+                dropped_weapon: fallen.dropped_weapon,
+                dropped_armor: fallen.dropped_armor,
+                dropped_gold: fallen.dropped_gold,
+                dropped_potions: fallen.dropped_potions,
+                is_looted: true,
+            });
         }
     }
 
