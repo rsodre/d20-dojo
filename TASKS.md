@@ -28,8 +28,8 @@
 - [x] **2.7** Implement Rogue features (Sneak Attack bonus dice 1d6/2d6/3d6 by level, Expertise double proficiency, cunning_action disengage/hide, Uncanny Dodge halve damage at level 5)
 - [x] **2.8** Implement Wizard spell casting: spell slot tracking per level, cantrip resolution (Fire Bolt attack roll + 1d10), leveled spell resolution (Magic Missile auto-hit 3x1d4+1, Shield +5 AC reaction, Sleep 5d8 HP, Scorching Ray 3x2d6, Misty Step, Fireball 8d6 DEX save using monster ability scores)
 - [x] **2.9** Implement death (internal fn): set `is_dead`, create `FallenExplorer` with dropped loot, increment `ChamberFallenCount`, emit ExplorerDied event
-- [ ] **2.10** Implement `flee` mechanic: contested DEX check (explorer DEX vs monster DEX), on success move back to previous chamber
-- [ ] **2.11** Write unit tests for combat math, each class feature, and death flow using `spawn_test_world` and `write_model_test`
+- [x] **2.10** Implement `flee` mechanic: contested DEX check (explorer DEX vs monster DEX), on success move back to previous chamber
+- [x] **2.11** Write unit tests for combat math, each class feature, and death flow using `spawn_test_world` and `write_model_test`
 
 ## Day 3: Temple & Exploration
 
