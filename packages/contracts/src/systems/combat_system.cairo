@@ -47,9 +47,9 @@ pub mod combat_system {
     use d20::models::explorer::{
         ExplorerStats, ExplorerHealth, ExplorerCombat, ExplorerInventory, ExplorerPosition,
     };
-    use d20::models::temple::{MonsterInstance, FallenExplorer, ChamberFallenCount};
+    use d20::models::temple::{MonsterInstance, FallenExplorer, ChamberFallenCount, ExplorerTempleProgress};
     use d20::models::config::Config;
-    use d20::events::{CombatResult, ExplorerDied};
+    use d20::events::{CombatResult, ExplorerDied, LevelUp};
     use d20::utils::d20::{roll_d20, roll_dice, ability_modifier, proficiency_bonus};
     use d20::utils::monsters::get_monster_stats;
     use starknet::ContractAddress;
@@ -347,6 +347,150 @@ pub mod combat_system {
             }
         }
 
+        // ── XP thresholds ────────────────────────────────────────────────────
+
+        /// Returns the XP required for the given level (1-5).
+        /// Level 1 = 0, 2 = 300, 3 = 900, 4 = 2700, 5 = 6500.
+        fn xp_threshold(level: u8) -> u32 {
+            if level <= 1 { 0 }
+            else if level == 2 { 300 }
+            else if level == 3 { 900 }
+            else if level == 4 { 2700 }
+            else { 6500 }
+        }
+
+        /// Hit die sides by class (for level-up HP rolls).
+        fn hit_die_sides(class: ExplorerClass) -> u8 {
+            match class {
+                ExplorerClass::Fighter => 10,
+                ExplorerClass::Rogue => 8,
+                ExplorerClass::Wizard => 6,
+                ExplorerClass::None => 6,
+            }
+        }
+
+        /// Wizard spell slots by level. Returns (slots_1, slots_2, slots_3).
+        fn wizard_spell_slots(level: u8) -> (u8, u8, u8) {
+            if level >= 5 { (4, 3, 2) }
+            else if level == 4 { (4, 3, 0) }
+            else if level == 3 { (4, 2, 0) }
+            else if level == 2 { (3, 0, 0) }
+            else { (2, 0, 0) }
+        }
+
+        /// Apply a level-up: increment level, roll HP, update spell slots, emit event.
+        fn level_up(
+            ref world: WorldStorage,
+            vrf_address: ContractAddress,
+            caller: starknet::ContractAddress,
+            explorer_id: u128,
+            stats: ExplorerStats,
+            health: ExplorerHealth,
+        ) {
+            let new_level: u8 = stats.level + 1;
+
+            // Update level in ExplorerStats
+            world.write_model(@ExplorerStats {
+                explorer_id,
+                strength: stats.strength,
+                dexterity: stats.dexterity,
+                constitution: stats.constitution,
+                intelligence: stats.intelligence,
+                wisdom: stats.wisdom,
+                charisma: stats.charisma,
+                level: new_level,
+                xp: stats.xp,
+                class: stats.class,
+                temples_conquered: stats.temples_conquered,
+            });
+
+            // Roll hit die + CON modifier, minimum 1, add to max HP
+            let hit_sides: u8 = Self::hit_die_sides(stats.class);
+            let raw_roll: u16 = roll_dice(vrf_address, caller, hit_sides, 1);
+            let con_mod: i8 = ability_modifier(stats.constitution);
+            let raw_roll_i32: i32 = raw_roll.into();
+            let con_mod_i32: i32 = con_mod.into();
+            let hp_gain_i32: i32 = raw_roll_i32 + con_mod_i32;
+            let hp_gain: u16 = if hp_gain_i32 < 1 { 1 } else { hp_gain_i32.try_into().unwrap() };
+            let new_max_hp: u16 = health.max_hp + hp_gain;
+
+            world.write_model(@ExplorerHealth {
+                explorer_id,
+                current_hp: health.current_hp,
+                max_hp: new_max_hp,
+                is_dead: false,
+            });
+
+            // Update spell slots for Wizards
+            if stats.class == ExplorerClass::Wizard {
+                let combat: ExplorerCombat = world.read_model(explorer_id);
+                let (slots_1, slots_2, slots_3) = Self::wizard_spell_slots(new_level);
+                world.write_model(@ExplorerCombat {
+                    explorer_id,
+                    armor_class: combat.armor_class,
+                    spell_slots_1: slots_1,
+                    spell_slots_2: slots_2,
+                    spell_slots_3: slots_3,
+                    second_wind_used: combat.second_wind_used,
+                    action_surge_used: combat.action_surge_used,
+                });
+            }
+
+            world.emit_event(@LevelUp { explorer_id, new_level });
+        }
+
+        /// Award XP to the explorer for killing a monster.
+        /// Updates ExplorerStats.xp and ExplorerTempleProgress.xp_earned.
+        /// Triggers level_up if an XP threshold is crossed (max level 5).
+        fn gain_xp(
+            ref world: WorldStorage,
+            vrf_address: ContractAddress,
+            caller: starknet::ContractAddress,
+            explorer_id: u128,
+            temple_id: u128,
+            xp_reward: u32,
+        ) {
+            let mut stats: ExplorerStats = world.read_model(explorer_id);
+
+            // Don't grant XP beyond level 5
+            if stats.level >= 5 {
+                return;
+            }
+
+            let new_xp: u32 = stats.xp + xp_reward;
+            stats.xp = new_xp;
+            world.write_model(@stats);
+
+            // Update temple progress XP
+            if temple_id != 0 {
+                let mut progress: ExplorerTempleProgress = world.read_model((explorer_id, temple_id));
+                world.write_model(@ExplorerTempleProgress {
+                    explorer_id,
+                    temple_id,
+                    chambers_explored: progress.chambers_explored,
+                    xp_earned: progress.xp_earned + xp_reward,
+                });
+            }
+
+            // Check for level-up (level 2-5 thresholds)
+            let mut current_level: u8 = stats.level;
+            loop {
+                if current_level >= 5 {
+                    break;
+                }
+                let next_threshold: u32 = Self::xp_threshold(current_level + 1);
+                if new_xp >= next_threshold {
+                    // Re-read stats in case level already updated
+                    let current_stats: ExplorerStats = world.read_model(explorer_id);
+                    let current_health: ExplorerHealth = world.read_model(explorer_id);
+                    Self::level_up(ref world, vrf_address, caller, explorer_id, current_stats, current_health);
+                    current_level += 1;
+                } else {
+                    break;
+                }
+            };
+        }
+
         /// Consume a spell slot of the given level. Panics if none available.
         fn consume_spell_slot(ref world: WorldStorage, explorer_id: u128, level: u8) {
             let mut combat: ExplorerCombat = world.read_model(explorer_id);
@@ -488,6 +632,11 @@ pub mod combat_system {
                     in_combat: false,
                     combat_monster_id: 0,
                 });
+                // Award XP for the kill
+                InternalImpl::gain_xp(
+                    ref world, vrf_address, caller, explorer_id,
+                    position.temple_id, monster_stats.xp_reward,
+                );
             } else {
                 world.write_model(@MonsterInstance {
                     temple_id: position.temple_id,
@@ -562,6 +711,7 @@ pub mod combat_system {
             let mut damage_dealt: u16 = 0;
             let mut monster_killed: bool = false;
             let mut spell_roll: u8 = 0;
+            let mut xp_to_award: u32 = 0;
 
             match spell_id {
                 SpellId::None => { assert(false, 'invalid spell'); },
@@ -576,6 +726,7 @@ pub mod combat_system {
                     );
                     assert(monster.is_alive, 'monster is already dead');
                     let monster_stats = get_monster_stats(monster.monster_type);
+                    xp_to_award = monster_stats.xp_reward;
 
                     let attack_roll: u8 = roll_d20(vrf_address, caller);
                     spell_roll = attack_roll;
@@ -624,6 +775,7 @@ pub mod combat_system {
                         (position.temple_id, position.chamber_id, position.combat_monster_id)
                     );
                     assert(monster.is_alive, 'monster is already dead');
+                    xp_to_award = get_monster_stats(monster.monster_type).xp_reward;
 
                     // 3 × (1d4+1): roll 3d4 then add 3
                     let raw: u16 = roll_dice(vrf_address, caller, 4, 3);
@@ -670,6 +822,7 @@ pub mod combat_system {
                         (position.temple_id, position.chamber_id, position.combat_monster_id)
                     );
                     assert(monster.is_alive, 'monster is already dead');
+                    xp_to_award = get_monster_stats(monster.monster_type).xp_reward;
 
                     let sleep_pool: u16 = roll_dice(vrf_address, caller, 8, 5); // 5d8
                     spell_roll = (sleep_pool % 256).try_into().unwrap(); // store low byte for event
@@ -706,6 +859,7 @@ pub mod combat_system {
                     );
                     assert(monster.is_alive, 'monster is already dead');
                     let monster_stats = get_monster_stats(monster.monster_type);
+                    xp_to_award = monster_stats.xp_reward;
 
                     let mut ray: u8 = 0;
                     loop {
@@ -783,6 +937,7 @@ pub mod combat_system {
                     );
                     assert(monster.is_alive, 'monster is already dead');
                     let monster_stats = get_monster_stats(monster.monster_type);
+                    xp_to_award = monster_stats.xp_reward;
 
                     // DC = 8 + INT mod + proficiency bonus
                     let save_dc: i16 = 8_i16 + int_mod.into() + prof_bonus.into();
@@ -820,6 +975,14 @@ pub mod combat_system {
                         });
                     }
                 },
+            }
+
+            // Award XP for the kill (cast_spell)
+            if monster_killed && xp_to_award > 0 {
+                InternalImpl::gain_xp(
+                    ref world, vrf_address, caller, explorer_id,
+                    position.temple_id, xp_to_award,
+                );
             }
 
             // ── Monster counter-attack (unless killed or disengaged) ──────────
