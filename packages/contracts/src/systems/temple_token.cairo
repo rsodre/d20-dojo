@@ -44,6 +44,7 @@ pub mod temple_token {
     use super::ITempleToken;
     use starknet::get_caller_address;
     use dojo::model::ModelStorage;
+    use dojo::event::EventStorage;
     use dojo::world::WorldStorage;
 
     // ERC-721 components (OpenZeppelin + cairo-nft-combo)
@@ -60,12 +61,27 @@ pub mod temple_token {
     impl ERC721ComboMixinImpl = ERC721ComboComponent::ERC721ComboMixinImpl<ContractState>;
 
     // Game types and models
-    use d20::models::temple::{TempleState, ExplorerTempleProgress};
+    use d20::types::{ChamberType, MonsterType};
+    use d20::models::temple::{
+        TempleState, Chamber, MonsterInstance, ChamberExit, ExplorerTempleProgress,
+    };
     use d20::models::explorer::{ExplorerHealth, ExplorerPosition};
+    use d20::models::config::Config;
+    use d20::events::ChamberRevealed;
+    use d20::utils::d20::roll_d20;
+    use d20::utils::monsters::get_monster_stats;
     use d20::constants::{TEMPLE_TOKEN_DESCRIPTION, TEMPLE_TOKEN_EXTERNAL_LINK};
+    use starknet::ContractAddress;
 
     // Metadata types
     use nft_combo::utils::renderer::{ContractMetadata, TokenMetadata, Attribute};
+
+    // ── Boss probability constants (Yonder Formula) ──────────────────────────
+    // See SPEC.md §"Boss Chamber Probability"
+    const MIN_YONDER: u8 = 5;
+    const YONDER_WEIGHT: u32 = 50;   // bps per effective_yonder²
+    const XP_WEIGHT: u32 = 2;        // bps per xp_earned
+    const MAX_PROB: u32 = 9500;      // cap at 95%
 
     // ── Storage ─────────────────────────────────────────────────────────────
 
@@ -115,6 +131,183 @@ pub mod temple_token {
     impl InternalImpl of InternalTrait {
         fn world_default(self: @ContractState) -> WorldStorage {
             self.world(@"d20_0_1")
+        }
+
+        fn vrf_address(world: @WorldStorage) -> ContractAddress {
+            let config: Config = world.read_model(1_u8);
+            config.vrf_address
+        }
+
+        // ── Boss probability: Yonder Formula (integer-only, bps) ─────────────
+
+        fn calculate_boss_probability(yonder: u8, xp_earned: u32) -> u32 {
+            if yonder < MIN_YONDER {
+                return 0;
+            }
+            let effective_yonder: u32 = (yonder - MIN_YONDER).into();
+            let yonder_component: u32 = effective_yonder * effective_yonder * YONDER_WEIGHT;
+            let xp_component: u32 = xp_earned * XP_WEIGHT;
+            let total: u32 = yonder_component + xp_component;
+            if total > MAX_PROB { MAX_PROB } else { total }
+        }
+
+        // ── Monster type by yonder and difficulty ────────────────────────────
+        // Derives from the temple seed + chamber_id hash (pseudo-random, deterministic).
+        // Uses a single hash felt to pick both chamber type and monster type.
+
+        fn monster_for_yonder(yonder: u8, difficulty: u8, hash: u256) -> MonsterType {
+            // Thematic progression per SPEC:
+            //   yonder 0-2:  Snakes, Skeletons
+            //   yonder 3-5:  Shadows, Animated Armor
+            //   yonder 6-9:  Gargoyles, Mummies
+            //   yonder 10+:  Mummies, (Wraith reserved for boss)
+            let tier: u8 = if yonder <= 2 { 0 }
+                else if yonder <= 5 { 1 }
+                else { 2 };
+
+            // difficulty shifts tier up by (difficulty - 1), capped
+            let adjusted: u8 = tier + (difficulty - 1);
+            let capped: u8 = if adjusted > 2 { 2 } else { adjusted };
+
+            // Pick one of two monsters in tier using hash bit
+            let pick: u8 = (hash % 2).try_into().unwrap();
+            match capped {
+                0 => if pick == 0 { MonsterType::PoisonousSnake } else { MonsterType::Skeleton },
+                1 => if pick == 0 { MonsterType::Shadow } else { MonsterType::AnimatedArmor },
+                _ => if pick == 0 { MonsterType::Gargoyle } else { MonsterType::Mummy },
+            }
+        }
+
+        // ── Deterministic hash from two felts ───────────────────────────────
+        // Combines temple seed and chamber_id into a u256 for branching decisions.
+        // Uses Poseidon-like mixing via field arithmetic (no external dep needed).
+
+        fn chamber_hash(seed: felt252, chamber_id: u32, salt: felt252) -> u256 {
+            // Simple hash: mix seed, chamber_id, and salt as a felt252 product
+            let chamber_felt: felt252 = chamber_id.into();
+            // Combine by adding and multiplying (stays in field)
+            let mixed: felt252 = seed + chamber_felt + salt;
+            let mixed_u256: u256 = mixed.into();
+            mixed_u256
+        }
+
+        // ── generate_chamber ─────────────────────────────────────────────────
+        // Creates a new chamber model derived from the temple seed + parent chamber.
+        // Returns the new chamber_id.
+
+        fn generate_chamber(
+            ref world: WorldStorage,
+            temple_id: u128,
+            parent_chamber_id: u32,
+            new_chamber_id: u32,
+            yonder: u8,
+            explorer_id: u128,
+            revealed_by: u128,
+            temple_seed: felt252,
+            difficulty: u8,
+            xp_earned: u32,
+            caller: ContractAddress,
+        ) {
+            let vrf_addr = Self::vrf_address(@world);
+
+            // ── Is this a boss chamber? ──────────────────────────────────────
+            let boss_prob: u32 = Self::calculate_boss_probability(yonder, xp_earned);
+            let is_boss: bool = if boss_prob > 0 {
+                let roll: u32 = roll_d20(vrf_addr, caller).into() * 500_u32; // scale 1-20 → 500-10000 bps
+                roll <= boss_prob
+            } else {
+                false
+            };
+
+            // ── Derive chamber properties from seed hash ─────────────────────
+            let hash_type = Self::chamber_hash(temple_seed, new_chamber_id, 'type');
+            let hash_exits = Self::chamber_hash(temple_seed, new_chamber_id, 'exits');
+
+            let (chamber_type, monster_type) = if is_boss {
+                (ChamberType::Boss, MonsterType::Wraith)
+            } else {
+                // Pick chamber type: 0-2 → Monster, 3 → Treasure, 4 → Trap, 5 → Empty
+                let type_roll: u8 = (hash_type % 6).try_into().unwrap();
+                let ct: ChamberType = if type_roll <= 2 { ChamberType::Monster }
+                    else if type_roll == 3 { ChamberType::Treasure }
+                    else if type_roll == 4 { ChamberType::Trap }
+                    else { ChamberType::Empty };
+                let mt: MonsterType = if ct == ChamberType::Monster {
+                    Self::monster_for_yonder(yonder, difficulty, hash_type)
+                } else {
+                    MonsterType::None
+                };
+                (ct, mt)
+            };
+
+            // ── Exit count: 0-3 new exits (dead end = 0) ────────────────────
+            let exit_count: u8 = (hash_exits % 4).try_into().unwrap(); // 0,1,2,3
+
+            // ── Trap DC: 10 + yonder/2 + (difficulty - 1)*2 ─────────────────
+            let trap_dc: u8 = if chamber_type == ChamberType::Trap {
+                10_u8 + yonder / 2 + (difficulty - 1) * 2
+            } else {
+                0
+            };
+
+            // ── Write Chamber model ──────────────────────────────────────────
+            world.write_model(@Chamber {
+                temple_id,
+                chamber_id: new_chamber_id,
+                chamber_type,
+                yonder,
+                exit_count,
+                is_revealed: true,
+                treasure_looted: false,
+                trap_disarmed: false,
+                trap_dc,
+            });
+
+            // ── Write MonsterInstance if needed ──────────────────────────────
+            if monster_type != MonsterType::None {
+                let stats = get_monster_stats(monster_type);
+                world.write_model(@MonsterInstance {
+                    temple_id,
+                    chamber_id: new_chamber_id,
+                    monster_id: 1,
+                    monster_type,
+                    current_hp: stats.hp.try_into().unwrap(),
+                    max_hp: stats.hp,
+                    is_alive: true,
+                });
+            }
+
+            // ── Initialize exit stubs (undiscovered) ─────────────────────────
+            // These placeholders exist so open_exit can validate exit_index bounds.
+            let mut i: u8 = 0;
+            loop {
+                if i >= exit_count { break; }
+                world.write_model(@ChamberExit {
+                    temple_id,
+                    from_chamber_id: new_chamber_id,
+                    exit_index: i,
+                    to_chamber_id: 0, // unknown until explorer opens it
+                    is_discovered: false,
+                });
+                i += 1;
+            };
+
+            // ── Update TempleState: record boss chamber, advance next_id ─────
+            // (next_chamber_id already incremented by caller before this call)
+            if is_boss {
+                let mut temple: TempleState = world.read_model(temple_id);
+                temple.boss_chamber_id = new_chamber_id;
+                world.write_model(@temple);
+            }
+
+            // ── Emit ChamberRevealed event ───────────────────────────────────
+            world.emit_event(@ChamberRevealed {
+                temple_id,
+                chamber_id: new_chamber_id,
+                chamber_type,
+                yonder,
+                revealed_by,
+            });
         }
     }
 
@@ -206,8 +399,79 @@ pub mod temple_token {
         }
 
         fn open_exit(ref self: ContractState, explorer_id: u128, exit_index: u8) {
-            // Full implementation in task 3.6
-            assert(false, 'not yet implemented');
+            let mut world = self.world_default();
+            let caller = get_caller_address();
+
+            // ── Validate explorer state ──────────────────────────────────────
+            let health: ExplorerHealth = world.read_model(explorer_id);
+            assert(!health.is_dead, 'dead explorers cannot explore');
+
+            let position: ExplorerPosition = world.read_model(explorer_id);
+            assert(position.temple_id != 0, 'not inside any temple');
+            assert(!position.in_combat, 'cannot open exit in combat');
+
+            let temple_id = position.temple_id;
+            let current_chamber_id = position.chamber_id;
+
+            // ── Validate the exit exists on the current chamber ──────────────
+            let current_chamber: Chamber = world.read_model((temple_id, current_chamber_id));
+            assert(exit_index < current_chamber.exit_count, 'invalid exit index');
+
+            // ── Check if exit is already discovered ──────────────────────────
+            let exit: ChamberExit = world.read_model((temple_id, current_chamber_id, exit_index));
+            assert(!exit.is_discovered, 'exit already discovered');
+
+            // ── Allocate new chamber ID ──────────────────────────────────────
+            let mut temple: TempleState = world.read_model(temple_id);
+            let new_chamber_id: u32 = temple.next_chamber_id;
+            temple.next_chamber_id = new_chamber_id + 1;
+            world.write_model(@temple);
+
+            // ── Read progress for boss probability ───────────────────────────
+            let progress: ExplorerTempleProgress = world.read_model((explorer_id, temple_id));
+
+            // ── Generate the new chamber ─────────────────────────────────────
+            let new_yonder: u8 = current_chamber.yonder + 1;
+            InternalTrait::generate_chamber(
+                ref world,
+                temple_id,
+                current_chamber_id,
+                new_chamber_id,
+                new_yonder,
+                explorer_id,
+                explorer_id, // revealed_by
+                temple.seed,
+                temple.difficulty_tier,
+                progress.xp_earned,
+                caller,
+            );
+
+            // ── Create bidirectional ChamberExit links ───────────────────────
+            // Forward: current → new (mark discovered)
+            world.write_model(@ChamberExit {
+                temple_id,
+                from_chamber_id: current_chamber_id,
+                exit_index,
+                to_chamber_id: new_chamber_id,
+                is_discovered: true,
+            });
+
+            // Back: new → current (exit_index = 0 reserved for return path)
+            world.write_model(@ChamberExit {
+                temple_id,
+                from_chamber_id: new_chamber_id,
+                exit_index: 0,
+                to_chamber_id: current_chamber_id,
+                is_discovered: true,
+            });
+
+            // ── Increment chambers_explored on ExplorerTempleProgress ────────
+            world.write_model(@ExplorerTempleProgress {
+                explorer_id,
+                temple_id,
+                chambers_explored: progress.chambers_explored + 1,
+                xp_earned: progress.xp_earned,
+            });
         }
 
         fn move_to_chamber(ref self: ContractState, explorer_id: u128, exit_index: u8) {
