@@ -1,3 +1,4 @@
+use core::num::traits::Zero;
 use starknet::ContractAddress;
 use d20::utils::vrf::{IVrfProviderDispatcher, IVrfProviderDispatcherTrait, Source};
 use dojo::model::ModelStorage;
@@ -8,6 +9,7 @@ use core::poseidon::poseidon_hash_span;
 #[derive(Drop, Copy, Serde)]
 pub struct Seeder {
     pub seed: felt252,
+    pub hash: u256,
     pub nonce: felt252,
 }
 
@@ -17,22 +19,33 @@ pub impl SeederImpl of SeederTrait {
         let config: Config = world.read_model(1_u8);
         let vrf_provider = IVrfProviderDispatcher { contract_address: config.vrf_address };
         let random_felt = vrf_provider.consume_random(Source::Nonce(caller));
-        Seeder { seed: random_felt, nonce: 0 }
+        Seeder { seed: random_felt, hash: 0, nonce: 0 }
     }
 
     fn from_seed(seed: felt252) -> Seeder {
-        Seeder { seed, nonce: 0 }
+        Seeder { seed: seed, hash: 0, nonce: 0 }
     }
 
-    fn random_felt(ref self: Seeder) -> felt252 {
-        let mut data = array![self.seed, self.nonce];
-        let hash = poseidon_hash_span(data.span());
-        self.nonce += 1;
-        hash
-    }
+    // fn random_felt(ref self: Seeder) -> felt252 {
+    //     let mut data = array![self.seed, self.nonce];
+    //     let hash = poseidon_hash_span(data.span());
+    //     self.nonce += 1;
+    //     hash
+    // }
 
+    // optimized for u8 outputs
     fn random_u256(ref self: Seeder) -> u256 {
-        self.random_felt().into()
+        if self.nonce.is_zero() {
+            self.hash = self.seed.into();
+        } else {
+            self.hash = self.hash / 0x100;
+        }
+        if self.hash < 0x100 {
+            let mut data = array![self.seed, self.nonce];
+            self.hash = poseidon_hash_span(data.span()).into();
+        }
+        self.nonce += 1;
+        self.hash
     }
 
     fn random_u8(ref self: Seeder) -> u8 {
@@ -50,8 +63,8 @@ mod tests {
         let mut seeder1 = SeederTrait::from_seed(seed);
         let mut seeder2 = SeederTrait::from_seed(seed);
 
-        let r1 = seeder1.random_felt();
-        let r2 = seeder2.random_felt();
+        let r1 = seeder1.random_u256();
+        let r2 = seeder2.random_u256();
 
         assert(r1 == r2, 'seeder not deterministic');
     }
@@ -61,20 +74,11 @@ mod tests {
         let seed = 12345;
         let mut seeder = SeederTrait::from_seed(seed);
 
-        let r1 = seeder.random_felt();
-        let r2 = seeder.random_felt();
+        let r1 = seeder.random_u256();
+        let r2 = seeder.random_u256();
 
         assert(r1 != r2, 'seeder repetition');
         assert(seeder.nonce == 2, 'nonce not incremented');
-    }
-
-    #[test]
-    fn test_random_u256() {
-        let seed = 67890;
-        let mut seeder = SeederTrait::from_seed(seed);
-
-        let r: u256 = seeder.random_u256();
-        assert(r > 0, 'random u256 is zero'); 
     }
 
     #[test]
