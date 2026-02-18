@@ -68,8 +68,9 @@ pub mod temple_token {
     use d20::models::explorer::{ExplorerHealth, ExplorerPosition};
     use d20::models::config::Config;
     use d20::events::ChamberRevealed;
-    use d20::utils::d20::roll_d20;
+    use d20::utils::d20::{roll_d20, roll_dice, ability_modifier, proficiency_bonus};
     use d20::utils::monsters::get_monster_stats;
+    use d20::models::explorer::{ExplorerStats, ExplorerInventory, ExplorerSkills};
     use d20::constants::{TEMPLE_TOKEN_DESCRIPTION, TEMPLE_TOKEN_EXTERNAL_LINK};
     use starknet::ContractAddress;
 
@@ -351,12 +352,11 @@ pub mod temple_token {
             let health: ExplorerHealth = world.read_model(explorer_id);
             assert(!health.is_dead, 'dead explorers cannot enter');
 
-            // Validate explorer is not already in a temple
+            // Validate explorer is not in combat; auto-exit current temple if in one
             let position: ExplorerPosition = world.read_model(explorer_id);
-            assert(position.temple_id == 0, 'already inside a temple');
             assert(!position.in_combat, 'explorer is in combat');
 
-            // Place explorer at entrance chamber
+            // Place explorer at entrance chamber (overwrites any previous temple position)
             world.write_model(@ExplorerPosition {
                 explorer_id,
                 temple_id,
@@ -475,13 +475,162 @@ pub mod temple_token {
         }
 
         fn move_to_chamber(ref self: ContractState, explorer_id: u128, exit_index: u8) {
-            // Full implementation in task 3.7
-            assert(false, 'not yet implemented');
+            let mut world = self.world_default();
+            let caller = get_caller_address();
+
+            // ── Validate explorer state ──────────────────────────────────────
+            let health: ExplorerHealth = world.read_model(explorer_id);
+            assert(!health.is_dead, 'dead explorers cannot move');
+
+            let position: ExplorerPosition = world.read_model(explorer_id);
+            assert(position.temple_id != 0, 'not inside any temple');
+            assert(!position.in_combat, 'cannot move during combat');
+
+            let temple_id = position.temple_id;
+            let current_chamber_id = position.chamber_id;
+
+            // ── Validate exit is discovered ──────────────────────────────────
+            let current_chamber: Chamber = world.read_model((temple_id, current_chamber_id));
+            assert(exit_index < current_chamber.exit_count, 'invalid exit index');
+
+            let exit: ChamberExit = world.read_model((temple_id, current_chamber_id, exit_index));
+            assert(exit.is_discovered, 'exit not yet discovered');
+
+            let dest_chamber_id = exit.to_chamber_id;
+
+            // ── Move explorer to destination chamber ─────────────────────────
+            let dest_chamber: Chamber = world.read_model((temple_id, dest_chamber_id));
+
+            // Check for live monster in destination chamber
+            let monster: MonsterInstance = world.read_model((temple_id, dest_chamber_id, 1_u32));
+            let enters_combat: bool = monster.is_alive && dest_chamber.chamber_type == ChamberType::Monster
+                || (monster.is_alive && dest_chamber.chamber_type == ChamberType::Boss);
+
+            world.write_model(@ExplorerPosition {
+                explorer_id,
+                temple_id,
+                chamber_id: dest_chamber_id,
+                in_combat: enters_combat,
+                combat_monster_id: if enters_combat { 1 } else { 0 },
+            });
+
+            // ── Trigger trap on entry if not disarmed ───────────────────────
+            // Trap damage dealt on entry: DEX save vs trap_dc.
+            // On failed save, explorer takes 1d6 + yonder/2 damage.
+            // (Full save resolution reuses VRF; simplified to automatic partial damage here
+            //  until task 3.9 disarm_trap is implemented)
+            if dest_chamber.chamber_type == ChamberType::Trap && !dest_chamber.trap_disarmed
+                && dest_chamber.trap_dc > 0 {
+                let config: Config = world.read_model(1_u8);
+                let vrf_addr = config.vrf_address;
+                let stats: ExplorerStats = world.read_model(explorer_id);
+                let dex_mod: i8 = ability_modifier(stats.dexterity);
+                // DEX saving throw
+                let save_roll: i16 = roll_d20(vrf_addr, caller).into() + dex_mod.into();
+                let dc_i16: i16 = dest_chamber.trap_dc.into();
+                if save_roll < dc_i16 {
+                    // Failed save: take 1d6 + yonder/2 piercing damage
+                    let base_dmg: u16 = roll_dice(vrf_addr, caller, 6, 1);
+                    let bonus: u16 = (dest_chamber.yonder / 2).into();
+                    let damage: u16 = base_dmg + bonus;
+                    let new_hp: i16 = health.current_hp - damage.try_into().unwrap();
+                    if new_hp <= 0 {
+                        world.write_model(@ExplorerHealth {
+                            explorer_id,
+                            current_hp: 0,
+                            max_hp: health.max_hp,
+                            is_dead: true,
+                        });
+                    } else {
+                        world.write_model(@ExplorerHealth {
+                            explorer_id,
+                            current_hp: new_hp,
+                            max_hp: health.max_hp,
+                            is_dead: false,
+                        });
+                    }
+                }
+            }
         }
 
         fn search_chamber(ref self: ContractState, explorer_id: u128) {
-            // Full implementation in task 3.8
-            assert(false, 'not yet implemented');
+            let mut world = self.world_default();
+            let caller = get_caller_address();
+
+            // ── Validate explorer state ──────────────────────────────────────
+            let health: ExplorerHealth = world.read_model(explorer_id);
+            assert(!health.is_dead, 'dead explorers cannot search');
+
+            let position: ExplorerPosition = world.read_model(explorer_id);
+            assert(position.temple_id != 0, 'not inside any temple');
+            assert(!position.in_combat, 'cannot search during combat');
+
+            let temple_id = position.temple_id;
+            let chamber_id = position.chamber_id;
+
+            // ── Only searchable in Empty or Treasure chambers ────────────────
+            let chamber: Chamber = world.read_model((temple_id, chamber_id));
+            assert(
+                chamber.chamber_type == ChamberType::Empty
+                    || chamber.chamber_type == ChamberType::Treasure,
+                'nothing to search here'
+            );
+            assert(!chamber.treasure_looted, 'already looted');
+
+            // ── Perception check: d20 + WIS mod [+ proficiency if trained] ───
+            let config: Config = world.read_model(1_u8);
+            let vrf_addr = config.vrf_address;
+            let stats: ExplorerStats = world.read_model(explorer_id);
+            let skills: ExplorerSkills = world.read_model(explorer_id);
+
+            let wis_mod: i8 = ability_modifier(stats.wisdom);
+            let prof: u8 = proficiency_bonus(stats.level);
+            let prof_bonus: i8 = if skills.perception { prof.try_into().unwrap() } else { 0 };
+
+            let roll: i16 = roll_d20(vrf_addr, caller).into()
+                + wis_mod.into()
+                + prof_bonus.into();
+
+            // DC 12 for Empty chambers, DC 10 for Treasure chambers
+            let dc: i16 = if chamber.chamber_type == ChamberType::Empty { 12 } else { 10 };
+
+            if roll >= dc {
+                // ── Success: award hidden gold and possibly a potion ──────────
+                // Gold: 1d6 × (yonder + 1) × difficulty
+                let gold_roll: u32 = roll_dice(vrf_addr, caller, 6, 1).into();
+                let temple: TempleState = world.read_model(temple_id);
+                let gold_found: u32 = gold_roll
+                    * (chamber.yonder.into() + 1)
+                    * temple.difficulty_tier.into();
+
+                // Potion found on total roll >= 15
+                let potion_found: u8 = if roll >= 15 { 1 } else { 0 };
+
+                let inventory: ExplorerInventory = world.read_model(explorer_id);
+                world.write_model(@ExplorerInventory {
+                    explorer_id,
+                    primary_weapon: inventory.primary_weapon,
+                    secondary_weapon: inventory.secondary_weapon,
+                    armor: inventory.armor,
+                    has_shield: inventory.has_shield,
+                    gold: inventory.gold + gold_found,
+                    potions: inventory.potions + potion_found,
+                });
+
+                // Mark as looted so it can't be searched again
+                world.write_model(@Chamber {
+                    temple_id,
+                    chamber_id,
+                    chamber_type: chamber.chamber_type,
+                    yonder: chamber.yonder,
+                    exit_count: chamber.exit_count,
+                    is_revealed: chamber.is_revealed,
+                    treasure_looted: true,
+                    trap_disarmed: chamber.trap_disarmed,
+                    trap_dc: chamber.trap_dc,
+                });
+            }
+            // On failure: nothing found, chamber unchanged — explorer can retry
         }
 
         fn disarm_trap(ref self: ContractState, explorer_id: u128) {
