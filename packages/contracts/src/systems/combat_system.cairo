@@ -47,9 +47,9 @@ pub mod combat_system {
     use d20::models::explorer::{
         ExplorerStats, ExplorerHealth, ExplorerCombat, ExplorerInventory, ExplorerPosition,
     };
-    use d20::models::temple::{MonsterInstance, FallenExplorer, ChamberFallenCount, ExplorerTempleProgress};
+    use d20::models::temple::{MonsterInstance, FallenExplorer, ChamberFallenCount, ExplorerTempleProgress, TempleState};
     use d20::models::config::Config;
-    use d20::events::{CombatResult, ExplorerDied, LevelUp};
+    use d20::events::{CombatResult, ExplorerDied, LevelUp, BossDefeated};
     use d20::utils::d20::{roll_d20, roll_dice, ability_modifier, proficiency_bonus};
     use d20::utils::monsters::get_monster_stats;
     use starknet::ContractAddress;
@@ -491,6 +491,42 @@ pub mod combat_system {
             };
         }
 
+        // ── Boss defeat (task 3.12) ──────────────────────────────────────────
+
+        /// Check if the just-killed monster was the boss. If so:
+        ///   1. Mark TempleState.boss_alive = false.
+        ///   2. Increment ExplorerStats.temples_conquered.
+        ///   3. Emit BossDefeated event.
+        fn check_boss_defeat(
+            ref world: WorldStorage,
+            explorer_id: u128,
+            temple_id: u128,
+            chamber_id: u32,
+            monster_type: MonsterType,
+        ) {
+            if temple_id == 0 {
+                return;
+            }
+            let mut temple: TempleState = world.read_model(temple_id);
+            if !temple.boss_alive {
+                return; // already defeated
+            }
+            if chamber_id != temple.boss_chamber_id {
+                return; // not the boss chamber
+            }
+            // Mark temple boss as defeated
+            temple.boss_alive = false;
+            world.write_model(@temple);
+
+            // Increment temples_conquered on the explorer
+            let mut stats: ExplorerStats = world.read_model(explorer_id);
+            stats.temples_conquered += 1;
+            world.write_model(@stats);
+
+            // Emit BossDefeated event
+            world.emit_event(@BossDefeated { temple_id, explorer_id, monster_type });
+        }
+
         /// Consume a spell slot of the given level. Panics if none available.
         fn consume_spell_slot(ref world: WorldStorage, explorer_id: u128, level: u8) {
             let mut combat: ExplorerCombat = world.read_model(explorer_id);
@@ -636,6 +672,11 @@ pub mod combat_system {
                 InternalImpl::gain_xp(
                     ref world, vrf_address, caller, explorer_id,
                     position.temple_id, monster_stats.xp_reward,
+                );
+                // Check for boss defeat
+                InternalImpl::check_boss_defeat(
+                    ref world, explorer_id, position.temple_id,
+                    position.chamber_id, monster.monster_type,
                 );
             } else {
                 world.write_model(@MonsterInstance {
@@ -977,11 +1018,22 @@ pub mod combat_system {
                 },
             }
 
-            // Award XP for the kill (cast_spell)
+            // Award XP and check for boss defeat on kill (cast_spell)
             if monster_killed && xp_to_award > 0 {
                 InternalImpl::gain_xp(
                     ref world, vrf_address, caller, explorer_id,
                     position.temple_id, xp_to_award,
+                );
+            }
+            if monster_killed {
+                // Re-read the monster type from the MonsterInstance (xp_to_award==0 for
+                // MistyStep/Shield which never kill, so this only fires on real kills)
+                let killed_monster: MonsterInstance = world.read_model(
+                    (position.temple_id, position.chamber_id, position.combat_monster_id)
+                );
+                InternalImpl::check_boss_defeat(
+                    ref world, explorer_id, position.temple_id,
+                    position.chamber_id, killed_monster.monster_type,
                 );
             }
 

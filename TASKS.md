@@ -44,7 +44,7 @@
 - [x] **3.9** Implement trap mechanics: saving throw to avoid, damage on failure, `disarm_trap` skill check
 - [x] **3.10** Implement `loot_fallen`: pick up a fallen explorer's items, update inventory, mark `is_looted=true`
 - [x] **3.11** Implement XP gain and level-up: check thresholds, increase max HP (roll hit die + CON), update proficiency bonus, unlock class features, add spell slots for Wizard
-- [ ] **3.12** Implement boss defeat: on boss kill, increment `temples_conquered`, mark `boss_alive = false`, emit BossDefeated event
+- [x] **3.12** Implement boss defeat: on boss kill, increment `temples_conquered`, mark `boss_alive = false`, emit BossDefeated event
 - [ ] **3.13** Implement `calculate_boss_probability` with the Yonder Formula (quadratic yonder + XP component)
 - [ ] **3.14** Write integration tests: full explorer-mints -> enters-temple -> opens-exits -> explores -> fights -> loots -> levels-up -> finds-boss flow
 
