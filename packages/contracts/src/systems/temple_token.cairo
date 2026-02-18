@@ -24,13 +24,11 @@ pub trait ITempleToken<TState> {
     /// Move the explorer through a previously discovered exit.
     fn move_to_chamber(ref self: TState, explorer_id: u128, exit_index: u8);
 
-    /// Perception check: reveal hidden traps or treasure in the current chamber.
-    fn search_chamber(ref self: TState, explorer_id: u128);
-
     /// DEX/skill check to disarm a trap in the current chamber.
     fn disarm_trap(ref self: TState, explorer_id: u128);
 
-    /// Pick up treasure from the current chamber.
+    /// Loot the current chamber: Perception check (d20 + WIS) in Empty/Treasure chambers,
+    /// awards gold and possibly a potion on success. Marks chamber as looted.
     fn loot_treasure(ref self: TState, explorer_id: u128);
 
     /// Pick up loot from a fallen explorer in the current chamber.
@@ -553,31 +551,37 @@ pub mod temple_token {
             }
         }
 
-        fn search_chamber(ref self: ContractState, explorer_id: u128) {
+        fn disarm_trap(ref self: ContractState, explorer_id: u128) {
+            // Full implementation in task 3.9
+            assert(false, 'not yet implemented');
+        }
+
+        fn loot_treasure(ref self: ContractState, explorer_id: u128) {
             let mut world = self.world_default();
             let caller = get_caller_address();
 
             // ── Validate explorer state ──────────────────────────────────────
             let health: ExplorerHealth = world.read_model(explorer_id);
-            assert(!health.is_dead, 'dead explorers cannot search');
+            assert(!health.is_dead, 'dead explorers cannot loot');
 
             let position: ExplorerPosition = world.read_model(explorer_id);
             assert(position.temple_id != 0, 'not inside any temple');
-            assert(!position.in_combat, 'cannot search during combat');
+            assert(!position.in_combat, 'cannot loot during combat');
 
             let temple_id = position.temple_id;
             let chamber_id = position.chamber_id;
 
-            // ── Only searchable in Empty or Treasure chambers ────────────────
+            // ── Only lootable in Empty or Treasure chambers ──────────────────
             let chamber: Chamber = world.read_model((temple_id, chamber_id));
             assert(
                 chamber.chamber_type == ChamberType::Empty
                     || chamber.chamber_type == ChamberType::Treasure,
-                'nothing to search here'
+                'nothing to loot here'
             );
             assert(!chamber.treasure_looted, 'already looted');
 
             // ── Perception check: d20 + WIS mod [+ proficiency if trained] ───
+            // DC 12 for Empty chambers, DC 10 for Treasure chambers
             let config: Config = world.read_model(1_u8);
             let vrf_addr = config.vrf_address;
             let stats: ExplorerStats = world.read_model(explorer_id);
@@ -591,11 +595,10 @@ pub mod temple_token {
                 + wis_mod.into()
                 + prof_bonus.into();
 
-            // DC 12 for Empty chambers, DC 10 for Treasure chambers
             let dc: i16 = if chamber.chamber_type == ChamberType::Empty { 12 } else { 10 };
 
             if roll >= dc {
-                // ── Success: award hidden gold and possibly a potion ──────────
+                // ── Success: award gold and possibly a potion ─────────────────
                 // Gold: 1d6 × (yonder + 1) × difficulty
                 let gold_roll: u32 = roll_dice(vrf_addr, caller, 6, 1).into();
                 let temple: TempleState = world.read_model(temple_id);
@@ -617,7 +620,7 @@ pub mod temple_token {
                     potions: inventory.potions + potion_found,
                 });
 
-                // Mark as looted so it can't be searched again
+                // Mark as looted — cannot loot again
                 world.write_model(@Chamber {
                     temple_id,
                     chamber_id,
@@ -630,17 +633,7 @@ pub mod temple_token {
                     trap_dc: chamber.trap_dc,
                 });
             }
-            // On failure: nothing found, chamber unchanged — explorer can retry
-        }
-
-        fn disarm_trap(ref self: ContractState, explorer_id: u128) {
-            // Full implementation in task 3.9
-            assert(false, 'not yet implemented');
-        }
-
-        fn loot_treasure(ref self: ContractState, explorer_id: u128) {
-            // Full implementation in task 3.10
-            assert(false, 'not yet implemented');
+            // On failed check: nothing found, can retry next turn
         }
 
         fn loot_fallen(ref self: ContractState, explorer_id: u128, fallen_index: u32) {

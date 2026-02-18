@@ -755,9 +755,8 @@ trait ITempleActions<T> {
     fn exit_temple(ref self: T, explorer_id: u128);
     fn open_exit(ref self: T, explorer_id: u128, exit_index: u8);
     fn move_to_chamber(ref self: T, explorer_id: u128, exit_index: u8);
-    fn search_chamber(ref self: T, explorer_id: u128);  // Perception check
     fn disarm_trap(ref self: T, explorer_id: u128);      // DEX/skill check
-    fn loot_treasure(ref self: T, explorer_id: u128);
+    fn loot_treasure(ref self: T, explorer_id: u128);    // Perception check + loot pickup
     fn loot_fallen(ref self: T, explorer_id: u128, fallen_index: u32);
 }
 
@@ -985,7 +984,7 @@ The AI agent is NOT part of the on-chain system. It runs locally on the explorer
    - "I sneak down the hallway" → `move_to_chamber(explorer_id, exit_index)` then `skill_check(stealth, chamber_dc)`
    - "I attack the Skeleton with my sword" → `attack(explorer_id)`
    - "I cast fireball" → `cast_spell(explorer_id, FIREBALL)`
-   - "I search for traps" → `search_chamber(explorer_id)` (Perception check)
+   - "I search for treasure" → `loot_treasure(explorer_id)` (Perception check + loot pickup)
    - "I check the dead body" → `loot_fallen(explorer_id, fallen_index)`
    - "I open the door on the left" → `open_exit(explorer_id, 1)`
    - "I leave the temple" → `exit_temple(explorer_id)`

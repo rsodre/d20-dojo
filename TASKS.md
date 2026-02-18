@@ -40,9 +40,9 @@
 - [x] **3.5** Implement `generate_chamber` (internal fn): derive chamber properties from temple seed + chamber position, calculate boss probability via Yonder Formula, determine chamber type / monster type / exit count / trap DC, create `MonsterInstance` model for monster chambers, emit ChamberRevealed event
 - [x] **3.6** Implement `open_exit`: call `generate_chamber` for undiscovered exits, create bidirectional `ChamberExit` links, increment `chambers_explored` on `ExplorerTempleProgress`
 - [x] **3.7** Implement `move_to_chamber`: validate exit is discovered, move explorer, trigger chamber events (monster encounter / trap)
-- [x] **3.8** Implement `search_chamber`: Perception skill check, reveal hidden traps or treasure
+- [x] **3.8** Implement `loot_treasure`: Perception skill check (d20 + WIS mod + proficiency), DC 10 Treasure / DC 12 Empty; success awards gold (1d6 × (yonder+1) × difficulty) + potion on roll ≥15; marks `treasure_looted=true`. Note: `search_chamber` was removed — traps fire immediately on `move_to_chamber` entry; loot pickup and treasure detection are merged into `loot_treasure`.
 - [ ] **3.9** Implement trap mechanics: saving throw to avoid, damage on failure, `disarm_trap` skill check
-- [ ] **3.10** Implement `loot_treasure` and `loot_fallen`: pick up chamber treasure or fallen explorer's items, update inventory
+- [ ] **3.10** Implement `loot_fallen`: pick up a fallen explorer's items, update inventory, mark `is_looted=true`
 - [ ] **3.11** Implement XP gain and level-up: check thresholds, increase max HP (roll hit die + CON), update proficiency bonus, unlock class features, add spell slots for Wizard
 - [ ] **3.12** Implement boss defeat: on boss kill, increment `temples_conquered`, mark `boss_alive = false`, emit BossDefeated event
 - [ ] **3.13** Implement `calculate_boss_probability` with the Yonder Formula (quadratic yonder + XP component)
