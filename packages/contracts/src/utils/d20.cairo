@@ -1,31 +1,24 @@
-use starknet::ContractAddress;
+use d20::utils::seeder::{Seeder, SeederTrait};
 use d20::types::ArmorType;
-use d20::utils::vrf::{IVrfProviderDispatcher, IVrfProviderDispatcherTrait, Source};
 
 // ---------------------------------------------------------------------------
 // VRF-based dice rolling
 // ---------------------------------------------------------------------------
 
-/// Roll a d20 (1-20) using Cartridge VRF.
-/// `vrf_address` comes from Config model (injected by the calling system).
-/// `caller` is typically `get_caller_address()` from the calling contract.
-pub fn roll_d20(vrf_address: ContractAddress, caller: ContractAddress) -> u8 {
-    let vrf_provider = IVrfProviderDispatcher { contract_address: vrf_address };
-    let random: felt252 = vrf_provider.consume_random(Source::Nonce(caller));
-    let random_u256: u256 = random.into();
-    ((random_u256 % 20) + 1).try_into().unwrap()
+/// Roll a d20 (1-20) using a Seeder.
+pub fn roll_d20(ref seeder: Seeder) -> u8 {
+    let random_u8 = seeder.random_u8();
+    ((random_u8 % 20) + 1)
 }
 
-/// Roll `count` dice each with `sides` faces (e.g. roll_dice(vrf, caller, 6, 2) = 2d6).
+/// Roll `count` dice each with `sides` faces (e.g. roll_dice(seeder, 6, 2) = 2d6).
 /// Returns the sum of all dice.
-pub fn roll_dice(vrf_address: ContractAddress, caller: ContractAddress, sides: u8, count: u8) -> u16 {
-    let vrf_provider = IVrfProviderDispatcher { contract_address: vrf_address };
+pub fn roll_dice(ref seeder: Seeder, sides: u8, count: u8) -> u16 {
     let mut total: u16 = 0;
     let mut i: u8 = 0;
     while i < count {
-        let random: felt252 = vrf_provider.consume_random(Source::Nonce(caller));
-        let random_u256: u256 = random.into();
-        total += ((random_u256 % sides.into()) + 1).try_into().unwrap();
+        let random_u8 = seeder.random_u8();
+        total += ((random_u8 % sides) + 1).into();
         i += 1;
     };
     total

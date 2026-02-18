@@ -65,13 +65,12 @@ pub mod temple_token {
         FallenExplorer, ChamberFallenCount,
     };
     use d20::models::explorer::{ExplorerHealth, ExplorerPosition};
-    use d20::models::config::Config;
     use d20::events::ChamberRevealed;
     use d20::utils::d20::{roll_d20, roll_dice, ability_modifier, proficiency_bonus};
+    use d20::utils::seeder::{Seeder, SeederTrait};
     use d20::utils::monsters::get_monster_stats;
     use d20::models::explorer::{ExplorerStats, ExplorerInventory, ExplorerSkills};
     use d20::constants::{TEMPLE_TOKEN_DESCRIPTION, TEMPLE_TOKEN_EXTERNAL_LINK};
-    use starknet::ContractAddress;
 
     // Metadata types
     use nft_combo::utils::renderer::{ContractMetadata, TokenMetadata, Attribute};
@@ -133,11 +132,6 @@ pub mod temple_token {
             self.world(@"d20_0_1")
         }
 
-        fn vrf_address(world: @WorldStorage) -> ContractAddress {
-            let config: Config = world.read_model(1_u8);
-            config.vrf_address
-        }
-
         // ── Boss probability: Yonder Formula (integer-only, bps) ─────────────
 
         fn calculate_boss_probability(yonder: u8, xp_earned: u32) -> u32 {
@@ -197,6 +191,7 @@ pub mod temple_token {
 
         fn generate_chamber(
             ref world: WorldStorage,
+            ref seeder: Seeder,
             temple_id: u128,
             parent_chamber_id: u32,
             new_chamber_id: u32,
@@ -206,14 +201,12 @@ pub mod temple_token {
             temple_seed: felt252,
             difficulty: u8,
             xp_earned: u32,
-            caller: ContractAddress,
         ) {
-            let vrf_addr = Self::vrf_address(@world);
 
             // ── Is this a boss chamber? ──────────────────────────────────────
             let boss_prob: u32 = Self::calculate_boss_probability(yonder, xp_earned);
             let is_boss: bool = if boss_prob > 0 {
-                let roll: u32 = roll_d20(vrf_addr, caller).into() * 500_u32; // scale 1-20 → 500-10000 bps
+                let roll: u32 = roll_d20(ref seeder).into() * 500_u32; // scale 1-20 → 500-10000 bps
                 roll <= boss_prob
             } else {
                 false
@@ -430,8 +423,10 @@ pub mod temple_token {
 
             // ── Generate the new chamber ─────────────────────────────────────
             let new_yonder: u8 = current_chamber.yonder + 1;
+            let mut seeder = SeederTrait::from_consume_vrf(world, caller);
             InternalTrait::generate_chamber(
                 ref world,
+                ref seeder,
                 temple_id,
                 current_chamber_id,
                 new_chamber_id,
@@ -441,7 +436,6 @@ pub mod temple_token {
                 temple.seed,
                 temple.difficulty_tier,
                 progress.xp_earned,
-                caller,
             );
 
             // ── Create bidirectional ChamberExit links ───────────────────────
@@ -519,16 +513,15 @@ pub mod temple_token {
             //  until task 3.9 disarm_trap is implemented)
             if dest_chamber.chamber_type == ChamberType::Trap && !dest_chamber.trap_disarmed
                 && dest_chamber.trap_dc > 0 {
-                let config: Config = world.read_model(1_u8);
-                let vrf_addr = config.vrf_address;
+                let mut seeder = SeederTrait::from_consume_vrf(world, caller);
                 let stats: ExplorerStats = world.read_model(explorer_id);
                 let dex_mod: i8 = ability_modifier(stats.dexterity);
                 // DEX saving throw
-                let save_roll: i16 = roll_d20(vrf_addr, caller).into() + dex_mod.into();
+                let save_roll: i16 = roll_d20(ref seeder).into() + dex_mod.into();
                 let dc_i16: i16 = dest_chamber.trap_dc.into();
                 if save_roll < dc_i16 {
                     // Failed save: take 1d6 + yonder/2 piercing damage
-                    let base_dmg: u16 = roll_dice(vrf_addr, caller, 6, 1);
+                    let base_dmg: u16 = roll_dice(ref seeder, 6, 1);
                     let bonus: u16 = (dest_chamber.yonder / 2).into();
                     let damage: u16 = base_dmg + bonus;
                     let new_hp: i16 = health.current_hp - damage.try_into().unwrap();
@@ -576,8 +569,9 @@ pub mod temple_token {
             // Rogues use DEX + proficiency (with expertise on Stealth/Acrobatics if selected).
             // All other classes use INT + proficiency only if proficient in Arcana.
             // Expertise on the relevant skill doubles the proficiency bonus.
-            let config: Config = world.read_model(1_u8);
-            let vrf_addr = config.vrf_address;
+            // Others: INT-based, proficient only if Arcana trained.
+            // Expertise on the relevant skill doubles the proficiency bonus.
+            let mut seeder = SeederTrait::from_consume_vrf(world, caller);
             let stats: ExplorerStats = world.read_model(explorer_id);
             let skills: ExplorerSkills = world.read_model(explorer_id);
             let prof: u8 = proficiency_bonus(stats.level);
@@ -603,7 +597,7 @@ pub mod temple_token {
 
             let ability_mod: i8 = ability_modifier(ability_score);
             let prof_bonus: i8 = (prof * prof_mult).try_into().unwrap();
-            let roll: u8 = roll_d20(vrf_addr, caller);
+            let roll: u8 = roll_d20(ref seeder);
             let total: i16 = roll.into() + ability_mod.into() + prof_bonus.into();
             let dc: i16 = chamber.trap_dc.into();
 
@@ -625,9 +619,9 @@ pub mod temple_token {
                 // Failed disarm attempt triggers the trap:
                 // DEX saving throw vs trap_dc; fail → 1d6 + yonder/2 damage.
                 let dex_mod: i8 = ability_modifier(stats.dexterity);
-                let save_roll: i16 = roll_d20(vrf_addr, caller).into() + dex_mod.into();
+                let save_roll: i16 = roll_d20(ref seeder).into() + dex_mod.into();
                 if save_roll < dc {
-                    let base_dmg: u16 = roll_dice(vrf_addr, caller, 6, 1);
+                    let base_dmg: u16 = roll_dice(ref seeder, 6, 1);
                     let bonus: u16 = (chamber.yonder / 2).into();
                     let damage: u16 = base_dmg + bonus;
                     let new_hp: i16 = health.current_hp - damage.try_into().unwrap();
@@ -677,8 +671,7 @@ pub mod temple_token {
 
             // ── Perception check: d20 + WIS mod [+ proficiency if trained] ───
             // DC 12 for Empty chambers, DC 10 for Treasure chambers
-            let config: Config = world.read_model(1_u8);
-            let vrf_addr = config.vrf_address;
+            let mut seeder = SeederTrait::from_consume_vrf(world, caller);
             let stats: ExplorerStats = world.read_model(explorer_id);
             let skills: ExplorerSkills = world.read_model(explorer_id);
 
@@ -686,7 +679,7 @@ pub mod temple_token {
             let prof: u8 = proficiency_bonus(stats.level);
             let prof_bonus: i8 = if skills.perception { prof.try_into().unwrap() } else { 0 };
 
-            let roll: i16 = roll_d20(vrf_addr, caller).into()
+            let roll: i16 = roll_d20(ref seeder).into()
                 + wis_mod.into()
                 + prof_bonus.into();
 
@@ -695,7 +688,7 @@ pub mod temple_token {
             if roll >= dc {
                 // ── Success: award gold and possibly a potion ─────────────────
                 // Gold: 1d6 × (yonder + 1) × difficulty
-                let gold_roll: u32 = roll_dice(vrf_addr, caller, 6, 1).into();
+                let gold_roll: u32 = roll_dice(ref seeder, 6, 1).into();
                 let temple: TempleState = world.read_model(temple_id);
                 let gold_found: u32 = gold_roll
                     * (chamber.yonder.into() + 1)

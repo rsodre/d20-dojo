@@ -51,6 +51,7 @@ pub mod combat_system {
     use d20::models::config::Config;
     use d20::events::{CombatResult, ExplorerDied, LevelUp, BossDefeated};
     use d20::utils::d20::{roll_d20, roll_dice, ability_modifier, proficiency_bonus};
+    use d20::utils::seeder::{Seeder, SeederTrait};
     use d20::utils::monsters::get_monster_stats;
     use starknet::ContractAddress;
 
@@ -78,12 +79,6 @@ pub mod combat_system {
     impl InternalImpl of InternalTrait {
         fn world_default(self: @ContractState) -> WorldStorage {
             self.world(@"d20_0_1")
-        }
-
-        /// Read the VRF provider address from the Config singleton.
-        fn vrf_address(world: @WorldStorage) -> ContractAddress {
-            let config: Config = world.read_model(1_u8);
-            config.vrf_address
         }
 
         /// Weapon dice sides for damage roll.
@@ -229,8 +224,7 @@ pub mod combat_system {
         /// Returns (damage_taken, explorer_died).
         fn monster_turn(
             ref world: WorldStorage,
-            vrf_address: ContractAddress,
-            caller: starknet::ContractAddress,
+            ref seeder: Seeder,
             explorer_id: u128,
             stats: ExplorerStats,
             health: ExplorerHealth,
@@ -246,7 +240,7 @@ pub mod combat_system {
 
             let mut attack_num: u8 = 0;
             while attack_num < monster_stats.num_attacks && !explorer_died {
-                let monster_roll: u8 = roll_d20(vrf_address, caller);
+                let monster_roll: u8 = roll_d20(ref seeder);
                 let is_nat_1: bool = monster_roll == 1;
                 let is_nat_20: bool = monster_roll == 20;
 
@@ -264,7 +258,7 @@ pub mod combat_system {
                     };
 
                     let raw_dmg: u16 = roll_dice(
-                        vrf_address, caller, monster_stats.damage_dice_sides, dice_count
+                        ref seeder, monster_stats.damage_dice_sides, dice_count
                     );
                     let raw_dmg_i32: i32 = raw_dmg.into();
                     let bonus_i32: i32 = monster_stats.damage_bonus.into();
@@ -377,8 +371,7 @@ pub mod combat_system {
         /// Apply a level-up: increment level, roll HP, update spell slots, emit event.
         fn level_up(
             ref world: WorldStorage,
-            vrf_address: ContractAddress,
-            caller: starknet::ContractAddress,
+            ref seeder: Seeder,
             explorer_id: u128,
             stats: ExplorerStats,
             health: ExplorerHealth,
@@ -402,7 +395,7 @@ pub mod combat_system {
 
             // Roll hit die + CON modifier, minimum 1, add to max HP
             let hit_sides: u8 = Self::hit_die_sides(stats.class);
-            let raw_roll: u16 = roll_dice(vrf_address, caller, hit_sides, 1);
+            let raw_roll: u16 = roll_dice(ref seeder, hit_sides, 1);
             let con_mod: i8 = ability_modifier(stats.constitution);
             let raw_roll_i32: i32 = raw_roll.into();
             let con_mod_i32: i32 = con_mod.into();
@@ -440,8 +433,7 @@ pub mod combat_system {
         /// Triggers level_up if an XP threshold is crossed (max level 5).
         fn gain_xp(
             ref world: WorldStorage,
-            vrf_address: ContractAddress,
-            caller: starknet::ContractAddress,
+            ref seeder: Seeder,
             explorer_id: u128,
             temple_id: u128,
             xp_reward: u32,
@@ -476,7 +468,7 @@ pub mod combat_system {
                     // Re-read stats in case level already updated
                     let current_stats: ExplorerStats = world.read_model(explorer_id);
                     let current_health: ExplorerHealth = world.read_model(explorer_id);
-                    Self::level_up(ref world, vrf_address, caller, explorer_id, current_stats, current_health);
+                    Self::level_up(ref world, ref seeder, explorer_id, current_stats, current_health);
                     current_level += 1;
                 } else {
                     break;
@@ -545,7 +537,7 @@ pub mod combat_system {
         fn attack(ref self: ContractState, explorer_id: u128) {
             let mut world = self.world_default();
             let caller = get_caller_address();
-            let vrf_address = InternalImpl::vrf_address(@world);
+            let mut seeder = SeederTrait::from_consume_vrf(world, caller);
 
             let stats: ExplorerStats = world.read_model(explorer_id);
             assert(stats.class != ExplorerClass::None, 'explorer does not exist');
@@ -593,7 +585,7 @@ pub mod combat_system {
 
             let mut atk_num: u8 = 0;
             while atk_num < num_attacks && !monster_killed {
-                let attack_roll: u8 = roll_d20(vrf_address, caller);
+                let attack_roll: u8 = roll_d20(ref seeder);
                 if atk_num == 0 {
                     first_attack_roll = attack_roll;
                 }
@@ -607,13 +599,13 @@ pub mod combat_system {
                     let dice_sides: u8 = InternalImpl::weapon_damage_sides(weapon);
                     let base_count: u8 = InternalImpl::weapon_damage_count(weapon);
                     let dice_count: u8 = if is_crit { base_count * 2 } else { base_count };
-                    let raw_damage: u16 = roll_dice(vrf_address, caller, dice_sides, dice_count);
+                    let raw_damage: u16 = roll_dice(ref seeder, dice_sides, dice_count);
 
                     // Rogue: Sneak Attack
                     let sneak_bonus: u16 = if stats.class == ExplorerClass::Rogue {
                         let sneak_dice: u8 = InternalImpl::sneak_attack_dice(stats.level);
                         let sneak_count: u8 = if is_crit { sneak_dice * 2 } else { sneak_dice };
-                        roll_dice(vrf_address, caller, 6, sneak_count)
+                        roll_dice(ref seeder, 6, sneak_count)
                     } else {
                         0
                     };
@@ -659,7 +651,7 @@ pub mod combat_system {
                 });
                 // Award XP for the kill
                 InternalImpl::gain_xp(
-                    ref world, vrf_address, caller, explorer_id,
+                    ref world, ref seeder, explorer_id,
                     position.temple_id, monster_stats.xp_reward,
                 );
                 // Check for boss defeat
@@ -694,7 +686,7 @@ pub mod combat_system {
                         is_alive: true,
                     };
                     let (dmg, _died) = InternalImpl::monster_turn(
-                        ref world, vrf_address, caller, explorer_id, stats, updated_health,
+                        ref world, ref seeder, explorer_id, stats, updated_health,
                         combat, position, updated_monster,
                     );
                     damage_taken = dmg;
@@ -716,7 +708,7 @@ pub mod combat_system {
         fn cast_spell(ref self: ContractState, explorer_id: u128, spell_id: SpellId) {
             let mut world = self.world_default();
             let caller = get_caller_address();
-            let vrf_address = InternalImpl::vrf_address(@world);
+            let mut seeder = SeederTrait::from_consume_vrf(world, caller);
 
             let stats: ExplorerStats = world.read_model(explorer_id);
             assert(stats.class == ExplorerClass::Wizard, 'only wizards cast spells');
@@ -758,7 +750,7 @@ pub mod combat_system {
                     let monster_stats = get_monster_stats(monster.monster_type);
                     xp_to_award = monster_stats.xp_reward;
 
-                    let attack_roll: u8 = roll_d20(vrf_address, caller);
+                    let attack_roll: u8 = roll_d20(ref seeder);
                     spell_roll = attack_roll;
                     let is_nat_1: bool = attack_roll == 1;
                     let is_nat_20: bool = attack_roll == 20;
@@ -768,7 +760,7 @@ pub mod combat_system {
 
                     if hits {
                         let dice_count: u8 = if is_nat_20 { 2 } else { 1 };
-                        damage_dealt = roll_dice(vrf_address, caller, 10, dice_count); // 1d10 (2d10 on crit)
+                        damage_dealt = roll_dice(ref seeder, 10, dice_count); // 1d10 (2d10 on crit)
                         let new_hp: i16 = monster.current_hp
                             - damage_dealt.try_into().unwrap();
                         monster_killed = new_hp <= 0;
@@ -808,7 +800,7 @@ pub mod combat_system {
                     xp_to_award = get_monster_stats(monster.monster_type).xp_reward;
 
                     // 3 × (1d4+1): roll 3d4 then add 3
-                    let raw: u16 = roll_dice(vrf_address, caller, 4, 3);
+                    let raw: u16 = roll_dice(ref seeder, 4, 3);
                     damage_dealt = raw + 3; // +1 per dart
                     spell_roll = 0; // auto-hit, no roll to report
 
@@ -854,7 +846,7 @@ pub mod combat_system {
                     assert(monster.is_alive, 'monster is already dead');
                     xp_to_award = get_monster_stats(monster.monster_type).xp_reward;
 
-                    let sleep_pool: u16 = roll_dice(vrf_address, caller, 8, 5); // 5d8
+                    let sleep_pool: u16 = roll_dice(ref seeder, 8, 5); // 5d8
                     spell_roll = (sleep_pool % 256).try_into().unwrap(); // store low byte for event
 
                     // Monster falls asleep if its current HP ≤ sleep pool
@@ -893,7 +885,7 @@ pub mod combat_system {
 
                     let mut ray: u8 = 0;
                     while ray < 3 && !monster_killed {
-                        let ray_roll: u8 = roll_d20(vrf_address, caller);
+                        let ray_roll: u8 = roll_d20(ref seeder);
                         if ray == 0 {
                             spell_roll = ray_roll;
                         }
@@ -907,7 +899,7 @@ pub mod combat_system {
 
                         if hits {
                             let dice_count: u8 = if is_nat_20 { 4 } else { 2 }; // 2d6 (4d6 crit)
-                            let ray_dmg: u16 = roll_dice(vrf_address, caller, 6, dice_count);
+                            let ray_dmg: u16 = roll_dice(ref seeder, 6, dice_count);
                             damage_dealt += ray_dmg;
                             let new_hp: i16 = monster.current_hp
                                 - ray_dmg.try_into().unwrap();
@@ -970,13 +962,13 @@ pub mod combat_system {
                     let save_dc: i16 = 8_i16 + int_mod.into() + prof_bonus.into();
 
                     // Monster DEX saving throw: d20 + DEX mod vs DC
-                    let save_roll: u8 = roll_d20(vrf_address, caller);
+                    let save_roll: u8 = roll_d20(ref seeder);
                     spell_roll = save_roll;
                     let monster_dex_mod: i8 = ability_modifier(monster_stats.dexterity);
                     let save_total: i16 = save_roll.into() + monster_dex_mod.into();
                     let save_succeeds: bool = save_total >= save_dc;
 
-                    let raw_dmg: u16 = roll_dice(vrf_address, caller, 6, 8); // 8d6
+                    let raw_dmg: u16 = roll_dice(ref seeder, 6, 8); // 8d6
 
                     // Half damage on successful save (integer floor division)
                     damage_dealt = if save_succeeds { raw_dmg / 2 } else { raw_dmg };
@@ -1007,7 +999,7 @@ pub mod combat_system {
             // Award XP and check for boss defeat on kill (cast_spell)
             if monster_killed && xp_to_award > 0 {
                 InternalImpl::gain_xp(
-                    ref world, vrf_address, caller, explorer_id,
+                    ref world, ref seeder, explorer_id,
                     position.temple_id, xp_to_award,
                 );
             }
@@ -1038,7 +1030,7 @@ pub mod combat_system {
                             (position.temple_id, position.chamber_id, position.combat_monster_id)
                         );
                         let (dmg, _died) = InternalImpl::monster_turn(
-                            ref world, vrf_address, caller, explorer_id, stats, updated_health,
+                            ref world, ref seeder, explorer_id, stats, updated_health,
                             updated_combat, updated_position, live_monster,
                         );
                         damage_taken = dmg;
@@ -1062,7 +1054,7 @@ pub mod combat_system {
         fn use_item(ref self: ContractState, explorer_id: u128, item_type: ItemType) {
             let mut world = self.world_default();
             let caller = get_caller_address();
-            let vrf_address = InternalImpl::vrf_address(@world);
+            let mut seeder = SeederTrait::from_consume_vrf(world, caller);
 
             let stats: ExplorerStats = world.read_model(explorer_id);
             assert(stats.class != ExplorerClass::None, 'explorer does not exist');
@@ -1079,7 +1071,7 @@ pub mod combat_system {
                     world.write_model(@inventory);
 
                     // Heal 2d4+2
-                    let raw_heal: u16 = roll_dice(vrf_address, caller, 4, 2);
+                    let raw_heal: u16 = roll_dice(ref seeder, 4, 2);
                     let heal_total: u16 = raw_heal + 2;
 
                     let new_hp_i16: i16 = health.current_hp + heal_total.try_into().unwrap();
@@ -1107,7 +1099,7 @@ pub mod combat_system {
                         );
                         if monster.is_alive {
                             let (dmg, _died) = InternalImpl::monster_turn(
-                                ref world, vrf_address, caller, explorer_id, stats, updated_health,
+                                ref world, ref seeder, explorer_id, stats, updated_health,
                                 combat, position, monster,
                             );
                             damage_taken = dmg;
@@ -1131,7 +1123,7 @@ pub mod combat_system {
         fn second_wind(ref self: ContractState, explorer_id: u128) {
             let mut world = self.world_default();
             let caller = get_caller_address();
-            let vrf_address = InternalImpl::vrf_address(@world);
+            let mut seeder = SeederTrait::from_consume_vrf(world, caller);
 
             let stats: ExplorerStats = world.read_model(explorer_id);
             assert(stats.class == ExplorerClass::Fighter, 'only fighters can second wind');
@@ -1142,7 +1134,7 @@ pub mod combat_system {
             let mut combat: ExplorerCombat = world.read_model(explorer_id);
             assert(!combat.second_wind_used, 'second wind already used');
 
-            let heal_roll: u16 = roll_dice(vrf_address, caller, 10, 1);
+            let heal_roll: u16 = roll_dice(ref seeder, 10, 1);
             let heal_total: u16 = heal_roll + stats.level.into();
 
             let new_hp_i16: i16 = health.current_hp + heal_total.try_into().unwrap();
@@ -1215,7 +1207,7 @@ pub mod combat_system {
         fn flee(ref self: ContractState, explorer_id: u128) {
             let mut world = self.world_default();
             let caller = get_caller_address();
-            let vrf_address = InternalImpl::vrf_address(@world);
+            let mut seeder = SeederTrait::from_consume_vrf(world, caller);
 
             let stats: ExplorerStats = world.read_model(explorer_id);
             assert(stats.class != ExplorerClass::None, 'explorer does not exist');
@@ -1232,7 +1224,7 @@ pub mod combat_system {
             assert(monster.is_alive, 'monster already dead');
 
             // Explorer DEX roll: d20 + DEX modifier
-            let explorer_roll: u8 = roll_d20(vrf_address, caller);
+            let explorer_roll: u8 = roll_d20(ref seeder);
             let explorer_dex_mod: i8 = ability_modifier(stats.dexterity);
             let explorer_dex_mod_i32: i32 = explorer_dex_mod.into();
             let explorer_roll_i32: i32 = explorer_roll.into();
@@ -1240,7 +1232,7 @@ pub mod combat_system {
 
             // Monster DEX roll: d20 + monster DEX modifier
             let monster_stats = get_monster_stats(monster.monster_type);
-            let monster_roll: u8 = roll_d20(vrf_address, caller);
+            let monster_roll: u8 = roll_d20(ref seeder);
             let monster_dex_mod: i8 = ability_modifier(monster_stats.dexterity);
             let monster_dex_mod_i32: i32 = monster_dex_mod.into();
             let monster_roll_i32: i32 = monster_roll.into();
@@ -1264,7 +1256,7 @@ pub mod combat_system {
                 // Monster gets a free counter-attack on failed flee
                 let combat: ExplorerCombat = world.read_model(explorer_id);
                 let (dmg, _died) = InternalImpl::monster_turn(
-                    ref world, vrf_address, caller, explorer_id, stats, health, combat, position, monster,
+                    ref world, ref seeder, explorer_id, stats, health, combat, position, monster,
                 );
                 damage_taken = dmg;
             }
