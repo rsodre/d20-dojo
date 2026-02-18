@@ -1,6 +1,7 @@
 #[cfg(test)]
 mod tests {
-    use starknet::contract_address_const;
+
+    use starknet::ContractAddress;
     use dojo::model::{ModelStorage, ModelStorageTest};
     use dojo::world::{WorldStorageTrait, world};
     use dojo_cairo_test::{
@@ -68,7 +69,7 @@ mod tests {
 
     #[test]
     fn test_mint_fighter_basic() {
-        let caller = contract_address_const::<'player1'>();
+        let caller: ContractAddress = 'player1'.try_into().unwrap();
         starknet::testing::set_contract_address(caller);
 
         let mut world = spawn_test_world(world::TEST_CLASS_HASH, [namespace_def()].span());
@@ -104,7 +105,7 @@ mod tests {
 
     #[test]
     fn test_mint_fighter_hp_and_ac() {
-        let caller = contract_address_const::<'player1'>();
+        let caller: ContractAddress = 'player1'.try_into().unwrap();
         starknet::testing::set_contract_address(caller);
 
         let mut world = spawn_test_world(world::TEST_CLASS_HASH, [namespace_def()].span());
@@ -137,7 +138,7 @@ mod tests {
 
     #[test]
     fn test_mint_fighter_equipment() {
-        let caller = contract_address_const::<'player1'>();
+        let caller: ContractAddress = 'player1'.try_into().unwrap();
         starknet::testing::set_contract_address(caller);
 
         let mut world = spawn_test_world(world::TEST_CLASS_HASH, [namespace_def()].span());
@@ -165,7 +166,7 @@ mod tests {
 
     #[test]
     fn test_mint_fighter_skills() {
-        let caller = contract_address_const::<'player1'>();
+        let caller: ContractAddress = 'player1'.try_into().unwrap();
         starknet::testing::set_contract_address(caller);
 
         let mut world = spawn_test_world(world::TEST_CLASS_HASH, [namespace_def()].span());
@@ -193,7 +194,7 @@ mod tests {
 
     #[test]
     fn test_mint_fighter_position() {
-        let caller = contract_address_const::<'player1'>();
+        let caller: ContractAddress = 'player1'.try_into().unwrap();
         starknet::testing::set_contract_address(caller);
 
         let mut world = spawn_test_world(world::TEST_CLASS_HASH, [namespace_def()].span());
@@ -221,7 +222,7 @@ mod tests {
 
     #[test]
     fn test_mint_rogue_basic() {
-        let caller = contract_address_const::<'player1'>();
+        let caller: ContractAddress = 'player1'.try_into().unwrap();
         starknet::testing::set_contract_address(caller);
 
         let mut world = spawn_test_world(world::TEST_CLASS_HASH, [namespace_def()].span());
@@ -254,7 +255,7 @@ mod tests {
 
     #[test]
     fn test_mint_rogue_equipment() {
-        let caller = contract_address_const::<'player1'>();
+        let caller: ContractAddress = 'player1'.try_into().unwrap();
         starknet::testing::set_contract_address(caller);
 
         let mut world = spawn_test_world(world::TEST_CLASS_HASH, [namespace_def()].span());
@@ -279,7 +280,7 @@ mod tests {
 
     #[test]
     fn test_mint_rogue_skills_and_expertise() {
-        let caller = contract_address_const::<'player1'>();
+        let caller: ContractAddress = 'player1'.try_into().unwrap();
         starknet::testing::set_contract_address(caller);
 
         let mut world = spawn_test_world(world::TEST_CLASS_HASH, [namespace_def()].span());
@@ -310,7 +311,7 @@ mod tests {
 
     #[test]
     fn test_mint_wizard_basic() {
-        let caller = contract_address_const::<'player1'>();
+        let caller: ContractAddress = 'player1'.try_into().unwrap();
         starknet::testing::set_contract_address(caller);
 
         let mut world = spawn_test_world(world::TEST_CLASS_HASH, [namespace_def()].span());
@@ -345,7 +346,7 @@ mod tests {
 
     #[test]
     fn test_mint_wizard_equipment() {
-        let caller = contract_address_const::<'player1'>();
+        let caller: ContractAddress = 'player1'.try_into().unwrap();
         starknet::testing::set_contract_address(caller);
 
         let mut world = spawn_test_world(world::TEST_CLASS_HASH, [namespace_def()].span());
@@ -370,7 +371,7 @@ mod tests {
 
     #[test]
     fn test_mint_wizard_skills() {
-        let caller = contract_address_const::<'player1'>();
+        let caller: ContractAddress = 'player1'.try_into().unwrap();
         starknet::testing::set_contract_address(caller);
 
         let mut world = spawn_test_world(world::TEST_CLASS_HASH, [namespace_def()].span());
@@ -399,7 +400,7 @@ mod tests {
 
     #[test]
     fn test_sequential_token_ids() {
-        let caller = contract_address_const::<'player1'>();
+        let caller: ContractAddress = 'player1'.try_into().unwrap();
         starknet::testing::set_contract_address(caller);
 
         let mut world = spawn_test_world(world::TEST_CLASS_HASH, [namespace_def()].span());
@@ -444,7 +445,7 @@ mod tests {
 
     #[test]
     fn test_rest_restores_hp() {
-        let caller = contract_address_const::<'player1'>();
+        let caller: ContractAddress = 'player1'.try_into().unwrap();
         starknet::testing::set_contract_address(caller);
 
         let mut world = spawn_test_world(world::TEST_CLASS_HASH, [namespace_def()].span());
@@ -476,7 +477,7 @@ mod tests {
 
     #[test]
     fn test_rest_resets_class_resources() {
-        let caller = contract_address_const::<'player1'>();
+        let caller: ContractAddress = 'player1'.try_into().unwrap();
         starknet::testing::set_contract_address(caller);
 
         let mut world = spawn_test_world(world::TEST_CLASS_HASH, [namespace_def()].span());
@@ -508,7 +509,7 @@ mod tests {
 
     #[test]
     fn test_rest_resets_wizard_spell_slots() {
-        let caller = contract_address_const::<'player1'>();
+        let caller: ContractAddress = 'player1'.try_into().unwrap();
         starknet::testing::set_contract_address(caller);
 
         let mut world = spawn_test_world(world::TEST_CLASS_HASH, [namespace_def()].span());
@@ -541,7 +542,7 @@ mod tests {
     #[test]
     #[should_panic(expected: ('must choose a class', 'ENTRYPOINT_FAILED'))]
     fn test_mint_rejects_none_class() {
-        let caller = contract_address_const::<'player1'>();
+        let caller: ContractAddress = 'player1'.try_into().unwrap();
         starknet::testing::set_contract_address(caller);
 
         let mut world = spawn_test_world(world::TEST_CLASS_HASH, [namespace_def()].span());
@@ -561,7 +562,7 @@ mod tests {
     #[test]
     #[should_panic(expected: ('not standard array', 'ENTRYPOINT_FAILED'))]
     fn test_mint_rejects_invalid_stats() {
-        let caller = contract_address_const::<'player1'>();
+        let caller: ContractAddress = 'player1'.try_into().unwrap();
         starknet::testing::set_contract_address(caller);
 
         let mut world = spawn_test_world(world::TEST_CLASS_HASH, [namespace_def()].span());
@@ -582,7 +583,7 @@ mod tests {
     #[test]
     #[should_panic(expected: ('fighter needs 1 skill choice', 'ENTRYPOINT_FAILED'))]
     fn test_mint_rejects_fighter_wrong_skill_count() {
-        let caller = contract_address_const::<'player1'>();
+        let caller: ContractAddress = 'player1'.try_into().unwrap();
         starknet::testing::set_contract_address(caller);
 
         let mut world = spawn_test_world(world::TEST_CLASS_HASH, [namespace_def()].span());
@@ -602,7 +603,7 @@ mod tests {
     #[test]
     #[should_panic(expected: ('invalid fighter skill choice', 'ENTRYPOINT_FAILED'))]
     fn test_mint_rejects_fighter_wrong_skill() {
-        let caller = contract_address_const::<'player1'>();
+        let caller: ContractAddress = 'player1'.try_into().unwrap();
         starknet::testing::set_contract_address(caller);
 
         let mut world = spawn_test_world(world::TEST_CLASS_HASH, [namespace_def()].span());
@@ -623,7 +624,7 @@ mod tests {
     #[test]
     #[should_panic(expected: ('invalid rogue skill choice', 'ENTRYPOINT_FAILED'))]
     fn test_mint_rejects_rogue_wrong_skill() {
-        let caller = contract_address_const::<'player1'>();
+        let caller: ContractAddress = 'player1'.try_into().unwrap();
         starknet::testing::set_contract_address(caller);
 
         let mut world = spawn_test_world(world::TEST_CLASS_HASH, [namespace_def()].span());
@@ -645,7 +646,7 @@ mod tests {
     #[test]
     #[should_panic(expected: ('duplicate expertise choice', 'ENTRYPOINT_FAILED'))]
     fn test_mint_rejects_rogue_duplicate_expertise() {
-        let caller = contract_address_const::<'player1'>();
+        let caller: ContractAddress = 'player1'.try_into().unwrap();
         starknet::testing::set_contract_address(caller);
 
         let mut world = spawn_test_world(world::TEST_CLASS_HASH, [namespace_def()].span());
@@ -665,7 +666,7 @@ mod tests {
     #[test]
     #[should_panic(expected: ('invalid wizard skill choice', 'ENTRYPOINT_FAILED'))]
     fn test_mint_rejects_wizard_wrong_skill() {
-        let caller = contract_address_const::<'player1'>();
+        let caller: ContractAddress = 'player1'.try_into().unwrap();
         starknet::testing::set_contract_address(caller);
 
         let mut world = spawn_test_world(world::TEST_CLASS_HASH, [namespace_def()].span());
@@ -686,7 +687,7 @@ mod tests {
     #[test]
     #[should_panic(expected: ('only rogue gets expertise', 'ENTRYPOINT_FAILED'))]
     fn test_mint_rejects_fighter_with_expertise() {
-        let caller = contract_address_const::<'player1'>();
+        let caller: ContractAddress = 'player1'.try_into().unwrap();
         starknet::testing::set_contract_address(caller);
 
         let mut world = spawn_test_world(world::TEST_CLASS_HASH, [namespace_def()].span());
@@ -706,7 +707,7 @@ mod tests {
     #[test]
     #[should_panic(expected: ('dead explorers cannot rest', 'ENTRYPOINT_FAILED'))]
     fn test_rest_rejects_dead_explorer() {
-        let caller = contract_address_const::<'player1'>();
+        let caller: ContractAddress = 'player1'.try_into().unwrap();
         starknet::testing::set_contract_address(caller);
 
         let mut world = spawn_test_world(world::TEST_CLASS_HASH, [namespace_def()].span());

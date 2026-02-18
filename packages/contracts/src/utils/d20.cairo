@@ -22,10 +22,7 @@ pub fn roll_dice(vrf_address: ContractAddress, caller: ContractAddress, sides: u
     let vrf_provider = IVrfProviderDispatcher { contract_address: vrf_address };
     let mut total: u16 = 0;
     let mut i: u8 = 0;
-    loop {
-        if i >= count {
-            break;
-        }
+    while i < count {
         let random: felt252 = vrf_provider.consume_random(Source::Nonce(caller));
         let random_u256: u256 = random.into();
         total += ((random_u256 % sides.into()) + 1).try_into().unwrap();

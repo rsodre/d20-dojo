@@ -1,7 +1,7 @@
 #[cfg(test)]
 mod tests {
-    use starknet::contract_address_const;
-    use starknet::syscalls::deploy_syscall;
+    use starknet::{ContractAddress, SyscallResultTrait};
+    use starknet::syscalls::{deploy_syscall};
     use dojo::model::{ModelStorage, ModelStorageTest};
     use dojo::world::{WorldStorageTrait, world};
     use dojo_cairo_test::{
@@ -65,11 +65,11 @@ mod tests {
         // 1. Deploy MockVrf at a deterministic address via deploy_syscall
         let mock_vrf_class_hash = MockVrf::TEST_CLASS_HASH;
         let (mock_vrf_address, _) = deploy_syscall(
-            mock_vrf_class_hash.try_into().unwrap(),
-            0,          // salt
-            [].span(),  // calldata (no constructor args)
-            false,      // deploy_from_zero
-        ).unwrap();
+            mock_vrf_class_hash,
+            0,
+            [].span(),
+            false,
+        ).unwrap_syscall();
 
         // 2. Build contract defs — pass vrf_address as init calldata for combat_system
         let contract_defs: Span<ContractDef> = [
@@ -165,7 +165,7 @@ mod tests {
 
     #[test]
     fn test_config_vrf_address_stored() {
-        let caller = contract_address_const::<'cfg_test'>();
+        let caller: ContractAddress = 'cfg_test'.try_into().unwrap();
         starknet::testing::set_contract_address(caller);
 
         let (world, _token, _combat) = setup_world();
@@ -174,7 +174,7 @@ mod tests {
         let config: Config = world.read_model(1_u8);
         assert(config.key == 1, 'config key should be 1');
         // vrf_address is non-zero (mock was deployed)
-        assert(config.vrf_address != contract_address_const::<0>(), 'vrf_address must be set');
+        assert(config.vrf_address != 0.try_into().unwrap(), 'vrf_address must be set');
     }
 
     // ═══════════════════════════════════════════════════════════════════════
@@ -183,7 +183,7 @@ mod tests {
 
     #[test]
     fn test_second_wind_heals_fighter() {
-        let caller = contract_address_const::<'fighter1'>();
+        let caller: ContractAddress = 'fighter1'.try_into().unwrap();
         starknet::testing::set_contract_address(caller);
 
         let (mut world, token, combat_sys) = setup_world();
@@ -208,7 +208,7 @@ mod tests {
 
     #[test]
     fn test_second_wind_marks_used() {
-        let caller = contract_address_const::<'fighter2'>();
+        let caller: ContractAddress = 'fighter2'.try_into().unwrap();
         starknet::testing::set_contract_address(caller);
 
         let (mut world, token, combat_sys) = setup_world();
@@ -226,7 +226,7 @@ mod tests {
     #[test]
     #[should_panic]
     fn test_second_wind_fails_if_already_used() {
-        let caller = contract_address_const::<'fighter3'>();
+        let caller: ContractAddress = 'fighter3'.try_into().unwrap();
         starknet::testing::set_contract_address(caller);
 
         let (_world, token, combat_sys) = setup_world();
@@ -239,7 +239,7 @@ mod tests {
     #[test]
     #[should_panic]
     fn test_second_wind_fails_for_non_fighter() {
-        let caller = contract_address_const::<'rogue1'>();
+        let caller: ContractAddress = 'rogue1'.try_into().unwrap();
         starknet::testing::set_contract_address(caller);
 
         let (_world, token, combat_sys) = setup_world();
@@ -249,7 +249,7 @@ mod tests {
 
     #[test]
     fn test_second_wind_caps_at_max_hp() {
-        let caller = contract_address_const::<'fighter4'>();
+        let caller: ContractAddress = 'fighter4'.try_into().unwrap();
         starknet::testing::set_contract_address(caller);
 
         let (mut world, token, combat_sys) = setup_world();
@@ -269,7 +269,7 @@ mod tests {
 
     #[test]
     fn test_cunning_action_clears_combat() {
-        let caller = contract_address_const::<'rogue2'>();
+        let caller: ContractAddress = 'rogue2'.try_into().unwrap();
         starknet::testing::set_contract_address(caller);
 
         let (mut world, token, combat_sys) = setup_world();
@@ -310,7 +310,7 @@ mod tests {
     #[test]
     #[should_panic]
     fn test_cunning_action_fails_for_fighter() {
-        let caller = contract_address_const::<'fighter5'>();
+        let caller: ContractAddress = 'fighter5'.try_into().unwrap();
         starknet::testing::set_contract_address(caller);
 
         let (mut world, token, combat_sys) = setup_world();
@@ -330,7 +330,7 @@ mod tests {
     #[test]
     #[should_panic]
     fn test_cunning_action_fails_if_not_in_combat() {
-        let caller = contract_address_const::<'rogue3'>();
+        let caller: ContractAddress = 'rogue3'.try_into().unwrap();
         starknet::testing::set_contract_address(caller);
 
         let (mut world, token, combat_sys) = setup_world();
@@ -369,7 +369,7 @@ mod tests {
 
     #[test]
     fn test_flee_resolves_without_death() {
-        let caller = contract_address_const::<'fighter6'>();
+        let caller: ContractAddress = 'fighter6'.try_into().unwrap();
         starknet::testing::set_contract_address(caller);
 
         let (mut world, token, combat_sys) = setup_world();
@@ -411,7 +411,7 @@ mod tests {
     #[test]
     #[should_panic]
     fn test_flee_fails_if_not_in_combat() {
-        let caller = contract_address_const::<'fighter7'>();
+        let caller: ContractAddress = 'fighter7'.try_into().unwrap();
         starknet::testing::set_contract_address(caller);
 
         let (mut world, token, combat_sys) = setup_world();
@@ -431,7 +431,7 @@ mod tests {
     #[test]
     #[should_panic]
     fn test_flee_fails_if_dead() {
-        let caller = contract_address_const::<'fighter8'>();
+        let caller: ContractAddress = 'fighter8'.try_into().unwrap();
         starknet::testing::set_contract_address(caller);
 
         let (mut world, token, combat_sys) = setup_world();
@@ -462,7 +462,7 @@ mod tests {
     #[test]
     #[should_panic]
     fn test_dead_explorer_cannot_attack() {
-        let caller = contract_address_const::<'deadfighter'>();
+        let caller: ContractAddress = 'deadfighter'.try_into().unwrap();
         starknet::testing::set_contract_address(caller);
 
         let (mut world, token, combat_sys) = setup_world();
@@ -499,7 +499,7 @@ mod tests {
     #[test]
     #[should_panic]
     fn test_dead_explorer_cannot_second_wind() {
-        let caller = contract_address_const::<'deadfighter2'>();
+        let caller: ContractAddress = 'deadfighter2'.try_into().unwrap();
         starknet::testing::set_contract_address(caller);
 
         let (mut world, token, combat_sys) = setup_world();
@@ -521,7 +521,7 @@ mod tests {
 
     #[test]
     fn test_use_health_potion_heals() {
-        let caller = contract_address_const::<'potionuser'>();
+        let caller: ContractAddress = 'potionuser'.try_into().unwrap();
         starknet::testing::set_contract_address(caller);
 
         let (mut world, token, combat_sys) = setup_world();
@@ -556,7 +556,7 @@ mod tests {
     #[test]
     #[should_panic]
     fn test_use_health_potion_fails_with_no_potions() {
-        let caller = contract_address_const::<'nopotions'>();
+        let caller: ContractAddress = 'nopotions'.try_into().unwrap();
         starknet::testing::set_contract_address(caller);
 
         let (_world, token, combat_sys) = setup_world();
@@ -572,7 +572,7 @@ mod tests {
 
     #[test]
     fn test_attack_hits_monster_and_deals_damage() {
-        let caller = contract_address_const::<'attacker1'>();
+        let caller: ContractAddress = 'attacker1'.try_into().unwrap();
         starknet::testing::set_contract_address(caller);
 
         let (mut world, token, combat_sys) = setup_world();
@@ -615,7 +615,7 @@ mod tests {
 
     #[test]
     fn test_death_creates_fallen_explorer() {
-        let caller = contract_address_const::<'fighter9'>();
+        let caller: ContractAddress = 'fighter9'.try_into().unwrap();
         starknet::testing::set_contract_address(caller);
 
         let (mut world, token, combat_sys) = setup_world();
@@ -684,7 +684,7 @@ mod tests {
 
     #[test]
     fn test_chamber_fallen_count_default_zero() {
-        let caller = contract_address_const::<'counttest'>();
+        let caller: ContractAddress = 'counttest'.try_into().unwrap();
         starknet::testing::set_contract_address(caller);
 
         let (world, _token, _combat) = setup_world();
@@ -695,7 +695,7 @@ mod tests {
 
     #[test]
     fn test_chamber_fallen_write_and_read() {
-        let caller = contract_address_const::<'fallentest'>();
+        let caller: ContractAddress = 'fallentest'.try_into().unwrap();
         starknet::testing::set_contract_address(caller);
 
         let (mut world, _token, _combat) = setup_world();

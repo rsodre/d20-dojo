@@ -50,7 +50,7 @@
 
 ## Housekeeping -- additional steps added after analyzing generated contracts
 
-- [ ] **x.1** Remove warnings from Cairo compiler
+- [x] **x.1** Remove warnings from Cairo compiler
 - [ ] **x.2** Consume VRF at entry point, always. Save seed and pass when needed (`dice_roll()` for example)
 - [ ] **x.3** Verify where multiple VRFs are needed, and divide seed by 0x100. Better make a new Seeder struct and trait (includes an initializer world to get Config and VRF address, store the seed, stores number of calls, a get_next() function, and rehash by /0x100 if used more than once)
 - [ ] **x.4** Create traits for enums, replacing functions (ex: `combat_sytem.spell_level()`)

@@ -226,10 +226,7 @@ fn shuffle<T, impl TCopy: Copy<T>, impl TDrop: Drop<T>>(
     player: ContractAddress,
 ) {
     let mut i = arr.len();
-    loop {
-        if i <= 1 {
-            break;
-        }
+    while i > 1 {
         i -= 1;
         let random = vrf_provider.consume_random(Source::Nonce(player));
         let j: u32 = (random.into() % (i + 1).into()).try_into().unwrap();

@@ -245,11 +245,7 @@ pub mod combat_system {
             let mut current_health = health;
 
             let mut attack_num: u8 = 0;
-            loop {
-                if attack_num >= monster_stats.num_attacks || explorer_died {
-                    break;
-                }
-
+            while attack_num < monster_stats.num_attacks && !explorer_died {
                 let monster_roll: u8 = roll_d20(vrf_address, caller);
                 let is_nat_1: bool = monster_roll == 1;
                 let is_nat_20: bool = monster_roll == 20;
@@ -474,10 +470,7 @@ pub mod combat_system {
 
             // Check for level-up (level 2-5 thresholds)
             let mut current_level: u8 = stats.level;
-            loop {
-                if current_level >= 5 {
-                    break;
-                }
+            while current_level < 5 {
                 let next_threshold: u32 = Self::xp_threshold(current_level + 1);
                 if new_xp >= next_threshold {
                     // Re-read stats in case level already updated
@@ -599,11 +592,7 @@ pub mod combat_system {
             let mut first_attack_roll: u8 = 0;
 
             let mut atk_num: u8 = 0;
-            loop {
-                if atk_num >= num_attacks || monster_killed {
-                    break;
-                }
-
+            while atk_num < num_attacks && !monster_killed {
                 let attack_roll: u8 = roll_d20(vrf_address, caller);
                 if atk_num == 0 {
                     first_attack_roll = attack_roll;
@@ -903,10 +892,7 @@ pub mod combat_system {
                     xp_to_award = monster_stats.xp_reward;
 
                     let mut ray: u8 = 0;
-                    loop {
-                        if ray >= 3 || monster_killed {
-                            break;
-                        }
+                    while ray < 3 && !monster_killed {
                         let ray_roll: u8 = roll_d20(vrf_address, caller);
                         if ray == 0 {
                             spell_roll = ray_roll;
@@ -1286,7 +1272,7 @@ pub mod combat_system {
             world.emit_event(@CombatResult {
                 explorer_id,
                 action: CombatAction::Flee,
-                roll: explorer_roll.try_into().unwrap(),
+                roll: explorer_roll,
                 damage_dealt: 0,
                 damage_taken,
                 monster_killed: false,

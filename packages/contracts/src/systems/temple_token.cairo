@@ -280,8 +280,7 @@ pub mod temple_token {
             // ── Initialize exit stubs (undiscovered) ─────────────────────────
             // These placeholders exist so open_exit can validate exit_index bounds.
             let mut i: u8 = 0;
-            loop {
-                if i >= exit_count { break; }
+            while i < exit_count {
                 world.write_model(@ChamberExit {
                     temple_id,
                     from_chamber_id: new_chamber_id,

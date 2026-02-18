@@ -125,8 +125,7 @@ pub mod explorer_token {
         let mut count_14: u8 = 0;
         let mut count_15: u8 = 0;
         let mut i: u32 = 0;
-        loop {
-            if i >= stat_assignment.len() { break; }
+        while i < stat_assignment.len() {
             let v = *stat_assignment.at(i);
             if v == 8 { count_8 += 1; }
             else if v == 10 { count_10 += 1; }
@@ -191,8 +190,7 @@ pub mod explorer_token {
         }
 
         let mut i: u32 = 0;
-        loop {
-            if i >= skill_choices.len() { break; }
+        while i < skill_choices.len() {
             let skill = *skill_choices.at(i);
             match skill {
                 Skill::Athletics => { athletics = true; },
@@ -221,8 +219,7 @@ pub mod explorer_token {
             ExplorerClass::Rogue => {
                 assert(skill_choices.len() == 2, 'rogue needs 2 skill choices');
                 let mut i: u32 = 0;
-                loop {
-                    if i >= skill_choices.len() { break; }
+                while i < skill_choices.len() {
                     let s = *skill_choices.at(i);
                     assert(
                         s == Skill::Perception || s == Skill::Persuasion
@@ -251,8 +248,7 @@ pub mod explorer_token {
             ExplorerClass::Rogue => {
                 assert(expertise_choices.len() == 2, 'rogue needs 2 expertise');
                 let mut i: u32 = 0;
-                loop {
-                    if i >= expertise_choices.len() { break; }
+                while i < expertise_choices.len() {
                     let e = *expertise_choices.at(i);
                     assert(e != Skill::None, 'expertise cannot be None');
                     let is_auto = e == Skill::Stealth || e == Skill::Acrobatics;

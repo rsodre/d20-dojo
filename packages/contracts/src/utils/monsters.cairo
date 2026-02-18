@@ -223,10 +223,7 @@ mod tests {
             MonsterType::Wraith,
         ];
         let mut i: u32 = 0;
-        loop {
-            if i >= types.len() {
-                break;
-            }
+        while i < types.len() {
             let stats = get_monster_stats(*types.at(i));
             assert(stats.hp > 0, 'monster should have hp > 0');
             assert(stats.xp_reward > 0, 'monster should give xp');

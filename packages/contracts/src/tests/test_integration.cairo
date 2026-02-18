@@ -4,8 +4,9 @@
 ///         loot_treasure → level-up → boss defeat.
 #[cfg(test)]
 mod tests {
-    use starknet::contract_address_const;
-    use starknet::syscalls::deploy_syscall;
+
+    use starknet::{ContractAddress, SyscallResultTrait};
+    use starknet::syscalls::{deploy_syscall};
     use dojo::model::{ModelStorage, ModelStorageTest};
     use dojo::world::{WorldStorageTrait, world};
     use dojo_cairo_test::{
@@ -96,11 +97,11 @@ mod tests {
         // 1. Deploy MockVrf
         let mock_vrf_class_hash = MockVrf::TEST_CLASS_HASH;
         let (mock_vrf_address, _) = deploy_syscall(
-            mock_vrf_class_hash.try_into().unwrap(),
+            mock_vrf_class_hash,
             0,
             [].span(),
             false,
-        ).unwrap();
+        ).unwrap_syscall();
 
         // 2. Build contract defs — pass vrf_address as init calldata for combat_system
         let contract_defs: Span<ContractDef> = [
@@ -178,7 +179,7 @@ mod tests {
 
     #[test]
     fn test_mint_temple_creates_temple_state() {
-        let caller = contract_address_const::<'templeowner1'>();
+        let caller: ContractAddress = 'templeowner1'.try_into().unwrap();
         starknet::testing::set_contract_address(caller);
 
         let (world, _token, _combat, temple) = setup_world();
@@ -195,7 +196,7 @@ mod tests {
 
     #[test]
     fn test_mint_temple_sequential_ids() {
-        let caller = contract_address_const::<'templeowner2'>();
+        let caller: ContractAddress = 'templeowner2'.try_into().unwrap();
         starknet::testing::set_contract_address(caller);
 
         let (_world, _token, _combat, temple) = setup_world();
@@ -208,7 +209,7 @@ mod tests {
     #[test]
     #[should_panic]
     fn test_mint_temple_rejects_zero_difficulty() {
-        let caller = contract_address_const::<'templeowner3'>();
+        let caller: ContractAddress = 'templeowner3'.try_into().unwrap();
         starknet::testing::set_contract_address(caller);
 
         let (_world, _token, _combat, temple) = setup_world();
@@ -221,7 +222,7 @@ mod tests {
 
     #[test]
     fn test_enter_temple_places_explorer_at_entrance() {
-        let caller = contract_address_const::<'entertest1'>();
+        let caller: ContractAddress = 'entertest1'.try_into().unwrap();
         starknet::testing::set_contract_address(caller);
 
         let (world, token, _combat, temple) = setup_world();
@@ -239,7 +240,7 @@ mod tests {
 
     #[test]
     fn test_enter_temple_initializes_progress() {
-        let caller = contract_address_const::<'entertest2'>();
+        let caller: ContractAddress = 'entertest2'.try_into().unwrap();
         starknet::testing::set_contract_address(caller);
 
         let (world, token, _combat, temple) = setup_world();
@@ -257,7 +258,7 @@ mod tests {
     #[test]
     #[should_panic]
     fn test_enter_temple_rejects_dead_explorer() {
-        let caller = contract_address_const::<'entertest3'>();
+        let caller: ContractAddress = 'entertest3'.try_into().unwrap();
         starknet::testing::set_contract_address(caller);
 
         let (mut world, token, _combat, temple) = setup_world();
@@ -277,7 +278,7 @@ mod tests {
 
     #[test]
     fn test_exit_temple_clears_position() {
-        let caller = contract_address_const::<'exittest1'>();
+        let caller: ContractAddress = 'exittest1'.try_into().unwrap();
         starknet::testing::set_contract_address(caller);
 
         let (world, token, _combat, temple) = setup_world();
@@ -295,7 +296,7 @@ mod tests {
 
     #[test]
     fn test_exit_temple_preserves_stats() {
-        let caller = contract_address_const::<'exittest2'>();
+        let caller: ContractAddress = 'exittest2'.try_into().unwrap();
         starknet::testing::set_contract_address(caller);
 
         let (world, token, _combat, temple) = setup_world();
@@ -316,7 +317,7 @@ mod tests {
     #[test]
     #[should_panic]
     fn test_exit_temple_fails_not_in_temple() {
-        let caller = contract_address_const::<'exittest3'>();
+        let caller: ContractAddress = 'exittest3'.try_into().unwrap();
         starknet::testing::set_contract_address(caller);
 
         let (_world, token, _combat, temple) = setup_world();
@@ -331,7 +332,7 @@ mod tests {
 
     #[test]
     fn test_open_exit_generates_new_chamber() {
-        let caller = contract_address_const::<'opentest1'>();
+        let caller: ContractAddress = 'opentest1'.try_into().unwrap();
         starknet::testing::set_contract_address(caller);
 
         let (mut world, token, _combat, temple) = setup_world();
@@ -375,7 +376,7 @@ mod tests {
 
     #[test]
     fn test_open_exit_increments_chambers_explored() {
-        let caller = contract_address_const::<'opentest2'>();
+        let caller: ContractAddress = 'opentest2'.try_into().unwrap();
         starknet::testing::set_contract_address(caller);
 
         let (mut world, token, _combat, temple) = setup_world();
@@ -411,7 +412,7 @@ mod tests {
 
     #[test]
     fn test_open_exit_creates_back_exit() {
-        let caller = contract_address_const::<'opentest3'>();
+        let caller: ContractAddress = 'opentest3'.try_into().unwrap();
         starknet::testing::set_contract_address(caller);
 
         let (mut world, token, _combat, temple) = setup_world();
@@ -450,7 +451,7 @@ mod tests {
     #[test]
     #[should_panic]
     fn test_open_exit_fails_if_already_discovered() {
-        let caller = contract_address_const::<'opentest4'>();
+        let caller: ContractAddress = 'opentest4'.try_into().unwrap();
         starknet::testing::set_contract_address(caller);
 
         let (mut world, token, _combat, temple) = setup_world();
@@ -488,7 +489,7 @@ mod tests {
 
     #[test]
     fn test_move_to_empty_chamber_no_combat() {
-        let caller = contract_address_const::<'movetest1'>();
+        let caller: ContractAddress = 'movetest1'.try_into().unwrap();
         starknet::testing::set_contract_address(caller);
 
         let (mut world, token, _combat, temple) = setup_world();
@@ -537,7 +538,7 @@ mod tests {
 
     #[test]
     fn test_move_to_monster_chamber_triggers_combat() {
-        let caller = contract_address_const::<'movetest2'>();
+        let caller: ContractAddress = 'movetest2'.try_into().unwrap();
         starknet::testing::set_contract_address(caller);
 
         let (mut world, token, _combat, temple) = setup_world();
@@ -596,7 +597,7 @@ mod tests {
     #[test]
     #[should_panic]
     fn test_move_to_undiscovered_exit_fails() {
-        let caller = contract_address_const::<'movetest3'>();
+        let caller: ContractAddress = 'movetest3'.try_into().unwrap();
         starknet::testing::set_contract_address(caller);
 
         let (mut world, token, _combat, temple) = setup_world();
@@ -633,7 +634,7 @@ mod tests {
 
     #[test]
     fn test_attack_in_temple_records_position() {
-        let caller = contract_address_const::<'combattest1'>();
+        let caller: ContractAddress = 'combattest1'.try_into().unwrap();
         starknet::testing::set_contract_address(caller);
 
         let (mut world, token, combat, temple) = setup_world();
@@ -680,7 +681,7 @@ mod tests {
 
     #[test]
     fn test_kill_monster_grants_xp() {
-        let caller = contract_address_const::<'xptest1'>();
+        let caller: ContractAddress = 'xptest1'.try_into().unwrap();
         starknet::testing::set_contract_address(caller);
 
         let (mut world, token, combat, temple) = setup_world();
@@ -739,7 +740,7 @@ mod tests {
 
     #[test]
     fn test_kill_monster_updates_temple_progress() {
-        let caller = contract_address_const::<'xptest2'>();
+        let caller: ContractAddress = 'xptest2'.try_into().unwrap();
         starknet::testing::set_contract_address(caller);
 
         let (mut world, token, combat, temple) = setup_world();
@@ -792,7 +793,7 @@ mod tests {
 
     #[test]
     fn test_level_up_increases_max_hp() {
-        let caller = contract_address_const::<'lvltest1'>();
+        let caller: ContractAddress = 'lvltest1'.try_into().unwrap();
         starknet::testing::set_contract_address(caller);
 
         let (mut world, token, combat, temple) = setup_world();
@@ -867,7 +868,7 @@ mod tests {
 
     #[test]
     fn test_loot_treasure_awards_gold_in_treasure_chamber() {
-        let caller = contract_address_const::<'loottest1'>();
+        let caller: ContractAddress = 'loottest1'.try_into().unwrap();
         starknet::testing::set_contract_address(caller);
 
         let (mut world, token, _combat, temple) = setup_world();
@@ -909,7 +910,7 @@ mod tests {
 
     #[test]
     fn test_loot_treasure_marks_looted() {
-        let caller = contract_address_const::<'loottest2'>();
+        let caller: ContractAddress = 'loottest2'.try_into().unwrap();
         starknet::testing::set_contract_address(caller);
 
         let (mut world, token, _combat, temple) = setup_world();
@@ -962,7 +963,7 @@ mod tests {
     #[test]
     #[should_panic]
     fn test_loot_treasure_fails_on_second_attempt() {
-        let caller = contract_address_const::<'loottest3'>();
+        let caller: ContractAddress = 'loottest3'.try_into().unwrap();
         starknet::testing::set_contract_address(caller);
 
         let (mut world, token, _combat, temple) = setup_world();
@@ -995,7 +996,7 @@ mod tests {
     #[test]
     #[should_panic]
     fn test_loot_treasure_fails_in_monster_chamber() {
-        let caller = contract_address_const::<'loottest4'>();
+        let caller: ContractAddress = 'loottest4'.try_into().unwrap();
         starknet::testing::set_contract_address(caller);
 
         let (mut world, token, _combat, temple) = setup_world();
@@ -1031,7 +1032,7 @@ mod tests {
 
     #[test]
     fn test_loot_fallen_transfers_items() {
-        let caller = contract_address_const::<'fallentest1'>();
+        let caller: ContractAddress = 'fallentest1'.try_into().unwrap();
         starknet::testing::set_contract_address(caller);
 
         let (mut world, token, _combat, temple) = setup_world();
@@ -1092,7 +1093,7 @@ mod tests {
     #[test]
     #[should_panic]
     fn test_loot_fallen_cannot_loot_self() {
-        let caller = contract_address_const::<'fallentest2'>();
+        let caller: ContractAddress = 'fallentest2'.try_into().unwrap();
         starknet::testing::set_contract_address(caller);
 
         let (mut world, token, _combat, temple) = setup_world();
@@ -1133,7 +1134,7 @@ mod tests {
 
     #[test]
     fn test_boss_defeat_marks_boss_dead() {
-        let caller = contract_address_const::<'bosstest1'>();
+        let caller: ContractAddress = 'bosstest1'.try_into().unwrap();
         starknet::testing::set_contract_address(caller);
 
         let (mut world, token, combat, temple) = setup_world();
@@ -1195,7 +1196,7 @@ mod tests {
 
     #[test]
     fn test_boss_defeat_increments_temples_conquered() {
-        let caller = contract_address_const::<'bosstest2'>();
+        let caller: ContractAddress = 'bosstest2'.try_into().unwrap();
         starknet::testing::set_contract_address(caller);
 
         let (mut world, token, combat, temple) = setup_world();
@@ -1271,7 +1272,7 @@ mod tests {
 
     #[test]
     fn test_full_flow_mint_enter_explore_fight_exit() {
-        let caller = contract_address_const::<'fullflow1'>();
+        let caller: ContractAddress = 'fullflow1'.try_into().unwrap();
         starknet::testing::set_contract_address(caller);
 
         let (mut world, token, combat, temple) = setup_world();
@@ -1385,7 +1386,7 @@ mod tests {
 
     #[test]
     fn test_full_flow_rogue_enters_loots_exits() {
-        let caller = contract_address_const::<'fullflow2'>();
+        let caller: ContractAddress = 'fullflow2'.try_into().unwrap();
         starknet::testing::set_contract_address(caller);
 
         let (mut world, token, _combat, temple) = setup_world();
@@ -1460,7 +1461,7 @@ mod tests {
 
     #[test]
     fn test_full_flow_wizard_casts_spell_kills_monster() {
-        let caller = contract_address_const::<'fullflow3'>();
+        let caller: ContractAddress = 'fullflow3'.try_into().unwrap();
         starknet::testing::set_contract_address(caller);
 
         let (mut world, token, combat, temple) = setup_world();
@@ -1520,7 +1521,7 @@ mod tests {
 
     #[test]
     fn test_cross_temple_stats_carry_over() {
-        let caller = contract_address_const::<'crosstest1'>();
+        let caller: ContractAddress = 'crosstest1'.try_into().unwrap();
         starknet::testing::set_contract_address(caller);
 
         let (mut world, token, _combat, temple) = setup_world();

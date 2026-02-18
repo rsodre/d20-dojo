@@ -284,8 +284,7 @@ fn roll_d20(ref world: WorldStorage) -> u8 {
 fn roll_dice(ref world: WorldStorage, sides: u8, count: u8) -> u16 {
     let mut total: u16 = 0;
     let mut i: u8 = 0;
-    loop {
-        if i >= count { break; }
+    while i < count {
         let seed: felt252 = world.uuid().into();
         let random: u256 = vrf.consume_random(seed);
         total += ((random % sides.into()) + 1).try_into().unwrap();
