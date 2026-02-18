@@ -80,7 +80,7 @@ mod tests {
         let (contract_address, _) = world.dns(@"explorer_token").unwrap();
         let token = IExplorerTokenDispatcher { contract_address };
 
-        let token_id = token.mint_explorer(
+        let explorer_id = token.mint_explorer(
             ExplorerClass::Fighter,
             stats_fighter(),
             array![Skill::Perception].span(),
@@ -88,9 +88,13 @@ mod tests {
         );
 
         // ERC-721 token ID starts at 1
-        assert(token_id == 1_u256, 'token_id should be 1');
+        assert(explorer_id == 1_u128, 'explorer_id should be 1');
 
-        let explorer_id: u128 = token_id.low;
+        // Verify ERC721 state
+        assert(token.total_supply() == 1_u256, 'supply should be 1');
+        assert(token.balance_of(caller) == 1_u256, 'balance should be 1');
+        assert(token.owner_of(explorer_id.into()) == caller, 'wrong owner');
+
         let stats: ExplorerStats = world.read_model(explorer_id);
 
         assert(stats.class == ExplorerClass::Fighter, 'wrong class');
@@ -118,13 +122,12 @@ mod tests {
 
         // STR=15, DEX=14, CON=13 → CON mod = +1, so HP = 10+1 = 11
         // DEX mod = +2 but Chain Mail ignores DEX → AC = 16
-        let token_id = token.mint_explorer(
+        let explorer_id = token.mint_explorer(
             ExplorerClass::Fighter,
             stats_fighter(),
             array![Skill::Perception].span(),
             array![].span(),
         );
-        let explorer_id: u128 = token_id.low;
 
         let health: ExplorerHealth = world.read_model(explorer_id);
         assert(health.max_hp == 11, 'fighter HP should be 11');
@@ -149,13 +152,12 @@ mod tests {
         let (contract_address, _) = world.dns(@"explorer_token").unwrap();
         let token = IExplorerTokenDispatcher { contract_address };
 
-        let token_id = token.mint_explorer(
+        let explorer_id = token.mint_explorer(
             ExplorerClass::Fighter,
             stats_fighter(),
             array![Skill::Perception].span(),
             array![].span(),
         );
-        let explorer_id: u128 = token_id.low;
 
         let inv: ExplorerInventory = world.read_model(explorer_id);
         assert(inv.primary_weapon == WeaponType::Longsword, 'fighter weapon: longsword');
@@ -177,13 +179,12 @@ mod tests {
         let (contract_address, _) = world.dns(@"explorer_token").unwrap();
         let token = IExplorerTokenDispatcher { contract_address };
 
-        let token_id = token.mint_explorer(
+        let explorer_id = token.mint_explorer(
             ExplorerClass::Fighter,
             stats_fighter(),
             array![Skill::Perception].span(), // choice
             array![].span(),
         );
-        let explorer_id: u128 = token_id.low;
 
         let skills: ExplorerSkills = world.read_model(explorer_id);
         assert(skills.athletics, 'fighter: athletics auto');
@@ -205,13 +206,12 @@ mod tests {
         let (contract_address, _) = world.dns(@"explorer_token").unwrap();
         let token = IExplorerTokenDispatcher { contract_address };
 
-        let token_id = token.mint_explorer(
+        let explorer_id = token.mint_explorer(
             ExplorerClass::Fighter,
             stats_fighter(),
             array![Skill::Perception].span(),
             array![].span(),
         );
-        let explorer_id: u128 = token_id.low;
 
         let pos: ExplorerPosition = world.read_model(explorer_id);
         assert(pos.temple_id == 0, 'not in a temple');
@@ -235,13 +235,12 @@ mod tests {
 
         // DEX=15 → mod +2, Leather AC = 11+2 = 13
         // CON=14 → mod +2, HP = 8+2 = 10
-        let token_id = token.mint_explorer(
+        let explorer_id = token.mint_explorer(
             ExplorerClass::Rogue,
             stats_rogue(),
             array![Skill::Perception, Skill::Athletics].span(),
             array![Skill::Stealth, Skill::Perception].span(), // expertise picks
         );
-        let explorer_id: u128 = token_id.low;
 
         let stats: ExplorerStats = world.read_model(explorer_id);
         assert(stats.class == ExplorerClass::Rogue, 'wrong class');
@@ -266,13 +265,12 @@ mod tests {
         let (contract_address, _) = world.dns(@"explorer_token").unwrap();
         let token = IExplorerTokenDispatcher { contract_address };
 
-        let token_id = token.mint_explorer(
+        let explorer_id = token.mint_explorer(
             ExplorerClass::Rogue,
             stats_rogue(),
             array![Skill::Perception, Skill::Athletics].span(),
             array![Skill::Stealth, Skill::Acrobatics].span(),
         );
-        let explorer_id: u128 = token_id.low;
 
         let inv: ExplorerInventory = world.read_model(explorer_id);
         assert(inv.primary_weapon == WeaponType::Dagger, 'rogue weapon: dagger');
@@ -291,13 +289,12 @@ mod tests {
         let (contract_address, _) = world.dns(@"explorer_token").unwrap();
         let token = IExplorerTokenDispatcher { contract_address };
 
-        let token_id = token.mint_explorer(
+        let explorer_id = token.mint_explorer(
             ExplorerClass::Rogue,
             stats_rogue(),
             array![Skill::Perception, Skill::Athletics].span(),
             array![Skill::Stealth, Skill::Perception].span(),
         );
-        let explorer_id: u128 = token_id.low;
 
         let skills: ExplorerSkills = world.read_model(explorer_id);
         assert(skills.stealth, 'rogue: stealth auto');
@@ -324,13 +321,12 @@ mod tests {
 
         // DEX=14 → mod +2, No armor AC = 10+2 = 12
         // CON=13 → mod +1, HP = 6+1 = 7
-        let token_id = token.mint_explorer(
+        let explorer_id = token.mint_explorer(
             ExplorerClass::Wizard,
             stats_wizard(),
             array![Skill::Perception].span(),
             array![].span(),
         );
-        let explorer_id: u128 = token_id.low;
 
         let stats: ExplorerStats = world.read_model(explorer_id);
         assert(stats.class == ExplorerClass::Wizard, 'wrong class');
@@ -357,13 +353,12 @@ mod tests {
         let (contract_address, _) = world.dns(@"explorer_token").unwrap();
         let token = IExplorerTokenDispatcher { contract_address };
 
-        let token_id = token.mint_explorer(
+        let explorer_id = token.mint_explorer(
             ExplorerClass::Wizard,
             stats_wizard(),
             array![Skill::Perception].span(),
             array![].span(),
         );
-        let explorer_id: u128 = token_id.low;
 
         let inv: ExplorerInventory = world.read_model(explorer_id);
         assert(inv.primary_weapon == WeaponType::Staff, 'wizard weapon: staff');
@@ -382,13 +377,12 @@ mod tests {
         let (contract_address, _) = world.dns(@"explorer_token").unwrap();
         let token = IExplorerTokenDispatcher { contract_address };
 
-        let token_id = token.mint_explorer(
+        let explorer_id = token.mint_explorer(
             ExplorerClass::Wizard,
             stats_wizard(),
             array![Skill::Persuasion].span(),
             array![].span(),
         );
-        let explorer_id: u128 = token_id.low;
 
         let skills: ExplorerSkills = world.read_model(explorer_id);
         assert(skills.arcana, 'wizard: arcana auto');
@@ -430,14 +424,21 @@ mod tests {
             array![Skill::Stealth, Skill::Acrobatics].span(),
         );
 
-        assert(id1 == 1_u256, 'first id should be 1');
-        assert(id2 == 2_u256, 'second id should be 2');
-        assert(id3 == 3_u256, 'third id should be 3');
+        assert(id1 == 1_u128, 'first id should be 1');
+        assert(id2 == 2_u128, 'second id should be 2');
+        assert(id3 == 3_u128, 'third id should be 3');
+
+        // Verify ERC721 state
+        assert(token.total_supply() == 3_u256, 'supply should be 3');
+        assert(token.balance_of(caller) == 3_u256, 'balance should be 3');
+        assert(token.owner_of(id1.into()) == caller, 'wrong owner id1');
+        assert(token.owner_of(id2.into()) == caller, 'wrong owner id2');
+        assert(token.owner_of(id3.into()) == caller, 'wrong owner id3');
 
         // Each explorer has independent state
-        let s1: ExplorerStats = world.read_model(id1.low);
-        let s2: ExplorerStats = world.read_model(id2.low);
-        let s3: ExplorerStats = world.read_model(id3.low);
+        let s1: ExplorerStats = world.read_model(id1);
+        let s2: ExplorerStats = world.read_model(id2);
+        let s3: ExplorerStats = world.read_model(id3);
         assert(s1.class == ExplorerClass::Fighter, 'id1 should be fighter');
         assert(s2.class == ExplorerClass::Wizard, 'id2 should be wizard');
         assert(s3.class == ExplorerClass::Rogue, 'id3 should be rogue');
@@ -456,13 +457,12 @@ mod tests {
         let (contract_address, _) = world.dns(@"explorer_token").unwrap();
         let token = IExplorerTokenDispatcher { contract_address };
 
-        let token_id = token.mint_explorer(
+        let explorer_id = token.mint_explorer(
             ExplorerClass::Fighter,
             stats_fighter(),
             array![Skill::Perception].span(),
             array![].span(),
         );
-        let explorer_id: u128 = token_id.low;
 
         // Simulate damage by writing model directly
         let mut health: ExplorerHealth = world.read_model(explorer_id);
@@ -488,13 +488,12 @@ mod tests {
         let (contract_address, _) = world.dns(@"explorer_token").unwrap();
         let token = IExplorerTokenDispatcher { contract_address };
 
-        let token_id = token.mint_explorer(
+        let explorer_id = token.mint_explorer(
             ExplorerClass::Fighter,
             stats_fighter(),
             array![Skill::Perception].span(),
             array![].span(),
         );
-        let explorer_id: u128 = token_id.low;
 
         // Simulate spent class resources
         let mut combat: ExplorerCombat = world.read_model(explorer_id);
@@ -520,13 +519,12 @@ mod tests {
         let (contract_address, _) = world.dns(@"explorer_token").unwrap();
         let token = IExplorerTokenDispatcher { contract_address };
 
-        let token_id = token.mint_explorer(
+        let explorer_id = token.mint_explorer(
             ExplorerClass::Wizard,
             stats_wizard(),
             array![Skill::Perception].span(),
             array![].span(),
         );
-        let explorer_id: u128 = token_id.low;
 
         // Spend all spell slots
         let mut combat: ExplorerCombat = world.read_model(explorer_id);
@@ -718,13 +716,12 @@ mod tests {
         let (contract_address, _) = world.dns(@"explorer_token").unwrap();
         let token = IExplorerTokenDispatcher { contract_address };
 
-        let token_id = token.mint_explorer(
+        let explorer_id = token.mint_explorer(
             ExplorerClass::Fighter,
             stats_fighter(),
             array![Skill::Perception].span(),
             array![].span(),
         );
-        let explorer_id: u128 = token_id.low;
 
         // Kill the explorer via write_model_test
         let mut health: ExplorerHealth = world.read_model(explorer_id);

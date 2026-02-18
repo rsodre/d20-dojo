@@ -1,7 +1,55 @@
+
 // ── Public interface ────────────────────────────────────────────────────────
+use starknet::{ContractAddress};
+use dojo::world::IWorldDispatcher;
 
 #[starknet::interface]
 pub trait ITempleToken<TState> {
+    // IWorldProvider
+    fn world_dispatcher(self: @TState) -> IWorldDispatcher;
+
+    //-----------------------------------
+    // IERC721ComboABI start
+    //
+    // (ISRC5)
+    fn supports_interface(self: @TState, interface_id: felt252) -> bool;
+    // (IERC721)
+    fn balance_of(self: @TState, account: ContractAddress) -> u256;
+    fn owner_of(self: @TState, token_id: u256) -> ContractAddress;
+    fn safe_transfer_from(ref self: TState, from: ContractAddress, to: ContractAddress, token_id: u256, data: Span<felt252>);
+    fn transfer_from(ref self: TState, from: ContractAddress, to: ContractAddress, token_id: u256);
+    fn approve(ref self: TState, to: ContractAddress, token_id: u256);
+    fn set_approval_for_all(ref self: TState, operator: ContractAddress, approved: bool);
+    fn get_approved(self: @TState, token_id: u256) -> ContractAddress;
+    fn is_approved_for_all(self: @TState, owner: ContractAddress, operator: ContractAddress) -> bool;
+    // (IERC721Metadata)
+    fn name(self: @TState) -> ByteArray;
+    fn symbol(self: @TState) -> ByteArray;
+    fn token_uri(self: @TState, token_id: u256) -> ByteArray;
+    fn tokenURI(self: @TState, tokenId: u256) -> ByteArray;
+    //-----------------------------------
+    // IERC721Minter
+    fn max_supply(self: @TState) -> u256;
+    fn total_supply(self: @TState) -> u256;
+    fn last_token_id(self: @TState) -> u256;
+    fn is_minting_paused(self: @TState) -> bool;
+    fn is_owner_of(self: @TState, address: ContractAddress, token_id: u256) -> bool;
+    fn token_exists(self: @TState, token_id: u256) -> bool;
+    fn totalSupply(self: @TState) -> u256;
+    //-----------------------------------
+    // IERC7572ContractMetadata
+    fn contract_uri(self: @TState) -> ByteArray;
+    fn contractURI(self: @TState) -> ByteArray;
+    //-----------------------------------
+    // IERC4906MetadataUpdate
+    //-----------------------------------
+    // IERC2981RoyaltyInfo
+    fn royalty_info(self: @TState, token_id: u256, sale_price: u256) -> (ContractAddress, u256);
+    fn default_royalty(self: @TState) -> (ContractAddress, u128, u128);
+    fn token_royalty(self: @TState, token_id: u256) -> (ContractAddress, u128, u128);
+    // IERC721ComboABI end
+    //-----------------------------------
+
     /// Mint a new Temple NFT.
     ///
     /// Parameters:
@@ -9,7 +57,42 @@ pub trait ITempleToken<TState> {
     /// - `difficulty`: difficulty tier (1 = easy, higher = harder)
     ///
     /// Returns the new temple's token ID (u256, ERC-721 standard).
-    fn mint_temple(ref self: TState, seed: felt252, difficulty: u8) -> u256;
+    fn mint_temple(ref self: TState, seed: felt252, difficulty: u8) -> u128;
+
+    /// Place an explorer at the temple's entrance chamber.
+    fn enter_temple(ref self: TState, explorer_id: u128, temple_id: u128);
+
+    /// Remove an explorer from the temple (set temple_id=0, chamber_id=0).
+    fn exit_temple(ref self: TState, explorer_id: u128);
+
+    /// Open an unexplored exit from the explorer's current chamber,
+    /// generating the destination chamber if it hasn't been discovered yet.
+    fn open_exit(ref self: TState, explorer_id: u128, exit_index: u8);
+
+    /// Move the explorer through a previously discovered exit.
+    fn move_to_chamber(ref self: TState, explorer_id: u128, exit_index: u8);
+
+    /// DEX/skill check to disarm a trap in the current chamber.
+    fn disarm_trap(ref self: TState, explorer_id: u128);
+
+    /// Loot the current chamber: Perception check (d20 + WIS) in Empty/Treasure chambers,
+    /// awards gold and possibly a potion on success. Marks chamber as looted.
+    fn loot_treasure(ref self: TState, explorer_id: u128);
+
+    /// Pick up loot from a fallen explorer in the current chamber.
+    fn loot_fallen(ref self: TState, explorer_id: u128, fallen_index: u32);
+}
+
+#[starknet::interface]
+pub trait ITempleTokenPublic<TState> {
+    /// Mint a new Temple NFT.
+    ///
+    /// Parameters:
+    /// - `seed`: felt252 seed that drives all procedural generation for this temple
+    /// - `difficulty`: difficulty tier (1 = easy, higher = harder)
+    ///
+    /// Returns the new temple's token ID (u256, ERC-721 standard).
+    fn mint_temple(ref self: TState, seed: felt252, difficulty: u8) -> u128;
 
     /// Place an explorer at the temple's entrance chamber.
     fn enter_temple(ref self: TState, explorer_id: u128, temple_id: u128);
@@ -39,7 +122,6 @@ pub trait ITempleToken<TState> {
 
 #[dojo::contract]
 pub mod temple_token {
-    use super::ITempleToken;
     use starknet::get_caller_address;
     use dojo::model::ModelStorage;
     use dojo::event::EventStorage;
@@ -309,8 +391,8 @@ pub mod temple_token {
     // ── Public interface implementation ──────────────────────────────────────
 
     #[abi(embed_v0)]
-    impl TempleTokenImpl of ITempleToken<ContractState> {
-        fn mint_temple(ref self: ContractState, seed: felt252, difficulty: u8) -> u256 {
+    impl TempleTokenPublicImpl of super::ITempleTokenPublic<ContractState> {
+        fn mint_temple(ref self: ContractState, seed: felt252, difficulty: u8) -> u128 {
             assert(difficulty >= 1, 'difficulty must be at least 1');
 
             let mut world = self.world_default();
@@ -332,7 +414,7 @@ pub mod temple_token {
                 boss_alive: true,
             });
 
-            token_id
+            temple_id
         }
 
         fn enter_temple(ref self: ContractState, explorer_id: u128, temple_id: u128) {

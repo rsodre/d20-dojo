@@ -153,7 +153,7 @@ mod tests {
             stats_fighter(),
             array![Skill::Perception].span(),
             array![].span(),
-        ).low
+        )
     }
 
     fn mint_rogue(token: IExplorerTokenDispatcher) -> u128 {
@@ -162,7 +162,7 @@ mod tests {
             stats_rogue(),
             array![Skill::Perception, Skill::Persuasion].span(),
             array![Skill::Stealth, Skill::Acrobatics].span(),
-        ).low
+        )
     }
 
     fn mint_wizard(token: IExplorerTokenDispatcher) -> u128 {
@@ -171,7 +171,7 @@ mod tests {
             stats_wizard(),
             array![Skill::Perception].span(),
             array![].span(),
-        ).low
+        )
     }
 
     // ═══════════════════════════════════════════════════════════════════════
@@ -185,7 +185,7 @@ mod tests {
 
         let (world, _token, _combat, temple) = setup_world();
 
-        let temple_id = temple.mint_temple('seed1', 1_u8).low;
+        let temple_id = temple.mint_temple('seed1', 1_u8);
         assert(temple_id != 0, 'temple_id must be non-zero');
 
         let state: TempleState = world.read_model(temple_id);
@@ -193,6 +193,11 @@ mod tests {
         assert(state.boss_alive, 'boss should start alive');
         assert(state.next_chamber_id == 2, 'next chamber starts at 2');
         assert(state.boss_chamber_id == 0, 'no boss chamber yet');
+
+        // Verify ERC721 state
+        assert(temple.total_supply() == 1_u256, 'supply should be 1');
+        assert(temple.balance_of(caller) == 1_u256, 'balance should be 1');
+        assert(temple.owner_of(temple_id.into()) == caller, 'wrong owner');
     }
 
     #[test]
@@ -202,9 +207,12 @@ mod tests {
 
         let (_world, _token, _combat, temple) = setup_world();
 
-        let id1 = temple.mint_temple('seed1', 1_u8).low;
-        let id2 = temple.mint_temple('seed2', 2_u8).low;
+        let id1 = temple.mint_temple('seed1', 1_u8);
+        let id2 = temple.mint_temple('seed2', 2_u8);
         assert(id2 == id1 + 1, 'ids should be sequential');
+
+        // Verify ERC721 state
+        assert(temple.total_supply() == 2_u256, 'supply should be 2');
     }
 
     #[test]
@@ -229,7 +237,7 @@ mod tests {
         let (world, token, _combat, temple) = setup_world();
 
         let explorer_id = mint_fighter(token);
-        let temple_id = temple.mint_temple('seed_enter', 1_u8).low;
+        let temple_id = temple.mint_temple('seed_enter', 1_u8);
 
         temple.enter_temple(explorer_id, temple_id);
 
@@ -247,7 +255,7 @@ mod tests {
         let (world, token, _combat, temple) = setup_world();
 
         let explorer_id = mint_fighter(token);
-        let temple_id = temple.mint_temple('seed_prog', 1_u8).low;
+        let temple_id = temple.mint_temple('seed_prog', 1_u8);
 
         temple.enter_temple(explorer_id, temple_id);
 
@@ -265,7 +273,7 @@ mod tests {
         let (mut world, token, _combat, temple) = setup_world();
 
         let explorer_id = mint_fighter(token);
-        let temple_id = temple.mint_temple('seed_dead', 1_u8).low;
+        let temple_id = temple.mint_temple('seed_dead', 1_u8);
 
         world.write_model_test(@ExplorerHealth {
             explorer_id,
@@ -285,7 +293,7 @@ mod tests {
         let (world, token, _combat, temple) = setup_world();
 
         let explorer_id = mint_fighter(token);
-        let temple_id = temple.mint_temple('seed_exit', 1_u8).low;
+        let temple_id = temple.mint_temple('seed_exit', 1_u8);
 
         temple.enter_temple(explorer_id, temple_id);
         temple.exit_temple(explorer_id);
@@ -303,7 +311,7 @@ mod tests {
         let (world, token, _combat, temple) = setup_world();
 
         let explorer_id = mint_fighter(token);
-        let temple_id = temple.mint_temple('seed_stat', 1_u8).low;
+        let temple_id = temple.mint_temple('seed_stat', 1_u8);
 
         let stats_before: ExplorerStats = world.read_model(explorer_id);
 
@@ -339,7 +347,7 @@ mod tests {
         let (mut world, token, _combat, temple) = setup_world();
 
         let explorer_id = mint_fighter(token);
-        let temple_id = temple.mint_temple('seed_open', 1_u8).low;
+        let temple_id = temple.mint_temple('seed_open', 1_u8);
 
         // Set up entrance chamber with 2 exits
         world.write_model_test(@Chamber {
@@ -383,7 +391,7 @@ mod tests {
         let (mut world, token, _combat, temple) = setup_world();
 
         let explorer_id = mint_fighter(token);
-        let temple_id = temple.mint_temple('seed_exp', 1_u8).low;
+        let temple_id = temple.mint_temple('seed_exp', 1_u8);
 
         world.write_model_test(@Chamber {
             temple_id,
@@ -419,7 +427,7 @@ mod tests {
         let (mut world, token, _combat, temple) = setup_world();
 
         let explorer_id = mint_fighter(token);
-        let temple_id = temple.mint_temple('seed_back', 1_u8).low;
+        let temple_id = temple.mint_temple('seed_back', 1_u8);
 
         world.write_model_test(@Chamber {
             temple_id,
@@ -458,7 +466,7 @@ mod tests {
         let (mut world, token, _combat, temple) = setup_world();
 
         let explorer_id = mint_fighter(token);
-        let temple_id = temple.mint_temple('seed_dup', 1_u8).low;
+        let temple_id = temple.mint_temple('seed_dup', 1_u8);
 
         world.write_model_test(@Chamber {
             temple_id,
@@ -496,7 +504,7 @@ mod tests {
         let (mut world, token, _combat, temple) = setup_world();
 
         let explorer_id = mint_fighter(token);
-        let temple_id = temple.mint_temple('seed_mv1', 1_u8).low;
+        let temple_id = temple.mint_temple('seed_mv1', 1_u8);
 
         // Set up entrance with one discovered exit to an empty chamber
         world.write_model_test(@Chamber {
@@ -545,7 +553,7 @@ mod tests {
         let (mut world, token, _combat, temple) = setup_world();
 
         let explorer_id = mint_fighter(token);
-        let temple_id = temple.mint_temple('seed_mv2', 1_u8).low;
+        let temple_id = temple.mint_temple('seed_mv2', 1_u8);
 
         world.write_model_test(@Chamber {
             temple_id,
@@ -604,7 +612,7 @@ mod tests {
         let (mut world, token, _combat, temple) = setup_world();
 
         let explorer_id = mint_fighter(token);
-        let temple_id = temple.mint_temple('seed_mv3', 1_u8).low;
+        let temple_id = temple.mint_temple('seed_mv3', 1_u8);
 
         world.write_model_test(@Chamber {
             temple_id,
@@ -641,7 +649,7 @@ mod tests {
         let (mut world, token, combat, temple) = setup_world();
 
         let explorer_id = mint_fighter(token);
-        let temple_id = temple.mint_temple('seed_ct1', 1_u8).low;
+        let temple_id = temple.mint_temple('seed_ct1', 1_u8);
 
         // Give explorer high HP so they survive the counter-attack
         world.write_model_test(@ExplorerHealth {
@@ -688,7 +696,7 @@ mod tests {
         let (mut world, token, combat, temple) = setup_world();
 
         let explorer_id = mint_fighter(token);
-        let temple_id = temple.mint_temple('seed_xp1', 1_u8).low;
+        let temple_id = temple.mint_temple('seed_xp1', 1_u8);
 
         let stats_before: ExplorerStats = world.read_model(explorer_id);
 
@@ -747,7 +755,7 @@ mod tests {
         let (mut world, token, combat, temple) = setup_world();
 
         let explorer_id = mint_fighter(token);
-        let temple_id = temple.mint_temple('seed_xp2', 1_u8).low;
+        let temple_id = temple.mint_temple('seed_xp2', 1_u8);
 
         world.write_model_test(@MonsterInstance {
             temple_id,
@@ -800,7 +808,7 @@ mod tests {
         let (mut world, token, combat, temple) = setup_world();
 
         let explorer_id = mint_fighter(token);
-        let temple_id = temple.mint_temple('seed_lvl', 1_u8).low;
+        let temple_id = temple.mint_temple('seed_lvl', 1_u8);
 
         // Set XP just below level 2 threshold (300 XP)
         let stats: ExplorerStats = world.read_model(explorer_id);
@@ -875,7 +883,7 @@ mod tests {
         let (mut world, token, _combat, temple) = setup_world();
 
         let explorer_id = mint_fighter(token);
-        let temple_id = temple.mint_temple('seed_loot', 1_u8).low;
+        let temple_id = temple.mint_temple('seed_loot', 1_u8);
 
         let inv_before: ExplorerInventory = world.read_model(explorer_id);
 
@@ -917,7 +925,7 @@ mod tests {
         let (mut world, token, _combat, temple) = setup_world();
 
         let explorer_id = mint_fighter(token);
-        let temple_id = temple.mint_temple('seed_loot2', 1_u8).low;
+        let temple_id = temple.mint_temple('seed_loot2', 1_u8);
 
         world.write_model_test(@Chamber {
             temple_id,
@@ -970,7 +978,7 @@ mod tests {
         let (mut world, token, _combat, temple) = setup_world();
 
         let explorer_id = mint_fighter(token);
-        let temple_id = temple.mint_temple('seed_loot3', 1_u8).low;
+        let temple_id = temple.mint_temple('seed_loot3', 1_u8);
 
         world.write_model_test(@Chamber {
             temple_id,
@@ -1003,7 +1011,7 @@ mod tests {
         let (mut world, token, _combat, temple) = setup_world();
 
         let explorer_id = mint_fighter(token);
-        let temple_id = temple.mint_temple('seed_loot4', 1_u8).low;
+        let temple_id = temple.mint_temple('seed_loot4', 1_u8);
 
         world.write_model_test(@Chamber {
             temple_id,
@@ -1042,7 +1050,7 @@ mod tests {
         let looter_id = mint_fighter(token);
         let fallen_explorer_id: u128 = 9999;
 
-        let temple_id = temple.mint_temple('seed_fall', 1_u8).low;
+        let temple_id = temple.mint_temple('seed_fall', 1_u8);
 
         // Place a fallen explorer body in chamber 2
         world.write_model_test(@ChamberFallenCount {
@@ -1100,7 +1108,7 @@ mod tests {
         let (mut world, token, _combat, temple) = setup_world();
 
         let explorer_id = mint_fighter(token);
-        let temple_id = temple.mint_temple('seed_self', 1_u8).low;
+        let temple_id = temple.mint_temple('seed_self', 1_u8);
 
         world.write_model_test(@ChamberFallenCount {
             temple_id,
@@ -1141,7 +1149,7 @@ mod tests {
         let (mut world, token, combat, temple) = setup_world();
 
         let explorer_id = mint_fighter(token);
-        let temple_id = temple.mint_temple('seed_boss', 1_u8).low;
+        let temple_id = temple.mint_temple('seed_boss', 1_u8);
 
         // Set up temple with a known boss chamber
         world.write_model_test(@TempleState {
@@ -1203,7 +1211,7 @@ mod tests {
         let (mut world, token, combat, temple) = setup_world();
 
         let explorer_id = mint_fighter(token);
-        let temple_id = temple.mint_temple('seed_boss2', 1_u8).low;
+        let temple_id = temple.mint_temple('seed_boss2', 1_u8);
 
         // Explorer with 1 prior conquest
         let stats: ExplorerStats = world.read_model(explorer_id);
@@ -1285,7 +1293,7 @@ mod tests {
         assert(stats.class == ExplorerClass::Fighter, 'is a fighter');
 
         // 2. Mint temple
-        let temple_id = temple.mint_temple('seed_full', 1_u8).low;
+        let temple_id = temple.mint_temple('seed_full', 1_u8);
         let temple_state: TempleState = world.read_model(temple_id);
         assert(temple_state.boss_alive, 'boss starts alive');
 
@@ -1393,7 +1401,7 @@ mod tests {
         let (mut world, token, _combat, temple) = setup_world();
 
         let explorer_id = mint_rogue(token);
-        let temple_id = temple.mint_temple('seed_rogue', 2_u8).low;
+        let temple_id = temple.mint_temple('seed_rogue', 2_u8);
 
         // Enter
         temple.enter_temple(explorer_id, temple_id);
@@ -1468,7 +1476,7 @@ mod tests {
         let (mut world, token, combat, temple) = setup_world();
 
         let explorer_id = mint_wizard(token);
-        let temple_id = temple.mint_temple('seed_wiz', 1_u8).low;
+        let temple_id = temple.mint_temple('seed_wiz', 1_u8);
 
         temple.enter_temple(explorer_id, temple_id);
 
@@ -1529,8 +1537,8 @@ mod tests {
 
         let explorer_id = mint_fighter(token);
 
-        let temple_a = temple.mint_temple('seed_a', 1_u8).low;
-        let temple_b = temple.mint_temple('seed_b', 2_u8).low;
+        let temple_a = temple.mint_temple('seed_a', 1_u8);
+        let temple_b = temple.mint_temple('seed_b', 2_u8);
 
         // Enter temple A, give some XP, exit
         temple.enter_temple(explorer_id, temple_a);

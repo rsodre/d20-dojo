@@ -54,11 +54,11 @@
 - [x] **x.2** Consume VRF at entry point, always. Save seed and pass when needed (`dice_roll()` for example)
 - [x] **x.3** Verify where multiple VRFs are needed, and divide seed by 0x100. Better make a new Seeder struct and trait (includes an initializer world to get Config and VRF address, store the seed, stores number of calls, a get_next() function, and rehash by /0x100 if used more than once)
 - [x] **x.4** Create traits for enums, replacing functions (ex: `combat_sytem.spell_level()`)
-- [ ] **x.5** Add erc721 and cairo-nft-combo interfaces to token contracts (explorer, temple)
+- [x] **x.5** Add erc721 and cairo-nft-combo interfaces to token contracts (explorer, temple)
 - [ ] **x.6** Validate explorer ownership in all player actions!
-- [ ] **x.7** Randomize character traits in the contract
-- [ ] **x.8** Create game interface with all contracts and entry points. Mark which calls need VRF.
-- [ ] **x.9** Make it easy for agents that want to play the game to have access to this interface (by an AGENTS file...? how? you're an agent, what's your take on this?). Also explain actions available in each context (exploring, combat, at entrance) so they can make the right choices.
+- [ ] **x.7** Create game interface with all contracts and entry points. Mark which calls need VRF.
+- [ ] **x.8** Make it easy for agents that want to play the game to have access to this interface (by an AGENTS file...? how? you're an agent, what's your take on this?). Also explain actions available in each context (exploring, combat, at entrance) so they can make the right choices.
+- [ ] **x.9** Randomize character traits in the contract
 - [ ] **x.10** Adapt client specification. Instead of text input, list the options available to the player, who just clicks on one.
 - [ ] **x.11** Refactor explorer and temple as Cairo components
 

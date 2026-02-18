@@ -119,7 +119,7 @@ mod tests {
             stats_fighter(),
             array![Skill::Perception].span(),
             array![].span(),
-        ).low
+        )
     }
 
     fn mint_rogue(token: IExplorerTokenDispatcher) -> u128 {
@@ -129,7 +129,7 @@ mod tests {
             stats_rogue(),
             array![Skill::Perception, Skill::Persuasion].span(),
             array![Skill::Stealth, Skill::Acrobatics].span(),
-        ).low
+        )
     }
 
     fn mint_wizard(token: IExplorerTokenDispatcher) -> u128 {
@@ -138,7 +138,7 @@ mod tests {
             stats_wizard(),
             array![Skill::Perception].span(),
             array![].span(),
-        ).low
+        )
     }
 
     // ═══════════════════════════════════════════════════════════════════════

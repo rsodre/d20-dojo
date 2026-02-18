@@ -1,12 +1,71 @@
 
-
 // ── Public interface ────────────────────────────────────────────────────────
 
+use starknet::{ContractAddress};
+use dojo::world::IWorldDispatcher;
 use crate::types::explorer::ExplorerClass;
 use crate::types::index::Skill;
 
 #[starknet::interface]
 pub trait IExplorerToken<TState> {
+    // IWorldProvider
+    fn world_dispatcher(self: @TState) -> IWorldDispatcher;
+
+    //-----------------------------------
+    // IERC721ComboABI start
+    //
+    // (ISRC5)
+    fn supports_interface(self: @TState, interface_id: felt252) -> bool;
+    // (IERC721)
+    fn balance_of(self: @TState, account: ContractAddress) -> u256;
+    fn owner_of(self: @TState, token_id: u256) -> ContractAddress;
+    fn safe_transfer_from(ref self: TState, from: ContractAddress, to: ContractAddress, token_id: u256, data: Span<felt252>);
+    fn transfer_from(ref self: TState, from: ContractAddress, to: ContractAddress, token_id: u256);
+    fn approve(ref self: TState, to: ContractAddress, token_id: u256);
+    fn set_approval_for_all(ref self: TState, operator: ContractAddress, approved: bool);
+    fn get_approved(self: @TState, token_id: u256) -> ContractAddress;
+    fn is_approved_for_all(self: @TState, owner: ContractAddress, operator: ContractAddress) -> bool;
+    // (IERC721Metadata)
+    fn name(self: @TState) -> ByteArray;
+    fn symbol(self: @TState) -> ByteArray;
+    fn token_uri(self: @TState, token_id: u256) -> ByteArray;
+    fn tokenURI(self: @TState, tokenId: u256) -> ByteArray;
+    //-----------------------------------
+    // IERC721Minter
+    fn max_supply(self: @TState) -> u256;
+    fn total_supply(self: @TState) -> u256;
+    fn last_token_id(self: @TState) -> u256;
+    fn is_minting_paused(self: @TState) -> bool;
+    fn is_owner_of(self: @TState, address: ContractAddress, token_id: u256) -> bool;
+    fn token_exists(self: @TState, token_id: u256) -> bool;
+    fn totalSupply(self: @TState) -> u256;
+    //-----------------------------------
+    // IERC7572ContractMetadata
+    fn contract_uri(self: @TState) -> ByteArray;
+    fn contractURI(self: @TState) -> ByteArray;
+    //-----------------------------------
+    // IERC4906MetadataUpdate
+    //-----------------------------------
+    // IERC2981RoyaltyInfo
+    fn royalty_info(self: @TState, token_id: u256, sale_price: u256) -> (ContractAddress, u256);
+    fn default_royalty(self: @TState) -> (ContractAddress, u128, u128);
+    fn token_royalty(self: @TState, token_id: u256) -> (ContractAddress, u128, u128);
+    // IERC721ComboABI end
+    //-----------------------------------
+
+    // IExplorerTokenPublic
+    fn mint_explorer(
+        ref self: TState,
+        class: ExplorerClass,
+        stat_assignment: Span<u8>,
+        skill_choices: Span<Skill>,
+        expertise_choices: Span<Skill>,
+    ) -> u128;
+    fn rest(ref self: TState, explorer_id: u128);
+}
+
+#[starknet::interface]
+pub trait IExplorerTokenPublic<TState> {
     /// Mint a new Explorer NFT.
     ///
     /// Parameters:
@@ -23,7 +82,7 @@ pub trait IExplorerToken<TState> {
         stat_assignment: Span<u8>,
         skill_choices: Span<Skill>,
         expertise_choices: Span<Skill>,
-    ) -> u256;
+    ) -> u128;
 
     /// Restore HP to max, reset spell slots to class/level values,
     /// and reset `second_wind_used` / `action_surge_used`.
@@ -34,7 +93,6 @@ pub trait IExplorerToken<TState> {
 
 #[dojo::contract]
 pub mod explorer_token {
-    use super::IExplorerToken;
     use starknet::get_caller_address;
     use dojo::model::ModelStorage;
     use dojo::event::EventStorage;
@@ -162,14 +220,14 @@ pub mod explorer_token {
     // ── Public interface implementation ──────────────────────────────────────
 
     #[abi(embed_v0)]
-    impl ExplorerTokenImpl of IExplorerToken<ContractState> {
+    impl ExplorerTokenPublicImpl of super::IExplorerTokenPublic<ContractState> {
         fn mint_explorer(
             ref self: ContractState,
             class: ExplorerClass,
             stat_assignment: Span<u8>,
             skill_choices: Span<Skill>,
             expertise_choices: Span<Skill>,
-        ) -> u256 {
+        ) -> u128 {
             assert(class != ExplorerClass::None, 'must choose a class');
 
             validate_standard_array(stat_assignment);
@@ -275,7 +333,7 @@ pub mod explorer_token {
                 player: caller,
             });
 
-            token_id
+            explorer_id
         }
 
         fn rest(ref self: ContractState, explorer_id: u128) {
