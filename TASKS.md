@@ -56,8 +56,8 @@
 - [x] **x.4** Create traits for enums, replacing functions (ex: `combat_sytem.spell_level()`)
 - [x] **x.5** Add erc721 and cairo-nft-combo interfaces to token contracts (explorer, temple)
 - [x] **x.6** Validate explorer ownership in all player actions!
-- [ ] **x.7** Create game interface with all contracts and entry points. Mark which calls need VRF.
-- [ ] **x.8** Make it easy for agents that want to play the game to have access to this interface (by an AGENTS file...? how? you're an agent, what's your take on this?). Also explain actions available in each context (exploring, combat, at entrance) so they can make the right choices.
+- [x] **x.7** Create game interface with all contracts and entry points. Mark which calls need VRF.
+- [x] **x.8** Make it easy for agents that want to play the game to have access to this interface (by an AGENTS file...? how? you're an agent, what's your take on this?). Also explain actions available in each context (exploring, combat, at entrance) so they can make the right choices.
 - [ ] **x.9** Randomize character traits in the contract
 - [ ] **x.10** Adapt client specification. Instead of text input, list the options available to the player, who just clicks on one.
 - [ ] **x.11** Refactor explorer and temple as Cairo components

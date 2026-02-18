@@ -1018,3 +1018,16 @@ See **[TASKS.md](TASKS.md)** for the full tickable task list.
 - Expanding the D20 subset: more classes, races, feats, levels beyond 5?
 - Monster respawn mechanics (do cleared temples eventually refill)?
 - Cooperative mechanics: multiple explorers fighting the same monster together?
+ 
+---
+ 
+ ## Agent & Gameplay Documentation
+ 
+ To facilitate interaction for autonomous agents, comprehensive documentation is provided:
+ - **[AGENTS.md](AGENTS.md)**: A high-level entry point for agents, explaining game flow and developer guidance.
+ - **[GAMEPLAY.md](GAMEPLAY.md)**: A detailed technical reference for all public contract methods, complete with direct source links and mechanic explanations.
+ 
+ ### Documentation Consistency
+ 
+ > [!IMPORTANT]
+ > Any changes to the public methods in the underlying contracts (`IExplorerTokenPublic`, `ITempleTokenPublic`, `ICombatSystem`) **MUST** be reflected in [GAMEPLAY.md](GAMEPLAY.md) to keep the agent guidelines accurate. This ensures that agents have a stable and predictable reference for all game actions.
