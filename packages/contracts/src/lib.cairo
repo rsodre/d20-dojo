@@ -5,6 +5,7 @@ pub mod systems {
 }
 
 pub mod models {
+    pub mod config;
     pub mod explorer;
     pub mod temple;
 }
@@ -23,5 +24,7 @@ pub mod utils {
 
 #[cfg(test)]
 pub mod tests {
+    pub mod mock_vrf;
     pub mod test_explorer_token;
+    pub mod test_combat_system;
 }

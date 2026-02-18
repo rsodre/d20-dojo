@@ -320,7 +320,29 @@ default = "d20_0_1"
 
 ### Models (Components)
 
-All models use the Dojo 1.8+ `#[dojo::model]` attribute (not the old `#[derive(Model)]`). Every model requires `#[derive(Drop, Serde)]` at minimum. Models with all-primitive fields add `Copy`. Custom nested types (enums, structs) must derive `Introspect`, `DojoStore`, and `Default`.
+All models use the Dojo 1.8+ `#[dojo::model]` attribute
+
+#### Config (singleton)
+
+```cairo
+/// Singleton world configuration. Always read/written with key = 1.
+/// Stored in src/models/config.cairo.
+#[derive(Copy, Drop, Serde)]
+#[dojo::model]
+pub struct Config {
+    #[key]
+    pub key: u8,                      // always 1 — singleton
+    pub vrf_address: ContractAddress, // Cartridge VRF provider address
+}
+```
+
+`Config` is written once by `combat_system`'s `dojo_init(vrf_address)`, which is called automatically by Dojo when the contract is deployed. The VRF address is passed as `init_call_args` in the dojo profile toml files:
+- `dojo_dev.toml` / `dojo_release.toml`: Cartridge VRF address (`0x051fea...ced8f`)
+- Tests: address of a `MockVrf` contract deployed via `deploy_syscall`, passed as `with_init_calldata` on the `ContractDef`
+
+All dice-rolling functions in `utils/d20.cairo` (`roll_d20`, `roll_dice`) now accept `vrf_address: ContractAddress` as their first parameter instead of hardcoding the constant. Systems read `Config` once at the start of each function call.
+
+ (not the old `#[derive(Model)]`). Every model requires `#[derive(Drop, Serde)]` at minimum. Models with all-primitive fields add `Copy`. Custom nested types (enums, structs) must derive `Introspect`, `DojoStore`, and `Default`.
 
 **Signed integers where D20 demands them.** The D20 system has many naturally negative values: ability modifiers (score 8 → -1), initiative rolls with negative DEX mods, and damage calculations. Cairo supports `i8`, `i16`, `i32`, `i64`, `i128` — use them where the game logic requires negative values. Store HP as `i16` (can go negative to detect overkill), modifiers as `i8` (range -5 to +5 for our score range). Keep unsigned types for values that are never negative (XP, gold, level, ability scores themselves).
 
