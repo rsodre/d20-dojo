@@ -60,8 +60,8 @@ pub mod temple_token {
     impl ERC721ComboMixinImpl = ERC721ComboComponent::ERC721ComboMixinImpl<ContractState>;
 
     // Game types and models
-    use d20::models::temple::{TempleState};
-    use d20::models::explorer::{ExplorerPosition};
+    use d20::models::temple::{TempleState, ExplorerTempleProgress};
+    use d20::models::explorer::{ExplorerHealth, ExplorerPosition};
     use d20::constants::{TEMPLE_TOKEN_DESCRIPTION, TEMPLE_TOKEN_EXTERNAL_LINK};
 
     // Metadata types
@@ -150,29 +150,52 @@ pub mod temple_token {
         fn enter_temple(ref self: ContractState, explorer_id: u128, temple_id: u128) {
             let mut world = self.world_default();
 
+            // Validate temple exists
             let temple: TempleState = world.read_model(temple_id);
             assert(temple.difficulty_tier >= 1, 'temple does not exist');
 
+            // Validate explorer is alive
+            let health: ExplorerHealth = world.read_model(explorer_id);
+            assert(!health.is_dead, 'dead explorers cannot enter');
+
+            // Validate explorer is not already in a temple
             let position: ExplorerPosition = world.read_model(explorer_id);
             assert(position.temple_id == 0, 'already inside a temple');
             assert(!position.in_combat, 'explorer is in combat');
 
+            // Place explorer at entrance chamber
             world.write_model(@ExplorerPosition {
                 explorer_id,
                 temple_id,
-                chamber_id: 1, // entrance chamber
+                chamber_id: 1, // entrance chamber is always id 1
                 in_combat: false,
                 combat_monster_id: 0,
             });
+
+            // Initialize ExplorerTempleProgress for this temple visit
+            // (only write if not previously set — existing chambers_explored/xp_earned carry over
+            //  from prior visits, so we only initialize on a fresh record)
+            let progress: ExplorerTempleProgress = world.read_model((explorer_id, temple_id));
+            if progress.chambers_explored == 0 && progress.xp_earned == 0 {
+                world.write_model(@ExplorerTempleProgress {
+                    explorer_id,
+                    temple_id,
+                    chambers_explored: 0,
+                    xp_earned: 0,
+                });
+            }
         }
 
         fn exit_temple(ref self: ContractState, explorer_id: u128) {
             let mut world = self.world_default();
 
+            // Validate explorer is in a temple
             let position: ExplorerPosition = world.read_model(explorer_id);
             assert(position.temple_id != 0, 'not inside any temple');
             assert(!position.in_combat, 'cannot exit during combat');
 
+            // Clear temple/chamber position — stats, inventory, XP, and
+            // ExplorerTempleProgress are all untouched (persisted on-chain).
             world.write_model(@ExplorerPosition {
                 explorer_id,
                 temple_id: 0,
