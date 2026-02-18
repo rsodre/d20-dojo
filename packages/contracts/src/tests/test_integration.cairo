@@ -45,9 +45,10 @@ mod tests {
         e_ExplorerMinted, e_CombatResult, e_ExplorerDied,
         e_ChamberRevealed, e_LevelUp, e_BossDefeated,
     };
-    use d20::types::{
-        ExplorerClass, Skill, WeaponType, ArmorType, MonsterType, ChamberType,
-    };
+    use d20::types::index::{Skill, ChamberType};
+    use d20::types::items::{WeaponType, ArmorType};
+    use d20::types::explorer::ExplorerClass;
+    use d20::types::monster::MonsterType;
     use d20::tests::mock_vrf::MockVrf;
 
     // ── Test world setup ──────────────────────────────────────────────────────
@@ -1505,7 +1506,7 @@ mod tests {
         let xp_before: u32 = stats_wiz_pre.xp;
 
         // Cast Fire Bolt (cantrip)
-        combat.cast_spell(explorer_id, d20::types::SpellId::FireBolt);
+        combat.cast_spell(explorer_id, d20::types::spells::SpellId::FireBolt);
 
         let monster_after: MonsterInstance = world.read_model((temple_id, 2_u32, 1_u32));
         if !monster_after.is_alive {

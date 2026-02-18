@@ -1,5 +1,5 @@
 use d20::utils::seeder::{Seeder, SeederTrait};
-use d20::types::ArmorType;
+use d20::types::items::{ArmorType, ArmorTrait};
 
 // ---------------------------------------------------------------------------
 // VRF-based dice rolling
@@ -66,25 +66,22 @@ pub fn proficiency_bonus(level: u8) -> u8 {
 /// - Chain Mail: 16 (no DEX bonus)
 /// - Shield adds +2 to any of the above
 pub fn calculate_ac(armor: ArmorType, has_shield: bool, dex_mod: i8) -> u8 {
-    let base_ac: i16 = match armor {
-        ArmorType::None => 10_i16 + dex_mod.into(),
-        ArmorType::Leather => 11_i16 + dex_mod.into(),
-        ArmorType::ChainMail => 16_i16,
-    };
+    let base = armor.base_ac();
+    let mut ac_val: i16 = base.into();
 
-    let shield_bonus: i16 = if has_shield {
-        2
-    } else {
-        0
-    };
+    if armor.allows_dex_bonus() {
+        ac_val += dex_mod.into();
+    }
 
-    let total: i16 = base_ac + shield_bonus;
+    if has_shield {
+        ac_val += 2;
+    }
 
     // AC should never be below 0, clamp to minimum of 1
-    if total < 1 {
+    if ac_val < 1 {
         1
     } else {
-        total.try_into().unwrap()
+        ac_val.try_into().unwrap()
     }
 }
 
@@ -95,7 +92,7 @@ pub fn calculate_ac(armor: ArmorType, has_shield: bool, dex_mod: i8) -> u8 {
 #[cfg(test)]
 mod tests {
     use super::{ability_modifier, proficiency_bonus, calculate_ac};
-    use d20::types::ArmorType;
+    use d20::types::items::ArmorType;
 
     // ── ability_modifier tests ──
 

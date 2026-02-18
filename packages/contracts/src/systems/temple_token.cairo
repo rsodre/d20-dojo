@@ -59,16 +59,18 @@ pub mod temple_token {
     impl ERC721ComboMixinImpl = ERC721ComboComponent::ERC721ComboMixinImpl<ContractState>;
 
     // Game types and models
-    use d20::types::{ChamberType, MonsterType, ExplorerClass};
+    use d20::types::index::ChamberType;
+    use d20::types::explorer::ExplorerClass;
+    use d20::types::monster::{MonsterType, MonsterTypeTrait};
     use d20::models::temple::{
         TempleState, Chamber, MonsterInstance, ChamberExit, ExplorerTempleProgress,
         FallenExplorer, ChamberFallenCount,
     };
     use d20::models::explorer::{ExplorerHealth, ExplorerPosition};
     use d20::events::ChamberRevealed;
-    use d20::utils::d20::{roll_d20, roll_dice, ability_modifier, proficiency_bonus};
+    use d20::utils::dice::{roll_d20, roll_dice, ability_modifier, proficiency_bonus};
     use d20::utils::seeder::{Seeder, SeederTrait};
-    use d20::utils::monsters::get_monster_stats;
+    // use d20::utils::monsters::MonsterTypeTrait; // Removed as it is now in types::monster
     use d20::models::explorer::{ExplorerStats, ExplorerInventory, ExplorerSkills};
     use d20::constants::{TEMPLE_TOKEN_DESCRIPTION, TEMPLE_TOKEN_EXTERNAL_LINK};
 
@@ -221,7 +223,8 @@ pub mod temple_token {
             } else {
                 // Pick chamber type: 0-2 → Monster, 3 → Treasure, 4 → Trap, 5 → Empty
                 let type_roll: u8 = (hash_type % 6).try_into().unwrap();
-                let ct: ChamberType = if type_roll <= 2 { ChamberType::Monster }
+                let ct: ChamberType =
+                    if type_roll <= 2 { ChamberType::Monster }
                     else if type_roll == 3 { ChamberType::Treasure }
                     else if type_roll == 4 { ChamberType::Trap }
                     else { ChamberType::Empty };
@@ -258,7 +261,7 @@ pub mod temple_token {
 
             // ── Write MonsterInstance if needed ──────────────────────────────
             if monster_type != MonsterType::None {
-                let stats = get_monster_stats(monster_type);
+                let stats = monster_type.get_stats();
                 world.write_model(@MonsterInstance {
                     temple_id,
                     chamber_id: new_chamber_id,
@@ -580,7 +583,7 @@ pub mod temple_token {
             // Rogue: DEX-based, always proficient (Thieves' Tools), expertise doubles if
             //        acrobatics expertise chosen (acrobatics is a dex skill, close enough).
             // Others: INT-based, proficient only if Arcana trained.
-            use d20::types::Skill;
+            use d20::types::index::Skill;
             let (ability_score, prof_mult): (u8, u8) = match stats.class {
                 ExplorerClass::Rogue => {
                     // Check for expertise on Acrobatics (DEX skill → applies to fine motor work)
@@ -755,7 +758,7 @@ pub mod temple_token {
             // Gold + potions: always add
             let inventory: ExplorerInventory = world.read_model(explorer_id);
 
-            use d20::types::{WeaponType, ArmorType};
+            use d20::types::items::{WeaponType, ArmorType};
 
             let new_primary: WeaponType = if inventory.primary_weapon == WeaponType::None {
                 fallen.dropped_weapon

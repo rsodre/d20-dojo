@@ -1,4 +1,6 @@
-use d20::types::{ChamberType, MonsterType, WeaponType, ArmorType};
+use d20::types::index::ChamberType;
+use d20::types::items::{WeaponType, ArmorType};
+use d20::types::monster::MonsterType;
 
 #[derive(Copy, Drop, Serde)]
 #[dojo::model]

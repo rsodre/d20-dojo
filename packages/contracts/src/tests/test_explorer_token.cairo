@@ -21,7 +21,9 @@ mod tests {
         ExplorerSkills, m_ExplorerSkills,
     };
     use d20::events::{e_ExplorerMinted};
-    use d20::types::{ExplorerClass, Skill, WeaponType, ArmorType};
+    use d20::types::index::Skill;
+    use d20::types::items::{WeaponType, ArmorType};
+    use d20::types::explorer::ExplorerClass;
 
     // ── Test world setup ──────────────────────────────────────────────────────
 

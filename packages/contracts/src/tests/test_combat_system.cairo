@@ -30,8 +30,11 @@ mod tests {
         ChamberFallenCount, m_ChamberFallenCount,
     };
     use d20::events::{e_ExplorerMinted, e_CombatResult, e_ExplorerDied};
-    use d20::types::{ExplorerClass, Skill, WeaponType, ArmorType, MonsterType, ItemType};
-    use d20::utils::d20::{ability_modifier, proficiency_bonus};
+    use d20::types::index::{Skill, ItemType};
+    use d20::types::items::{WeaponType, ArmorType};
+    use d20::types::explorer::ExplorerClass;
+    use d20::types::monster::MonsterType;
+    use d20::utils::dice::{ability_modifier, proficiency_bonus};
     use d20::tests::mock_vrf::MockVrf;
 
     // ── Test world setup ──────────────────────────────────────────────────────

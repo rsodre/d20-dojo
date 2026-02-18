@@ -1,5 +1,5 @@
-use d20::types::SpellId;
-use d20::types::ItemType;
+use d20::types::index::ItemType;
+use d20::types::spells::SpellId;
 
 // ── Public interface ────────────────────────────────────────────────────────
 
@@ -41,18 +41,19 @@ pub mod combat_system {
     use dojo::event::EventStorage;
     use dojo::world::WorldStorage;
 
-    use d20::types::{
-        ExplorerClass, WeaponType, SpellId, ItemType, CombatAction, MonsterType,
-    };
+    use d20::types::index::{CombatAction, ItemType};
+    use d20::types::items::{WeaponTypeTrait};
+    use d20::types::spells::{SpellId, SpellIdTrait};
+    use d20::types::explorer::{ExplorerClass, ExplorerClassTrait};
     use d20::models::explorer::{
         ExplorerStats, ExplorerHealth, ExplorerCombat, ExplorerInventory, ExplorerPosition,
     };
     use d20::models::temple::{MonsterInstance, FallenExplorer, ChamberFallenCount, ExplorerTempleProgress, TempleState};
     use d20::models::config::Config;
     use d20::events::{CombatResult, ExplorerDied, LevelUp, BossDefeated};
-    use d20::utils::d20::{roll_d20, roll_dice, ability_modifier, proficiency_bonus};
+    use d20::utils::dice::{roll_d20, roll_dice, ability_modifier, proficiency_bonus};
     use d20::utils::seeder::{Seeder, SeederTrait};
-    use d20::utils::monsters::get_monster_stats;
+    use d20::types::monster::{MonsterType, MonsterTypeTrait};
     use starknet::ContractAddress;
 
     // ── Storage ──────────────────────────────────────────────────────────────
@@ -79,35 +80,6 @@ pub mod combat_system {
     impl InternalImpl of InternalTrait {
         fn world_default(self: @ContractState) -> WorldStorage {
             self.world(@"d20_0_1")
-        }
-
-        /// Weapon dice sides for damage roll.
-        fn weapon_damage_sides(weapon: WeaponType) -> u8 {
-            match weapon {
-                WeaponType::Longsword => 8,
-                WeaponType::Dagger => 4,
-                WeaponType::Shortbow => 6,
-                WeaponType::Greataxe => 12,
-                WeaponType::Staff => 6,
-                WeaponType::None => 4,
-            }
-        }
-
-        /// Weapon dice count for damage roll (all standard weapons: 1).
-        fn weapon_damage_count(weapon: WeaponType) -> u8 {
-            match weapon {
-                WeaponType::None => 0,
-                _ => 1,
-            }
-        }
-
-        /// Whether a weapon uses DEX modifier (ranged / finesse).
-        fn weapon_uses_dex(weapon: WeaponType) -> bool {
-            match weapon {
-                WeaponType::Dagger => true,
-                WeaponType::Shortbow => true,
-                _ => false,
-            }
         }
 
         /// Apply damage to the explorer. Returns actual damage taken.
@@ -232,7 +204,7 @@ pub mod combat_system {
             position: ExplorerPosition,
             monster: MonsterInstance,
         ) -> (u16, bool) {
-            let monster_stats = get_monster_stats(monster.monster_type);
+            let monster_stats = monster.monster_type.get_stats();
 
             let mut total_damage: u16 = 0;
             let mut explorer_died: bool = false;
@@ -302,41 +274,6 @@ pub mod combat_system {
             (total_damage, explorer_died)
         }
 
-        // ── Sneak Attack helper (task 2.7) ───────────────────────────────────
-
-        /// Number of Sneak Attack dice: 1d6 (levels 1-2), 2d6 (3-4), 3d6 (5).
-        fn sneak_attack_dice(level: u8) -> u8 {
-            if level >= 5 {
-                3
-            } else if level >= 3 {
-                2
-            } else {
-                1
-            }
-        }
-
-        // ── Spell helpers (task 2.8) ─────────────────────────────────────────
-
-        /// Spell level for a given SpellId (0 = cantrip, 1/2/3 = leveled).
-        fn spell_level(spell_id: SpellId) -> u8 {
-            match spell_id {
-                SpellId::None => 0,
-                // Cantrips
-                SpellId::FireBolt => 0,
-                SpellId::MageHand => 0,
-                SpellId::Light => 0,
-                // 1st level
-                SpellId::MagicMissile => 1,
-                SpellId::ShieldSpell => 1,
-                SpellId::Sleep => 1,
-                // 2nd level
-                SpellId::ScorchingRay => 2,
-                SpellId::MistyStep => 2,
-                // 3rd level
-                SpellId::Fireball => 3,
-            }
-        }
-
         // ── XP thresholds ────────────────────────────────────────────────────
 
         /// Returns the XP required for the given level (1-5).
@@ -347,25 +284,6 @@ pub mod combat_system {
             else if level == 3 { 900 }
             else if level == 4 { 2700 }
             else { 6500 }
-        }
-
-        /// Hit die sides by class (for level-up HP rolls).
-        fn hit_die_sides(class: ExplorerClass) -> u8 {
-            match class {
-                ExplorerClass::Fighter => 10,
-                ExplorerClass::Rogue => 8,
-                ExplorerClass::Wizard => 6,
-                ExplorerClass::None => 6,
-            }
-        }
-
-        /// Wizard spell slots by level. Returns (slots_1, slots_2, slots_3).
-        fn wizard_spell_slots(level: u8) -> (u8, u8, u8) {
-            if level >= 5 { (4, 3, 2) }
-            else if level == 4 { (4, 3, 0) }
-            else if level == 3 { (4, 2, 0) }
-            else if level == 2 { (3, 0, 0) }
-            else { (2, 0, 0) }
         }
 
         /// Apply a level-up: increment level, roll HP, update spell slots, emit event.
@@ -394,7 +312,7 @@ pub mod combat_system {
             });
 
             // Roll hit die + CON modifier, minimum 1, add to max HP
-            let hit_sides: u8 = Self::hit_die_sides(stats.class);
+            let hit_sides: u8 = stats.class.hit_die_max();
             let raw_roll: u16 = roll_dice(ref seeder, hit_sides, 1);
             let con_mod: i8 = ability_modifier(stats.constitution);
             let raw_roll_i32: i32 = raw_roll.into();
@@ -413,7 +331,7 @@ pub mod combat_system {
             // Update spell slots for Wizards
             if stats.class == ExplorerClass::Wizard {
                 let combat: ExplorerCombat = world.read_model(explorer_id);
-                let (slots_1, slots_2, slots_3) = Self::wizard_spell_slots(new_level);
+                let (slots_1, slots_2, slots_3) = stats.class.spell_slots_for(new_level);
                 world.write_model(@ExplorerCombat {
                     explorer_id,
                     armor_class: combat.armor_class,
@@ -556,7 +474,7 @@ pub mod combat_system {
             );
             assert(monster.is_alive, 'monster is already dead');
 
-            let monster_stats = get_monster_stats(monster.monster_type);
+            let monster_stats = monster.monster_type.get_stats();
 
             // Fighter level 5+: Extra Attack
             let num_attacks: u8 = if stats.class == ExplorerClass::Fighter && stats.level >= 5 {
@@ -566,7 +484,7 @@ pub mod combat_system {
             };
 
             let weapon = inventory.primary_weapon;
-            let uses_dex = InternalImpl::weapon_uses_dex(weapon);
+            let uses_dex = weapon.uses_dex();
             let ability_score: u8 = if uses_dex { stats.dexterity } else { stats.strength };
             let ability_mod: i8 = ability_modifier(ability_score);
             let prof_bonus: u8 = proficiency_bonus(stats.level);
@@ -596,14 +514,14 @@ pub mod combat_system {
                 let hits: bool = !is_nat_1 && (is_crit || total_attack >= monster_stats.ac.into());
 
                 if hits {
-                    let dice_sides: u8 = InternalImpl::weapon_damage_sides(weapon);
-                    let base_count: u8 = InternalImpl::weapon_damage_count(weapon);
+                    let dice_sides: u8 = weapon.damage_sides();
+                    let base_count: u8 = weapon.damage_count();
                     let dice_count: u8 = if is_crit { base_count * 2 } else { base_count };
                     let raw_damage: u16 = roll_dice(ref seeder, dice_sides, dice_count);
 
                     // Rogue: Sneak Attack
                     let sneak_bonus: u16 = if stats.class == ExplorerClass::Rogue {
-                        let sneak_dice: u8 = InternalImpl::sneak_attack_dice(stats.level);
+                        let sneak_dice: u8 = stats.class.sneak_attack_dice(stats.level);
                         let sneak_count: u8 = if is_crit { sneak_dice * 2 } else { sneak_dice };
                         roll_dice(ref seeder, 6, sneak_count)
                     } else {
@@ -720,7 +638,7 @@ pub mod combat_system {
             let position: ExplorerPosition = world.read_model(explorer_id);
 
             // Consume spell slot if leveled
-            let slot_level: u8 = InternalImpl::spell_level(spell_id);
+            let slot_level: u8 = spell_id.level();
             if slot_level > 0 {
                 assert(position.in_combat || slot_level == 1, 'must be in combat');
                 InternalImpl::consume_spell_slot(ref world, explorer_id, slot_level);
@@ -747,7 +665,7 @@ pub mod combat_system {
                         (position.temple_id, position.chamber_id, position.combat_monster_id)
                     );
                     assert(monster.is_alive, 'monster is already dead');
-                    let monster_stats = get_monster_stats(monster.monster_type);
+                    let monster_stats = monster.monster_type.get_stats();
                     xp_to_award = monster_stats.xp_reward;
 
                     let attack_roll: u8 = roll_d20(ref seeder);
@@ -797,7 +715,7 @@ pub mod combat_system {
                         (position.temple_id, position.chamber_id, position.combat_monster_id)
                     );
                     assert(monster.is_alive, 'monster is already dead');
-                    xp_to_award = get_monster_stats(monster.monster_type).xp_reward;
+                    xp_to_award = monster.monster_type.get_stats().xp_reward;
 
                     // 3 × (1d4+1): roll 3d4 then add 3
                     let raw: u16 = roll_dice(ref seeder, 4, 3);
@@ -844,7 +762,7 @@ pub mod combat_system {
                         (position.temple_id, position.chamber_id, position.combat_monster_id)
                     );
                     assert(monster.is_alive, 'monster is already dead');
-                    xp_to_award = get_monster_stats(monster.monster_type).xp_reward;
+                    xp_to_award = monster.monster_type.get_stats().xp_reward;
 
                     let sleep_pool: u16 = roll_dice(ref seeder, 8, 5); // 5d8
                     spell_roll = (sleep_pool % 256).try_into().unwrap(); // store low byte for event
@@ -880,7 +798,7 @@ pub mod combat_system {
                         (position.temple_id, position.chamber_id, position.combat_monster_id)
                     );
                     assert(monster.is_alive, 'monster is already dead');
-                    let monster_stats = get_monster_stats(monster.monster_type);
+                    let monster_stats = monster.monster_type.get_stats();
                     xp_to_award = monster_stats.xp_reward;
 
                     let mut ray: u8 = 0;
@@ -955,7 +873,7 @@ pub mod combat_system {
                         (position.temple_id, position.chamber_id, position.combat_monster_id)
                     );
                     assert(monster.is_alive, 'monster is already dead');
-                    let monster_stats = get_monster_stats(monster.monster_type);
+                    let monster_stats = monster.monster_type.get_stats();
                     xp_to_award = monster_stats.xp_reward;
 
                     // DC = 8 + INT mod + proficiency bonus
@@ -1231,7 +1149,7 @@ pub mod combat_system {
             let explorer_total: i32 = explorer_roll_i32 + explorer_dex_mod_i32;
 
             // Monster DEX roll: d20 + monster DEX modifier
-            let monster_stats = get_monster_stats(monster.monster_type);
+            let monster_stats = monster.monster_type.get_stats();
             let monster_roll: u8 = roll_d20(ref seeder);
             let monster_dex_mod: i8 = ability_modifier(monster_stats.dexterity);
             let monster_dex_mod_i32: i32 = monster_dex_mod.into();

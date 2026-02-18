@@ -1,6 +1,9 @@
-use d20::types::{ExplorerClass, Skill};
+
 
 // ── Public interface ────────────────────────────────────────────────────────
+
+use crate::types::explorer::ExplorerClass;
+use crate::types::index::Skill;
 
 #[starknet::interface]
 pub trait IExplorerToken<TState> {
@@ -51,13 +54,14 @@ pub mod explorer_token {
     impl ERC721ComboMixinImpl = ERC721ComboComponent::ERC721ComboMixinImpl<ContractState>;
 
     // Game types and models
-    use d20::types::{ExplorerClass, Skill, WeaponType, ArmorType};
+    use d20::types::index::Skill;
+    use d20::types::explorer::{ExplorerClass, ExplorerClassTrait};
     use d20::models::explorer::{
         ExplorerStats, ExplorerHealth, ExplorerCombat, ExplorerInventory,
         ExplorerPosition, ExplorerSkills,
     };
     use d20::events::ExplorerMinted;
-    use d20::utils::d20::{ability_modifier, calculate_ac};
+    use d20::utils::dice::{ability_modifier, calculate_ac};
     use d20::constants::{EXPLORER_TOKEN_DESCRIPTION, EXPLORER_TOKEN_EXTERNAL_LINK};
 
     // Metadata types
@@ -145,126 +149,7 @@ pub mod explorer_token {
 
     // ── Spell slots by class and level ───────────────────────────────────────
 
-    fn spell_slots_for(class: ExplorerClass, level: u8) -> (u8, u8, u8) {
-        match class {
-            ExplorerClass::Wizard => {
-                if level >= 5 { (4, 3, 2) }
-                else if level >= 4 { (4, 3, 0) }
-                else if level >= 3 { (4, 2, 0) }
-                else if level >= 2 { (3, 0, 0) }
-                else { (2, 0, 0) }
-            },
-            _ => (0, 0, 0),
-        }
-    }
 
-    // ── Hit die max by class ─────────────────────────────────────────────────
-
-    fn hit_die_max(class: ExplorerClass) -> u8 {
-        match class {
-            ExplorerClass::Fighter => 10,
-            ExplorerClass::Rogue => 8,
-            ExplorerClass::Wizard => 6,
-            ExplorerClass::None => 6,
-        }
-    }
-
-    // ── Skill initialization ─────────────────────────────────────────────────
-
-    fn build_skills(
-        class: ExplorerClass,
-        skill_choices: Span<Skill>,
-    ) -> (bool, bool, bool, bool, bool, bool) {
-        let mut athletics: bool = false;
-        let mut stealth: bool = false;
-        let mut perception: bool = false;
-        let mut persuasion: bool = false;
-        let mut arcana: bool = false;
-        let mut acrobatics: bool = false;
-
-        match class {
-            ExplorerClass::Fighter => { athletics = true; },
-            ExplorerClass::Rogue => { stealth = true; acrobatics = true; },
-            ExplorerClass::Wizard => { arcana = true; },
-            ExplorerClass::None => {},
-        }
-
-        let mut i: u32 = 0;
-        while i < skill_choices.len() {
-            let skill = *skill_choices.at(i);
-            match skill {
-                Skill::Athletics => { athletics = true; },
-                Skill::Stealth => { stealth = true; },
-                Skill::Perception => { perception = true; },
-                Skill::Persuasion => { persuasion = true; },
-                Skill::Arcana => { arcana = true; },
-                Skill::Acrobatics => { acrobatics = true; },
-                Skill::None => {},
-            }
-            i += 1;
-        };
-
-        (athletics, stealth, perception, persuasion, arcana, acrobatics)
-    }
-
-    // ── Class-specific skill choice validation ───────────────────────────────
-
-    fn validate_skill_choices(class: ExplorerClass, skill_choices: Span<Skill>) {
-        match class {
-            ExplorerClass::Fighter => {
-                assert(skill_choices.len() == 1, 'fighter needs 1 skill choice');
-                let s = *skill_choices.at(0);
-                assert(s == Skill::Perception || s == Skill::Acrobatics, 'invalid fighter skill choice');
-            },
-            ExplorerClass::Rogue => {
-                assert(skill_choices.len() == 2, 'rogue needs 2 skill choices');
-                let mut i: u32 = 0;
-                while i < skill_choices.len() {
-                    let s = *skill_choices.at(i);
-                    assert(
-                        s == Skill::Perception || s == Skill::Persuasion
-                            || s == Skill::Athletics || s == Skill::Arcana,
-                        'invalid rogue skill choice'
-                    );
-                    i += 1;
-                };
-                assert(*skill_choices.at(0) != *skill_choices.at(1), 'duplicate skill choice');
-            },
-            ExplorerClass::Wizard => {
-                assert(skill_choices.len() == 1, 'wizard needs 1 skill choice');
-                let s = *skill_choices.at(0);
-                assert(s == Skill::Perception || s == Skill::Persuasion, 'invalid wizard skill choice');
-            },
-            ExplorerClass::None => {},
-        }
-    }
-
-    fn validate_expertise(
-        class: ExplorerClass,
-        expertise_choices: Span<Skill>,
-        skill_choices: Span<Skill>,
-    ) {
-        match class {
-            ExplorerClass::Rogue => {
-                assert(expertise_choices.len() == 2, 'rogue needs 2 expertise');
-                let mut i: u32 = 0;
-                while i < expertise_choices.len() {
-                    let e = *expertise_choices.at(i);
-                    assert(e != Skill::None, 'expertise cannot be None');
-                    let is_auto = e == Skill::Stealth || e == Skill::Acrobatics;
-                    let is_chosen = skill_choices.len() >= 1
-                        && (*skill_choices.at(0) == e
-                            || (skill_choices.len() >= 2 && *skill_choices.at(1) == e));
-                    assert(is_auto || is_chosen, 'expertise not in proficiencies');
-                    i += 1;
-                };
-                assert(*expertise_choices.at(0) != *expertise_choices.at(1), 'duplicate expertise choice');
-            },
-            _ => {
-                assert(expertise_choices.len() == 0, 'only rogue gets expertise');
-            },
-        }
-    }
 
     fn get_expertise(expertise_choices: Span<Skill>) -> (Skill, Skill) {
         if expertise_choices.len() == 2 {
@@ -288,8 +173,8 @@ pub mod explorer_token {
             assert(class != ExplorerClass::None, 'must choose a class');
 
             validate_standard_array(stat_assignment);
-            validate_skill_choices(class, skill_choices);
-            validate_expertise(class, expertise_choices, skill_choices);
+            class.validate_skill_choices(skill_choices);
+            class.validate_expertise(expertise_choices, skill_choices);
 
             let mut world = self.world_default();
             let caller = get_caller_address();
@@ -312,35 +197,21 @@ pub mod explorer_token {
             let dex_mod: i8 = ability_modifier(dexterity);
 
             // Starting HP: hit die max + CON modifier (minimum 1)
-            let hit_die = hit_die_max(class);
+            let hit_die = class.hit_die_max();
             let raw_hp: i16 = hit_die.into() + con_mod.into();
             let max_hp: u16 = if raw_hp < 1 { 1 } else { raw_hp.try_into().unwrap() };
 
             // Starting equipment and AC by class
-            let (primary_weapon, secondary_weapon, armor, has_shield, armor_class) = match class {
-                ExplorerClass::Fighter => {
-                    let ac = calculate_ac(ArmorType::ChainMail, false, dex_mod);
-                    (WeaponType::Longsword, WeaponType::None, ArmorType::ChainMail, false, ac)
-                },
-                ExplorerClass::Rogue => {
-                    let ac = calculate_ac(ArmorType::Leather, false, dex_mod);
-                    (WeaponType::Dagger, WeaponType::Shortbow, ArmorType::Leather, false, ac)
-                },
-                ExplorerClass::Wizard => {
-                    let ac = calculate_ac(ArmorType::None, false, dex_mod);
-                    (WeaponType::Staff, WeaponType::None, ArmorType::None, false, ac)
-                },
-                ExplorerClass::None => {
-                    (WeaponType::None, WeaponType::None, ArmorType::None, false, 10)
-                },
-            };
+            // Starting equipment and AC by class
+            let (primary_weapon, secondary_weapon, armor, has_shield) = class.starting_equipment();
+            let armor_class = calculate_ac(armor, has_shield, dex_mod);
 
             // Spell slots (level 1)
-            let (slots_1, slots_2, slots_3) = spell_slots_for(class, 1);
+            let (slots_1, slots_2, slots_3) = class.spell_slots_for(1);
 
             // Skills
             let (athletics, stealth, perception, persuasion, arcana, acrobatics) =
-                build_skills(class, skill_choices);
+                class.build_skills(skill_choices);
 
             // Expertise (Rogue only)
             let (expertise_1, expertise_2) = get_expertise(expertise_choices);
@@ -423,7 +294,7 @@ pub mod explorer_token {
                 is_dead: false,
             });
 
-            let (slots_1, slots_2, slots_3) = spell_slots_for(stats.class, stats.level);
+            let (slots_1, slots_2, slots_3) = stats.class.spell_slots_for(stats.level);
             let combat: ExplorerCombat = world.read_model(explorer_id);
             world.write_model(@ExplorerCombat {
                 explorer_id,

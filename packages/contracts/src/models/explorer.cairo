@@ -1,4 +1,6 @@
-use d20::types::{ExplorerClass, WeaponType, ArmorType, Skill};
+use d20::types::index::Skill;
+use d20::types::items::{WeaponType, ArmorType};
+use d20::types::explorer::ExplorerClass;
 
 #[derive(Copy, Drop, Serde)]
 #[dojo::model]

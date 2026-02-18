@@ -10,15 +10,20 @@ pub mod models {
     pub mod temple;
 }
 
-pub mod types;
+pub mod types {
+    pub mod index;
+    pub mod explorer;
+    pub mod items;
+    pub mod spells;
+    pub mod monster;
+}
 
 pub mod events;
 
 pub mod constants;
 
 pub mod utils {
-    pub mod d20;
-    pub mod monsters;
+    pub mod dice;
     pub mod vrf;
     pub mod seeder;
 }
