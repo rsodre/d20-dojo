@@ -25,7 +25,7 @@ mod tests {
     use d20::events::{e_ExplorerMinted};
     use d20::types::index::Skill;
     use d20::types::items::{WeaponType, ArmorType};
-    use d20::types::explorer::ExplorerClass;
+    use d20::types::explorer_class::ExplorerClass;
     use d20::tests::mock_vrf::MockVrf;
 
     // ── Test world setup ──────────────────────────────────────────────────────

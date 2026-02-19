@@ -142,7 +142,7 @@ pub mod temple_token {
 
     // Game types and models
     use d20::types::index::ChamberType;
-    use d20::types::explorer::ExplorerClass;
+    use d20::types::explorer_class::ExplorerClass;
     use d20::types::monster::{MonsterType, MonsterTypeTrait};
     use d20::models::temple::{
         TempleState, Chamber, MonsterInstance, ChamberExit, ExplorerTempleProgress,

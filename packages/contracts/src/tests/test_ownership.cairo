@@ -16,7 +16,7 @@ mod tests {
         m_ExplorerInventory, m_ExplorerPosition, m_ExplorerSkills,
     };
     use d20::events::e_ExplorerMinted;
-    use d20::types::explorer::ExplorerClass;
+    use d20::types::explorer_class::ExplorerClass;
     use d20::tests::mock_vrf::MockVrf;
 
     fn namespace_def() -> NamespaceDef {

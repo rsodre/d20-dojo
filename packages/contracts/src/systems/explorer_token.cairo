@@ -3,7 +3,7 @@
 
 use starknet::{ContractAddress};
 use dojo::world::IWorldDispatcher;
-use crate::types::explorer::ExplorerClass;
+use crate::types::explorer_class::ExplorerClass;
 
 #[starknet::interface]
 pub trait IExplorerToken<TState> {
@@ -102,7 +102,7 @@ pub mod explorer_token {
     impl ERC721ComboMixinImpl = ERC721ComboComponent::ERC721ComboMixinImpl<ContractState>;
 
     // Game types and models
-    use d20::types::explorer::{ExplorerClass, ExplorerClassTrait};
+    use d20::types::explorer_class::{ExplorerClass, ExplorerClassTrait};
     use d20::models::explorer::{
         ExplorerStats, ExplorerHealth, ExplorerCombat, ExplorerInventory,
         ExplorerPosition, ExplorerSkills,

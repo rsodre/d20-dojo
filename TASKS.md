@@ -59,12 +59,12 @@
 - [x] **x.7** Create game interface with all contracts and entry points. Mark which calls need VRF.
 - [x] **x.8** Make it easy for agents that want to play the game to have access to this interface (by an AGENTS file...? how? you're an agent, what's your take on this?). Also explain actions available in each context (exploring, combat, at entrance) so they can make the right choices.
 - [x] **x.9** Randomize character traits in the contract
-- [ ] **x.10** Adapt client specification. Instead of text input, list the options available to the player, who just clicks on one.
-- [ ] **x.11** Refactor explorer and temple as Cairo components
+- [ ] **x.10** Refactor explorer and temple as Cairo components
 
 
 ## Day 4: AI Agent & Client
 
+- [ ] **4.0** Adapt client specification. Instead of text input, list the options available to the player, who just clicks on one.
 - [ ] **4.1** Set up client project (TypeScript or Python)
 - [ ] **4.2** Implement Torii GraphQL client: query explorer state (stats, HP, inventory, position, skills), chamber state (type, yonder, monster, exits, fallen explorers), temple state (seed, difficulty, boss status)
 - [ ] **4.3** Implement Starknet transaction submission wrapper: build and sign transactions for each game action

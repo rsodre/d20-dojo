@@ -44,7 +44,7 @@ pub mod combat_system {
     use d20::types::index::{CombatAction, ItemType};
     use d20::types::items::{WeaponTypeTrait};
     use d20::types::spells::{SpellId, SpellIdTrait};
-    use d20::types::explorer::{ExplorerClass, ExplorerClassTrait};
+    use d20::types::explorer_class::{ExplorerClass, ExplorerClassTrait};
     use d20::models::explorer::{
         ExplorerStats, ExplorerHealth, ExplorerCombat, ExplorerInventory, ExplorerPosition,
     };

@@ -1,5 +1,5 @@
 use d20::types::index::Skill;
-use d20::types::explorer::{ExplorerClass, ExplorerClassTrait};
+use d20::types::explorer_class::{ExplorerClass, ExplorerClassTrait};
 use d20::utils::seeder::{Seeder, SeederTrait};
 
 // ── Standard array ───────────────────────────────────────────────────────────

@@ -47,7 +47,7 @@ mod tests {
     };
     use d20::types::index::ChamberType;
     use d20::types::items::{WeaponType, ArmorType};
-    use d20::types::explorer::ExplorerClass;
+    use d20::types::explorer_class::ExplorerClass;
     use d20::types::monster::MonsterType;
     use d20::tests::mock_vrf::MockVrf;
 
