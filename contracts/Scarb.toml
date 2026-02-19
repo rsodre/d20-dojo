@@ -27,3 +27,4 @@ dojo_cairo_test = "1.8.0"
 
 [profile.dev]
 [profile.katana]
+[profile.sepolia]

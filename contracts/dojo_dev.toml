@@ -1,6 +1,6 @@
 [world]
 name = "D20 On-Chain"
-description = "A fully on-chain text-based RPG built on Starknet using Cairo and the Dojo framework. Implements D20 SRD rules as smart contracts."
+description = "A fully on-chain RPG built on Starknet using Cairo and the Dojo framework. Implements D20 SRD rules as smart contracts."
 cover_uri = "file://assets/cover.png"
 icon_uri = "file://assets/icon.png"
 seed = "d20_0_1"
