@@ -2,9 +2,8 @@ import { type Chain, sepolia } from "@starknet-react/chains";
 import { addAddressPadding } from "starknet";
 import { bigintToHex, stringToFelt } from "@/utils/utils";
 import manifest_dev from "@/generated/manifest_dev.json";
-// import manifest_katana from "@/generated/manifest_katana.json";
+import manifest_katana from "@/generated/manifest_katana.json";
 // import manifest_sepolia from "@/generated/manifest_sepolia.json";
-const manifest_katana = manifest_dev;
 const manifest_sepolia = manifest_dev;
 
 //----------------------------------------------------

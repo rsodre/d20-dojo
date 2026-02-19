@@ -1,0 +1,62 @@
+#
+# from:
+# https://book.dojoengine.org/toolchain/katana/configuration#complete-configuration-reference
+#
+
+# Core node settings
+# silent = false                    # Don't print anything on startup (default: false)
+# no_mining = false                 # Disable auto/interval mining (default: false)
+# block_time = 6000                 # Block time in milliseconds (default: none)
+# db_dir = "./katana-db"            # Database dir for non-Slot deployments (default: none)
+ 
+# [logging]
+# log_format = "full"               # Log format: "full" or "json" (default: full)
+ 
+[server]
+# http_addr = "127.0.0.1"           # HTTP-RPC server interface (default: 127.0.0.1)
+# http_port = 5050                  # HTTP-RPC server port (default: 5050)
+http_cors_origins = "*"         # CORS allowed origins (default: none)
+# max_connections = 100             # Max concurrent connections (default: none)
+# max_request_body_size = 33554432  # Max request body size in bytes (default: none)
+# max_response_body_size = 33554432 # Max response body size in bytes (default: none)
+# timeout = 60                      # RPC server request timeout in seconds (default: none)
+# max_event_page_size = 1024        # Max page size for event queries (default: 1024)
+# max_proof_keys = 100              # Max keys for storage proofs (default: 100)
+# max_call_gas = 1000000000         # Max gas for starknet_call RPC (default: 1000000000)
+ 
+[dev]
+dev = true                        # Enable development mode (default: true)
+seed = "0"                        # Seed for account generation (default: 0)
+total_accounts = 10               # Number of pre-funded accounts (default: 10)
+no_fee = true                     # Disable transaction fees (default: false)
+no_account_validation = false     # Skip account validation (default: false)
+ 
+# [starknet.env]
+# chain_id = "KATANA"               # Chain ID (default: KATANA)
+# validate_max_steps = 1000000      # Max steps for validation (default: 1000000)
+# invoke_max_steps = 10000000       # Max steps for execution (default: 10000000)
+ 
+# [forking]
+# fork_provider = "https://api.cartridge.gg/x/starknet/mainnet"  # Fork provider URL
+# fork_block = 1000000              # Fork at specific block number/hash
+ 
+# [metrics]
+# metrics = false                   # Enable metrics server (default: false)
+# metrics_addr = "127.0.0.1"        # Metrics server address (default: 127.0.0.1)
+# metrics_port = 9100               # Metrics server port (default: 9100)
+ 
+# [gpo]  # Gas Price Oracle - all values are u128 strings (hex/decimal)
+# l2_eth_gas_price = "100000000000"       # L2 ETH gas price in wei
+# l2_strk_gas_price = "1000000000000000"  # L2 STRK gas price in fri
+# l1_eth_gas_price = "100000000000"       # L1 ETH gas price in wei
+# l1_strk_gas_price = "1000000000000000"  # L1 STRK gas price in fri
+# l1_eth_data_gas_price = "100000000"     # L1 ETH data gas price in wei
+# l1_strk_data_gas_price = "10000000000"  # L1 STRK data gas price in fri
+ 
+[cartridge]
+controllers = true               # Declare Controller classes at genesis (default: false)
+paymaster = true                 # Use Cartridge paymaster (default: false)
+api = "https://api.cartridge.gg"  # Cartridge API URL (default: https://api.cartridge.gg)
+ 
+[explorer]
+explorer = true                  # Enable explorer frontend (default: false)

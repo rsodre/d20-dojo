@@ -2,7 +2,7 @@
 # torii config for profile [dev]
 #
 world_address = "0x00b8d2b85a77394f9980a502e1d9f86a4b9219c9065044bd044a59a8f84f1393"
-rpc = "http://127.0.0.1:5050"
+rpc = "https://api.cartridge.gg/x/d20-katana/katana"
 
 [events]
 raw = true

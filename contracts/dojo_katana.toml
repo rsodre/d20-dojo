@@ -9,10 +9,11 @@ seed = "d20_0_1"
 default = "d20_0_1"
 
 [env]
-rpc_url = "https://api.cartridge.gg/x/starknet/sepolia/rpc/v0_9"
+rpc_url = "https://api.cartridge.gg/x/d20-katana/katana"
 # Default account for katana with seed = 0
-# account_address = "0x127fd5f1fe78a71f8bcd1fec63e3fe2f0486b6ecd5c86a0466c3a21fa5cfcec"
-# private_key = "0xc5b2fcab997346f3ea1c00b002ecf6f382c5f9c9659a3894eb783c5320f912"
+world_address = "0x0400feed25cca789d09cfdc33debcc94c11703995cb3eb3dae2501fd215d1b3a"
+account_address = "0x127fd5f1fe78a71f8bcd1fec63e3fe2f0486b6ecd5c86a0466c3a21fa5cfcec"
+private_key = "0xc5b2fcab997346f3ea1c00b002ecf6f382c5f9c9659a3894eb783c5320f912"
 
 [writers]
 "d20_0_1" = ["d20_0_1-explorer_token", "d20_0_1-combat_system", "d20_0_1-temple_token"]

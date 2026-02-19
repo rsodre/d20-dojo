@@ -1,0 +1,5119 @@
+{
+  "world": {
+    "class_hash": "0x613551abceb2b37073b1149bb862ea70cf029981ce1ca47e9dd7c7ab97cb65d",
+    "address": "0x400feed25cca789d09cfdc33debcc94c11703995cb3eb3dae2501fd215d1b3a",
+    "seed": "d20_0_1",
+    "name": "D20 On-Chain",
+    "entrypoints": [
+      "uuid",
+      "set_metadata",
+      "register_namespace",
+      "register_event",
+      "register_model",
+      "register_contract",
+      "register_external_contract",
+      "register_library",
+      "init_contract",
+      "upgrade_event",
+      "upgrade_model",
+      "upgrade_contract",
+      "upgrade_external_contract",
+      "emit_event",
+      "emit_events",
+      "set_entity",
+      "set_entities",
+      "delete_entity",
+      "delete_entities",
+      "grant_owner",
+      "revoke_owner",
+      "grant_writer",
+      "revoke_writer",
+      "upgrade"
+    ]
+  },
+  "contracts": [
+    {
+      "address": "0x5c6a7b7e245f1bcb01b43966d9fd2c24186b1e8184a54f52e23a9dc1163d780",
+      "class_hash": "0x58078604f54f27bf504aa5c02c4f5d83cf58913e97221990a819ff73ed60581",
+      "init_calldata": [
+        "0x051fea4450da9d6aee758bdeba88b2f665bcbf549d2c61421aa724e9ac0ced8f"
+      ],
+      "tag": "d20_0_1-combat_system",
+      "selector": "0x3c1af41041bccafdf2c2a36dc7549784a6ba6727a8f2bc30be877b47098a471",
+      "systems": [
+        "dojo_init",
+        "attack",
+        "cast_spell",
+        "use_item",
+        "flee",
+        "second_wind",
+        "cunning_action",
+        "upgrade"
+      ]
+    },
+    {
+      "address": "0x468d3fbf587e6099286aee2e42f4e8e37bf3f95d0dec368f53b2479f51e882f",
+      "class_hash": "0x35683d5bdb47add80f29730156ab9376a570dbd3ed9dba1d7b3a32a694ade95",
+      "init_calldata": [
+        "0x051fea4450da9d6aee758bdeba88b2f665bcbf549d2c61421aa724e9ac0ced8f"
+      ],
+      "tag": "d20_0_1-explorer_token",
+      "selector": "0x3eadb251441261436cc41b718569b5c2c6236330e126f426b30f93c8f4ff6a1",
+      "systems": [
+        "dojo_init",
+        "mint_explorer",
+        "rest",
+        "upgrade",
+        "safe_transfer_from",
+        "transfer_from",
+        "approve",
+        "set_approval_for_all",
+        "safeTransferFrom",
+        "transferFrom",
+        "setApprovalForAll"
+      ]
+    },
+    {
+      "address": "0x5b7e1e89e4af223d5a2444e304f9c26500311de3bd2184facc3dd3c39d471d9",
+      "class_hash": "0x78f40eb1faff1928b172fc1390acc594101912541132339d461eaf7f792c7c4",
+      "init_calldata": [],
+      "tag": "d20_0_1-temple_token",
+      "selector": "0x6c84dcfaf0c2645d94dd633dd2b6d079f91d09ec7e63c865482860da03b0de5",
+      "systems": [
+        "dojo_init",
+        "mint_temple",
+        "enter_temple",
+        "exit_temple",
+        "open_exit",
+        "move_to_chamber",
+        "disarm_trap",
+        "loot_treasure",
+        "loot_fallen",
+        "upgrade",
+        "safe_transfer_from",
+        "transfer_from",
+        "approve",
+        "set_approval_for_all",
+        "safeTransferFrom",
+        "transferFrom",
+        "setApprovalForAll"
+      ]
+    }
+  ],
+  "libraries": [],
+  "models": [
+    {
+      "members": [
+        {
+          "name": "temple_id",
+          "type": "core::integer::u128",
+          "key": true
+        },
+        {
+          "name": "chamber_id",
+          "type": "core::integer::u32",
+          "key": true
+        },
+        {
+          "name": "chamber_type",
+          "type": "d20::types::index::ChamberType",
+          "key": false
+        },
+        {
+          "name": "yonder",
+          "type": "core::integer::u8",
+          "key": false
+        },
+        {
+          "name": "exit_count",
+          "type": "core::integer::u8",
+          "key": false
+        },
+        {
+          "name": "is_revealed",
+          "type": "core::bool",
+          "key": false
+        },
+        {
+          "name": "treasure_looted",
+          "type": "core::bool",
+          "key": false
+        },
+        {
+          "name": "trap_disarmed",
+          "type": "core::bool",
+          "key": false
+        },
+        {
+          "name": "trap_dc",
+          "type": "core::integer::u8",
+          "key": false
+        }
+      ],
+      "class_hash": "0x1a1625e3b2d7c3e42a3427de0f172b630f72b21117bb298d0ac23b2a5bfe6b0",
+      "tag": "d20_0_1-Chamber",
+      "selector": "0x68d8f1994339c90a1e871d77925683a4019478b3dcc14f6f8bbfa042d93b63f"
+    },
+    {
+      "members": [
+        {
+          "name": "temple_id",
+          "type": "core::integer::u128",
+          "key": true
+        },
+        {
+          "name": "from_chamber_id",
+          "type": "core::integer::u32",
+          "key": true
+        },
+        {
+          "name": "exit_index",
+          "type": "core::integer::u8",
+          "key": true
+        },
+        {
+          "name": "to_chamber_id",
+          "type": "core::integer::u32",
+          "key": false
+        },
+        {
+          "name": "is_discovered",
+          "type": "core::bool",
+          "key": false
+        }
+      ],
+      "class_hash": "0x2399b0461fd5129bf5179704008ff0220df58381e65cb99bc2b16de2edf7ec2",
+      "tag": "d20_0_1-ChamberExit",
+      "selector": "0x12d79515b3da7c7ee98aaa3bc679fc281d58afece629b46a35aa2d7aea59a95"
+    },
+    {
+      "members": [
+        {
+          "name": "temple_id",
+          "type": "core::integer::u128",
+          "key": true
+        },
+        {
+          "name": "chamber_id",
+          "type": "core::integer::u32",
+          "key": true
+        },
+        {
+          "name": "count",
+          "type": "core::integer::u32",
+          "key": false
+        }
+      ],
+      "class_hash": "0x1b191d0074860bca6e4e8b361ddf2c1425ab901ce76c261666edb9136e6ef8c",
+      "tag": "d20_0_1-ChamberFallenCount",
+      "selector": "0x333781756799054cd742c7f285e0d57b1034e5c9124914ac41a2f67f1d8b072"
+    },
+    {
+      "members": [
+        {
+          "name": "key",
+          "type": "core::integer::u8",
+          "key": true
+        },
+        {
+          "name": "vrf_address",
+          "type": "core::starknet::contract_address::ContractAddress",
+          "key": false
+        }
+      ],
+      "class_hash": "0x37685c10b9638bd236eb44d0ed5eb5c09fb19270e5a3f2b3991b36445588da5",
+      "tag": "d20_0_1-Config",
+      "selector": "0x57e4837fe6a3772d98f1d54cb2641b841d582ac94d91b769a5e690618a446e5"
+    },
+    {
+      "members": [
+        {
+          "name": "explorer_id",
+          "type": "core::integer::u128",
+          "key": true
+        },
+        {
+          "name": "armor_class",
+          "type": "core::integer::u8",
+          "key": false
+        },
+        {
+          "name": "spell_slots_1",
+          "type": "core::integer::u8",
+          "key": false
+        },
+        {
+          "name": "spell_slots_2",
+          "type": "core::integer::u8",
+          "key": false
+        },
+        {
+          "name": "spell_slots_3",
+          "type": "core::integer::u8",
+          "key": false
+        },
+        {
+          "name": "second_wind_used",
+          "type": "core::bool",
+          "key": false
+        },
+        {
+          "name": "action_surge_used",
+          "type": "core::bool",
+          "key": false
+        }
+      ],
+      "class_hash": "0x1d1d2041161429497784b84f4c19f5d7b4a1f3da158ba2d69ac5f93efea203a",
+      "tag": "d20_0_1-ExplorerCombat",
+      "selector": "0x2b4a9831c822257e37c35045fb097b9a679d03fbaf20afc36d34d1dc98fad05"
+    },
+    {
+      "members": [
+        {
+          "name": "explorer_id",
+          "type": "core::integer::u128",
+          "key": true
+        },
+        {
+          "name": "current_hp",
+          "type": "core::integer::i16",
+          "key": false
+        },
+        {
+          "name": "max_hp",
+          "type": "core::integer::u16",
+          "key": false
+        },
+        {
+          "name": "is_dead",
+          "type": "core::bool",
+          "key": false
+        }
+      ],
+      "class_hash": "0x73c9bb76f6abb17f3751f987c239d66eab2daa2dd96c781465d07d31492d10b",
+      "tag": "d20_0_1-ExplorerHealth",
+      "selector": "0x6e0aa9e06d73b383eca25b863ae18bba5b8382353bf4b6af52422abf7e232e5"
+    },
+    {
+      "members": [
+        {
+          "name": "explorer_id",
+          "type": "core::integer::u128",
+          "key": true
+        },
+        {
+          "name": "primary_weapon",
+          "type": "d20::types::items::WeaponType",
+          "key": false
+        },
+        {
+          "name": "secondary_weapon",
+          "type": "d20::types::items::WeaponType",
+          "key": false
+        },
+        {
+          "name": "armor",
+          "type": "d20::types::items::ArmorType",
+          "key": false
+        },
+        {
+          "name": "has_shield",
+          "type": "core::bool",
+          "key": false
+        },
+        {
+          "name": "gold",
+          "type": "core::integer::u32",
+          "key": false
+        },
+        {
+          "name": "potions",
+          "type": "core::integer::u8",
+          "key": false
+        }
+      ],
+      "class_hash": "0x28564cc2ceafb10dc04d7a6dea0a1960a708abd19487b087003674661a50488",
+      "tag": "d20_0_1-ExplorerInventory",
+      "selector": "0x20fcbaacfa7ae21ba4452b09095e58b5d4a99d22ab2f2873a84e4e7070c2d6e"
+    },
+    {
+      "members": [
+        {
+          "name": "explorer_id",
+          "type": "core::integer::u128",
+          "key": true
+        },
+        {
+          "name": "temple_id",
+          "type": "core::integer::u128",
+          "key": false
+        },
+        {
+          "name": "chamber_id",
+          "type": "core::integer::u32",
+          "key": false
+        },
+        {
+          "name": "in_combat",
+          "type": "core::bool",
+          "key": false
+        },
+        {
+          "name": "combat_monster_id",
+          "type": "core::integer::u32",
+          "key": false
+        }
+      ],
+      "class_hash": "0x1b327c6ba7ed1a57db845e3a5447bf3ed79d2e81c27a9f45eff630661248174",
+      "tag": "d20_0_1-ExplorerPosition",
+      "selector": "0x76d9b7ea74bf05ee6cc1c91111c8a2ea6a59b1a2fc813b60ac8c90673037a41"
+    },
+    {
+      "members": [
+        {
+          "name": "explorer_id",
+          "type": "core::integer::u128",
+          "key": true
+        },
+        {
+          "name": "skills",
+          "type": "d20::models::explorer::SkillsSet",
+          "key": false
+        },
+        {
+          "name": "expertise_1",
+          "type": "d20::types::index::Skill",
+          "key": false
+        },
+        {
+          "name": "expertise_2",
+          "type": "d20::types::index::Skill",
+          "key": false
+        }
+      ],
+      "class_hash": "0x31bbcccc8144017621a1abaa2927f70d3f526f3765b0e40fe92fbfe6f9feb77",
+      "tag": "d20_0_1-ExplorerSkills",
+      "selector": "0x50ca00121096333f080aedbb397f604f06bae20cd9210c15b60424daae9afec"
+    },
+    {
+      "members": [
+        {
+          "name": "explorer_id",
+          "type": "core::integer::u128",
+          "key": true
+        },
+        {
+          "name": "abilities",
+          "type": "d20::models::explorer::AbilityScore",
+          "key": false
+        },
+        {
+          "name": "level",
+          "type": "core::integer::u8",
+          "key": false
+        },
+        {
+          "name": "xp",
+          "type": "core::integer::u32",
+          "key": false
+        },
+        {
+          "name": "explorer_class",
+          "type": "d20::types::explorer_class::ExplorerClass",
+          "key": false
+        },
+        {
+          "name": "temples_conquered",
+          "type": "core::integer::u16",
+          "key": false
+        }
+      ],
+      "class_hash": "0x73cbcf7a86d2f4332015fcb1ed3add39b28ac3a0a8b9d3b5da490bf36019f0a",
+      "tag": "d20_0_1-ExplorerStats",
+      "selector": "0x943328377bc3ffda4b8d939906551e3b75759070afbf2fed4a7f4aaba39f79"
+    },
+    {
+      "members": [
+        {
+          "name": "explorer_id",
+          "type": "core::integer::u128",
+          "key": true
+        },
+        {
+          "name": "temple_id",
+          "type": "core::integer::u128",
+          "key": true
+        },
+        {
+          "name": "chambers_explored",
+          "type": "core::integer::u16",
+          "key": false
+        },
+        {
+          "name": "xp_earned",
+          "type": "core::integer::u32",
+          "key": false
+        }
+      ],
+      "class_hash": "0xdee7f5d746c7a8c239ea6deacd6e510fcbf5a242c15ed095f18eca0013c523",
+      "tag": "d20_0_1-ExplorerTempleProgress",
+      "selector": "0xd3e0ebbc5c76afd46bbb947e59c9d608fb6a6ce962553ae54d5564a4af4395"
+    },
+    {
+      "members": [
+        {
+          "name": "temple_id",
+          "type": "core::integer::u128",
+          "key": true
+        },
+        {
+          "name": "chamber_id",
+          "type": "core::integer::u32",
+          "key": true
+        },
+        {
+          "name": "fallen_index",
+          "type": "core::integer::u32",
+          "key": true
+        },
+        {
+          "name": "explorer_id",
+          "type": "core::integer::u128",
+          "key": false
+        },
+        {
+          "name": "dropped_weapon",
+          "type": "d20::types::items::WeaponType",
+          "key": false
+        },
+        {
+          "name": "dropped_armor",
+          "type": "d20::types::items::ArmorType",
+          "key": false
+        },
+        {
+          "name": "dropped_gold",
+          "type": "core::integer::u32",
+          "key": false
+        },
+        {
+          "name": "dropped_potions",
+          "type": "core::integer::u8",
+          "key": false
+        },
+        {
+          "name": "is_looted",
+          "type": "core::bool",
+          "key": false
+        }
+      ],
+      "class_hash": "0x472872be7513d4676ba0f0fc217c182f1d292f6d615225a87f71b8025238fbe",
+      "tag": "d20_0_1-FallenExplorer",
+      "selector": "0x34ae034ea5d27035d8cdc2fc66064a0f5754fb6a867f7e82497e89ca0dccef3"
+    },
+    {
+      "members": [
+        {
+          "name": "temple_id",
+          "type": "core::integer::u128",
+          "key": true
+        },
+        {
+          "name": "chamber_id",
+          "type": "core::integer::u32",
+          "key": true
+        },
+        {
+          "name": "monster_id",
+          "type": "core::integer::u32",
+          "key": true
+        },
+        {
+          "name": "monster_type",
+          "type": "d20::types::monster::MonsterType",
+          "key": false
+        },
+        {
+          "name": "current_hp",
+          "type": "core::integer::i16",
+          "key": false
+        },
+        {
+          "name": "max_hp",
+          "type": "core::integer::u16",
+          "key": false
+        },
+        {
+          "name": "is_alive",
+          "type": "core::bool",
+          "key": false
+        }
+      ],
+      "class_hash": "0x713817e94868d5de4da82dd207f2c85bceffcb04b072ea54a48630c8f1ac19f",
+      "tag": "d20_0_1-MonsterInstance",
+      "selector": "0x2a3db4f1190413a521f9f383c18f6ebfa7048715341f1c9a6188bdcba52c5be"
+    },
+    {
+      "members": [
+        {
+          "name": "temple_id",
+          "type": "core::integer::u128",
+          "key": true
+        },
+        {
+          "name": "difficulty_tier",
+          "type": "core::integer::u8",
+          "key": false
+        },
+        {
+          "name": "next_chamber_id",
+          "type": "core::integer::u32",
+          "key": false
+        },
+        {
+          "name": "boss_chamber_id",
+          "type": "core::integer::u32",
+          "key": false
+        },
+        {
+          "name": "boss_alive",
+          "type": "core::bool",
+          "key": false
+        },
+        {
+          "name": "max_yonder",
+          "type": "core::integer::u8",
+          "key": false
+        }
+      ],
+      "class_hash": "0x279ebccedbf38a5d46e67775f3d066c14158092e213115d7fba0cacd4356d4d",
+      "tag": "d20_0_1-TempleState",
+      "selector": "0x2aa9b9ab07d900c40168c3396f5532c300205b46349277b0c31437a0752f55c"
+    }
+  ],
+  "events": [
+    {
+      "members": [
+        {
+          "name": "temple_id",
+          "type": "core::integer::u128",
+          "key": true
+        },
+        {
+          "name": "explorer_id",
+          "type": "core::integer::u128",
+          "key": false
+        },
+        {
+          "name": "monster_type",
+          "type": "d20::types::monster::MonsterType",
+          "key": false
+        }
+      ],
+      "class_hash": "0x49e9dce8082b71436767d37a129cfd1a9f1ea74508dcba70d289b1a57f5dd7",
+      "tag": "d20_0_1-BossDefeated",
+      "selector": "0x32fada6b6297ab12527854ac8b9c624a4a040ac0dcddbd0f58c5276da43bfe6"
+    },
+    {
+      "members": [
+        {
+          "name": "temple_id",
+          "type": "core::integer::u128",
+          "key": true
+        },
+        {
+          "name": "chamber_id",
+          "type": "core::integer::u32",
+          "key": false
+        },
+        {
+          "name": "chamber_type",
+          "type": "d20::types::index::ChamberType",
+          "key": false
+        },
+        {
+          "name": "yonder",
+          "type": "core::integer::u8",
+          "key": false
+        },
+        {
+          "name": "revealed_by",
+          "type": "core::integer::u128",
+          "key": false
+        }
+      ],
+      "class_hash": "0x2fd297bc226f2a631368f65e02be42d9344526cb974b6e8e3ef2920cbdf937c",
+      "tag": "d20_0_1-ChamberRevealed",
+      "selector": "0x7e23ba3c186dd0c96ba31ac0a725c172c29391ad79c8274b682414a9ed31d11"
+    },
+    {
+      "members": [
+        {
+          "name": "explorer_id",
+          "type": "core::integer::u128",
+          "key": true
+        },
+        {
+          "name": "action",
+          "type": "d20::types::index::CombatAction",
+          "key": false
+        },
+        {
+          "name": "roll",
+          "type": "core::integer::u8",
+          "key": false
+        },
+        {
+          "name": "damage_dealt",
+          "type": "core::integer::u16",
+          "key": false
+        },
+        {
+          "name": "damage_taken",
+          "type": "core::integer::u16",
+          "key": false
+        },
+        {
+          "name": "monster_killed",
+          "type": "core::bool",
+          "key": false
+        }
+      ],
+      "class_hash": "0x26d11db817edfab17b757fb9849c22c0a50ff331abe82f4ebc371aa51de0b55",
+      "tag": "d20_0_1-CombatResult",
+      "selector": "0x3328d6cb8bd693e743d282e30140f45a611afc55fa98d6b99802b20ac37cdb5"
+    },
+    {
+      "members": [
+        {
+          "name": "explorer_id",
+          "type": "core::integer::u128",
+          "key": true
+        },
+        {
+          "name": "temple_id",
+          "type": "core::integer::u128",
+          "key": false
+        },
+        {
+          "name": "chamber_id",
+          "type": "core::integer::u32",
+          "key": false
+        },
+        {
+          "name": "killed_by",
+          "type": "d20::types::monster::MonsterType",
+          "key": false
+        }
+      ],
+      "class_hash": "0x208c5e773f333fa5b6381f5b33dfe869c1dd0203cbcda69817a1398b75d93a4",
+      "tag": "d20_0_1-ExplorerDied",
+      "selector": "0x4055c48e90a1f3dfca0897b48fe57956a633ae74a58e69d789e052d5279bce"
+    },
+    {
+      "members": [
+        {
+          "name": "explorer_id",
+          "type": "core::integer::u128",
+          "key": true
+        },
+        {
+          "name": "explorer_class",
+          "type": "d20::types::explorer_class::ExplorerClass",
+          "key": false
+        },
+        {
+          "name": "player",
+          "type": "core::starknet::contract_address::ContractAddress",
+          "key": false
+        }
+      ],
+      "class_hash": "0x5ca6144a979c41ff0ee9a5adb9a27f9b168208682a097ab4afcbc321953b7e7",
+      "tag": "d20_0_1-ExplorerMinted",
+      "selector": "0x272fd482b80aa424b0e40d55bce73f963c42a04ad7445d7156bb373d564e307"
+    },
+    {
+      "members": [
+        {
+          "name": "explorer_id",
+          "type": "core::integer::u128",
+          "key": true
+        },
+        {
+          "name": "new_level",
+          "type": "core::integer::u8",
+          "key": false
+        }
+      ],
+      "class_hash": "0x66a36498395bd363e32adf256a512630ea7338f0276a723dd0090b4e61ea855",
+      "tag": "d20_0_1-LevelUp",
+      "selector": "0x706b353497cc568c5c266e31a0ee67c9a9d6d8b33107303985323a376aa9be0"
+    }
+  ],
+  "external_contracts": [],
+  "abis": [
+    {
+      "type": "constructor",
+      "name": "constructor",
+      "inputs": []
+    },
+    {
+      "type": "struct",
+      "name": "core::array::Span::<(core::felt252, dojo::meta::introspect::Ty)>",
+      "members": [
+        {
+          "name": "snapshot",
+          "type": "@core::array::Array::<(core::felt252, dojo::meta::introspect::Ty)>"
+        }
+      ]
+    },
+    {
+      "type": "struct",
+      "name": "core::array::Span::<core::array::Span::<core::felt252>>",
+      "members": [
+        {
+          "name": "snapshot",
+          "type": "@core::array::Array::<core::array::Span::<core::felt252>>"
+        }
+      ]
+    },
+    {
+      "type": "struct",
+      "name": "core::array::Span::<core::felt252>",
+      "members": [
+        {
+          "name": "snapshot",
+          "type": "@core::array::Array::<core::felt252>"
+        }
+      ]
+    },
+    {
+      "type": "struct",
+      "name": "core::array::Span::<core::integer::u8>",
+      "members": [
+        {
+          "name": "snapshot",
+          "type": "@core::array::Array::<core::integer::u8>"
+        }
+      ]
+    },
+    {
+      "type": "struct",
+      "name": "core::array::Span::<dojo::meta::introspect::Member>",
+      "members": [
+        {
+          "name": "snapshot",
+          "type": "@core::array::Array::<dojo::meta::introspect::Member>"
+        }
+      ]
+    },
+    {
+      "type": "struct",
+      "name": "core::array::Span::<dojo::meta::introspect::Ty>",
+      "members": [
+        {
+          "name": "snapshot",
+          "type": "@core::array::Array::<dojo::meta::introspect::Ty>"
+        }
+      ]
+    },
+    {
+      "type": "struct",
+      "name": "core::array::Span::<dojo::meta::layout::FieldLayout>",
+      "members": [
+        {
+          "name": "snapshot",
+          "type": "@core::array::Array::<dojo::meta::layout::FieldLayout>"
+        }
+      ]
+    },
+    {
+      "type": "struct",
+      "name": "core::array::Span::<dojo::meta::layout::Layout>",
+      "members": [
+        {
+          "name": "snapshot",
+          "type": "@core::array::Array::<dojo::meta::layout::Layout>"
+        }
+      ]
+    },
+    {
+      "type": "struct",
+      "name": "core::array::Span::<dojo::model::definition::ModelIndex>",
+      "members": [
+        {
+          "name": "snapshot",
+          "type": "@core::array::Array::<dojo::model::definition::ModelIndex>"
+        }
+      ]
+    },
+    {
+      "type": "enum",
+      "name": "core::bool",
+      "variants": [
+        {
+          "name": "False",
+          "type": "()"
+        },
+        {
+          "name": "True",
+          "type": "()"
+        }
+      ]
+    },
+    {
+      "type": "struct",
+      "name": "core::byte_array::ByteArray",
+      "members": [
+        {
+          "name": "data",
+          "type": "core::array::Array::<core::bytes_31::bytes31>"
+        },
+        {
+          "name": "pending_word",
+          "type": "core::felt252"
+        },
+        {
+          "name": "pending_word_len",
+          "type": "core::internal::bounded_int::BoundedInt::<0, 30>"
+        }
+      ]
+    },
+    {
+      "type": "struct",
+      "name": "core::integer::u256",
+      "members": [
+        {
+          "name": "low",
+          "type": "core::integer::u128"
+        },
+        {
+          "name": "high",
+          "type": "core::integer::u128"
+        }
+      ]
+    },
+    {
+      "type": "enum",
+      "name": "core::option::Option::<core::integer::u32>",
+      "variants": [
+        {
+          "name": "Some",
+          "type": "core::integer::u32"
+        },
+        {
+          "name": "None",
+          "type": "()"
+        }
+      ]
+    },
+    {
+      "type": "struct",
+      "name": "d20::events::BossDefeated",
+      "members": [
+        {
+          "name": "temple_id",
+          "type": "core::integer::u128"
+        },
+        {
+          "name": "explorer_id",
+          "type": "core::integer::u128"
+        },
+        {
+          "name": "monster_type",
+          "type": "d20::types::monster::MonsterType"
+        }
+      ]
+    },
+    {
+      "type": "struct",
+      "name": "d20::events::BossDefeatedValue",
+      "members": [
+        {
+          "name": "explorer_id",
+          "type": "core::integer::u128"
+        },
+        {
+          "name": "monster_type",
+          "type": "d20::types::monster::MonsterType"
+        }
+      ]
+    },
+    {
+      "type": "struct",
+      "name": "d20::events::ChamberRevealed",
+      "members": [
+        {
+          "name": "temple_id",
+          "type": "core::integer::u128"
+        },
+        {
+          "name": "chamber_id",
+          "type": "core::integer::u32"
+        },
+        {
+          "name": "chamber_type",
+          "type": "d20::types::index::ChamberType"
+        },
+        {
+          "name": "yonder",
+          "type": "core::integer::u8"
+        },
+        {
+          "name": "revealed_by",
+          "type": "core::integer::u128"
+        }
+      ]
+    },
+    {
+      "type": "struct",
+      "name": "d20::events::ChamberRevealedValue",
+      "members": [
+        {
+          "name": "chamber_id",
+          "type": "core::integer::u32"
+        },
+        {
+          "name": "chamber_type",
+          "type": "d20::types::index::ChamberType"
+        },
+        {
+          "name": "yonder",
+          "type": "core::integer::u8"
+        },
+        {
+          "name": "revealed_by",
+          "type": "core::integer::u128"
+        }
+      ]
+    },
+    {
+      "type": "struct",
+      "name": "d20::events::CombatResult",
+      "members": [
+        {
+          "name": "explorer_id",
+          "type": "core::integer::u128"
+        },
+        {
+          "name": "action",
+          "type": "d20::types::index::CombatAction"
+        },
+        {
+          "name": "roll",
+          "type": "core::integer::u8"
+        },
+        {
+          "name": "damage_dealt",
+          "type": "core::integer::u16"
+        },
+        {
+          "name": "damage_taken",
+          "type": "core::integer::u16"
+        },
+        {
+          "name": "monster_killed",
+          "type": "core::bool"
+        }
+      ]
+    },
+    {
+      "type": "struct",
+      "name": "d20::events::CombatResultValue",
+      "members": [
+        {
+          "name": "action",
+          "type": "d20::types::index::CombatAction"
+        },
+        {
+          "name": "roll",
+          "type": "core::integer::u8"
+        },
+        {
+          "name": "damage_dealt",
+          "type": "core::integer::u16"
+        },
+        {
+          "name": "damage_taken",
+          "type": "core::integer::u16"
+        },
+        {
+          "name": "monster_killed",
+          "type": "core::bool"
+        }
+      ]
+    },
+    {
+      "type": "struct",
+      "name": "d20::events::ExplorerDied",
+      "members": [
+        {
+          "name": "explorer_id",
+          "type": "core::integer::u128"
+        },
+        {
+          "name": "temple_id",
+          "type": "core::integer::u128"
+        },
+        {
+          "name": "chamber_id",
+          "type": "core::integer::u32"
+        },
+        {
+          "name": "killed_by",
+          "type": "d20::types::monster::MonsterType"
+        }
+      ]
+    },
+    {
+      "type": "struct",
+      "name": "d20::events::ExplorerDiedValue",
+      "members": [
+        {
+          "name": "temple_id",
+          "type": "core::integer::u128"
+        },
+        {
+          "name": "chamber_id",
+          "type": "core::integer::u32"
+        },
+        {
+          "name": "killed_by",
+          "type": "d20::types::monster::MonsterType"
+        }
+      ]
+    },
+    {
+      "type": "struct",
+      "name": "d20::events::ExplorerMinted",
+      "members": [
+        {
+          "name": "explorer_id",
+          "type": "core::integer::u128"
+        },
+        {
+          "name": "explorer_class",
+          "type": "d20::types::explorer_class::ExplorerClass"
+        },
+        {
+          "name": "player",
+          "type": "core::starknet::contract_address::ContractAddress"
+        }
+      ]
+    },
+    {
+      "type": "struct",
+      "name": "d20::events::ExplorerMintedValue",
+      "members": [
+        {
+          "name": "explorer_class",
+          "type": "d20::types::explorer_class::ExplorerClass"
+        },
+        {
+          "name": "player",
+          "type": "core::starknet::contract_address::ContractAddress"
+        }
+      ]
+    },
+    {
+      "type": "struct",
+      "name": "d20::events::LevelUp",
+      "members": [
+        {
+          "name": "explorer_id",
+          "type": "core::integer::u128"
+        },
+        {
+          "name": "new_level",
+          "type": "core::integer::u8"
+        }
+      ]
+    },
+    {
+      "type": "struct",
+      "name": "d20::events::LevelUpValue",
+      "members": [
+        {
+          "name": "new_level",
+          "type": "core::integer::u8"
+        }
+      ]
+    },
+    {
+      "type": "event",
+      "name": "d20::events::e_BossDefeated::Event",
+      "kind": "enum",
+      "variants": []
+    },
+    {
+      "type": "event",
+      "name": "d20::events::e_ChamberRevealed::Event",
+      "kind": "enum",
+      "variants": []
+    },
+    {
+      "type": "event",
+      "name": "d20::events::e_CombatResult::Event",
+      "kind": "enum",
+      "variants": []
+    },
+    {
+      "type": "event",
+      "name": "d20::events::e_ExplorerDied::Event",
+      "kind": "enum",
+      "variants": []
+    },
+    {
+      "type": "event",
+      "name": "d20::events::e_ExplorerMinted::Event",
+      "kind": "enum",
+      "variants": []
+    },
+    {
+      "type": "event",
+      "name": "d20::events::e_LevelUp::Event",
+      "kind": "enum",
+      "variants": []
+    },
+    {
+      "type": "struct",
+      "name": "d20::models::config::Config",
+      "members": [
+        {
+          "name": "key",
+          "type": "core::integer::u8"
+        },
+        {
+          "name": "vrf_address",
+          "type": "core::starknet::contract_address::ContractAddress"
+        }
+      ]
+    },
+    {
+      "type": "struct",
+      "name": "d20::models::config::ConfigValue",
+      "members": [
+        {
+          "name": "vrf_address",
+          "type": "core::starknet::contract_address::ContractAddress"
+        }
+      ]
+    },
+    {
+      "type": "event",
+      "name": "d20::models::config::m_Config::Event",
+      "kind": "enum",
+      "variants": []
+    },
+    {
+      "type": "struct",
+      "name": "d20::models::explorer::AbilityScore",
+      "members": [
+        {
+          "name": "strength",
+          "type": "core::integer::u8"
+        },
+        {
+          "name": "dexterity",
+          "type": "core::integer::u8"
+        },
+        {
+          "name": "constitution",
+          "type": "core::integer::u8"
+        },
+        {
+          "name": "intelligence",
+          "type": "core::integer::u8"
+        },
+        {
+          "name": "wisdom",
+          "type": "core::integer::u8"
+        },
+        {
+          "name": "charisma",
+          "type": "core::integer::u8"
+        }
+      ]
+    },
+    {
+      "type": "struct",
+      "name": "d20::models::explorer::ExplorerCombat",
+      "members": [
+        {
+          "name": "explorer_id",
+          "type": "core::integer::u128"
+        },
+        {
+          "name": "armor_class",
+          "type": "core::integer::u8"
+        },
+        {
+          "name": "spell_slots_1",
+          "type": "core::integer::u8"
+        },
+        {
+          "name": "spell_slots_2",
+          "type": "core::integer::u8"
+        },
+        {
+          "name": "spell_slots_3",
+          "type": "core::integer::u8"
+        },
+        {
+          "name": "second_wind_used",
+          "type": "core::bool"
+        },
+        {
+          "name": "action_surge_used",
+          "type": "core::bool"
+        }
+      ]
+    },
+    {
+      "type": "struct",
+      "name": "d20::models::explorer::ExplorerCombatValue",
+      "members": [
+        {
+          "name": "armor_class",
+          "type": "core::integer::u8"
+        },
+        {
+          "name": "spell_slots_1",
+          "type": "core::integer::u8"
+        },
+        {
+          "name": "spell_slots_2",
+          "type": "core::integer::u8"
+        },
+        {
+          "name": "spell_slots_3",
+          "type": "core::integer::u8"
+        },
+        {
+          "name": "second_wind_used",
+          "type": "core::bool"
+        },
+        {
+          "name": "action_surge_used",
+          "type": "core::bool"
+        }
+      ]
+    },
+    {
+      "type": "struct",
+      "name": "d20::models::explorer::ExplorerHealth",
+      "members": [
+        {
+          "name": "explorer_id",
+          "type": "core::integer::u128"
+        },
+        {
+          "name": "current_hp",
+          "type": "core::integer::i16"
+        },
+        {
+          "name": "max_hp",
+          "type": "core::integer::u16"
+        },
+        {
+          "name": "is_dead",
+          "type": "core::bool"
+        }
+      ]
+    },
+    {
+      "type": "struct",
+      "name": "d20::models::explorer::ExplorerHealthValue",
+      "members": [
+        {
+          "name": "current_hp",
+          "type": "core::integer::i16"
+        },
+        {
+          "name": "max_hp",
+          "type": "core::integer::u16"
+        },
+        {
+          "name": "is_dead",
+          "type": "core::bool"
+        }
+      ]
+    },
+    {
+      "type": "struct",
+      "name": "d20::models::explorer::ExplorerInventory",
+      "members": [
+        {
+          "name": "explorer_id",
+          "type": "core::integer::u128"
+        },
+        {
+          "name": "primary_weapon",
+          "type": "d20::types::items::WeaponType"
+        },
+        {
+          "name": "secondary_weapon",
+          "type": "d20::types::items::WeaponType"
+        },
+        {
+          "name": "armor",
+          "type": "d20::types::items::ArmorType"
+        },
+        {
+          "name": "has_shield",
+          "type": "core::bool"
+        },
+        {
+          "name": "gold",
+          "type": "core::integer::u32"
+        },
+        {
+          "name": "potions",
+          "type": "core::integer::u8"
+        }
+      ]
+    },
+    {
+      "type": "struct",
+      "name": "d20::models::explorer::ExplorerInventoryValue",
+      "members": [
+        {
+          "name": "primary_weapon",
+          "type": "d20::types::items::WeaponType"
+        },
+        {
+          "name": "secondary_weapon",
+          "type": "d20::types::items::WeaponType"
+        },
+        {
+          "name": "armor",
+          "type": "d20::types::items::ArmorType"
+        },
+        {
+          "name": "has_shield",
+          "type": "core::bool"
+        },
+        {
+          "name": "gold",
+          "type": "core::integer::u32"
+        },
+        {
+          "name": "potions",
+          "type": "core::integer::u8"
+        }
+      ]
+    },
+    {
+      "type": "struct",
+      "name": "d20::models::explorer::ExplorerPosition",
+      "members": [
+        {
+          "name": "explorer_id",
+          "type": "core::integer::u128"
+        },
+        {
+          "name": "temple_id",
+          "type": "core::integer::u128"
+        },
+        {
+          "name": "chamber_id",
+          "type": "core::integer::u32"
+        },
+        {
+          "name": "in_combat",
+          "type": "core::bool"
+        },
+        {
+          "name": "combat_monster_id",
+          "type": "core::integer::u32"
+        }
+      ]
+    },
+    {
+      "type": "struct",
+      "name": "d20::models::explorer::ExplorerPositionValue",
+      "members": [
+        {
+          "name": "temple_id",
+          "type": "core::integer::u128"
+        },
+        {
+          "name": "chamber_id",
+          "type": "core::integer::u32"
+        },
+        {
+          "name": "in_combat",
+          "type": "core::bool"
+        },
+        {
+          "name": "combat_monster_id",
+          "type": "core::integer::u32"
+        }
+      ]
+    },
+    {
+      "type": "struct",
+      "name": "d20::models::explorer::ExplorerSkills",
+      "members": [
+        {
+          "name": "explorer_id",
+          "type": "core::integer::u128"
+        },
+        {
+          "name": "skills",
+          "type": "d20::models::explorer::SkillsSet"
+        },
+        {
+          "name": "expertise_1",
+          "type": "d20::types::index::Skill"
+        },
+        {
+          "name": "expertise_2",
+          "type": "d20::types::index::Skill"
+        }
+      ]
+    },
+    {
+      "type": "struct",
+      "name": "d20::models::explorer::ExplorerSkillsValue",
+      "members": [
+        {
+          "name": "skills",
+          "type": "d20::models::explorer::SkillsSet"
+        },
+        {
+          "name": "expertise_1",
+          "type": "d20::types::index::Skill"
+        },
+        {
+          "name": "expertise_2",
+          "type": "d20::types::index::Skill"
+        }
+      ]
+    },
+    {
+      "type": "struct",
+      "name": "d20::models::explorer::ExplorerStats",
+      "members": [
+        {
+          "name": "explorer_id",
+          "type": "core::integer::u128"
+        },
+        {
+          "name": "abilities",
+          "type": "d20::models::explorer::AbilityScore"
+        },
+        {
+          "name": "level",
+          "type": "core::integer::u8"
+        },
+        {
+          "name": "xp",
+          "type": "core::integer::u32"
+        },
+        {
+          "name": "explorer_class",
+          "type": "d20::types::explorer_class::ExplorerClass"
+        },
+        {
+          "name": "temples_conquered",
+          "type": "core::integer::u16"
+        }
+      ]
+    },
+    {
+      "type": "struct",
+      "name": "d20::models::explorer::ExplorerStatsValue",
+      "members": [
+        {
+          "name": "abilities",
+          "type": "d20::models::explorer::AbilityScore"
+        },
+        {
+          "name": "level",
+          "type": "core::integer::u8"
+        },
+        {
+          "name": "xp",
+          "type": "core::integer::u32"
+        },
+        {
+          "name": "explorer_class",
+          "type": "d20::types::explorer_class::ExplorerClass"
+        },
+        {
+          "name": "temples_conquered",
+          "type": "core::integer::u16"
+        }
+      ]
+    },
+    {
+      "type": "struct",
+      "name": "d20::models::explorer::SkillsSet",
+      "members": [
+        {
+          "name": "athletics",
+          "type": "core::bool"
+        },
+        {
+          "name": "stealth",
+          "type": "core::bool"
+        },
+        {
+          "name": "perception",
+          "type": "core::bool"
+        },
+        {
+          "name": "persuasion",
+          "type": "core::bool"
+        },
+        {
+          "name": "arcana",
+          "type": "core::bool"
+        },
+        {
+          "name": "acrobatics",
+          "type": "core::bool"
+        }
+      ]
+    },
+    {
+      "type": "event",
+      "name": "d20::models::explorer::m_ExplorerCombat::Event",
+      "kind": "enum",
+      "variants": []
+    },
+    {
+      "type": "event",
+      "name": "d20::models::explorer::m_ExplorerHealth::Event",
+      "kind": "enum",
+      "variants": []
+    },
+    {
+      "type": "event",
+      "name": "d20::models::explorer::m_ExplorerInventory::Event",
+      "kind": "enum",
+      "variants": []
+    },
+    {
+      "type": "event",
+      "name": "d20::models::explorer::m_ExplorerPosition::Event",
+      "kind": "enum",
+      "variants": []
+    },
+    {
+      "type": "event",
+      "name": "d20::models::explorer::m_ExplorerSkills::Event",
+      "kind": "enum",
+      "variants": []
+    },
+    {
+      "type": "event",
+      "name": "d20::models::explorer::m_ExplorerStats::Event",
+      "kind": "enum",
+      "variants": []
+    },
+    {
+      "type": "struct",
+      "name": "d20::models::temple::Chamber",
+      "members": [
+        {
+          "name": "temple_id",
+          "type": "core::integer::u128"
+        },
+        {
+          "name": "chamber_id",
+          "type": "core::integer::u32"
+        },
+        {
+          "name": "chamber_type",
+          "type": "d20::types::index::ChamberType"
+        },
+        {
+          "name": "yonder",
+          "type": "core::integer::u8"
+        },
+        {
+          "name": "exit_count",
+          "type": "core::integer::u8"
+        },
+        {
+          "name": "is_revealed",
+          "type": "core::bool"
+        },
+        {
+          "name": "treasure_looted",
+          "type": "core::bool"
+        },
+        {
+          "name": "trap_disarmed",
+          "type": "core::bool"
+        },
+        {
+          "name": "trap_dc",
+          "type": "core::integer::u8"
+        }
+      ]
+    },
+    {
+      "type": "struct",
+      "name": "d20::models::temple::ChamberExit",
+      "members": [
+        {
+          "name": "temple_id",
+          "type": "core::integer::u128"
+        },
+        {
+          "name": "from_chamber_id",
+          "type": "core::integer::u32"
+        },
+        {
+          "name": "exit_index",
+          "type": "core::integer::u8"
+        },
+        {
+          "name": "to_chamber_id",
+          "type": "core::integer::u32"
+        },
+        {
+          "name": "is_discovered",
+          "type": "core::bool"
+        }
+      ]
+    },
+    {
+      "type": "struct",
+      "name": "d20::models::temple::ChamberExitValue",
+      "members": [
+        {
+          "name": "to_chamber_id",
+          "type": "core::integer::u32"
+        },
+        {
+          "name": "is_discovered",
+          "type": "core::bool"
+        }
+      ]
+    },
+    {
+      "type": "struct",
+      "name": "d20::models::temple::ChamberFallenCount",
+      "members": [
+        {
+          "name": "temple_id",
+          "type": "core::integer::u128"
+        },
+        {
+          "name": "chamber_id",
+          "type": "core::integer::u32"
+        },
+        {
+          "name": "count",
+          "type": "core::integer::u32"
+        }
+      ]
+    },
+    {
+      "type": "struct",
+      "name": "d20::models::temple::ChamberFallenCountValue",
+      "members": [
+        {
+          "name": "count",
+          "type": "core::integer::u32"
+        }
+      ]
+    },
+    {
+      "type": "struct",
+      "name": "d20::models::temple::ChamberValue",
+      "members": [
+        {
+          "name": "chamber_type",
+          "type": "d20::types::index::ChamberType"
+        },
+        {
+          "name": "yonder",
+          "type": "core::integer::u8"
+        },
+        {
+          "name": "exit_count",
+          "type": "core::integer::u8"
+        },
+        {
+          "name": "is_revealed",
+          "type": "core::bool"
+        },
+        {
+          "name": "treasure_looted",
+          "type": "core::bool"
+        },
+        {
+          "name": "trap_disarmed",
+          "type": "core::bool"
+        },
+        {
+          "name": "trap_dc",
+          "type": "core::integer::u8"
+        }
+      ]
+    },
+    {
+      "type": "struct",
+      "name": "d20::models::temple::ExplorerTempleProgress",
+      "members": [
+        {
+          "name": "explorer_id",
+          "type": "core::integer::u128"
+        },
+        {
+          "name": "temple_id",
+          "type": "core::integer::u128"
+        },
+        {
+          "name": "chambers_explored",
+          "type": "core::integer::u16"
+        },
+        {
+          "name": "xp_earned",
+          "type": "core::integer::u32"
+        }
+      ]
+    },
+    {
+      "type": "struct",
+      "name": "d20::models::temple::ExplorerTempleProgressValue",
+      "members": [
+        {
+          "name": "chambers_explored",
+          "type": "core::integer::u16"
+        },
+        {
+          "name": "xp_earned",
+          "type": "core::integer::u32"
+        }
+      ]
+    },
+    {
+      "type": "struct",
+      "name": "d20::models::temple::FallenExplorer",
+      "members": [
+        {
+          "name": "temple_id",
+          "type": "core::integer::u128"
+        },
+        {
+          "name": "chamber_id",
+          "type": "core::integer::u32"
+        },
+        {
+          "name": "fallen_index",
+          "type": "core::integer::u32"
+        },
+        {
+          "name": "explorer_id",
+          "type": "core::integer::u128"
+        },
+        {
+          "name": "dropped_weapon",
+          "type": "d20::types::items::WeaponType"
+        },
+        {
+          "name": "dropped_armor",
+          "type": "d20::types::items::ArmorType"
+        },
+        {
+          "name": "dropped_gold",
+          "type": "core::integer::u32"
+        },
+        {
+          "name": "dropped_potions",
+          "type": "core::integer::u8"
+        },
+        {
+          "name": "is_looted",
+          "type": "core::bool"
+        }
+      ]
+    },
+    {
+      "type": "struct",
+      "name": "d20::models::temple::FallenExplorerValue",
+      "members": [
+        {
+          "name": "explorer_id",
+          "type": "core::integer::u128"
+        },
+        {
+          "name": "dropped_weapon",
+          "type": "d20::types::items::WeaponType"
+        },
+        {
+          "name": "dropped_armor",
+          "type": "d20::types::items::ArmorType"
+        },
+        {
+          "name": "dropped_gold",
+          "type": "core::integer::u32"
+        },
+        {
+          "name": "dropped_potions",
+          "type": "core::integer::u8"
+        },
+        {
+          "name": "is_looted",
+          "type": "core::bool"
+        }
+      ]
+    },
+    {
+      "type": "struct",
+      "name": "d20::models::temple::MonsterInstance",
+      "members": [
+        {
+          "name": "temple_id",
+          "type": "core::integer::u128"
+        },
+        {
+          "name": "chamber_id",
+          "type": "core::integer::u32"
+        },
+        {
+          "name": "monster_id",
+          "type": "core::integer::u32"
+        },
+        {
+          "name": "monster_type",
+          "type": "d20::types::monster::MonsterType"
+        },
+        {
+          "name": "current_hp",
+          "type": "core::integer::i16"
+        },
+        {
+          "name": "max_hp",
+          "type": "core::integer::u16"
+        },
+        {
+          "name": "is_alive",
+          "type": "core::bool"
+        }
+      ]
+    },
+    {
+      "type": "struct",
+      "name": "d20::models::temple::MonsterInstanceValue",
+      "members": [
+        {
+          "name": "monster_type",
+          "type": "d20::types::monster::MonsterType"
+        },
+        {
+          "name": "current_hp",
+          "type": "core::integer::i16"
+        },
+        {
+          "name": "max_hp",
+          "type": "core::integer::u16"
+        },
+        {
+          "name": "is_alive",
+          "type": "core::bool"
+        }
+      ]
+    },
+    {
+      "type": "struct",
+      "name": "d20::models::temple::TempleState",
+      "members": [
+        {
+          "name": "temple_id",
+          "type": "core::integer::u128"
+        },
+        {
+          "name": "difficulty_tier",
+          "type": "core::integer::u8"
+        },
+        {
+          "name": "next_chamber_id",
+          "type": "core::integer::u32"
+        },
+        {
+          "name": "boss_chamber_id",
+          "type": "core::integer::u32"
+        },
+        {
+          "name": "boss_alive",
+          "type": "core::bool"
+        },
+        {
+          "name": "max_yonder",
+          "type": "core::integer::u8"
+        }
+      ]
+    },
+    {
+      "type": "struct",
+      "name": "d20::models::temple::TempleStateValue",
+      "members": [
+        {
+          "name": "difficulty_tier",
+          "type": "core::integer::u8"
+        },
+        {
+          "name": "next_chamber_id",
+          "type": "core::integer::u32"
+        },
+        {
+          "name": "boss_chamber_id",
+          "type": "core::integer::u32"
+        },
+        {
+          "name": "boss_alive",
+          "type": "core::bool"
+        },
+        {
+          "name": "max_yonder",
+          "type": "core::integer::u8"
+        }
+      ]
+    },
+    {
+      "type": "event",
+      "name": "d20::models::temple::m_Chamber::Event",
+      "kind": "enum",
+      "variants": []
+    },
+    {
+      "type": "event",
+      "name": "d20::models::temple::m_ChamberExit::Event",
+      "kind": "enum",
+      "variants": []
+    },
+    {
+      "type": "event",
+      "name": "d20::models::temple::m_ChamberFallenCount::Event",
+      "kind": "enum",
+      "variants": []
+    },
+    {
+      "type": "event",
+      "name": "d20::models::temple::m_ExplorerTempleProgress::Event",
+      "kind": "enum",
+      "variants": []
+    },
+    {
+      "type": "event",
+      "name": "d20::models::temple::m_FallenExplorer::Event",
+      "kind": "enum",
+      "variants": []
+    },
+    {
+      "type": "event",
+      "name": "d20::models::temple::m_MonsterInstance::Event",
+      "kind": "enum",
+      "variants": []
+    },
+    {
+      "type": "event",
+      "name": "d20::models::temple::m_TempleState::Event",
+      "kind": "enum",
+      "variants": []
+    },
+    {
+      "type": "interface",
+      "name": "d20::systems::combat_system::ICombatSystem",
+      "items": [
+        {
+          "type": "function",
+          "name": "attack",
+          "inputs": [
+            {
+              "name": "explorer_id",
+              "type": "core::integer::u128"
+            }
+          ],
+          "outputs": [],
+          "state_mutability": "external"
+        },
+        {
+          "type": "function",
+          "name": "cast_spell",
+          "inputs": [
+            {
+              "name": "explorer_id",
+              "type": "core::integer::u128"
+            },
+            {
+              "name": "spell_id",
+              "type": "d20::types::spells::SpellId"
+            }
+          ],
+          "outputs": [],
+          "state_mutability": "external"
+        },
+        {
+          "type": "function",
+          "name": "use_item",
+          "inputs": [
+            {
+              "name": "explorer_id",
+              "type": "core::integer::u128"
+            },
+            {
+              "name": "item_type",
+              "type": "d20::types::index::ItemType"
+            }
+          ],
+          "outputs": [],
+          "state_mutability": "external"
+        },
+        {
+          "type": "function",
+          "name": "flee",
+          "inputs": [
+            {
+              "name": "explorer_id",
+              "type": "core::integer::u128"
+            }
+          ],
+          "outputs": [],
+          "state_mutability": "external"
+        },
+        {
+          "type": "function",
+          "name": "second_wind",
+          "inputs": [
+            {
+              "name": "explorer_id",
+              "type": "core::integer::u128"
+            }
+          ],
+          "outputs": [],
+          "state_mutability": "external"
+        },
+        {
+          "type": "function",
+          "name": "cunning_action",
+          "inputs": [
+            {
+              "name": "explorer_id",
+              "type": "core::integer::u128"
+            }
+          ],
+          "outputs": [],
+          "state_mutability": "external"
+        }
+      ]
+    },
+    {
+      "type": "event",
+      "name": "d20::systems::combat_system::combat_system::Event",
+      "kind": "enum",
+      "variants": [
+        {
+          "name": "UpgradeableEvent",
+          "type": "dojo::contract::components::upgradeable::upgradeable_cpt::Event",
+          "kind": "nested"
+        },
+        {
+          "name": "WorldProviderEvent",
+          "type": "dojo::contract::components::world_provider::world_provider_cpt::Event",
+          "kind": "nested"
+        }
+      ]
+    },
+    {
+      "type": "interface",
+      "name": "d20::systems::explorer_token::IExplorerTokenPublic",
+      "items": [
+        {
+          "type": "function",
+          "name": "mint_explorer",
+          "inputs": [
+            {
+              "name": "explorer_class",
+              "type": "d20::types::explorer_class::ExplorerClass"
+            }
+          ],
+          "outputs": [
+            {
+              "type": "core::integer::u128"
+            }
+          ],
+          "state_mutability": "external"
+        },
+        {
+          "type": "function",
+          "name": "rest",
+          "inputs": [
+            {
+              "name": "explorer_id",
+              "type": "core::integer::u128"
+            }
+          ],
+          "outputs": [],
+          "state_mutability": "external"
+        }
+      ]
+    },
+    {
+      "type": "event",
+      "name": "d20::systems::explorer_token::explorer_token::Event",
+      "kind": "enum",
+      "variants": [
+        {
+          "name": "UpgradeableEvent",
+          "type": "dojo::contract::components::upgradeable::upgradeable_cpt::Event",
+          "kind": "nested"
+        },
+        {
+          "name": "WorldProviderEvent",
+          "type": "dojo::contract::components::world_provider::world_provider_cpt::Event",
+          "kind": "nested"
+        },
+        {
+          "name": "SRC5Event",
+          "type": "openzeppelin_introspection::src5::SRC5Component::Event",
+          "kind": "flat"
+        },
+        {
+          "name": "ERC721Event",
+          "type": "openzeppelin_token::erc721::erc721::ERC721Component::Event",
+          "kind": "flat"
+        },
+        {
+          "name": "ERC721ComboEvent",
+          "type": "nft_combo::erc721::erc721_combo::ERC721ComboComponent::Event",
+          "kind": "flat"
+        }
+      ]
+    },
+    {
+      "type": "interface",
+      "name": "d20::systems::temple_token::ITempleTokenPublic",
+      "items": [
+        {
+          "type": "function",
+          "name": "mint_temple",
+          "inputs": [
+            {
+              "name": "difficulty",
+              "type": "core::integer::u8"
+            }
+          ],
+          "outputs": [
+            {
+              "type": "core::integer::u128"
+            }
+          ],
+          "state_mutability": "external"
+        },
+        {
+          "type": "function",
+          "name": "enter_temple",
+          "inputs": [
+            {
+              "name": "explorer_id",
+              "type": "core::integer::u128"
+            },
+            {
+              "name": "temple_id",
+              "type": "core::integer::u128"
+            }
+          ],
+          "outputs": [],
+          "state_mutability": "external"
+        },
+        {
+          "type": "function",
+          "name": "exit_temple",
+          "inputs": [
+            {
+              "name": "explorer_id",
+              "type": "core::integer::u128"
+            }
+          ],
+          "outputs": [],
+          "state_mutability": "external"
+        },
+        {
+          "type": "function",
+          "name": "open_exit",
+          "inputs": [
+            {
+              "name": "explorer_id",
+              "type": "core::integer::u128"
+            },
+            {
+              "name": "exit_index",
+              "type": "core::integer::u8"
+            }
+          ],
+          "outputs": [],
+          "state_mutability": "external"
+        },
+        {
+          "type": "function",
+          "name": "move_to_chamber",
+          "inputs": [
+            {
+              "name": "explorer_id",
+              "type": "core::integer::u128"
+            },
+            {
+              "name": "exit_index",
+              "type": "core::integer::u8"
+            }
+          ],
+          "outputs": [],
+          "state_mutability": "external"
+        },
+        {
+          "type": "function",
+          "name": "disarm_trap",
+          "inputs": [
+            {
+              "name": "explorer_id",
+              "type": "core::integer::u128"
+            }
+          ],
+          "outputs": [],
+          "state_mutability": "external"
+        },
+        {
+          "type": "function",
+          "name": "loot_treasure",
+          "inputs": [
+            {
+              "name": "explorer_id",
+              "type": "core::integer::u128"
+            }
+          ],
+          "outputs": [],
+          "state_mutability": "external"
+        },
+        {
+          "type": "function",
+          "name": "loot_fallen",
+          "inputs": [
+            {
+              "name": "explorer_id",
+              "type": "core::integer::u128"
+            },
+            {
+              "name": "fallen_index",
+              "type": "core::integer::u32"
+            }
+          ],
+          "outputs": [],
+          "state_mutability": "external"
+        }
+      ]
+    },
+    {
+      "type": "event",
+      "name": "d20::systems::temple_token::temple_token::Event",
+      "kind": "enum",
+      "variants": [
+        {
+          "name": "UpgradeableEvent",
+          "type": "dojo::contract::components::upgradeable::upgradeable_cpt::Event",
+          "kind": "nested"
+        },
+        {
+          "name": "WorldProviderEvent",
+          "type": "dojo::contract::components::world_provider::world_provider_cpt::Event",
+          "kind": "nested"
+        },
+        {
+          "name": "SRC5Event",
+          "type": "openzeppelin_introspection::src5::SRC5Component::Event",
+          "kind": "flat"
+        },
+        {
+          "name": "ERC721Event",
+          "type": "openzeppelin_token::erc721::erc721::ERC721Component::Event",
+          "kind": "flat"
+        },
+        {
+          "name": "ERC721ComboEvent",
+          "type": "nft_combo::erc721::erc721_combo::ERC721ComboComponent::Event",
+          "kind": "flat"
+        }
+      ]
+    },
+    {
+      "type": "enum",
+      "name": "d20::types::explorer_class::ExplorerClass",
+      "variants": [
+        {
+          "name": "None",
+          "type": "()"
+        },
+        {
+          "name": "Fighter",
+          "type": "()"
+        },
+        {
+          "name": "Rogue",
+          "type": "()"
+        },
+        {
+          "name": "Wizard",
+          "type": "()"
+        }
+      ]
+    },
+    {
+      "type": "enum",
+      "name": "d20::types::index::ChamberType",
+      "variants": [
+        {
+          "name": "None",
+          "type": "()"
+        },
+        {
+          "name": "Entrance",
+          "type": "()"
+        },
+        {
+          "name": "Empty",
+          "type": "()"
+        },
+        {
+          "name": "Monster",
+          "type": "()"
+        },
+        {
+          "name": "Treasure",
+          "type": "()"
+        },
+        {
+          "name": "Trap",
+          "type": "()"
+        },
+        {
+          "name": "Boss",
+          "type": "()"
+        }
+      ]
+    },
+    {
+      "type": "enum",
+      "name": "d20::types::index::CombatAction",
+      "variants": [
+        {
+          "name": "None",
+          "type": "()"
+        },
+        {
+          "name": "Attack",
+          "type": "()"
+        },
+        {
+          "name": "CastSpell",
+          "type": "()"
+        },
+        {
+          "name": "UseItem",
+          "type": "()"
+        },
+        {
+          "name": "Flee",
+          "type": "()"
+        },
+        {
+          "name": "Dodge",
+          "type": "()"
+        },
+        {
+          "name": "SecondWind",
+          "type": "()"
+        },
+        {
+          "name": "CunningAction",
+          "type": "()"
+        }
+      ]
+    },
+    {
+      "type": "enum",
+      "name": "d20::types::index::ItemType",
+      "variants": [
+        {
+          "name": "None",
+          "type": "()"
+        },
+        {
+          "name": "HealthPotion",
+          "type": "()"
+        }
+      ]
+    },
+    {
+      "type": "enum",
+      "name": "d20::types::index::Skill",
+      "variants": [
+        {
+          "name": "None",
+          "type": "()"
+        },
+        {
+          "name": "Athletics",
+          "type": "()"
+        },
+        {
+          "name": "Stealth",
+          "type": "()"
+        },
+        {
+          "name": "Perception",
+          "type": "()"
+        },
+        {
+          "name": "Persuasion",
+          "type": "()"
+        },
+        {
+          "name": "Arcana",
+          "type": "()"
+        },
+        {
+          "name": "Acrobatics",
+          "type": "()"
+        }
+      ]
+    },
+    {
+      "type": "enum",
+      "name": "d20::types::items::ArmorType",
+      "variants": [
+        {
+          "name": "None",
+          "type": "()"
+        },
+        {
+          "name": "Leather",
+          "type": "()"
+        },
+        {
+          "name": "ChainMail",
+          "type": "()"
+        }
+      ]
+    },
+    {
+      "type": "enum",
+      "name": "d20::types::items::WeaponType",
+      "variants": [
+        {
+          "name": "None",
+          "type": "()"
+        },
+        {
+          "name": "Longsword",
+          "type": "()"
+        },
+        {
+          "name": "Dagger",
+          "type": "()"
+        },
+        {
+          "name": "Shortbow",
+          "type": "()"
+        },
+        {
+          "name": "Greataxe",
+          "type": "()"
+        },
+        {
+          "name": "Staff",
+          "type": "()"
+        }
+      ]
+    },
+    {
+      "type": "enum",
+      "name": "d20::types::monster::MonsterType",
+      "variants": [
+        {
+          "name": "None",
+          "type": "()"
+        },
+        {
+          "name": "PoisonousSnake",
+          "type": "()"
+        },
+        {
+          "name": "Skeleton",
+          "type": "()"
+        },
+        {
+          "name": "Shadow",
+          "type": "()"
+        },
+        {
+          "name": "AnimatedArmor",
+          "type": "()"
+        },
+        {
+          "name": "Gargoyle",
+          "type": "()"
+        },
+        {
+          "name": "Mummy",
+          "type": "()"
+        },
+        {
+          "name": "Wraith",
+          "type": "()"
+        }
+      ]
+    },
+    {
+      "type": "enum",
+      "name": "d20::types::spells::SpellId",
+      "variants": [
+        {
+          "name": "None",
+          "type": "()"
+        },
+        {
+          "name": "FireBolt",
+          "type": "()"
+        },
+        {
+          "name": "MageHand",
+          "type": "()"
+        },
+        {
+          "name": "Light",
+          "type": "()"
+        },
+        {
+          "name": "MagicMissile",
+          "type": "()"
+        },
+        {
+          "name": "ShieldSpell",
+          "type": "()"
+        },
+        {
+          "name": "Sleep",
+          "type": "()"
+        },
+        {
+          "name": "ScorchingRay",
+          "type": "()"
+        },
+        {
+          "name": "MistyStep",
+          "type": "()"
+        },
+        {
+          "name": "Fireball",
+          "type": "()"
+        }
+      ]
+    },
+    {
+      "type": "interface",
+      "name": "dojo::contract::components::upgradeable::IUpgradeable",
+      "items": [
+        {
+          "type": "function",
+          "name": "upgrade",
+          "inputs": [
+            {
+              "name": "new_class_hash",
+              "type": "core::starknet::class_hash::ClassHash"
+            }
+          ],
+          "outputs": [],
+          "state_mutability": "external"
+        }
+      ]
+    },
+    {
+      "type": "event",
+      "name": "dojo::contract::components::upgradeable::upgradeable_cpt::Event",
+      "kind": "enum",
+      "variants": [
+        {
+          "name": "Upgraded",
+          "type": "dojo::contract::components::upgradeable::upgradeable_cpt::Upgraded",
+          "kind": "nested"
+        }
+      ]
+    },
+    {
+      "type": "event",
+      "name": "dojo::contract::components::upgradeable::upgradeable_cpt::Upgraded",
+      "kind": "struct",
+      "members": [
+        {
+          "name": "class_hash",
+          "type": "core::starknet::class_hash::ClassHash",
+          "kind": "data"
+        }
+      ]
+    },
+    {
+      "type": "interface",
+      "name": "dojo::contract::components::world_provider::IWorldProvider",
+      "items": [
+        {
+          "type": "function",
+          "name": "world_dispatcher",
+          "inputs": [],
+          "outputs": [
+            {
+              "type": "dojo::world::iworld::IWorldDispatcher"
+            }
+          ],
+          "state_mutability": "view"
+        }
+      ]
+    },
+    {
+      "type": "event",
+      "name": "dojo::contract::components::world_provider::world_provider_cpt::Event",
+      "kind": "enum",
+      "variants": []
+    },
+    {
+      "type": "interface",
+      "name": "dojo::contract::interface::IContract",
+      "items": []
+    },
+    {
+      "type": "struct",
+      "name": "dojo::event::event::EventDef",
+      "members": [
+        {
+          "name": "name",
+          "type": "core::byte_array::ByteArray"
+        },
+        {
+          "name": "layout",
+          "type": "dojo::meta::layout::Layout"
+        },
+        {
+          "name": "schema",
+          "type": "dojo::meta::introspect::Struct"
+        }
+      ]
+    },
+    {
+      "type": "interface",
+      "name": "dojo::event::interface::IEvent",
+      "items": [
+        {
+          "type": "function",
+          "name": "definition",
+          "inputs": [],
+          "outputs": [
+            {
+              "type": "dojo::event::event::EventDef"
+            }
+          ],
+          "state_mutability": "view"
+        }
+      ]
+    },
+    {
+      "type": "interface",
+      "name": "dojo::meta::interface::IDeployedResource",
+      "items": [
+        {
+          "type": "function",
+          "name": "dojo_name",
+          "inputs": [],
+          "outputs": [
+            {
+              "type": "core::byte_array::ByteArray"
+            }
+          ],
+          "state_mutability": "view"
+        }
+      ]
+    },
+    {
+      "type": "interface",
+      "name": "dojo::meta::interface::IStoredResource",
+      "items": [
+        {
+          "type": "function",
+          "name": "layout",
+          "inputs": [],
+          "outputs": [
+            {
+              "type": "dojo::meta::layout::Layout"
+            }
+          ],
+          "state_mutability": "view"
+        },
+        {
+          "type": "function",
+          "name": "schema",
+          "inputs": [],
+          "outputs": [
+            {
+              "type": "dojo::meta::introspect::Struct"
+            }
+          ],
+          "state_mutability": "view"
+        }
+      ]
+    },
+    {
+      "type": "struct",
+      "name": "dojo::meta::introspect::Enum",
+      "members": [
+        {
+          "name": "name",
+          "type": "core::felt252"
+        },
+        {
+          "name": "attrs",
+          "type": "core::array::Span::<core::felt252>"
+        },
+        {
+          "name": "children",
+          "type": "core::array::Span::<(core::felt252, dojo::meta::introspect::Ty)>"
+        }
+      ]
+    },
+    {
+      "type": "struct",
+      "name": "dojo::meta::introspect::Member",
+      "members": [
+        {
+          "name": "name",
+          "type": "core::felt252"
+        },
+        {
+          "name": "attrs",
+          "type": "core::array::Span::<core::felt252>"
+        },
+        {
+          "name": "ty",
+          "type": "dojo::meta::introspect::Ty"
+        }
+      ]
+    },
+    {
+      "type": "struct",
+      "name": "dojo::meta::introspect::Struct",
+      "members": [
+        {
+          "name": "name",
+          "type": "core::felt252"
+        },
+        {
+          "name": "attrs",
+          "type": "core::array::Span::<core::felt252>"
+        },
+        {
+          "name": "children",
+          "type": "core::array::Span::<dojo::meta::introspect::Member>"
+        }
+      ]
+    },
+    {
+      "type": "enum",
+      "name": "dojo::meta::introspect::Ty",
+      "variants": [
+        {
+          "name": "Primitive",
+          "type": "core::felt252"
+        },
+        {
+          "name": "Struct",
+          "type": "dojo::meta::introspect::Struct"
+        },
+        {
+          "name": "Enum",
+          "type": "dojo::meta::introspect::Enum"
+        },
+        {
+          "name": "Tuple",
+          "type": "core::array::Span::<dojo::meta::introspect::Ty>"
+        },
+        {
+          "name": "Array",
+          "type": "core::array::Span::<dojo::meta::introspect::Ty>"
+        },
+        {
+          "name": "ByteArray",
+          "type": "()"
+        },
+        {
+          "name": "FixedArray",
+          "type": "(core::array::Span::<dojo::meta::introspect::Ty>, core::integer::u32)"
+        }
+      ]
+    },
+    {
+      "type": "struct",
+      "name": "dojo::meta::layout::FieldLayout",
+      "members": [
+        {
+          "name": "selector",
+          "type": "core::felt252"
+        },
+        {
+          "name": "layout",
+          "type": "dojo::meta::layout::Layout"
+        }
+      ]
+    },
+    {
+      "type": "enum",
+      "name": "dojo::meta::layout::Layout",
+      "variants": [
+        {
+          "name": "Fixed",
+          "type": "core::array::Span::<core::integer::u8>"
+        },
+        {
+          "name": "Struct",
+          "type": "core::array::Span::<dojo::meta::layout::FieldLayout>"
+        },
+        {
+          "name": "Tuple",
+          "type": "core::array::Span::<dojo::meta::layout::Layout>"
+        },
+        {
+          "name": "Array",
+          "type": "core::array::Span::<dojo::meta::layout::Layout>"
+        },
+        {
+          "name": "ByteArray",
+          "type": "()"
+        },
+        {
+          "name": "Enum",
+          "type": "core::array::Span::<dojo::meta::layout::FieldLayout>"
+        },
+        {
+          "name": "FixedArray",
+          "type": "(core::array::Span::<dojo::meta::layout::Layout>, core::integer::u32)"
+        }
+      ]
+    },
+    {
+      "type": "struct",
+      "name": "dojo::model::definition::ModelDef",
+      "members": [
+        {
+          "name": "name",
+          "type": "core::byte_array::ByteArray"
+        },
+        {
+          "name": "layout",
+          "type": "dojo::meta::layout::Layout"
+        },
+        {
+          "name": "schema",
+          "type": "dojo::meta::introspect::Struct"
+        },
+        {
+          "name": "packed_size",
+          "type": "core::option::Option::<core::integer::u32>"
+        },
+        {
+          "name": "unpacked_size",
+          "type": "core::option::Option::<core::integer::u32>"
+        }
+      ]
+    },
+    {
+      "type": "enum",
+      "name": "dojo::model::definition::ModelIndex",
+      "variants": [
+        {
+          "name": "Keys",
+          "type": "core::array::Span::<core::felt252>"
+        },
+        {
+          "name": "Id",
+          "type": "core::felt252"
+        },
+        {
+          "name": "MemberId",
+          "type": "(core::felt252, core::felt252)"
+        }
+      ]
+    },
+    {
+      "type": "interface",
+      "name": "dojo::model::interface::IModel",
+      "items": [
+        {
+          "type": "function",
+          "name": "unpacked_size",
+          "inputs": [],
+          "outputs": [
+            {
+              "type": "core::option::Option::<core::integer::u32>"
+            }
+          ],
+          "state_mutability": "view"
+        },
+        {
+          "type": "function",
+          "name": "packed_size",
+          "inputs": [],
+          "outputs": [
+            {
+              "type": "core::option::Option::<core::integer::u32>"
+            }
+          ],
+          "state_mutability": "view"
+        },
+        {
+          "type": "function",
+          "name": "definition",
+          "inputs": [],
+          "outputs": [
+            {
+              "type": "dojo::model::definition::ModelDef"
+            }
+          ],
+          "state_mutability": "view"
+        },
+        {
+          "type": "function",
+          "name": "use_legacy_storage",
+          "inputs": [],
+          "outputs": [
+            {
+              "type": "core::bool"
+            }
+          ],
+          "state_mutability": "view"
+        }
+      ]
+    },
+    {
+      "type": "struct",
+      "name": "dojo::model::metadata::ResourceMetadata",
+      "members": [
+        {
+          "name": "resource_id",
+          "type": "core::felt252"
+        },
+        {
+          "name": "metadata_uri",
+          "type": "core::byte_array::ByteArray"
+        },
+        {
+          "name": "metadata_hash",
+          "type": "core::felt252"
+        }
+      ]
+    },
+    {
+      "type": "interface",
+      "name": "dojo::world::iworld::IUpgradeableWorld",
+      "items": [
+        {
+          "type": "function",
+          "name": "upgrade",
+          "inputs": [
+            {
+              "name": "new_class_hash",
+              "type": "core::starknet::class_hash::ClassHash"
+            }
+          ],
+          "outputs": [],
+          "state_mutability": "external"
+        }
+      ]
+    },
+    {
+      "type": "interface",
+      "name": "dojo::world::iworld::IWorld",
+      "items": [
+        {
+          "type": "function",
+          "name": "resource",
+          "inputs": [
+            {
+              "name": "selector",
+              "type": "core::felt252"
+            }
+          ],
+          "outputs": [
+            {
+              "type": "dojo::world::resource::Resource"
+            }
+          ],
+          "state_mutability": "view"
+        },
+        {
+          "type": "function",
+          "name": "world_version",
+          "inputs": [],
+          "outputs": [
+            {
+              "type": "core::felt252"
+            }
+          ],
+          "state_mutability": "view"
+        },
+        {
+          "type": "function",
+          "name": "uuid",
+          "inputs": [],
+          "outputs": [
+            {
+              "type": "core::integer::u32"
+            }
+          ],
+          "state_mutability": "external"
+        },
+        {
+          "type": "function",
+          "name": "metadata",
+          "inputs": [
+            {
+              "name": "resource_selector",
+              "type": "core::felt252"
+            }
+          ],
+          "outputs": [
+            {
+              "type": "dojo::model::metadata::ResourceMetadata"
+            }
+          ],
+          "state_mutability": "view"
+        },
+        {
+          "type": "function",
+          "name": "set_metadata",
+          "inputs": [
+            {
+              "name": "metadata",
+              "type": "dojo::model::metadata::ResourceMetadata"
+            }
+          ],
+          "outputs": [],
+          "state_mutability": "external"
+        },
+        {
+          "type": "function",
+          "name": "register_namespace",
+          "inputs": [
+            {
+              "name": "namespace",
+              "type": "core::byte_array::ByteArray"
+            }
+          ],
+          "outputs": [],
+          "state_mutability": "external"
+        },
+        {
+          "type": "function",
+          "name": "register_event",
+          "inputs": [
+            {
+              "name": "namespace",
+              "type": "core::byte_array::ByteArray"
+            },
+            {
+              "name": "class_hash",
+              "type": "core::starknet::class_hash::ClassHash"
+            }
+          ],
+          "outputs": [],
+          "state_mutability": "external"
+        },
+        {
+          "type": "function",
+          "name": "register_model",
+          "inputs": [
+            {
+              "name": "namespace",
+              "type": "core::byte_array::ByteArray"
+            },
+            {
+              "name": "class_hash",
+              "type": "core::starknet::class_hash::ClassHash"
+            }
+          ],
+          "outputs": [],
+          "state_mutability": "external"
+        },
+        {
+          "type": "function",
+          "name": "register_contract",
+          "inputs": [
+            {
+              "name": "salt",
+              "type": "core::felt252"
+            },
+            {
+              "name": "namespace",
+              "type": "core::byte_array::ByteArray"
+            },
+            {
+              "name": "class_hash",
+              "type": "core::starknet::class_hash::ClassHash"
+            }
+          ],
+          "outputs": [
+            {
+              "type": "core::starknet::contract_address::ContractAddress"
+            }
+          ],
+          "state_mutability": "external"
+        },
+        {
+          "type": "function",
+          "name": "register_external_contract",
+          "inputs": [
+            {
+              "name": "namespace",
+              "type": "core::byte_array::ByteArray"
+            },
+            {
+              "name": "contract_name",
+              "type": "core::byte_array::ByteArray"
+            },
+            {
+              "name": "instance_name",
+              "type": "core::byte_array::ByteArray"
+            },
+            {
+              "name": "contract_address",
+              "type": "core::starknet::contract_address::ContractAddress"
+            },
+            {
+              "name": "block_number",
+              "type": "core::integer::u64"
+            }
+          ],
+          "outputs": [],
+          "state_mutability": "external"
+        },
+        {
+          "type": "function",
+          "name": "register_library",
+          "inputs": [
+            {
+              "name": "namespace",
+              "type": "core::byte_array::ByteArray"
+            },
+            {
+              "name": "class_hash",
+              "type": "core::starknet::class_hash::ClassHash"
+            },
+            {
+              "name": "name",
+              "type": "core::byte_array::ByteArray"
+            },
+            {
+              "name": "version",
+              "type": "core::byte_array::ByteArray"
+            }
+          ],
+          "outputs": [
+            {
+              "type": "core::starknet::class_hash::ClassHash"
+            }
+          ],
+          "state_mutability": "external"
+        },
+        {
+          "type": "function",
+          "name": "init_contract",
+          "inputs": [
+            {
+              "name": "selector",
+              "type": "core::felt252"
+            },
+            {
+              "name": "init_calldata",
+              "type": "core::array::Span::<core::felt252>"
+            }
+          ],
+          "outputs": [],
+          "state_mutability": "external"
+        },
+        {
+          "type": "function",
+          "name": "upgrade_event",
+          "inputs": [
+            {
+              "name": "namespace",
+              "type": "core::byte_array::ByteArray"
+            },
+            {
+              "name": "class_hash",
+              "type": "core::starknet::class_hash::ClassHash"
+            }
+          ],
+          "outputs": [],
+          "state_mutability": "external"
+        },
+        {
+          "type": "function",
+          "name": "upgrade_model",
+          "inputs": [
+            {
+              "name": "namespace",
+              "type": "core::byte_array::ByteArray"
+            },
+            {
+              "name": "class_hash",
+              "type": "core::starknet::class_hash::ClassHash"
+            }
+          ],
+          "outputs": [],
+          "state_mutability": "external"
+        },
+        {
+          "type": "function",
+          "name": "upgrade_contract",
+          "inputs": [
+            {
+              "name": "namespace",
+              "type": "core::byte_array::ByteArray"
+            },
+            {
+              "name": "class_hash",
+              "type": "core::starknet::class_hash::ClassHash"
+            }
+          ],
+          "outputs": [
+            {
+              "type": "core::starknet::class_hash::ClassHash"
+            }
+          ],
+          "state_mutability": "external"
+        },
+        {
+          "type": "function",
+          "name": "upgrade_external_contract",
+          "inputs": [
+            {
+              "name": "namespace",
+              "type": "core::byte_array::ByteArray"
+            },
+            {
+              "name": "instance_name",
+              "type": "core::byte_array::ByteArray"
+            },
+            {
+              "name": "contract_address",
+              "type": "core::starknet::contract_address::ContractAddress"
+            },
+            {
+              "name": "block_number",
+              "type": "core::integer::u64"
+            }
+          ],
+          "outputs": [],
+          "state_mutability": "external"
+        },
+        {
+          "type": "function",
+          "name": "emit_event",
+          "inputs": [
+            {
+              "name": "event_selector",
+              "type": "core::felt252"
+            },
+            {
+              "name": "keys",
+              "type": "core::array::Span::<core::felt252>"
+            },
+            {
+              "name": "values",
+              "type": "core::array::Span::<core::felt252>"
+            }
+          ],
+          "outputs": [],
+          "state_mutability": "external"
+        },
+        {
+          "type": "function",
+          "name": "emit_events",
+          "inputs": [
+            {
+              "name": "event_selector",
+              "type": "core::felt252"
+            },
+            {
+              "name": "keys",
+              "type": "core::array::Span::<core::array::Span::<core::felt252>>"
+            },
+            {
+              "name": "values",
+              "type": "core::array::Span::<core::array::Span::<core::felt252>>"
+            }
+          ],
+          "outputs": [],
+          "state_mutability": "external"
+        },
+        {
+          "type": "function",
+          "name": "entity",
+          "inputs": [
+            {
+              "name": "model_selector",
+              "type": "core::felt252"
+            },
+            {
+              "name": "index",
+              "type": "dojo::model::definition::ModelIndex"
+            },
+            {
+              "name": "layout",
+              "type": "dojo::meta::layout::Layout"
+            }
+          ],
+          "outputs": [
+            {
+              "type": "core::array::Span::<core::felt252>"
+            }
+          ],
+          "state_mutability": "view"
+        },
+        {
+          "type": "function",
+          "name": "entities",
+          "inputs": [
+            {
+              "name": "model_selector",
+              "type": "core::felt252"
+            },
+            {
+              "name": "indexes",
+              "type": "core::array::Span::<dojo::model::definition::ModelIndex>"
+            },
+            {
+              "name": "layout",
+              "type": "dojo::meta::layout::Layout"
+            }
+          ],
+          "outputs": [
+            {
+              "type": "core::array::Span::<core::array::Span::<core::felt252>>"
+            }
+          ],
+          "state_mutability": "view"
+        },
+        {
+          "type": "function",
+          "name": "set_entity",
+          "inputs": [
+            {
+              "name": "model_selector",
+              "type": "core::felt252"
+            },
+            {
+              "name": "index",
+              "type": "dojo::model::definition::ModelIndex"
+            },
+            {
+              "name": "values",
+              "type": "core::array::Span::<core::felt252>"
+            },
+            {
+              "name": "layout",
+              "type": "dojo::meta::layout::Layout"
+            }
+          ],
+          "outputs": [],
+          "state_mutability": "external"
+        },
+        {
+          "type": "function",
+          "name": "set_entities",
+          "inputs": [
+            {
+              "name": "model_selector",
+              "type": "core::felt252"
+            },
+            {
+              "name": "indexes",
+              "type": "core::array::Span::<dojo::model::definition::ModelIndex>"
+            },
+            {
+              "name": "values",
+              "type": "core::array::Span::<core::array::Span::<core::felt252>>"
+            },
+            {
+              "name": "layout",
+              "type": "dojo::meta::layout::Layout"
+            }
+          ],
+          "outputs": [],
+          "state_mutability": "external"
+        },
+        {
+          "type": "function",
+          "name": "delete_entity",
+          "inputs": [
+            {
+              "name": "model_selector",
+              "type": "core::felt252"
+            },
+            {
+              "name": "index",
+              "type": "dojo::model::definition::ModelIndex"
+            },
+            {
+              "name": "layout",
+              "type": "dojo::meta::layout::Layout"
+            }
+          ],
+          "outputs": [],
+          "state_mutability": "external"
+        },
+        {
+          "type": "function",
+          "name": "delete_entities",
+          "inputs": [
+            {
+              "name": "model_selector",
+              "type": "core::felt252"
+            },
+            {
+              "name": "indexes",
+              "type": "core::array::Span::<dojo::model::definition::ModelIndex>"
+            },
+            {
+              "name": "layout",
+              "type": "dojo::meta::layout::Layout"
+            }
+          ],
+          "outputs": [],
+          "state_mutability": "external"
+        },
+        {
+          "type": "function",
+          "name": "is_owner",
+          "inputs": [
+            {
+              "name": "resource",
+              "type": "core::felt252"
+            },
+            {
+              "name": "address",
+              "type": "core::starknet::contract_address::ContractAddress"
+            }
+          ],
+          "outputs": [
+            {
+              "type": "core::bool"
+            }
+          ],
+          "state_mutability": "view"
+        },
+        {
+          "type": "function",
+          "name": "grant_owner",
+          "inputs": [
+            {
+              "name": "resource",
+              "type": "core::felt252"
+            },
+            {
+              "name": "address",
+              "type": "core::starknet::contract_address::ContractAddress"
+            }
+          ],
+          "outputs": [],
+          "state_mutability": "external"
+        },
+        {
+          "type": "function",
+          "name": "revoke_owner",
+          "inputs": [
+            {
+              "name": "resource",
+              "type": "core::felt252"
+            },
+            {
+              "name": "address",
+              "type": "core::starknet::contract_address::ContractAddress"
+            }
+          ],
+          "outputs": [],
+          "state_mutability": "external"
+        },
+        {
+          "type": "function",
+          "name": "owners_count",
+          "inputs": [
+            {
+              "name": "resource",
+              "type": "core::felt252"
+            }
+          ],
+          "outputs": [
+            {
+              "type": "core::integer::u64"
+            }
+          ],
+          "state_mutability": "view"
+        },
+        {
+          "type": "function",
+          "name": "is_writer",
+          "inputs": [
+            {
+              "name": "resource",
+              "type": "core::felt252"
+            },
+            {
+              "name": "contract",
+              "type": "core::starknet::contract_address::ContractAddress"
+            }
+          ],
+          "outputs": [
+            {
+              "type": "core::bool"
+            }
+          ],
+          "state_mutability": "view"
+        },
+        {
+          "type": "function",
+          "name": "grant_writer",
+          "inputs": [
+            {
+              "name": "resource",
+              "type": "core::felt252"
+            },
+            {
+              "name": "contract",
+              "type": "core::starknet::contract_address::ContractAddress"
+            }
+          ],
+          "outputs": [],
+          "state_mutability": "external"
+        },
+        {
+          "type": "function",
+          "name": "revoke_writer",
+          "inputs": [
+            {
+              "name": "resource",
+              "type": "core::felt252"
+            },
+            {
+              "name": "contract",
+              "type": "core::starknet::contract_address::ContractAddress"
+            }
+          ],
+          "outputs": [],
+          "state_mutability": "external"
+        }
+      ]
+    },
+    {
+      "type": "struct",
+      "name": "dojo::world::iworld::IWorldDispatcher",
+      "members": [
+        {
+          "name": "contract_address",
+          "type": "core::starknet::contract_address::ContractAddress"
+        }
+      ]
+    },
+    {
+      "type": "enum",
+      "name": "dojo::world::resource::Resource",
+      "variants": [
+        {
+          "name": "Model",
+          "type": "(core::starknet::contract_address::ContractAddress, core::felt252)"
+        },
+        {
+          "name": "Event",
+          "type": "(core::starknet::contract_address::ContractAddress, core::felt252)"
+        },
+        {
+          "name": "Contract",
+          "type": "(core::starknet::contract_address::ContractAddress, core::felt252)"
+        },
+        {
+          "name": "Namespace",
+          "type": "core::byte_array::ByteArray"
+        },
+        {
+          "name": "World",
+          "type": "()"
+        },
+        {
+          "name": "Unregistered",
+          "type": "()"
+        },
+        {
+          "name": "Library",
+          "type": "(core::starknet::class_hash::ClassHash, core::felt252)"
+        },
+        {
+          "name": "ExternalContract",
+          "type": "(core::starknet::contract_address::ContractAddress, core::felt252)"
+        }
+      ]
+    },
+    {
+      "type": "event",
+      "name": "dojo::world::world_contract::world::ContractInitialized",
+      "kind": "struct",
+      "members": [
+        {
+          "name": "selector",
+          "type": "core::felt252",
+          "kind": "key"
+        },
+        {
+          "name": "init_calldata",
+          "type": "core::array::Span::<core::felt252>",
+          "kind": "data"
+        }
+      ]
+    },
+    {
+      "type": "event",
+      "name": "dojo::world::world_contract::world::ContractRegistered",
+      "kind": "struct",
+      "members": [
+        {
+          "name": "name",
+          "type": "core::byte_array::ByteArray",
+          "kind": "key"
+        },
+        {
+          "name": "namespace",
+          "type": "core::byte_array::ByteArray",
+          "kind": "key"
+        },
+        {
+          "name": "address",
+          "type": "core::starknet::contract_address::ContractAddress",
+          "kind": "data"
+        },
+        {
+          "name": "class_hash",
+          "type": "core::starknet::class_hash::ClassHash",
+          "kind": "data"
+        },
+        {
+          "name": "salt",
+          "type": "core::felt252",
+          "kind": "data"
+        }
+      ]
+    },
+    {
+      "type": "event",
+      "name": "dojo::world::world_contract::world::ContractUpgraded",
+      "kind": "struct",
+      "members": [
+        {
+          "name": "selector",
+          "type": "core::felt252",
+          "kind": "key"
+        },
+        {
+          "name": "class_hash",
+          "type": "core::starknet::class_hash::ClassHash",
+          "kind": "data"
+        }
+      ]
+    },
+    {
+      "type": "event",
+      "name": "dojo::world::world_contract::world::Event",
+      "kind": "enum",
+      "variants": [
+        {
+          "name": "WorldSpawned",
+          "type": "dojo::world::world_contract::world::WorldSpawned",
+          "kind": "nested"
+        },
+        {
+          "name": "WorldUpgraded",
+          "type": "dojo::world::world_contract::world::WorldUpgraded",
+          "kind": "nested"
+        },
+        {
+          "name": "NamespaceRegistered",
+          "type": "dojo::world::world_contract::world::NamespaceRegistered",
+          "kind": "nested"
+        },
+        {
+          "name": "ModelRegistered",
+          "type": "dojo::world::world_contract::world::ModelRegistered",
+          "kind": "nested"
+        },
+        {
+          "name": "EventRegistered",
+          "type": "dojo::world::world_contract::world::EventRegistered",
+          "kind": "nested"
+        },
+        {
+          "name": "ContractRegistered",
+          "type": "dojo::world::world_contract::world::ContractRegistered",
+          "kind": "nested"
+        },
+        {
+          "name": "ExternalContractRegistered",
+          "type": "dojo::world::world_contract::world::ExternalContractRegistered",
+          "kind": "nested"
+        },
+        {
+          "name": "ExternalContractUpgraded",
+          "type": "dojo::world::world_contract::world::ExternalContractUpgraded",
+          "kind": "nested"
+        },
+        {
+          "name": "ModelUpgraded",
+          "type": "dojo::world::world_contract::world::ModelUpgraded",
+          "kind": "nested"
+        },
+        {
+          "name": "EventUpgraded",
+          "type": "dojo::world::world_contract::world::EventUpgraded",
+          "kind": "nested"
+        },
+        {
+          "name": "ContractUpgraded",
+          "type": "dojo::world::world_contract::world::ContractUpgraded",
+          "kind": "nested"
+        },
+        {
+          "name": "ContractInitialized",
+          "type": "dojo::world::world_contract::world::ContractInitialized",
+          "kind": "nested"
+        },
+        {
+          "name": "LibraryRegistered",
+          "type": "dojo::world::world_contract::world::LibraryRegistered",
+          "kind": "nested"
+        },
+        {
+          "name": "EventEmitted",
+          "type": "dojo::world::world_contract::world::EventEmitted",
+          "kind": "nested"
+        },
+        {
+          "name": "MetadataUpdate",
+          "type": "dojo::world::world_contract::world::MetadataUpdate",
+          "kind": "nested"
+        },
+        {
+          "name": "StoreSetRecord",
+          "type": "dojo::world::world_contract::world::StoreSetRecord",
+          "kind": "nested"
+        },
+        {
+          "name": "StoreUpdateRecord",
+          "type": "dojo::world::world_contract::world::StoreUpdateRecord",
+          "kind": "nested"
+        },
+        {
+          "name": "StoreUpdateMember",
+          "type": "dojo::world::world_contract::world::StoreUpdateMember",
+          "kind": "nested"
+        },
+        {
+          "name": "StoreDelRecord",
+          "type": "dojo::world::world_contract::world::StoreDelRecord",
+          "kind": "nested"
+        },
+        {
+          "name": "WriterUpdated",
+          "type": "dojo::world::world_contract::world::WriterUpdated",
+          "kind": "nested"
+        },
+        {
+          "name": "OwnerUpdated",
+          "type": "dojo::world::world_contract::world::OwnerUpdated",
+          "kind": "nested"
+        }
+      ]
+    },
+    {
+      "type": "event",
+      "name": "dojo::world::world_contract::world::EventEmitted",
+      "kind": "struct",
+      "members": [
+        {
+          "name": "selector",
+          "type": "core::felt252",
+          "kind": "key"
+        },
+        {
+          "name": "system_address",
+          "type": "core::starknet::contract_address::ContractAddress",
+          "kind": "key"
+        },
+        {
+          "name": "keys",
+          "type": "core::array::Span::<core::felt252>",
+          "kind": "data"
+        },
+        {
+          "name": "values",
+          "type": "core::array::Span::<core::felt252>",
+          "kind": "data"
+        }
+      ]
+    },
+    {
+      "type": "event",
+      "name": "dojo::world::world_contract::world::EventRegistered",
+      "kind": "struct",
+      "members": [
+        {
+          "name": "name",
+          "type": "core::byte_array::ByteArray",
+          "kind": "key"
+        },
+        {
+          "name": "namespace",
+          "type": "core::byte_array::ByteArray",
+          "kind": "key"
+        },
+        {
+          "name": "class_hash",
+          "type": "core::starknet::class_hash::ClassHash",
+          "kind": "data"
+        },
+        {
+          "name": "address",
+          "type": "core::starknet::contract_address::ContractAddress",
+          "kind": "data"
+        }
+      ]
+    },
+    {
+      "type": "event",
+      "name": "dojo::world::world_contract::world::EventUpgraded",
+      "kind": "struct",
+      "members": [
+        {
+          "name": "selector",
+          "type": "core::felt252",
+          "kind": "key"
+        },
+        {
+          "name": "class_hash",
+          "type": "core::starknet::class_hash::ClassHash",
+          "kind": "data"
+        },
+        {
+          "name": "address",
+          "type": "core::starknet::contract_address::ContractAddress",
+          "kind": "data"
+        },
+        {
+          "name": "prev_address",
+          "type": "core::starknet::contract_address::ContractAddress",
+          "kind": "data"
+        }
+      ]
+    },
+    {
+      "type": "event",
+      "name": "dojo::world::world_contract::world::ExternalContractRegistered",
+      "kind": "struct",
+      "members": [
+        {
+          "name": "namespace",
+          "type": "core::byte_array::ByteArray",
+          "kind": "key"
+        },
+        {
+          "name": "contract_name",
+          "type": "core::byte_array::ByteArray",
+          "kind": "key"
+        },
+        {
+          "name": "instance_name",
+          "type": "core::byte_array::ByteArray",
+          "kind": "key"
+        },
+        {
+          "name": "contract_selector",
+          "type": "core::felt252",
+          "kind": "key"
+        },
+        {
+          "name": "class_hash",
+          "type": "core::starknet::class_hash::ClassHash",
+          "kind": "data"
+        },
+        {
+          "name": "contract_address",
+          "type": "core::starknet::contract_address::ContractAddress",
+          "kind": "data"
+        },
+        {
+          "name": "block_number",
+          "type": "core::integer::u64",
+          "kind": "data"
+        }
+      ]
+    },
+    {
+      "type": "event",
+      "name": "dojo::world::world_contract::world::ExternalContractUpgraded",
+      "kind": "struct",
+      "members": [
+        {
+          "name": "namespace",
+          "type": "core::byte_array::ByteArray",
+          "kind": "key"
+        },
+        {
+          "name": "instance_name",
+          "type": "core::byte_array::ByteArray",
+          "kind": "key"
+        },
+        {
+          "name": "contract_selector",
+          "type": "core::felt252",
+          "kind": "key"
+        },
+        {
+          "name": "class_hash",
+          "type": "core::starknet::class_hash::ClassHash",
+          "kind": "data"
+        },
+        {
+          "name": "contract_address",
+          "type": "core::starknet::contract_address::ContractAddress",
+          "kind": "data"
+        },
+        {
+          "name": "block_number",
+          "type": "core::integer::u64",
+          "kind": "data"
+        }
+      ]
+    },
+    {
+      "type": "event",
+      "name": "dojo::world::world_contract::world::LibraryRegistered",
+      "kind": "struct",
+      "members": [
+        {
+          "name": "name",
+          "type": "core::byte_array::ByteArray",
+          "kind": "key"
+        },
+        {
+          "name": "namespace",
+          "type": "core::byte_array::ByteArray",
+          "kind": "key"
+        },
+        {
+          "name": "class_hash",
+          "type": "core::starknet::class_hash::ClassHash",
+          "kind": "data"
+        }
+      ]
+    },
+    {
+      "type": "event",
+      "name": "dojo::world::world_contract::world::MetadataUpdate",
+      "kind": "struct",
+      "members": [
+        {
+          "name": "resource",
+          "type": "core::felt252",
+          "kind": "key"
+        },
+        {
+          "name": "uri",
+          "type": "core::byte_array::ByteArray",
+          "kind": "data"
+        },
+        {
+          "name": "hash",
+          "type": "core::felt252",
+          "kind": "data"
+        }
+      ]
+    },
+    {
+      "type": "event",
+      "name": "dojo::world::world_contract::world::ModelRegistered",
+      "kind": "struct",
+      "members": [
+        {
+          "name": "name",
+          "type": "core::byte_array::ByteArray",
+          "kind": "key"
+        },
+        {
+          "name": "namespace",
+          "type": "core::byte_array::ByteArray",
+          "kind": "key"
+        },
+        {
+          "name": "class_hash",
+          "type": "core::starknet::class_hash::ClassHash",
+          "kind": "data"
+        },
+        {
+          "name": "address",
+          "type": "core::starknet::contract_address::ContractAddress",
+          "kind": "data"
+        }
+      ]
+    },
+    {
+      "type": "event",
+      "name": "dojo::world::world_contract::world::ModelUpgraded",
+      "kind": "struct",
+      "members": [
+        {
+          "name": "selector",
+          "type": "core::felt252",
+          "kind": "key"
+        },
+        {
+          "name": "class_hash",
+          "type": "core::starknet::class_hash::ClassHash",
+          "kind": "data"
+        },
+        {
+          "name": "address",
+          "type": "core::starknet::contract_address::ContractAddress",
+          "kind": "data"
+        },
+        {
+          "name": "prev_address",
+          "type": "core::starknet::contract_address::ContractAddress",
+          "kind": "data"
+        }
+      ]
+    },
+    {
+      "type": "event",
+      "name": "dojo::world::world_contract::world::NamespaceRegistered",
+      "kind": "struct",
+      "members": [
+        {
+          "name": "namespace",
+          "type": "core::byte_array::ByteArray",
+          "kind": "key"
+        },
+        {
+          "name": "hash",
+          "type": "core::felt252",
+          "kind": "data"
+        }
+      ]
+    },
+    {
+      "type": "event",
+      "name": "dojo::world::world_contract::world::OwnerUpdated",
+      "kind": "struct",
+      "members": [
+        {
+          "name": "resource",
+          "type": "core::felt252",
+          "kind": "key"
+        },
+        {
+          "name": "contract",
+          "type": "core::starknet::contract_address::ContractAddress",
+          "kind": "key"
+        },
+        {
+          "name": "value",
+          "type": "core::bool",
+          "kind": "data"
+        }
+      ]
+    },
+    {
+      "type": "event",
+      "name": "dojo::world::world_contract::world::StoreDelRecord",
+      "kind": "struct",
+      "members": [
+        {
+          "name": "selector",
+          "type": "core::felt252",
+          "kind": "key"
+        },
+        {
+          "name": "entity_id",
+          "type": "core::felt252",
+          "kind": "key"
+        }
+      ]
+    },
+    {
+      "type": "event",
+      "name": "dojo::world::world_contract::world::StoreSetRecord",
+      "kind": "struct",
+      "members": [
+        {
+          "name": "selector",
+          "type": "core::felt252",
+          "kind": "key"
+        },
+        {
+          "name": "entity_id",
+          "type": "core::felt252",
+          "kind": "key"
+        },
+        {
+          "name": "keys",
+          "type": "core::array::Span::<core::felt252>",
+          "kind": "data"
+        },
+        {
+          "name": "values",
+          "type": "core::array::Span::<core::felt252>",
+          "kind": "data"
+        }
+      ]
+    },
+    {
+      "type": "event",
+      "name": "dojo::world::world_contract::world::StoreUpdateMember",
+      "kind": "struct",
+      "members": [
+        {
+          "name": "selector",
+          "type": "core::felt252",
+          "kind": "key"
+        },
+        {
+          "name": "entity_id",
+          "type": "core::felt252",
+          "kind": "key"
+        },
+        {
+          "name": "member_selector",
+          "type": "core::felt252",
+          "kind": "key"
+        },
+        {
+          "name": "values",
+          "type": "core::array::Span::<core::felt252>",
+          "kind": "data"
+        }
+      ]
+    },
+    {
+      "type": "event",
+      "name": "dojo::world::world_contract::world::StoreUpdateRecord",
+      "kind": "struct",
+      "members": [
+        {
+          "name": "selector",
+          "type": "core::felt252",
+          "kind": "key"
+        },
+        {
+          "name": "entity_id",
+          "type": "core::felt252",
+          "kind": "key"
+        },
+        {
+          "name": "values",
+          "type": "core::array::Span::<core::felt252>",
+          "kind": "data"
+        }
+      ]
+    },
+    {
+      "type": "event",
+      "name": "dojo::world::world_contract::world::WorldSpawned",
+      "kind": "struct",
+      "members": [
+        {
+          "name": "creator",
+          "type": "core::starknet::contract_address::ContractAddress",
+          "kind": "data"
+        },
+        {
+          "name": "class_hash",
+          "type": "core::starknet::class_hash::ClassHash",
+          "kind": "data"
+        }
+      ]
+    },
+    {
+      "type": "event",
+      "name": "dojo::world::world_contract::world::WorldUpgraded",
+      "kind": "struct",
+      "members": [
+        {
+          "name": "class_hash",
+          "type": "core::starknet::class_hash::ClassHash",
+          "kind": "data"
+        }
+      ]
+    },
+    {
+      "type": "event",
+      "name": "dojo::world::world_contract::world::WriterUpdated",
+      "kind": "struct",
+      "members": [
+        {
+          "name": "resource",
+          "type": "core::felt252",
+          "kind": "key"
+        },
+        {
+          "name": "contract",
+          "type": "core::starknet::contract_address::ContractAddress",
+          "kind": "key"
+        },
+        {
+          "name": "value",
+          "type": "core::bool",
+          "kind": "data"
+        }
+      ]
+    },
+    {
+      "type": "function",
+      "name": "dojo_init",
+      "inputs": [],
+      "outputs": [],
+      "state_mutability": "external"
+    },
+    {
+      "type": "function",
+      "name": "ensure_abi",
+      "inputs": [
+        {
+          "name": "event",
+          "type": "d20::events::LevelUp"
+        }
+      ],
+      "outputs": [],
+      "state_mutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "ensure_unique",
+      "inputs": [],
+      "outputs": [],
+      "state_mutability": "view"
+    },
+    {
+      "type": "function",
+      "name": "ensure_values",
+      "inputs": [
+        {
+          "name": "value",
+          "type": "d20::events::LevelUpValue"
+        }
+      ],
+      "outputs": [],
+      "state_mutability": "view"
+    },
+    {
+      "type": "event",
+      "name": "nft_combo::erc721::erc721_combo::ERC721ComboComponent::BatchMetadataUpdate",
+      "kind": "struct",
+      "members": [
+        {
+          "name": "from_token_id",
+          "type": "core::integer::u256",
+          "kind": "key"
+        },
+        {
+          "name": "to_token_id",
+          "type": "core::integer::u256",
+          "kind": "key"
+        }
+      ]
+    },
+    {
+      "type": "event",
+      "name": "nft_combo::erc721::erc721_combo::ERC721ComboComponent::ContractURIUpdated",
+      "kind": "struct",
+      "members": []
+    },
+    {
+      "type": "event",
+      "name": "nft_combo::erc721::erc721_combo::ERC721ComboComponent::Event",
+      "kind": "enum",
+      "variants": [
+        {
+          "name": "ContractURIUpdated",
+          "type": "nft_combo::erc721::erc721_combo::ERC721ComboComponent::ContractURIUpdated",
+          "kind": "nested"
+        },
+        {
+          "name": "MetadataUpdate",
+          "type": "nft_combo::erc721::erc721_combo::ERC721ComboComponent::MetadataUpdate",
+          "kind": "nested"
+        },
+        {
+          "name": "BatchMetadataUpdate",
+          "type": "nft_combo::erc721::erc721_combo::ERC721ComboComponent::BatchMetadataUpdate",
+          "kind": "nested"
+        }
+      ]
+    },
+    {
+      "type": "event",
+      "name": "nft_combo::erc721::erc721_combo::ERC721ComboComponent::MetadataUpdate",
+      "kind": "struct",
+      "members": [
+        {
+          "name": "token_id",
+          "type": "core::integer::u256",
+          "kind": "key"
+        }
+      ]
+    },
+    {
+      "type": "interface",
+      "name": "nft_combo::erc721::interface::IERC721ComboABI",
+      "items": [
+        {
+          "type": "function",
+          "name": "supports_interface",
+          "inputs": [
+            {
+              "name": "interface_id",
+              "type": "core::felt252"
+            }
+          ],
+          "outputs": [
+            {
+              "type": "core::bool"
+            }
+          ],
+          "state_mutability": "view"
+        },
+        {
+          "type": "function",
+          "name": "balance_of",
+          "inputs": [
+            {
+              "name": "account",
+              "type": "core::starknet::contract_address::ContractAddress"
+            }
+          ],
+          "outputs": [
+            {
+              "type": "core::integer::u256"
+            }
+          ],
+          "state_mutability": "view"
+        },
+        {
+          "type": "function",
+          "name": "owner_of",
+          "inputs": [
+            {
+              "name": "token_id",
+              "type": "core::integer::u256"
+            }
+          ],
+          "outputs": [
+            {
+              "type": "core::starknet::contract_address::ContractAddress"
+            }
+          ],
+          "state_mutability": "view"
+        },
+        {
+          "type": "function",
+          "name": "safe_transfer_from",
+          "inputs": [
+            {
+              "name": "from",
+              "type": "core::starknet::contract_address::ContractAddress"
+            },
+            {
+              "name": "to",
+              "type": "core::starknet::contract_address::ContractAddress"
+            },
+            {
+              "name": "token_id",
+              "type": "core::integer::u256"
+            },
+            {
+              "name": "data",
+              "type": "core::array::Span::<core::felt252>"
+            }
+          ],
+          "outputs": [],
+          "state_mutability": "external"
+        },
+        {
+          "type": "function",
+          "name": "transfer_from",
+          "inputs": [
+            {
+              "name": "from",
+              "type": "core::starknet::contract_address::ContractAddress"
+            },
+            {
+              "name": "to",
+              "type": "core::starknet::contract_address::ContractAddress"
+            },
+            {
+              "name": "token_id",
+              "type": "core::integer::u256"
+            }
+          ],
+          "outputs": [],
+          "state_mutability": "external"
+        },
+        {
+          "type": "function",
+          "name": "approve",
+          "inputs": [
+            {
+              "name": "to",
+              "type": "core::starknet::contract_address::ContractAddress"
+            },
+            {
+              "name": "token_id",
+              "type": "core::integer::u256"
+            }
+          ],
+          "outputs": [],
+          "state_mutability": "external"
+        },
+        {
+          "type": "function",
+          "name": "set_approval_for_all",
+          "inputs": [
+            {
+              "name": "operator",
+              "type": "core::starknet::contract_address::ContractAddress"
+            },
+            {
+              "name": "approved",
+              "type": "core::bool"
+            }
+          ],
+          "outputs": [],
+          "state_mutability": "external"
+        },
+        {
+          "type": "function",
+          "name": "get_approved",
+          "inputs": [
+            {
+              "name": "token_id",
+              "type": "core::integer::u256"
+            }
+          ],
+          "outputs": [
+            {
+              "type": "core::starknet::contract_address::ContractAddress"
+            }
+          ],
+          "state_mutability": "view"
+        },
+        {
+          "type": "function",
+          "name": "is_approved_for_all",
+          "inputs": [
+            {
+              "name": "owner",
+              "type": "core::starknet::contract_address::ContractAddress"
+            },
+            {
+              "name": "operator",
+              "type": "core::starknet::contract_address::ContractAddress"
+            }
+          ],
+          "outputs": [
+            {
+              "type": "core::bool"
+            }
+          ],
+          "state_mutability": "view"
+        },
+        {
+          "type": "function",
+          "name": "balanceOf",
+          "inputs": [
+            {
+              "name": "account",
+              "type": "core::starknet::contract_address::ContractAddress"
+            }
+          ],
+          "outputs": [
+            {
+              "type": "core::integer::u256"
+            }
+          ],
+          "state_mutability": "view"
+        },
+        {
+          "type": "function",
+          "name": "ownerOf",
+          "inputs": [
+            {
+              "name": "tokenId",
+              "type": "core::integer::u256"
+            }
+          ],
+          "outputs": [
+            {
+              "type": "core::starknet::contract_address::ContractAddress"
+            }
+          ],
+          "state_mutability": "view"
+        },
+        {
+          "type": "function",
+          "name": "safeTransferFrom",
+          "inputs": [
+            {
+              "name": "from",
+              "type": "core::starknet::contract_address::ContractAddress"
+            },
+            {
+              "name": "to",
+              "type": "core::starknet::contract_address::ContractAddress"
+            },
+            {
+              "name": "tokenId",
+              "type": "core::integer::u256"
+            },
+            {
+              "name": "data",
+              "type": "core::array::Span::<core::felt252>"
+            }
+          ],
+          "outputs": [],
+          "state_mutability": "external"
+        },
+        {
+          "type": "function",
+          "name": "transferFrom",
+          "inputs": [
+            {
+              "name": "from",
+              "type": "core::starknet::contract_address::ContractAddress"
+            },
+            {
+              "name": "to",
+              "type": "core::starknet::contract_address::ContractAddress"
+            },
+            {
+              "name": "tokenId",
+              "type": "core::integer::u256"
+            }
+          ],
+          "outputs": [],
+          "state_mutability": "external"
+        },
+        {
+          "type": "function",
+          "name": "setApprovalForAll",
+          "inputs": [
+            {
+              "name": "operator",
+              "type": "core::starknet::contract_address::ContractAddress"
+            },
+            {
+              "name": "approved",
+              "type": "core::bool"
+            }
+          ],
+          "outputs": [],
+          "state_mutability": "external"
+        },
+        {
+          "type": "function",
+          "name": "getApproved",
+          "inputs": [
+            {
+              "name": "tokenId",
+              "type": "core::integer::u256"
+            }
+          ],
+          "outputs": [
+            {
+              "type": "core::starknet::contract_address::ContractAddress"
+            }
+          ],
+          "state_mutability": "view"
+        },
+        {
+          "type": "function",
+          "name": "isApprovedForAll",
+          "inputs": [
+            {
+              "name": "owner",
+              "type": "core::starknet::contract_address::ContractAddress"
+            },
+            {
+              "name": "operator",
+              "type": "core::starknet::contract_address::ContractAddress"
+            }
+          ],
+          "outputs": [
+            {
+              "type": "core::bool"
+            }
+          ],
+          "state_mutability": "view"
+        },
+        {
+          "type": "function",
+          "name": "name",
+          "inputs": [],
+          "outputs": [
+            {
+              "type": "core::byte_array::ByteArray"
+            }
+          ],
+          "state_mutability": "view"
+        },
+        {
+          "type": "function",
+          "name": "symbol",
+          "inputs": [],
+          "outputs": [
+            {
+              "type": "core::byte_array::ByteArray"
+            }
+          ],
+          "state_mutability": "view"
+        },
+        {
+          "type": "function",
+          "name": "token_uri",
+          "inputs": [
+            {
+              "name": "token_id",
+              "type": "core::integer::u256"
+            }
+          ],
+          "outputs": [
+            {
+              "type": "core::byte_array::ByteArray"
+            }
+          ],
+          "state_mutability": "view"
+        },
+        {
+          "type": "function",
+          "name": "tokenURI",
+          "inputs": [
+            {
+              "name": "tokenId",
+              "type": "core::integer::u256"
+            }
+          ],
+          "outputs": [
+            {
+              "type": "core::byte_array::ByteArray"
+            }
+          ],
+          "state_mutability": "view"
+        },
+        {
+          "type": "function",
+          "name": "max_supply",
+          "inputs": [],
+          "outputs": [
+            {
+              "type": "core::integer::u256"
+            }
+          ],
+          "state_mutability": "view"
+        },
+        {
+          "type": "function",
+          "name": "reserved_supply",
+          "inputs": [],
+          "outputs": [
+            {
+              "type": "core::integer::u256"
+            }
+          ],
+          "state_mutability": "view"
+        },
+        {
+          "type": "function",
+          "name": "available_supply",
+          "inputs": [],
+          "outputs": [
+            {
+              "type": "core::integer::u256"
+            }
+          ],
+          "state_mutability": "view"
+        },
+        {
+          "type": "function",
+          "name": "minted_supply",
+          "inputs": [],
+          "outputs": [
+            {
+              "type": "core::integer::u256"
+            }
+          ],
+          "state_mutability": "view"
+        },
+        {
+          "type": "function",
+          "name": "total_supply",
+          "inputs": [],
+          "outputs": [
+            {
+              "type": "core::integer::u256"
+            }
+          ],
+          "state_mutability": "view"
+        },
+        {
+          "type": "function",
+          "name": "last_token_id",
+          "inputs": [],
+          "outputs": [
+            {
+              "type": "core::integer::u256"
+            }
+          ],
+          "state_mutability": "view"
+        },
+        {
+          "type": "function",
+          "name": "is_minting_paused",
+          "inputs": [],
+          "outputs": [
+            {
+              "type": "core::bool"
+            }
+          ],
+          "state_mutability": "view"
+        },
+        {
+          "type": "function",
+          "name": "is_minted_out",
+          "inputs": [],
+          "outputs": [
+            {
+              "type": "core::bool"
+            }
+          ],
+          "state_mutability": "view"
+        },
+        {
+          "type": "function",
+          "name": "is_owner_of",
+          "inputs": [
+            {
+              "name": "address",
+              "type": "core::starknet::contract_address::ContractAddress"
+            },
+            {
+              "name": "token_id",
+              "type": "core::integer::u256"
+            }
+          ],
+          "outputs": [
+            {
+              "type": "core::bool"
+            }
+          ],
+          "state_mutability": "view"
+        },
+        {
+          "type": "function",
+          "name": "token_exists",
+          "inputs": [
+            {
+              "name": "token_id",
+              "type": "core::integer::u256"
+            }
+          ],
+          "outputs": [
+            {
+              "type": "core::bool"
+            }
+          ],
+          "state_mutability": "view"
+        },
+        {
+          "type": "function",
+          "name": "maxSupply",
+          "inputs": [],
+          "outputs": [
+            {
+              "type": "core::integer::u256"
+            }
+          ],
+          "state_mutability": "view"
+        },
+        {
+          "type": "function",
+          "name": "reservedSupply",
+          "inputs": [],
+          "outputs": [
+            {
+              "type": "core::integer::u256"
+            }
+          ],
+          "state_mutability": "view"
+        },
+        {
+          "type": "function",
+          "name": "availableSupply",
+          "inputs": [],
+          "outputs": [
+            {
+              "type": "core::integer::u256"
+            }
+          ],
+          "state_mutability": "view"
+        },
+        {
+          "type": "function",
+          "name": "mintedSupply",
+          "inputs": [],
+          "outputs": [
+            {
+              "type": "core::integer::u256"
+            }
+          ],
+          "state_mutability": "view"
+        },
+        {
+          "type": "function",
+          "name": "totalSupply",
+          "inputs": [],
+          "outputs": [
+            {
+              "type": "core::integer::u256"
+            }
+          ],
+          "state_mutability": "view"
+        },
+        {
+          "type": "function",
+          "name": "contract_uri",
+          "inputs": [],
+          "outputs": [
+            {
+              "type": "core::byte_array::ByteArray"
+            }
+          ],
+          "state_mutability": "view"
+        },
+        {
+          "type": "function",
+          "name": "contractURI",
+          "inputs": [],
+          "outputs": [
+            {
+              "type": "core::byte_array::ByteArray"
+            }
+          ],
+          "state_mutability": "view"
+        },
+        {
+          "type": "function",
+          "name": "royalty_info",
+          "inputs": [
+            {
+              "name": "token_id",
+              "type": "core::integer::u256"
+            },
+            {
+              "name": "sale_price",
+              "type": "core::integer::u256"
+            }
+          ],
+          "outputs": [
+            {
+              "type": "(core::starknet::contract_address::ContractAddress, core::integer::u256)"
+            }
+          ],
+          "state_mutability": "view"
+        },
+        {
+          "type": "function",
+          "name": "default_royalty",
+          "inputs": [],
+          "outputs": [
+            {
+              "type": "(core::starknet::contract_address::ContractAddress, core::integer::u128, core::integer::u128)"
+            }
+          ],
+          "state_mutability": "view"
+        },
+        {
+          "type": "function",
+          "name": "token_royalty",
+          "inputs": [
+            {
+              "name": "token_id",
+              "type": "core::integer::u256"
+            }
+          ],
+          "outputs": [
+            {
+              "type": "(core::starknet::contract_address::ContractAddress, core::integer::u128, core::integer::u128)"
+            }
+          ],
+          "state_mutability": "view"
+        },
+        {
+          "type": "function",
+          "name": "royaltyInfo",
+          "inputs": [
+            {
+              "name": "token_id",
+              "type": "core::integer::u256"
+            },
+            {
+              "name": "sale_price",
+              "type": "core::integer::u256"
+            }
+          ],
+          "outputs": [
+            {
+              "type": "(core::starknet::contract_address::ContractAddress, core::integer::u256)"
+            }
+          ],
+          "state_mutability": "view"
+        },
+        {
+          "type": "function",
+          "name": "defaultRoyalty",
+          "inputs": [],
+          "outputs": [
+            {
+              "type": "(core::starknet::contract_address::ContractAddress, core::integer::u128, core::integer::u128)"
+            }
+          ],
+          "state_mutability": "view"
+        },
+        {
+          "type": "function",
+          "name": "tokenRoyalty",
+          "inputs": [
+            {
+              "name": "token_id",
+              "type": "core::integer::u256"
+            }
+          ],
+          "outputs": [
+            {
+              "type": "(core::starknet::contract_address::ContractAddress, core::integer::u128, core::integer::u128)"
+            }
+          ],
+          "state_mutability": "view"
+        }
+      ]
+    },
+    {
+      "type": "event",
+      "name": "openzeppelin_introspection::src5::SRC5Component::Event",
+      "kind": "enum",
+      "variants": []
+    },
+    {
+      "type": "event",
+      "name": "openzeppelin_token::erc721::erc721::ERC721Component::Approval",
+      "kind": "struct",
+      "members": [
+        {
+          "name": "owner",
+          "type": "core::starknet::contract_address::ContractAddress",
+          "kind": "key"
+        },
+        {
+          "name": "approved",
+          "type": "core::starknet::contract_address::ContractAddress",
+          "kind": "key"
+        },
+        {
+          "name": "token_id",
+          "type": "core::integer::u256",
+          "kind": "key"
+        }
+      ]
+    },
+    {
+      "type": "event",
+      "name": "openzeppelin_token::erc721::erc721::ERC721Component::ApprovalForAll",
+      "kind": "struct",
+      "members": [
+        {
+          "name": "owner",
+          "type": "core::starknet::contract_address::ContractAddress",
+          "kind": "key"
+        },
+        {
+          "name": "operator",
+          "type": "core::starknet::contract_address::ContractAddress",
+          "kind": "key"
+        },
+        {
+          "name": "approved",
+          "type": "core::bool",
+          "kind": "data"
+        }
+      ]
+    },
+    {
+      "type": "event",
+      "name": "openzeppelin_token::erc721::erc721::ERC721Component::Event",
+      "kind": "enum",
+      "variants": [
+        {
+          "name": "Transfer",
+          "type": "openzeppelin_token::erc721::erc721::ERC721Component::Transfer",
+          "kind": "nested"
+        },
+        {
+          "name": "Approval",
+          "type": "openzeppelin_token::erc721::erc721::ERC721Component::Approval",
+          "kind": "nested"
+        },
+        {
+          "name": "ApprovalForAll",
+          "type": "openzeppelin_token::erc721::erc721::ERC721Component::ApprovalForAll",
+          "kind": "nested"
+        }
+      ]
+    },
+    {
+      "type": "event",
+      "name": "openzeppelin_token::erc721::erc721::ERC721Component::Transfer",
+      "kind": "struct",
+      "members": [
+        {
+          "name": "from",
+          "type": "core::starknet::contract_address::ContractAddress",
+          "kind": "key"
+        },
+        {
+          "name": "to",
+          "type": "core::starknet::contract_address::ContractAddress",
+          "kind": "key"
+        },
+        {
+          "name": "token_id",
+          "type": "core::integer::u256",
+          "kind": "key"
+        }
+      ]
+    }
+  ]
+}
