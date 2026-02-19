@@ -9,9 +9,13 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@cartridge/connector": "^0.13.9",
+    "@cartridge/controller": "^0.13.9",
     "@radix-ui/themes": "^3.2.1",
+    "@tanstack/react-query": "^5.90.21",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "react-dom": "^19.0.0",
+    "starknet": "^9.2.1"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.0.0",
