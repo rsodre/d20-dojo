@@ -67,8 +67,8 @@
 - [x] **4.0** Adapt client specification. Instead of text input, list the options available to the player, who just clicks on one. No AI/LLM — pure state display + deterministic action buttons.
 - [x] **4.1** Set up client project at /client (basic TypeScript + Vite + Radix-UI + tailwind). it must run in https (vite-plugin-mkcert).
 - [x] **4.2** Implement Cartridge controller connect on the client. Add a button to connect with the controller to the default chain. When connected, this button displays the username and open the controller profile
-- [ ] **4.3** Adapt migration scripts to generate typescript bindings, and copy bindings and manifest to /client/src/generated/<profile>
-- [ ] **4.4** Create configs for each profile (dev, katana, sepolia, mainnet) based on the env variable `VITE_DEFAULT_PROFILE`. the profile must include the manifest, chain id, torii slot server and VRF address.
+- [x] **4.3** Adapt migration scripts to generate typescript bindings, and copy bindings and manifest to /client/src/generated/<profile>
+- [x] **4.4** Create configs for each profile (dev, katana, sepolia, mainnet) based on the env variable `VITE_PROFILE`. the profile must include the manifest, chain id, torii slot server and VRF address.
 - [ ] **4.5** Implement Explorer and Temple minting UI (class picker → `mint_explorer` VRF multicall; difficulty picker → `mint_temple`)
 - [ ] **4.6** Implement Torii GRPC client: query explorer state (stats, HP, inventory, position, skills), chamber state (type, yonder, monster, exits, fallen explorers), temple state (difficulty, boss status). Create hooks to get all relevant state with tanstack-query.
 - [ ] **4.7** Implement Torii GRPC subscription for: current selected explorer, and the temple the explorer is in.

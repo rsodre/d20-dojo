@@ -1,4 +1,4 @@
-import { ConnectButton } from "@/components/ConnectButton";
+import { ConnectButton } from "@/components/connect-button";
 
 export default function App() {
   return (

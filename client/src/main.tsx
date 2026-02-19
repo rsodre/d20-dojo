@@ -2,7 +2,7 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { Theme } from "@radix-ui/themes";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { ControllerProvider } from "@/contexts/ControllerContext";
+import StarknetProvider from "@/contexts/starknet-provider";
 import App from "./App";
 import "./index.css";
 
@@ -22,9 +22,9 @@ createRoot(root).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
       <Theme appearance="dark" accentColor="amber" grayColor="sand" radius="medium">
-        <ControllerProvider>
+        <StarknetProvider>
           <App />
-        </ControllerProvider>
+        </StarknetProvider>
       </Theme>
     </QueryClientProvider>
   </StrictMode>
