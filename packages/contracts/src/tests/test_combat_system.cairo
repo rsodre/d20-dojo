@@ -255,12 +255,7 @@ mod tests {
         let stats: ExplorerStats = world.read_model(explorer_id);
         world.write_model_test(@ExplorerStats {
             explorer_id,
-            strength: stats.strength,
-            dexterity: stats.dexterity,
-            constitution: stats.constitution,
-            intelligence: stats.intelligence,
-            wisdom: stats.wisdom,
-            charisma: stats.charisma,
+            abilities: stats.abilities,
             level: 2,
             xp: stats.xp,
             class: stats.class,
@@ -316,12 +311,7 @@ mod tests {
         let stats: ExplorerStats = world.read_model(explorer_id);
         world.write_model_test(@ExplorerStats {
             explorer_id,
-            strength: stats.strength,
-            dexterity: stats.dexterity,
-            constitution: stats.constitution,
-            intelligence: stats.intelligence,
-            wisdom: stats.wisdom,
-            charisma: stats.charisma,
+            abilities: stats.abilities,
             level: 2,
             xp: stats.xp,
             class: stats.class,

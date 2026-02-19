@@ -70,16 +70,16 @@ mod tests {
 
     /// Assert each stat value is from [15,14,13,12,10,8].
     fn assert_standard_array(stats: @ExplorerStats) {
-        assert_valid_stat(*stats.strength);
-        assert_valid_stat(*stats.dexterity);
-        assert_valid_stat(*stats.constitution);
-        assert_valid_stat(*stats.intelligence);
-        assert_valid_stat(*stats.wisdom);
-        assert_valid_stat(*stats.charisma);
+        assert_valid_stat(*stats.abilities.strength);
+        assert_valid_stat(*stats.abilities.dexterity);
+        assert_valid_stat(*stats.abilities.constitution);
+        assert_valid_stat(*stats.abilities.intelligence);
+        assert_valid_stat(*stats.abilities.wisdom);
+        assert_valid_stat(*stats.abilities.charisma);
         // Also verify the total equals 15+14+13+12+10+8 = 72
-        let total: u16 = (*stats.strength).into() + (*stats.dexterity).into()
-            + (*stats.constitution).into() + (*stats.intelligence).into()
-            + (*stats.wisdom).into() + (*stats.charisma).into();
+        let total: u16 = (*stats.abilities.strength).into() + (*stats.abilities.dexterity).into()
+            + (*stats.abilities.constitution).into() + (*stats.abilities.intelligence).into()
+            + (*stats.abilities.wisdom).into() + (*stats.abilities.charisma).into();
         assert(total == 72, 'stats sum must be 72');
     }
 
@@ -126,7 +126,7 @@ mod tests {
 
         let explorer_id = token.mint_explorer(ExplorerClass::Fighter);
 
-        let stats: ExplorerStats = world.read_model(explorer_id);
+        // let stats: ExplorerStats = world.read_model(explorer_id);
         let health: ExplorerHealth = world.read_model(explorer_id);
         let combat: ExplorerCombat = world.read_model(explorer_id);
 

@@ -618,7 +618,7 @@ pub mod temple_token {
                 && dest_chamber.trap_dc > 0 {
                 let mut seeder = SeederTrait::from_consume_vrf(world, caller);
                 let stats: ExplorerStats = world.read_model(explorer_id);
-                let dex_mod: i8 = ability_modifier(stats.dexterity);
+                let dex_mod: i8 = ability_modifier(stats.abilities.dexterity);
                 // DEX saving throw
                 let save_roll: i16 = roll_d20(ref seeder).into() + dex_mod.into();
                 let dc_i16: i16 = dest_chamber.trap_dc.into();
@@ -693,12 +693,12 @@ pub mod temple_token {
                     // Check for expertise on Acrobatics (DEX skill → applies to fine motor work)
                     let expertise_mult: u8 = if skills.expertise_1 == Skill::Acrobatics
                         || skills.expertise_2 == Skill::Acrobatics { 2 } else { 1 };
-                    (stats.dexterity, expertise_mult)
+                    (stats.abilities.dexterity, expertise_mult)
                 },
                 _ => {
                     // INT check; proficient only if Arcana trained
                     let arcana_mult: u8 = if skills.arcana { 1 } else { 0 };
-                    (stats.intelligence, arcana_mult)
+                    (stats.abilities.intelligence, arcana_mult)
                 },
             };
 
@@ -725,7 +725,7 @@ pub mod temple_token {
                 // ── Failure: trap fires — DEX save or take damage ────────────
                 // Failed disarm attempt triggers the trap:
                 // DEX saving throw vs trap_dc; fail → 1d6 + yonder/2 damage.
-                let dex_mod: i8 = ability_modifier(stats.dexterity);
+                let dex_mod: i8 = ability_modifier(stats.abilities.dexterity);
                 let save_roll: i16 = roll_d20(ref seeder).into() + dex_mod.into();
                 if save_roll < dc {
                     let base_dmg: u16 = roll_dice(ref seeder, 6, 1);
@@ -786,7 +786,7 @@ pub mod temple_token {
             let stats: ExplorerStats = world.read_model(explorer_id);
             let skills: ExplorerSkills = world.read_model(explorer_id);
 
-            let wis_mod: i8 = ability_modifier(stats.wisdom);
+            let wis_mod: i8 = ability_modifier(stats.abilities.wisdom);
             let prof: u8 = proficiency_bonus(stats.level);
             let prof_bonus: i8 = if skills.perception { prof.try_into().unwrap() } else { 0 };
 

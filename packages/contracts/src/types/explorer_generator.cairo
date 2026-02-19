@@ -1,6 +1,7 @@
 use d20::types::index::Skill;
 use d20::types::explorer_class::{ExplorerClass, ExplorerClassTrait};
 use d20::utils::seeder::{Seeder, SeederTrait};
+use d20::models::explorer::AbilityScore;
 
 // ── Standard array ───────────────────────────────────────────────────────────
 
@@ -13,14 +14,8 @@ pub fn standard_array() -> Span<u8> {
 
 #[generate_trait]
 pub impl ExplorerClassGeneratorImpl of ExplorerClassGeneratorTrait {
-    /// Assign stats randomly using VRF with a class-biased shuffle.
-    ///
-    /// Strategy: use the class's `preferred_stat_order` as a base assignment,
-    /// then perform a full Fisher-Yates shuffle (5 swaps) using VRF bytes.
-    /// This keeps high stats near preferred abilities while introducing variety.
-    ///
-    /// Returns (STR, DEX, CON, INT, WIS, CHA).
-    fn random_stat_assignment(self: ExplorerClass, ref seeder: Seeder) -> (u8, u8, u8, u8, u8, u8) {
+    /// Returns AbilityScore.
+    fn random_stat_assignment(self: ExplorerClass, ref seeder: Seeder) -> AbilityScore {
         // preferred_stat_order returns [STR_idx, DEX_idx, CON_idx, INT_idx, WIS_idx, CHA_idx]
         // Each value is which position in the sorted array (0=15, 1=14, ..., 5=8) to assign.
         let order = self.preferred_stat_order();
@@ -108,14 +103,14 @@ pub impl ExplorerClassGeneratorImpl of ExplorerClassGeneratorTrait {
             k += 1;
         };
 
-        (
-            *assign6.at(0), // STR
-            *assign6.at(1), // DEX
-            *assign6.at(2), // CON
-            *assign6.at(3), // INT
-            *assign6.at(4), // WIS
-            *assign6.at(5), // CHA
-        )
+        AbilityScore {
+            strength: *assign6.at(0),
+            dexterity: *assign6.at(1),
+            constitution: *assign6.at(2),
+            intelligence: *assign6.at(3),
+            wisdom: *assign6.at(4),
+            charisma: *assign6.at(5),
+        }
     }
 
     /// Randomly pick skills (and expertise for Rogue) using VRF.

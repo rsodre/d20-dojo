@@ -192,11 +192,10 @@ pub mod explorer_token {
             let explorer_id: u128 = token_id.low;
 
             // Randomly assign stats from standard array [15,14,13,12,10,8] using VRF
-            let (strength, dexterity, constitution, intelligence, wisdom, charisma) =
-                class.random_stat_assignment(ref seeder);
+            let abilities = class.random_stat_assignment(ref seeder);
 
-            let con_mod: i8 = ability_modifier(constitution);
-            let dex_mod: i8 = ability_modifier(dexterity);
+            let con_mod: i8 = ability_modifier(abilities.constitution);
+            let dex_mod: i8 = ability_modifier(abilities.dexterity);
 
             // Starting HP: hit die max + CON modifier (minimum 1)
             let hit_die = class.hit_die_max();
@@ -217,7 +216,7 @@ pub mod explorer_token {
             // Write all explorer Dojo models
             world.write_model(@ExplorerStats {
                 explorer_id,
-                strength, dexterity, constitution, intelligence, wisdom, charisma,
+                abilities,
                 level: 1,
                 xp: 0,
                 class,
@@ -357,12 +356,12 @@ pub mod explorer_token {
                 Attribute { key: "Level", value: format!("{}", stats.level) },
                 Attribute { key: "HP", value: format!("{}/{}", health.current_hp, health.max_hp) },
                 Attribute { key: "AC", value: format!("{}", combat.armor_class) },
-                Attribute { key: "STR", value: format!("{}", stats.strength) },
-                Attribute { key: "DEX", value: format!("{}", stats.dexterity) },
-                Attribute { key: "CON", value: format!("{}", stats.constitution) },
-                Attribute { key: "INT", value: format!("{}", stats.intelligence) },
-                Attribute { key: "WIS", value: format!("{}", stats.wisdom) },
-                Attribute { key: "CHA", value: format!("{}", stats.charisma) },
+                Attribute { key: "STR", value: format!("{}", stats.abilities.strength) },
+                Attribute { key: "DEX", value: format!("{}", stats.abilities.dexterity) },
+                Attribute { key: "CON", value: format!("{}", stats.abilities.constitution) },
+                Attribute { key: "INT", value: format!("{}", stats.abilities.intelligence) },
+                Attribute { key: "WIS", value: format!("{}", stats.abilities.wisdom) },
+                Attribute { key: "CHA", value: format!("{}", stats.abilities.charisma) },
                 Attribute { key: "Status", value: status },
             ];
 

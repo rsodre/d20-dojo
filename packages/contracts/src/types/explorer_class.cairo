@@ -10,6 +10,17 @@ pub enum ExplorerClass {
     Wizard,
 }
 
+#[derive(Serde, Copy, Drop)]
+pub struct SkillsSet {
+    pub athletics: bool,
+    pub stealth: bool,
+    pub perception: bool,
+    pub persuasion: bool,
+    pub arcana: bool,
+    pub acrobatics: bool,
+}
+
+
 #[generate_trait]
 pub impl ExplorerClassImpl of ExplorerClassTrait {
     fn hit_die_max(self: ExplorerClass) -> u8 {

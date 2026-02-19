@@ -301,12 +301,7 @@ pub mod combat_system {
             // Update level in ExplorerStats
             world.write_model(@ExplorerStats {
                 explorer_id,
-                strength: stats.strength,
-                dexterity: stats.dexterity,
-                constitution: stats.constitution,
-                intelligence: stats.intelligence,
-                wisdom: stats.wisdom,
-                charisma: stats.charisma,
+                abilities: stats.abilities,
                 level: new_level,
                 xp: stats.xp,
                 class: stats.class,
@@ -316,7 +311,7 @@ pub mod combat_system {
             // Roll hit die + CON modifier, minimum 1, add to max HP
             let hit_sides: u8 = stats.class.hit_die_max();
             let raw_roll: u16 = roll_dice(ref seeder, hit_sides, 1);
-            let con_mod: i8 = ability_modifier(stats.constitution);
+            let con_mod: i8 = ability_modifier(stats.abilities.constitution);
             let raw_roll_i32: i32 = raw_roll.into();
             let con_mod_i32: i32 = con_mod.into();
             let hp_gain_i32: i32 = raw_roll_i32 + con_mod_i32;
@@ -491,7 +486,7 @@ pub mod combat_system {
 
             let weapon = inventory.primary_weapon;
             let uses_dex = weapon.uses_dex();
-            let ability_score: u8 = if uses_dex { stats.dexterity } else { stats.strength };
+            let ability_score: u8 = if uses_dex { stats.abilities.dexterity } else { stats.abilities.strength };
             let ability_mod: i8 = ability_modifier(ability_score);
             let prof_bonus: u8 = proficiency_bonus(stats.level);
 
@@ -655,7 +650,7 @@ pub mod combat_system {
             }
 
             // INT modifier for spell attack rolls and save DCs
-            let int_mod: i8 = ability_modifier(stats.intelligence);
+            let int_mod: i8 = ability_modifier(stats.abilities.intelligence);
             let prof_bonus: u8 = proficiency_bonus(stats.level);
 
             let mut damage_dealt: u16 = 0;
@@ -1168,7 +1163,7 @@ pub mod combat_system {
 
             // Explorer DEX roll: d20 + DEX modifier
             let explorer_roll: u8 = roll_d20(ref seeder);
-            let explorer_dex_mod: i8 = ability_modifier(stats.dexterity);
+            let explorer_dex_mod: i8 = ability_modifier(stats.abilities.dexterity);
             let explorer_dex_mod_i32: i32 = explorer_dex_mod.into();
             let explorer_roll_i32: i32 = explorer_roll.into();
             let explorer_total: i32 = explorer_roll_i32 + explorer_dex_mod_i32;

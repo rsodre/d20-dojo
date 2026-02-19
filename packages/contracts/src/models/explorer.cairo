@@ -7,19 +7,23 @@ use d20::types::explorer_class::ExplorerClass;
 pub struct ExplorerStats {
     #[key]
     pub explorer_id: u128,
-    // Ability scores (each 3-20)
-    pub strength: u8,
-    pub dexterity: u8,
-    pub constitution: u8,
-    pub intelligence: u8,
-    pub wisdom: u8,
-    pub charisma: u8,
+    pub abilities: AbilityScore,
     // Progression
     pub level: u8,
     pub xp: u32,
     pub class: ExplorerClass,
     // Achievements
     pub temples_conquered: u16,
+}
+
+#[derive(Copy, Drop, Serde, IntrospectPacked, DojoStore, Default)]
+pub struct AbilityScore {
+    pub strength: u8,
+    pub dexterity: u8,
+    pub constitution: u8,
+    pub intelligence: u8,
+    pub wisdom: u8,
+    pub charisma: u8,
 }
 
 #[derive(Copy, Drop, Serde)]

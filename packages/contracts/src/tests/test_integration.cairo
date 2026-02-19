@@ -786,12 +786,7 @@ mod tests {
         let stats: ExplorerStats = world.read_model(explorer_id);
         world.write_model_test(@ExplorerStats {
             explorer_id,
-            strength: stats.strength,
-            dexterity: stats.dexterity,
-            constitution: stats.constitution,
-            intelligence: stats.intelligence,
-            wisdom: stats.wisdom,
-            charisma: stats.charisma,
+            abilities: stats.abilities,
             level: 1,
             xp: 250, // skeleton = 50 XP → total 300 = level 2
             class: stats.class,
@@ -920,14 +915,11 @@ mod tests {
 
         // Boost WIS to guarantee perception check passes (no modifier needed)
         let stats: ExplorerStats = world.read_model(explorer_id);
+        let mut abilities = stats.abilities;
+        abilities.wisdom = 20; // +5 mod guarantees DC 10
         world.write_model_test(@ExplorerStats {
             explorer_id,
-            strength: stats.strength,
-            dexterity: stats.dexterity,
-            constitution: stats.constitution,
-            intelligence: stats.intelligence,
-            wisdom: 20, // +5 mod guarantees DC 10
-            charisma: stats.charisma,
+            abilities,
             level: stats.level,
             xp: stats.xp,
             class: stats.class,
@@ -1189,12 +1181,7 @@ mod tests {
         let stats: ExplorerStats = world.read_model(explorer_id);
         world.write_model_test(@ExplorerStats {
             explorer_id,
-            strength: stats.strength,
-            dexterity: stats.dexterity,
-            constitution: stats.constitution,
-            intelligence: stats.intelligence,
-            wisdom: stats.wisdom,
-            charisma: stats.charisma,
+            abilities: stats.abilities,
             level: stats.level,
             xp: stats.xp,
             class: stats.class,
@@ -1402,14 +1389,11 @@ mod tests {
 
         // Boost WIS to ensure loot check passes
         let stats: ExplorerStats = world.read_model(explorer_id);
+        let mut abilities = stats.abilities;
+        abilities.wisdom = 20;
         world.write_model_test(@ExplorerStats {
             explorer_id,
-            strength: stats.strength,
-            dexterity: stats.dexterity,
-            constitution: stats.constitution,
-            intelligence: stats.intelligence,
-            wisdom: 20,
-            charisma: stats.charisma,
+            abilities,
             level: stats.level,
             xp: stats.xp,
             class: stats.class,
@@ -1517,12 +1501,7 @@ mod tests {
         let stats: ExplorerStats = world.read_model(explorer_id);
         world.write_model_test(@ExplorerStats {
             explorer_id,
-            strength: stats.strength,
-            dexterity: stats.dexterity,
-            constitution: stats.constitution,
-            intelligence: stats.intelligence,
-            wisdom: stats.wisdom,
-            charisma: stats.charisma,
+            abilities: stats.abilities,
             level: 1,
             xp: 150,
             class: stats.class,
