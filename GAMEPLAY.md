@@ -63,9 +63,8 @@ Managed by the `temple_token` contract. This system handles the procedural gener
 **Source Interface**: [ITempleTokenPublic](packages/contracts/src/systems/temple_token.cairo#L87)
 
 ### `mint_temple`
-Mint a new Temple NFT with a specific seed and difficulty.
+Mint a new Temple NFT with a specific difficulty.
 - **Parameters**:
-  - `seed`: A `felt252` that drives all procedural generation.
   - `difficulty`: Tier (1 = easy, higher = harder).
 
 ### `enter_temple`

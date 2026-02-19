@@ -7,7 +7,6 @@ use d20::types::monster::MonsterType;
 pub struct TempleState {
     #[key]
     pub temple_id: u128,
-    pub seed: felt252,
     pub difficulty_tier: u8,
     pub next_chamber_id: u32,
     pub boss_chamber_id: u32,

@@ -53,11 +53,10 @@ pub trait ITempleToken<TState> {
     /// Mint a new Temple NFT.
     ///
     /// Parameters:
-    /// - `seed`: felt252 seed that drives all procedural generation for this temple
     /// - `difficulty`: difficulty tier (1 = easy, higher = harder)
     ///
     /// Returns the new temple's token ID (u256, ERC-721 standard).
-    fn mint_temple(ref self: TState, seed: felt252, difficulty: u8) -> u128;
+    fn mint_temple(ref self: TState, difficulty: u8) -> u128;
 
     /// Place an explorer at the temple's entrance chamber.
     fn enter_temple(ref self: TState, explorer_id: u128, temple_id: u128);
@@ -88,11 +87,10 @@ pub trait ITempleTokenPublic<TState> {
     /// Mint a new Temple NFT.
     ///
     /// Parameters:
-    /// - `seed`: felt252 seed that drives all procedural generation for this temple
     /// - `difficulty`: difficulty tier (1 = easy, higher = harder)
     ///
     /// Returns the new temple's token ID (u256, ERC-721 standard).
-    fn mint_temple(ref self: TState, seed: felt252, difficulty: u8) -> u128;
+    fn mint_temple(ref self: TState, difficulty: u8) -> u128;
 
     /// Place an explorer at the temple's entrance chamber.
     fn enter_temple(ref self: TState, explorer_id: u128, temple_id: u128);
@@ -258,18 +256,7 @@ pub mod temple_token {
             }
         }
 
-        // ── Deterministic hash from two felts ───────────────────────────────
-        // Combines temple seed and chamber_id into a u256 for branching decisions.
-        // Uses Poseidon-like mixing via field arithmetic (no external dep needed).
 
-        fn chamber_hash(seed: felt252, chamber_id: u32, salt: felt252) -> u256 {
-            // Simple hash: mix seed, chamber_id, and salt as a felt252 product
-            let chamber_felt: felt252 = chamber_id.into();
-            // Combine by adding and multiplying (stays in field)
-            let mixed: felt252 = seed + chamber_felt + salt;
-            let mixed_u256: u256 = mixed.into();
-            mixed_u256
-        }
 
         // ── generate_chamber ─────────────────────────────────────────────────
         // Creates a new chamber model derived from the temple seed + parent chamber.
@@ -284,7 +271,6 @@ pub mod temple_token {
             yonder: u8,
             explorer_id: u128,
             revealed_by: u128,
-            temple_seed: felt252,
             difficulty: u8,
             xp_earned: u32,
         ) {
@@ -298,22 +284,30 @@ pub mod temple_token {
                 false
             };
 
-            // ── Derive chamber properties from seed hash ─────────────────────
-            let hash_type = Self::chamber_hash(temple_seed, new_chamber_id, 'type');
-            let hash_exits = Self::chamber_hash(temple_seed, new_chamber_id, 'exits');
-
+            // ── Generate chamber properties from seeder ──────────────────────
+            // We use the seeder (seeded with VRF) for all random decisions.
+            // No longer using deterministic hash from temple seed.
+            
             let (chamber_type, monster_type) = if is_boss {
                 (ChamberType::Boss, MonsterType::Wraith)
             } else {
-                // Pick chamber type: 0-2 → Monster, 3 → Treasure, 4 → Trap, 5 → Empty
-                let type_roll: u8 = (hash_type % 6).try_into().unwrap();
+                // Pick chamber type using VRF
+                // 0-2 → Monster (50%), 3 → Treasure (16%), 4 → Trap (16%), 5 → Empty (16%)
+                let type_roll: u8 = seeder.random_u8() % 6;
+                
                 let ct: ChamberType =
                     if type_roll <= 2 { ChamberType::Monster }
                     else if type_roll == 3 { ChamberType::Treasure }
                     else if type_roll == 4 { ChamberType::Trap }
                     else { ChamberType::Empty };
+                
                 let mt: MonsterType = if ct == ChamberType::Monster {
-                    Self::monster_for_yonder(yonder, difficulty, hash_type)
+                    // Pass a random value for the "hash" argument if still needed by helper, 
+                    // or better yet, refactor helper.
+                    // Checking monster_for_yonder signature: fn monster_for_yonder(yonder: u8, difficulty: u8, hash: u256)
+                    // We can just pass a random u256 from seeder.
+                    let random_val = seeder.random_u256();
+                    Self::monster_for_yonder(yonder, difficulty, random_val)
                 } else {
                     MonsterType::None
                 };
@@ -321,7 +315,7 @@ pub mod temple_token {
             };
 
             // ── Exit count: 0-3 new exits (dead end = 0) ────────────────────
-            let exit_count: u8 = (hash_exits % 4).try_into().unwrap(); // 0,1,2,3
+            let exit_count: u8 = seeder.random_u8() % 4; // 0,1,2,3
 
             // ── Trap DC: 10 + yonder/2 + (difficulty - 1)*2 ─────────────────
             let trap_dc: u8 = if chamber_type == ChamberType::Trap {
@@ -394,7 +388,7 @@ pub mod temple_token {
 
     #[abi(embed_v0)]
     impl TempleTokenPublicImpl of super::ITempleTokenPublic<ContractState> {
-        fn mint_temple(ref self: ContractState, seed: felt252, difficulty: u8) -> u128 {
+        fn mint_temple(ref self: ContractState, difficulty: u8) -> u128 {
             assert(difficulty >= 1, 'difficulty must be at least 1');
 
             let mut world = self.world_default();
@@ -409,7 +403,6 @@ pub mod temple_token {
             // Initialize TempleState
             world.write_model(@TempleState {
                 temple_id,
-                seed,
                 difficulty_tier: difficulty,
                 next_chamber_id: 2, // chamber 1 is the entrance; next new chamber gets id 2
                 boss_chamber_id: 0,
@@ -532,7 +525,6 @@ pub mod temple_token {
                 new_yonder,
                 explorer_id,
                 explorer_id, // revealed_by
-                temple.seed,
                 temple.difficulty_tier,
                 progress.xp_earned,
             );

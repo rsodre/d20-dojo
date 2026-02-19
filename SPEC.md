@@ -79,7 +79,7 @@ All NFTs use dedicated ERC-721 contracts built with **OpenZeppelin ERC-721 compo
 ### Temple NFT
 - Each temple is an NFT representing a procedurally generated world
 - The temple token ID is the key for all chamber data and world state
-- Temples are minted with a seed that determines their generation rules
+- Temples are generated procedurally using on-chain VRF (Cartridge) for randomness
 - Multiple temples can exist — explorers choose which temple to enter
 - An explorer can be inside at most one temple at a time, or none (freshly minted / between temples)
 - Explorers can exit a temple and enter another — this creates interesting cross-temple strategy where you level up in an easier temple to tackle a harder one
@@ -529,7 +529,6 @@ pub struct ChamberFallenCount {
 pub struct TempleState {
     #[key]
     pub temple_id: u128,          // Temple NFT token ID (from cairo-nft-combo _mint_next())
-    pub seed: felt252,
     pub difficulty_tier: u8,
     pub next_chamber_id: u32,     // auto-incrementing ID for new chambers
     pub boss_chamber_id: u32,     // 0 until boss chamber is generated
@@ -749,7 +748,7 @@ trait ICombatActions<T> {
 // ──────────────────────────────────────────────
 #[starknet::interface]
 trait ITempleActions<T> {
-    fn mint_temple(ref self: T, seed: felt252, difficulty: u8) -> u128;
+    fn mint_temple(ref self: T, difficulty: u8) -> u128;
     fn enter_temple(ref self: T, explorer_id: u128, temple_id: u128);
     fn exit_temple(ref self: T, explorer_id: u128);
     fn open_exit(ref self: T, explorer_id: u128, exit_index: u8);
@@ -838,7 +837,7 @@ Chambers are **not** pre-generated. They are created one at a time as explorers 
 
 1. **Temple minting** creates a single entrance chamber (chamber_id=1, yonder=0, type=Entrance). The entrance has a random number of exits (determined by seed) leading to unexplored space.
 
-2. **Opening an exit** triggers `generate_chamber`. The new chamber is created from the temple seed combined with the chamber's position in the graph. This determines:
+2. **Opening an exit** triggers `generate_chamber`. The new chamber is created from the vrf seed. This determines:
    - **Chamber type**: Monster, Treasure, Trap, Empty, or Boss (see boss probability below)
    - **Number of exits**: 0 to 3 (a dead end has 0 exits beyond the one you came from)
    - **Yonder value**: parent chamber's yonder + 1
@@ -1009,7 +1008,6 @@ See **[TASKS.md](TASKS.md)** for the full tickable task list.
 
 ## Open Questions / Future Scope
 - Should fallen explorers drop class abilities / skill proficiencies in addition to items ("soul harvesting")?
-- How are temple seeds governed? Open minting by anyone? Curated? Rate-limited?
 - Locked exits requiring specific loot items to open (key-and-lock mechanic for branching paths)
 - PvP in v2?
 - On-chain leaderboard (temples conquered, deepest yonder reached, most monsters killed)?
