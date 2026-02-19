@@ -169,13 +169,13 @@ mod tests {
 
         let skills: ExplorerSkills = world.read_model(explorer_id);
         // Fighter always has Athletics
-        assert(skills.athletics, 'fighter: athletics auto');
+        assert(skills.skills.athletics, 'fighter: athletics auto');
         // Fighter gets exactly one of Perception or Acrobatics (not both, not neither)
-        assert(skills.perception || skills.acrobatics, 'fighter: must have 1 optional');
-        assert(!(skills.perception && skills.acrobatics), 'fighter: only 1 optional');
-        assert(!skills.stealth, 'fighter: no stealth');
-        assert(!skills.arcana, 'fighter: no arcana');
-        assert(!skills.persuasion, 'fighter: no persuasion');
+        assert(skills.skills.perception || skills.skills.acrobatics, 'fighter: must have 1 optional');
+        assert(!(skills.skills.perception && skills.skills.acrobatics), 'fighter: only 1 optional');
+        assert(!skills.skills.stealth, 'fighter: no stealth');
+        assert(!skills.skills.arcana, 'fighter: no arcana');
+        assert(!skills.skills.persuasion, 'fighter: no persuasion');
         assert(skills.expertise_1 == Skill::None, 'no expertise');
         assert(skills.expertise_2 == Skill::None, 'no expertise_2');
     }
@@ -244,8 +244,8 @@ mod tests {
 
         let skills: ExplorerSkills = world.read_model(explorer_id);
         // Rogue always has Stealth and Acrobatics
-        assert(skills.stealth, 'rogue: stealth auto');
-        assert(skills.acrobatics, 'rogue: acrobatics auto');
+        assert(skills.skills.stealth, 'rogue: stealth auto');
+        assert(skills.skills.acrobatics, 'rogue: acrobatics auto');
         // Rogue expertise must be non-None and different
         assert(skills.expertise_1 != Skill::None, 'rogue: expertise_1 set');
         assert(skills.expertise_2 != Skill::None, 'rogue: expertise_2 set');
@@ -303,12 +303,12 @@ mod tests {
 
         let skills: ExplorerSkills = world.read_model(explorer_id);
         // Wizard always has Arcana
-        assert(skills.arcana, 'wizard: arcana auto');
+        assert(skills.skills.arcana, 'wizard: arcana auto');
         // Wizard gets exactly one of Perception or Persuasion
-        assert(skills.perception || skills.persuasion, 'wizard: must have 1 optional');
-        assert(!(skills.perception && skills.persuasion), 'wizard: only 1 optional');
-        assert(!skills.athletics, 'wizard: no athletics');
-        assert(!skills.stealth, 'wizard: no stealth');
+        assert(skills.skills.perception || skills.skills.persuasion, 'wizard: must have 1 optional');
+        assert(!(skills.skills.perception && skills.skills.persuasion), 'wizard: only 1 optional');
+        assert(!skills.skills.athletics, 'wizard: no athletics');
+        assert(!skills.skills.stealth, 'wizard: no stealth');
         assert(skills.expertise_1 == Skill::None, 'no expertise');
     }
 

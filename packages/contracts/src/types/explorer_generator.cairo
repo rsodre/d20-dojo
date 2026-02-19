@@ -1,3 +1,4 @@
+use d20::models::explorer::SkillsSet;
 use d20::types::index::Skill;
 use d20::types::explorer_class::{ExplorerClass, ExplorerClassTrait};
 use d20::utils::seeder::{Seeder, SeederTrait};
@@ -117,15 +118,17 @@ pub impl ExplorerClassGeneratorImpl of ExplorerClassGeneratorTrait {
     /// Returns (athletics, stealth, perception, persuasion, arcana, acrobatics, expertise_1, expertise_2).
     fn random_skills(
         self: ExplorerClass, ref seeder: Seeder
-    ) -> (bool, bool, bool, bool, bool, bool, Skill, Skill) {
+    ) -> (SkillsSet, Skill, Skill) {
+        let mut skills: SkillsSet = Default::default();
         match self {
             ExplorerClass::Fighter => {
                 let r = seeder.random_u8();
                 let chosen = ExplorerClassTrait::random_fighter_skill(r);
-                let perception = chosen == Skill::Perception;
-                let acrobatics = chosen == Skill::Acrobatics;
+                skills.perception = chosen == Skill::Perception;
+                skills.acrobatics = chosen == Skill::Acrobatics;
                 // Fighter always has Athletics; no expertise
-                (true, false, perception, false, false, acrobatics, Skill::None, Skill::None)
+                skills.athletics = true;
+                (skills, Skill::None, Skill::None)
             },
             ExplorerClass::Rogue => {
                 let r0 = seeder.random_u8();
@@ -134,23 +137,26 @@ pub impl ExplorerClassGeneratorImpl of ExplorerClassGeneratorTrait {
                 let r2 = seeder.random_u8();
                 let r3 = seeder.random_u8();
                 let (exp0, exp1) = ExplorerClassTrait::random_rogue_expertise(r2, r3, skill0, skill1);
-                let athletics = skill0 == Skill::Athletics || skill1 == Skill::Athletics;
-                let perception = skill0 == Skill::Perception || skill1 == Skill::Perception;
-                let persuasion = skill0 == Skill::Persuasion || skill1 == Skill::Persuasion;
-                let arcana = skill0 == Skill::Arcana || skill1 == Skill::Arcana;
+                skills.athletics = skill0 == Skill::Athletics || skill1 == Skill::Athletics;
+                skills.perception = skill0 == Skill::Perception || skill1 == Skill::Perception;
+                skills.persuasion = skill0 == Skill::Persuasion || skill1 == Skill::Persuasion;
+                skills.arcana = skill0 == Skill::Arcana || skill1 == Skill::Arcana;
                 // Rogue always has Stealth and Acrobatics
-                (athletics, true, perception, persuasion, arcana, true, exp0, exp1)
+                skills.stealth = true;
+                skills.acrobatics = true;
+                (skills, exp0, exp1)
             },
             ExplorerClass::Wizard => {
                 let r = seeder.random_u8();
                 let chosen = ExplorerClassTrait::random_wizard_skill(r);
-                let perception = chosen == Skill::Perception;
-                let persuasion = chosen == Skill::Persuasion;
+                skills.perception = chosen == Skill::Perception;
+                skills.persuasion = chosen == Skill::Persuasion;
                 // Wizard always has Arcana; no expertise
-                (false, false, perception, persuasion, true, false, Skill::None, Skill::None)
+                skills.arcana = true;
+                (skills, Skill::None, Skill::None)
             },
             ExplorerClass::None => {
-                (false, false, false, false, false, false, Skill::None, Skill::None)
+                (skills, Skill::None, Skill::None)
             },
         }
     }

@@ -80,13 +80,18 @@ pub struct ExplorerSkills {
     #[key]
     pub explorer_id: u128,
     // Proficiency flags for each skill
+    pub skills: SkillsSet,
+    // Expertise (double proficiency, Rogue feature)
+    pub expertise_1: Skill,
+    pub expertise_2: Skill,
+}
+
+#[derive(Copy, Drop, Serde, IntrospectPacked, DojoStore, Default)]
+pub struct SkillsSet {
     pub athletics: bool,
     pub stealth: bool,
     pub perception: bool,
     pub persuasion: bool,
     pub arcana: bool,
     pub acrobatics: bool,
-    // Expertise (double proficiency, Rogue feature)
-    pub expertise_1: Skill,
-    pub expertise_2: Skill,
 }

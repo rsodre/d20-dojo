@@ -210,8 +210,7 @@ pub mod explorer_token {
             let (slots_1, slots_2, slots_3) = class.spell_slots_for(1);
 
             // Randomly pick skills from VRF
-            let (athletics, stealth, perception, persuasion, arcana, acrobatics,
-                 expertise_1, expertise_2) = class.random_skills(ref seeder);
+            let (skills, expertise_1, expertise_2) = class.random_skills(ref seeder);
 
             // Write all explorer Dojo models
             world.write_model(@ExplorerStats {
@@ -260,7 +259,7 @@ pub mod explorer_token {
 
             world.write_model(@ExplorerSkills {
                 explorer_id,
-                athletics, stealth, perception, persuasion, arcana, acrobatics,
+                skills,
                 expertise_1,
                 expertise_2,
             });

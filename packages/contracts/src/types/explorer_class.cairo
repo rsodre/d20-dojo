@@ -1,5 +1,6 @@
 use d20::types::index::Skill;
 use d20::types::items::{ArmorType, WeaponType};
+use d20::models::explorer::SkillsSet;
 
 #[derive(Serde, Copy, Drop, Introspect, PartialEq, Debug, DojoStore, Default)]
 pub enum ExplorerClass {
@@ -9,17 +10,6 @@ pub enum ExplorerClass {
     Rogue,
     Wizard,
 }
-
-#[derive(Serde, Copy, Drop)]
-pub struct SkillsSet {
-    pub athletics: bool,
-    pub stealth: bool,
-    pub perception: bool,
-    pub persuasion: bool,
-    pub arcana: bool,
-    pub acrobatics: bool,
-}
-
 
 #[generate_trait]
 pub impl ExplorerClassImpl of ExplorerClassTrait {
@@ -53,24 +43,19 @@ pub impl ExplorerClassImpl of ExplorerClassTrait {
 
     fn build_skills(
         self: ExplorerClass, skill_choices: Span<Skill>
-    ) -> (bool, bool, bool, bool, bool, bool) {
-        let mut athletics: bool = false;
-        let mut stealth: bool = false;
-        let mut perception: bool = false;
-        let mut persuasion: bool = false;
-        let mut arcana: bool = false;
-        let mut acrobatics: bool = false;
+    ) -> SkillsSet {
+        let mut result: SkillsSet = Default::default();
 
         match self {
             ExplorerClass::Fighter => {
-                athletics = true;
+                result.athletics = true;
             },
             ExplorerClass::Rogue => {
-                stealth = true;
-                acrobatics = true;
+                result.stealth = true;
+                result.acrobatics = true;
             },
             ExplorerClass::Wizard => {
-                arcana = true;
+                result.arcana = true;
             },
             ExplorerClass::None => {},
         }
@@ -80,29 +65,29 @@ pub impl ExplorerClassImpl of ExplorerClassTrait {
             let skill = *skill_choices.at(i);
             match skill {
                 Skill::Athletics => {
-                    athletics = true;
+                    result.athletics = true;
                 },
                 Skill::Stealth => {
-                    stealth = true;
+                    result.stealth = true;
                 },
                 Skill::Perception => {
-                    perception = true;
+                    result.perception = true;
                 },
                 Skill::Persuasion => {
-                    persuasion = true;
+                    result.persuasion = true;
                 },
                 Skill::Arcana => {
-                    arcana = true;
+                    result.arcana = true;
                 },
                 Skill::Acrobatics => {
-                    acrobatics = true;
+                    result.acrobatics = true;
                 },
                 Skill::None => {},
             }
             i += 1;
         };
 
-        (athletics, stealth, perception, persuasion, arcana, acrobatics)
+        result
     }
 
     fn validate_skill_choices(self: ExplorerClass, skill_choices: Span<Skill>) {

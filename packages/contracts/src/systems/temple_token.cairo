@@ -697,7 +697,7 @@ pub mod temple_token {
                 },
                 _ => {
                     // INT check; proficient only if Arcana trained
-                    let arcana_mult: u8 = if skills.arcana { 1 } else { 0 };
+                    let arcana_mult: u8 = if skills.skills.arcana { 1 } else { 0 };
                     (stats.abilities.intelligence, arcana_mult)
                 },
             };
@@ -788,7 +788,7 @@ pub mod temple_token {
 
             let wis_mod: i8 = ability_modifier(stats.abilities.wisdom);
             let prof: u8 = proficiency_bonus(stats.level);
-            let prof_bonus: i8 = if skills.perception { prof.try_into().unwrap() } else { 0 };
+            let prof_bonus: i8 = if skills.skills.perception { prof.try_into().unwrap() } else { 0 };
 
             let roll: i16 = roll_d20(ref seeder).into()
                 + wis_mod.into()
