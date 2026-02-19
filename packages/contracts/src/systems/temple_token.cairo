@@ -273,6 +273,7 @@ pub mod temple_token {
             revealed_by: u128,
             difficulty: u8,
             xp_earned: u32,
+            current_max_yonder: u8,
         ) {
 
             // ── Is this a boss chamber? ──────────────────────────────────────
@@ -315,7 +316,14 @@ pub mod temple_token {
             };
 
             // ── Exit count: 0-3 new exits (dead end = 0) ────────────────────
-            let exit_count: u8 = seeder.random_u8() % 4; // 0,1,2,3
+            // At the frontier (yonder >= current max), enforce at least 1 exit
+            // so the dungeon always has a path forward.
+            let raw_exit_count: u8 = seeder.random_u8() % 4;
+            let exit_count: u8 = if yonder >= current_max_yonder && raw_exit_count == 0 {
+                1
+            } else {
+                raw_exit_count
+            };
 
             // ── Trap DC: 10 + yonder/2 + (difficulty - 1)*2 ─────────────────
             let trap_dc: u8 = if chamber_type == ChamberType::Trap {
@@ -365,11 +373,16 @@ pub mod temple_token {
                 i += 1;
             };
 
-            // ── Update TempleState: record boss chamber, advance next_id ─────
+            // ── Update TempleState: record boss chamber and max_yonder ───────
             // (next_chamber_id already incremented by caller before this call)
-            if is_boss {
+            if is_boss || yonder > current_max_yonder {
                 let mut temple: TempleState = world.read_model(temple_id);
-                temple.boss_chamber_id = new_chamber_id;
+                if is_boss {
+                    temple.boss_chamber_id = new_chamber_id;
+                }
+                if yonder > current_max_yonder {
+                    temple.max_yonder = yonder;
+                }
                 world.write_model(@temple);
             }
 
@@ -407,6 +420,7 @@ pub mod temple_token {
                 next_chamber_id: 2, // chamber 1 is the entrance; next new chamber gets id 2
                 boss_chamber_id: 0,
                 boss_alive: true,
+                max_yonder: 0,
             });
 
             temple_id
@@ -527,6 +541,7 @@ pub mod temple_token {
                 explorer_id, // revealed_by
                 temple.difficulty_tier,
                 progress.xp_earned,
+                temple.max_yonder,
             );
 
             // ── Create bidirectional ChamberExit links ───────────────────────

@@ -11,6 +11,7 @@ pub struct TempleState {
     pub next_chamber_id: u32,
     pub boss_chamber_id: u32,
     pub boss_alive: bool,
+    pub max_yonder: u8,
 }
 
 #[derive(Copy, Drop, Serde)]
