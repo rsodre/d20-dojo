@@ -132,7 +132,8 @@ mod tests {
 
         let contract_defs: Span<ContractDef> = array![
             ContractDefTrait::new(@"d20_0_1", @"explorer_token")
-                .with_writer_of(array![dojo::utils::bytearray_hash(@"d20_0_1")].span()),
+                .with_writer_of(array![dojo::utils::bytearray_hash(@"d20_0_1")].span())
+                .with_init_calldata(array![mock_vrf_address.into()].span()),
             ContractDefTrait::new(@"d20_0_1", @"combat_system")
                 .with_writer_of(array![dojo::utils::bytearray_hash(@"d20_0_1")].span())
                 .with_init_calldata(array![mock_vrf_address.into()].span()),

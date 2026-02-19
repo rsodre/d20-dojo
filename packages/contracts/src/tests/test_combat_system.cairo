@@ -30,7 +30,7 @@ mod tests {
         ChamberFallenCount, m_ChamberFallenCount,
     };
     use d20::events::{e_ExplorerMinted, e_CombatResult, e_ExplorerDied};
-    use d20::types::index::{Skill, ItemType};
+    use d20::types::index::ItemType;
     use d20::types::items::{WeaponType, ArmorType};
     use d20::types::explorer::ExplorerClass;
     use d20::types::monster::MonsterType;
@@ -74,10 +74,11 @@ mod tests {
             false,
         ).unwrap_syscall();
 
-        // 2. Build contract defs — pass vrf_address as init calldata for combat_system
+        // 2. Build contract defs — pass vrf_address as init calldata for both contracts
         let contract_defs: Span<ContractDef> = [
             ContractDefTrait::new(@"d20_0_1", @"explorer_token")
-                .with_writer_of([dojo::utils::bytearray_hash(@"d20_0_1")].span()),
+                .with_writer_of([dojo::utils::bytearray_hash(@"d20_0_1")].span())
+                .with_init_calldata([mock_vrf_address.into()].span()),
             ContractDefTrait::new(@"d20_0_1", @"combat_system")
                 .with_writer_of([dojo::utils::bytearray_hash(@"d20_0_1")].span())
                 .with_init_calldata([mock_vrf_address.into()].span()),
@@ -97,48 +98,18 @@ mod tests {
         )
     }
 
-    // ── Standard stat arrays ─────────────────────────────────────────────────
-
-    fn stats_fighter() -> Span<u8> {
-        array![15_u8, 14_u8, 13_u8, 12_u8, 10_u8, 8_u8].span()
-    }
-
-    fn stats_rogue() -> Span<u8> {
-        array![8_u8, 15_u8, 14_u8, 12_u8, 10_u8, 13_u8].span()
-    }
-
-    fn stats_wizard() -> Span<u8> {
-        array![8_u8, 14_u8, 13_u8, 15_u8, 12_u8, 10_u8].span()
-    }
-
     // ── Mint helpers ─────────────────────────────────────────────────────────
 
     fn mint_fighter(token: IExplorerTokenDispatcher) -> u128 {
-        token.mint_explorer(
-            ExplorerClass::Fighter,
-            stats_fighter(),
-            array![Skill::Perception].span(),
-            array![].span(),
-        )
+        token.mint_explorer(ExplorerClass::Fighter)
     }
 
     fn mint_rogue(token: IExplorerTokenDispatcher) -> u128 {
-        // Rogue: stealth + acrobatics automatic, 2 choices from [Perception, Persuasion, Athletics, Arcana]
-        token.mint_explorer(
-            ExplorerClass::Rogue,
-            stats_rogue(),
-            array![Skill::Perception, Skill::Persuasion].span(),
-            array![Skill::Stealth, Skill::Acrobatics].span(),
-        )
+        token.mint_explorer(ExplorerClass::Rogue)
     }
 
     fn mint_wizard(token: IExplorerTokenDispatcher) -> u128 {
-        token.mint_explorer(
-            ExplorerClass::Wizard,
-            stats_wizard(),
-            array![Skill::Perception].span(),
-            array![].span(),
-        )
+        token.mint_explorer(ExplorerClass::Wizard)
     }
 
     // ═══════════════════════════════════════════════════════════════════════
@@ -192,20 +163,22 @@ mod tests {
         let (mut world, token, combat_sys) = setup_world();
         let explorer_id = mint_fighter(token);
 
-        // Reduce HP to 3 to simulate damage (Fighter HP = 11)
+        // Reduce HP to 3 to simulate damage
+        let health: ExplorerHealth = world.read_model(explorer_id);
+        let max_hp = health.max_hp;
         world.write_model_test(@ExplorerHealth {
             explorer_id,
             current_hp: 3,
-            max_hp: 11,
+            max_hp,
             is_dead: false,
         });
 
         combat_sys.second_wind(explorer_id);
 
         let after: ExplorerHealth = world.read_model(explorer_id);
-        // 1d10+1 heal from 3 HP. Mock returns mid-range (5 per d10).
+        // 1d10+level heal from 3 HP.
         assert(after.current_hp > 3, 'second wind should heal');
-        assert(after.current_hp <= 11, 'cannot exceed max hp');
+        assert(after.current_hp <= max_hp.try_into().unwrap(), 'cannot exceed max hp');
         assert(!after.is_dead, 'should not be dead');
     }
 
@@ -258,11 +231,11 @@ mod tests {
         let (mut world, token, combat_sys) = setup_world();
         let explorer_id = mint_fighter(token);
 
-        // Fighter starts at full HP (11). Second wind should not exceed max.
+        // Fighter starts at full HP. Second wind should not exceed max.
         combat_sys.second_wind(explorer_id);
 
         let after: ExplorerHealth = world.read_model(explorer_id);
-        assert(after.current_hp <= 11, 'hp cannot exceed max');
+        assert(after.current_hp <= after.max_hp.try_into().unwrap(), 'hp cannot exceed max');
         assert(after.current_hp >= 1, 'hp must be at least 1');
     }
 

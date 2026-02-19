@@ -45,7 +45,7 @@ mod tests {
         e_ExplorerMinted, e_CombatResult, e_ExplorerDied,
         e_ChamberRevealed, e_LevelUp, e_BossDefeated,
     };
-    use d20::types::index::{Skill, ChamberType};
+    use d20::types::index::ChamberType;
     use d20::types::items::{WeaponType, ArmorType};
     use d20::types::explorer::ExplorerClass;
     use d20::types::monster::MonsterType;
@@ -104,10 +104,11 @@ mod tests {
             false,
         ).unwrap_syscall();
 
-        // 2. Build contract defs — pass vrf_address as init calldata for combat_system
+        // 2. Build contract defs — pass vrf_address as init calldata for both token contracts
         let contract_defs: Span<ContractDef> = [
             ContractDefTrait::new(@"d20_0_1", @"explorer_token")
-                .with_writer_of([dojo::utils::bytearray_hash(@"d20_0_1")].span()),
+                .with_writer_of([dojo::utils::bytearray_hash(@"d20_0_1")].span())
+                .with_init_calldata([mock_vrf_address.into()].span()),
             ContractDefTrait::new(@"d20_0_1", @"combat_system")
                 .with_writer_of([dojo::utils::bytearray_hash(@"d20_0_1")].span())
                 .with_init_calldata([mock_vrf_address.into()].span()),
@@ -131,47 +132,18 @@ mod tests {
         )
     }
 
-    // ── Stat arrays ───────────────────────────────────────────────────────────
-
-    fn stats_fighter() -> Span<u8> {
-        array![15_u8, 14_u8, 13_u8, 12_u8, 10_u8, 8_u8].span()
-    }
-
-    fn stats_rogue() -> Span<u8> {
-        array![8_u8, 15_u8, 14_u8, 12_u8, 10_u8, 13_u8].span()
-    }
-
-    fn stats_wizard() -> Span<u8> {
-        array![8_u8, 14_u8, 13_u8, 15_u8, 12_u8, 10_u8].span()
-    }
-
     // ── Mint helpers ──────────────────────────────────────────────────────────
 
     fn mint_fighter(token: IExplorerTokenDispatcher) -> u128 {
-        token.mint_explorer(
-            ExplorerClass::Fighter,
-            stats_fighter(),
-            array![Skill::Perception].span(),
-            array![].span(),
-        )
+        token.mint_explorer(ExplorerClass::Fighter)
     }
 
     fn mint_rogue(token: IExplorerTokenDispatcher) -> u128 {
-        token.mint_explorer(
-            ExplorerClass::Rogue,
-            stats_rogue(),
-            array![Skill::Perception, Skill::Persuasion].span(),
-            array![Skill::Stealth, Skill::Acrobatics].span(),
-        )
+        token.mint_explorer(ExplorerClass::Rogue)
     }
 
     fn mint_wizard(token: IExplorerTokenDispatcher) -> u128 {
-        token.mint_explorer(
-            ExplorerClass::Wizard,
-            stats_wizard(),
-            array![Skill::Perception].span(),
-            array![].span(),
-        )
+        token.mint_explorer(ExplorerClass::Wizard)
     }
 
     // ═══════════════════════════════════════════════════════════════════════

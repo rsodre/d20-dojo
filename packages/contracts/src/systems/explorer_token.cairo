@@ -4,7 +4,6 @@
 use starknet::{ContractAddress};
 use dojo::world::IWorldDispatcher;
 use crate::types::explorer::ExplorerClass;
-use crate::types::index::Skill;
 
 #[starknet::interface]
 pub trait IExplorerToken<TState> {
@@ -54,13 +53,7 @@ pub trait IExplorerToken<TState> {
     //-----------------------------------
 
     // IExplorerTokenPublic
-    fn mint_explorer(
-        ref self: TState,
-        class: ExplorerClass,
-        stat_assignment: Span<u8>,
-        skill_choices: Span<Skill>,
-        expertise_choices: Span<Skill>,
-    ) -> u128;
+    fn mint_explorer(ref self: TState, class: ExplorerClass) -> u128;
     fn rest(ref self: TState, explorer_id: u128);
 }
 
@@ -70,19 +63,16 @@ pub trait IExplorerTokenPublic<TState> {
     ///
     /// Parameters:
     /// - `class`: Fighter, Rogue, or Wizard
-    /// - `stat_assignment`: 6 values assigned to [STR, DEX, CON, INT, WIS, CHA]
-    ///   Must be a permutation of [15, 14, 13, 12, 10, 8] (standard array).
-    /// - `skill_choices`: class-specific optional skill picks
-    /// - `expertise_choices`: Rogue only — 2 skills for double proficiency (Expertise)
     ///
-    /// Returns the new explorer's token ID (u256, ERC-721 standard).
-    fn mint_explorer(
-        ref self: TState,
-        class: ExplorerClass,
-        stat_assignment: Span<u8>,
-        skill_choices: Span<Skill>,
-        expertise_choices: Span<Skill>,
-    ) -> u128;
+    /// Stats ([STR, DEX, CON, INT, WIS, CHA]) are randomly assigned from the standard array
+    /// [15, 14, 13, 12, 10, 8] using VRF, biased towards the class's preferred ability scores.
+    /// Skills and expertise are also randomly selected via VRF from the valid options for
+    /// the chosen class.
+    ///
+    /// This call MUST be preceded by `request_random` on the VRF contract (multicall).
+    ///
+    /// Returns the new explorer's token ID (u128).
+    fn mint_explorer(ref self: TState, class: ExplorerClass) -> u128;
 
     /// Restore HP to max, reset spell slots to class/level values,
     /// and reset `second_wind_used` / `action_surge_used`.
@@ -93,7 +83,7 @@ pub trait IExplorerTokenPublic<TState> {
 
 #[dojo::contract]
 pub mod explorer_token {
-    use starknet::get_caller_address;
+    use starknet::{get_caller_address, ContractAddress};
     use dojo::model::ModelStorage;
     use dojo::event::EventStorage;
     use dojo::world::WorldStorage;
@@ -118,10 +108,12 @@ pub mod explorer_token {
         ExplorerStats, ExplorerHealth, ExplorerCombat, ExplorerInventory,
         ExplorerPosition, ExplorerSkills,
     };
+    use d20::models::config::Config;
     use d20::utils::dns::{DnsTrait};
     use super::{IExplorerTokenDispatcherTrait};
     use d20::events::ExplorerMinted;
     use d20::utils::dice::{ability_modifier, calculate_ac};
+    use d20::utils::seeder::{SeederTrait};
     use d20::constants::{EXPLORER_TOKEN_DESCRIPTION, EXPLORER_TOKEN_EXTERNAL_LINK};
 
     // Metadata types
@@ -159,7 +151,7 @@ pub mod explorer_token {
 
     // ── Initializer ──────────────────────────────────────────────────────────
 
-    fn dojo_init(ref self: ContractState) {
+    fn dojo_init(ref self: ContractState, vrf_address: ContractAddress) {
         self.erc721_combo.initializer(
             TOKEN_NAME(),
             TOKEN_SYMBOL(),
@@ -167,6 +159,8 @@ pub mod explorer_token {
             Option::None, // contract_uri: use hooks
             Option::None, // max_supply: unlimited
         );
+        let mut world = self.world_default();
+        world.write_model(@Config { key: 1, vrf_address });
     }
 
     // ── Internal helpers ─────────────────────────────────────────────────────
@@ -178,44 +172,161 @@ pub mod explorer_token {
         }
     }
 
-    // ── Standard array validation ────────────────────────────────────────────
+    // ── Standard array (sorted descending) ──────────────────────────────────
 
-    fn validate_standard_array(stat_assignment: Span<u8>) {
-        assert(stat_assignment.len() == 6, 'need exactly 6 stats');
-        let mut count_8: u8 = 0;
-        let mut count_10: u8 = 0;
-        let mut count_12: u8 = 0;
-        let mut count_13: u8 = 0;
-        let mut count_14: u8 = 0;
-        let mut count_15: u8 = 0;
-        let mut i: u32 = 0;
-        while i < stat_assignment.len() {
-            let v = *stat_assignment.at(i);
-            if v == 8 { count_8 += 1; }
-            else if v == 10 { count_10 += 1; }
-            else if v == 12 { count_12 += 1; }
-            else if v == 13 { count_13 += 1; }
-            else if v == 14 { count_14 += 1; }
-            else if v == 15 { count_15 += 1; }
-            else { assert(false, 'not standard array'); }
-            i += 1;
-        };
-        assert(
-            count_8 == 1 && count_10 == 1 && count_12 == 1
-                && count_13 == 1 && count_14 == 1 && count_15 == 1,
-            'not standard array'
-        );
+    // The standard array values in descending order: [15, 14, 13, 12, 10, 8]
+    fn standard_array() -> Span<u8> {
+        array![15_u8, 14_u8, 13_u8, 12_u8, 10_u8, 8_u8].span()
     }
 
-    // ── Spell slots by class and level ───────────────────────────────────────
+    /// Assign stats randomly using VRF with a class-biased shuffle.
+    ///
+    /// Strategy: use the class's `preferred_stat_order` as a base assignment,
+    /// then perform a Fisher-Yates shuffle of the 6 slots using VRF bytes.
+    /// This keeps high stats near preferred abilities while introducing variety.
+    ///
+    /// Returns [STR, DEX, CON, INT, WIS, CHA].
+    fn random_stat_assignment(ref seeder: d20::utils::seeder::Seeder, class: ExplorerClass) -> (u8, u8, u8, u8, u8, u8) {
+        // Start with the class-preferred order: indices into standard_array()
+        // preferred_stat_order returns [STR_idx, DEX_idx, CON_idx, INT_idx, WIS_idx, CHA_idx]
+        // Each value is which position in the sorted array (0=15, 1=14, ..., 5=8) to assign.
+        let order = class.preferred_stat_order();
+        let sa = standard_array();
 
+        // Build a mutable assignment array: assign[ability] = stat_value
+        // order[0] = which slot in sa goes to STR, order[1] = which slot goes to DEX, etc.
+        let mut assign: Array<u8> = array![
+            *sa.at((*order.at(0)).into()),
+            *sa.at((*order.at(1)).into()),
+            *sa.at((*order.at(2)).into()),
+            *sa.at((*order.at(3)).into()),
+            *sa.at((*order.at(4)).into()),
+            *sa.at((*order.at(5)).into()),
+        ];
 
+        // Fisher-Yates shuffle (partial, 3 swaps) adds randomness while preserving
+        // rough class bias. Full shuffle would be 5 random swaps.
+        // We do 5 swaps for full randomness:
+        let r0 = seeder.random_u8();
+        let r1 = seeder.random_u8();
+        let r2 = seeder.random_u8();
+        let r3 = seeder.random_u8();
+        let r4 = seeder.random_u8();
 
-    fn get_expertise(expertise_choices: Span<Skill>) -> (Skill, Skill) {
-        if expertise_choices.len() == 2 {
-            (*expertise_choices.at(0), *expertise_choices.at(1))
-        } else {
-            (Skill::None, Skill::None)
+        // Swap [5] with [r0 % 6]
+        let i0: u32 = (r0 % 6).into();
+        let tmp0 = *assign.at(5);
+        let v0 = *assign.at(i0);
+        let mut assign2: Array<u8> = array![];
+        let mut k: u32 = 0;
+        while k < 6 {
+            if k == i0 { assign2.append(tmp0); }
+            else if k == 5 { assign2.append(v0); }
+            else { assign2.append(*assign.at(k)); }
+            k += 1;
+        };
+
+        // Swap [4] with [r1 % 5]
+        let i1: u32 = (r1 % 5).into();
+        let tmp1 = *assign2.at(4);
+        let v1 = *assign2.at(i1);
+        let mut assign3: Array<u8> = array![];
+        let mut k: u32 = 0;
+        while k < 6 {
+            if k == i1 { assign3.append(tmp1); }
+            else if k == 4 { assign3.append(v1); }
+            else { assign3.append(*assign2.at(k)); }
+            k += 1;
+        };
+
+        // Swap [3] with [r2 % 4]
+        let i2: u32 = (r2 % 4).into();
+        let tmp2 = *assign3.at(3);
+        let v2 = *assign3.at(i2);
+        let mut assign4: Array<u8> = array![];
+        let mut k: u32 = 0;
+        while k < 6 {
+            if k == i2 { assign4.append(tmp2); }
+            else if k == 3 { assign4.append(v2); }
+            else { assign4.append(*assign3.at(k)); }
+            k += 1;
+        };
+
+        // Swap [2] with [r3 % 3]
+        let i3: u32 = (r3 % 3).into();
+        let tmp3 = *assign4.at(2);
+        let v3 = *assign4.at(i3);
+        let mut assign5: Array<u8> = array![];
+        let mut k: u32 = 0;
+        while k < 6 {
+            if k == i3 { assign5.append(tmp3); }
+            else if k == 2 { assign5.append(v3); }
+            else { assign5.append(*assign4.at(k)); }
+            k += 1;
+        };
+
+        // Swap [1] with [r4 % 2]
+        let i4: u32 = (r4 % 2).into();
+        let tmp4 = *assign5.at(1);
+        let v4 = *assign5.at(i4);
+        let mut assign6: Array<u8> = array![];
+        let mut k: u32 = 0;
+        while k < 6 {
+            if k == i4 { assign6.append(tmp4); }
+            else if k == 1 { assign6.append(v4); }
+            else { assign6.append(*assign5.at(k)); }
+            k += 1;
+        };
+
+        (
+            *assign6.at(0), // STR
+            *assign6.at(1), // DEX
+            *assign6.at(2), // CON
+            *assign6.at(3), // INT
+            *assign6.at(4), // WIS
+            *assign6.at(5), // CHA
+        )
+    }
+
+    /// Randomly pick skills (and expertise for Rogue) using VRF.
+    /// Returns (athletics, stealth, perception, persuasion, arcana, acrobatics, expertise_1, expertise_2).
+    fn random_skills(
+        ref seeder: d20::utils::seeder::Seeder, class: ExplorerClass
+    ) -> (bool, bool, bool, bool, bool, bool, Skill, Skill) {
+        match class {
+            ExplorerClass::Fighter => {
+                let r = seeder.random_u8();
+                let chosen = ExplorerClassTrait::random_fighter_skill(r);
+                let perception = chosen == Skill::Perception;
+                let acrobatics = chosen == Skill::Acrobatics;
+                // Fighter always has Athletics; no expertise
+                (true, false, perception, false, false, acrobatics, Skill::None, Skill::None)
+            },
+            ExplorerClass::Rogue => {
+                let r0 = seeder.random_u8();
+                let r1 = seeder.random_u8();
+                let (skill0, skill1) = ExplorerClassTrait::random_rogue_skills(r0, r1);
+                let r2 = seeder.random_u8();
+                let r3 = seeder.random_u8();
+                let (exp0, exp1) = ExplorerClassTrait::random_rogue_expertise(r2, r3, skill0, skill1);
+                let athletics = skill0 == Skill::Athletics || skill1 == Skill::Athletics;
+                let perception = skill0 == Skill::Perception || skill1 == Skill::Perception;
+                let persuasion = skill0 == Skill::Persuasion || skill1 == Skill::Persuasion;
+                let arcana = skill0 == Skill::Arcana || skill1 == Skill::Arcana;
+                // Rogue always has Stealth and Acrobatics
+                (athletics, true, perception, persuasion, arcana, true, exp0, exp1)
+            },
+            ExplorerClass::Wizard => {
+                let r = seeder.random_u8();
+                let chosen = ExplorerClassTrait::random_wizard_skill(r);
+                let perception = chosen == Skill::Perception;
+                let persuasion = chosen == Skill::Persuasion;
+                // Wizard always has Arcana; no expertise
+                (false, false, perception, persuasion, true, false, Skill::None, Skill::None)
+            },
+            ExplorerClass::None => {
+                (false, false, false, false, false, false, Skill::None, Skill::None)
+            },
         }
     }
 
@@ -223,21 +334,14 @@ pub mod explorer_token {
 
     #[abi(embed_v0)]
     impl ExplorerTokenPublicImpl of super::IExplorerTokenPublic<ContractState> {
-        fn mint_explorer(
-            ref self: ContractState,
-            class: ExplorerClass,
-            stat_assignment: Span<u8>,
-            skill_choices: Span<Skill>,
-            expertise_choices: Span<Skill>,
-        ) -> u128 {
+        fn mint_explorer(ref self: ContractState, class: ExplorerClass) -> u128 {
             assert(class != ExplorerClass::None, 'must choose a class');
-
-            validate_standard_array(stat_assignment);
-            class.validate_skill_choices(skill_choices);
-            class.validate_expertise(expertise_choices, skill_choices);
 
             let mut world = self.world_default();
             let caller = get_caller_address();
+
+            // Consume VRF for all randomization (must be preceded by request_random multicall)
+            let mut seeder = SeederTrait::from_consume_vrf(world, caller);
 
             // Mint the ERC-721 token via cairo-nft-combo sequential minter
             let token_id: u256 = self.erc721_combo._mint_next(caller);
@@ -245,13 +349,9 @@ pub mod explorer_token {
             // Dojo models use u128 keys — high part is always 0 for counter-minted IDs
             let explorer_id: u128 = token_id.low;
 
-            // Unpack stats [STR, DEX, CON, INT, WIS, CHA]
-            let strength: u8 = *stat_assignment.at(0);
-            let dexterity: u8 = *stat_assignment.at(1);
-            let constitution: u8 = *stat_assignment.at(2);
-            let intelligence: u8 = *stat_assignment.at(3);
-            let wisdom: u8 = *stat_assignment.at(4);
-            let charisma: u8 = *stat_assignment.at(5);
+            // Randomly assign stats from standard array [15,14,13,12,10,8] using VRF
+            let (strength, dexterity, constitution, intelligence, wisdom, charisma) =
+                random_stat_assignment(ref seeder, class);
 
             let con_mod: i8 = ability_modifier(constitution);
             let dex_mod: i8 = ability_modifier(dexterity);
@@ -262,19 +362,15 @@ pub mod explorer_token {
             let max_hp: u16 = if raw_hp < 1 { 1 } else { raw_hp.try_into().unwrap() };
 
             // Starting equipment and AC by class
-            // Starting equipment and AC by class
             let (primary_weapon, secondary_weapon, armor, has_shield) = class.starting_equipment();
             let armor_class = calculate_ac(armor, has_shield, dex_mod);
 
             // Spell slots (level 1)
             let (slots_1, slots_2, slots_3) = class.spell_slots_for(1);
 
-            // Skills
-            let (athletics, stealth, perception, persuasion, arcana, acrobatics) =
-                class.build_skills(skill_choices);
-
-            // Expertise (Rogue only)
-            let (expertise_1, expertise_2) = get_expertise(expertise_choices);
+            // Randomly pick skills from VRF
+            let (athletics, stealth, perception, persuasion, arcana, acrobatics,
+                 expertise_1, expertise_2) = random_skills(ref seeder, class);
 
             // Write all explorer Dojo models
             world.write_model(@ExplorerStats {

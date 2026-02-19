@@ -1,7 +1,8 @@
 #[cfg(test)]
 mod tests {
-    use starknet::ContractAddress;
-use dojo::world::{WorldStorage, WorldStorageTrait, world};
+    use starknet::{ContractAddress, SyscallResultTrait};
+    use starknet::syscalls::deploy_syscall;
+    use dojo::world::{WorldStorage, WorldStorageTrait, world};
     use dojo_cairo_test::{
         spawn_test_world, NamespaceDef, TestResource, ContractDefTrait, ContractDef,
         WorldStorageTestTrait
@@ -16,7 +17,7 @@ use dojo::world::{WorldStorage, WorldStorageTrait, world};
     };
     use d20::events::e_ExplorerMinted;
     use d20::types::explorer::ExplorerClass;
-    use d20::types::index::Skill;
+    use d20::tests::mock_vrf::MockVrf;
 
     fn namespace_def() -> NamespaceDef {
         NamespaceDef {
@@ -37,9 +38,14 @@ use dojo::world::{WorldStorage, WorldStorageTrait, world};
     }
 
     fn setup_world() -> WorldStorage {
+        let (mock_vrf_address, _) = deploy_syscall(
+            MockVrf::TEST_CLASS_HASH, 0, [].span(), false,
+        ).unwrap_syscall();
+
         let contract_defs: Span<ContractDef> = array![
             ContractDefTrait::new(@"d20_0_1", @"explorer_token")
-                .with_writer_of(array![dojo::utils::bytearray_hash(@"d20_0_1")].span()),
+                .with_writer_of(array![dojo::utils::bytearray_hash(@"d20_0_1")].span())
+                .with_init_calldata(array![mock_vrf_address.into()].span()),
             ContractDefTrait::new(@"d20_0_1", @"temple_token")
                 .with_writer_of(array![dojo::utils::bytearray_hash(@"d20_0_1")].span()),
         ].span();
@@ -63,12 +69,7 @@ use dojo::world::{WorldStorage, WorldStorageTrait, world};
 
         // Mint explorer as owner
         starknet::testing::set_contract_address(owner);
-        let explorer_id = explorer_token.mint_explorer(
-            ExplorerClass::Fighter,
-            array![15, 14, 13, 12, 10, 8].span(),
-            array![Skill::Perception].span(),
-            array![].span()
-        );
+        let explorer_id = explorer_token.mint_explorer(ExplorerClass::Fighter);
 
         // Try to rest as non-owner
         starknet::testing::set_contract_address(non_owner);
@@ -81,7 +82,7 @@ use dojo::world::{WorldStorage, WorldStorageTrait, world};
         let mut world = setup_world();
         let (explorer_token_addr, _) = world.dns(@"explorer_token").unwrap();
         let (temple_token_addr, _) = world.dns(@"temple_token").unwrap();
-        
+
         let explorer_token = IExplorerTokenDispatcher {
             contract_address: explorer_token_addr
         };
@@ -94,12 +95,7 @@ use dojo::world::{WorldStorage, WorldStorageTrait, world};
 
         // Mint explorer as owner
         starknet::testing::set_contract_address(owner);
-        let explorer_id = explorer_token.mint_explorer(
-            ExplorerClass::Fighter,
-            array![15, 14, 13, 12, 10, 8].span(),
-            array![Skill::Perception].span(),
-            array![].span()
-        );
+        let explorer_id = explorer_token.mint_explorer(ExplorerClass::Fighter);
 
         // Try to enter temple as non-owner
         starknet::testing::set_contract_address(non_owner);

@@ -40,12 +40,15 @@ Managed by the `explorer_token` contract. This system handles character creation
 
 ### `mint_explorer`
 Mint a new Explorer NFT.
+- **VRF**: Consumes VRF — must be preceded by `request_random` in a multicall.
 - **Parameters**:
   - `class`: `Fighter`, `Rogue`, or `Wizard`
-  - `stat_assignment`: 6 values assigned to `[STR, DEX, CON, INT, WIS, CHA]`. Must be a standard array permutation: `[15, 14, 13, 12, 10, 8]`.
-  - `skill_choices`: Class-specific optional skill picks.
-  - `expertise_choices`: Rogue only — 2 skills for double proficiency (Expertise).
 - **Returns**: The new explorer's token ID (`u128`).
+- **Randomization**: Stats (`[STR, DEX, CON, INT, WIS, CHA]`) are randomly assigned from the standard array `[15, 14, 13, 12, 10, 8]` using VRF, with a class-biased shuffle (high stats tend toward primary abilities). Skills and expertise are also randomly selected from the valid options for the chosen class.
+- **Class stat bias**:
+  - Fighter: prefers STR → CON → DEX
+  - Rogue: prefers DEX → CON → CHA
+  - Wizard: prefers INT → WIS → DEX
 
 ### `rest`
 Restore HP to maximum and reset class resources.
