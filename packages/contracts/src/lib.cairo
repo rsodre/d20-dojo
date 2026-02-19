@@ -13,6 +13,7 @@ pub mod models {
 pub mod types {
     pub mod index;
     pub mod explorer;
+    pub mod explorer_generator;
     pub mod items;
     pub mod spells;
     pub mod monster;
