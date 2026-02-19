@@ -1,0 +1,6 @@
+{
+  "recommendations": [
+    "StarkWare.cairo1",
+    "tamasfe.even-better-toml"
+  ]
+}
