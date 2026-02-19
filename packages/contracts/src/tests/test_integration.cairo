@@ -353,6 +353,10 @@ mod tests {
         let exit: ChamberExit = world.read_model((temple_id, 1_u32, 0_u8));
         assert(exit.is_discovered, 'exit should be discovered');
         assert(exit.to_chamber_id == 2, 'exit points to new chamber');
+
+        // TempleState.max_yonder should be updated to the new chamber's yonder
+        let state: TempleState = world.read_model(temple_id);
+        assert(state.max_yonder == 1, 'max_yonder should be 1');
     }
 
     #[test]
@@ -1122,6 +1126,7 @@ mod tests {
             next_chamber_id: 3,
             boss_chamber_id: 2,
             boss_alive: true,
+            max_yonder: 1,
         });
 
         // Boss = Wraith with 1 HP (guaranteed kill)
@@ -1193,6 +1198,7 @@ mod tests {
             next_chamber_id: 3,
             boss_chamber_id: 2,
             boss_alive: true,
+            max_yonder: 1,
         });
         world.write_model_test(@MonsterInstance {
             temple_id,

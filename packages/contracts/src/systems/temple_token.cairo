@@ -319,7 +319,7 @@ pub mod temple_token {
             // At the frontier (yonder >= current max), enforce at least 1 exit
             // so the dungeon always has a path forward.
             let raw_exit_count: u8 = seeder.random_u8() % 4;
-            let exit_count: u8 = if yonder >= current_max_yonder && raw_exit_count == 0 {
+            let exit_count: u8 = if raw_exit_count == 0 && yonder >= current_max_yonder {
                 1
             } else {
                 raw_exit_count
