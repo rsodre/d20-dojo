@@ -23,15 +23,16 @@ Every formula in this spec is written with integer math in mind. When implementi
 ```
 ┌─────────────────────────────────┐
 │        Explorer Client          │
-│  ┌───────────┐  ┌────────────┐  │
-│  │ Chat UI   │  │ AI Agent   │  │
-│  │ (frontend)│◄►│ (LLM)     │  │
-│  └───────────┘  └─────┬──────┘  │
-│                       │         │
-└───────────────────────┼─────────┘
-                        │ reads state via Torii (GraphQL)
-                        │ submits txns to World contract
-                        ▼
+│  ┌───────────────────────────┐  │
+│  │ Web UI                    │  │
+│  │  State panel (HP, chamber)│  │
+│  │  Action button list       │  │
+│  └─────────────┬─────────────┘  │
+│                │                │
+└────────────────┼────────────────┘
+                 │ reads state via Torii (gRPC)
+                 │ submits txns to World contract
+                 ▼
 ┌─────────────────────────────────┐
 │        Starknet (Dojo)          │
 │                                 │
@@ -51,9 +52,9 @@ Every formula in this spec is written with integer math in mind. When implementi
 └─────────────────────────────────┘
 ```
 
-**No game master server.** The contracts enforce all rules. The AI agent on the explorer's client side does two things:
-1. Translates natural language ("I try to sneak past the guard") into the correct contract call (`skill_check(stealth, guard_id)`)
-2. Reads on-chain results and narrates them as a story ("You press against the wall as the torchlight sweeps past...")
+**No game master server.** The contracts enforce all rules. The web client on the explorer's machine does two things:
+1. Queries world state via Torii and displays it (HP, chamber type, monster info, available exits, inventory)
+2. Computes the list of valid actions from that state and shows them as clickable buttons — the player clicks one, the client submits the corresponding transaction
 
 ---
 
@@ -92,20 +93,23 @@ All NFTs use dedicated ERC-721 contracts built with **OpenZeppelin ERC-721 compo
 
 ## Character Creation
 
-When a player mints an Explorer NFT, they go through the following steps:
+When a player mints an Explorer NFT, they make one decision:
 
-1. **Choose a class:** Fighter, Rogue, or Wizard. This determines hit die, starting equipment, skill proficiencies, saving throw proficiencies, and class features.
+1. **Choose a class:** Fighter, Rogue, or Wizard. This determines hit die, starting equipment, fixed skill proficiencies, saving throw proficiencies, and class features.
 
-2. **Assign ability scores:** The player receives the standard array `[15, 14, 13, 12, 10, 8]` and assigns each value to one of the six ability scores (STR, DEX, CON, INT, WIS, CHA). The assignment is a strategic decision based on class — a Fighter wants high STR and CON, a Rogue wants high DEX, a Wizard wants high INT.
+Everything else is randomized by VRF in a single `mint_explorer(class)` transaction:
 
-3. **Choose skill proficiencies:** Each class grants proficiency in a fixed number of skills. The player selects from the class's skill list:
-   - **Fighter:** Athletics is automatic, plus 1 choice from [Perception, Acrobatics]
-   - **Rogue:** Stealth and Acrobatics are automatic, plus 2 choices from [Perception, Persuasion, Athletics, Arcana]. Rogue also picks 2 skills for Expertise (double proficiency bonus).
-   - **Wizard:** Arcana is automatic, plus 1 choice from [Perception, Persuasion]
+- **Ability scores:** The contract assigns the standard array `[15, 14, 13, 12, 10, 8]` to the six ability scores (STR, DEX, CON, INT, WIS, CHA) using a class-biased Fisher-Yates shuffle seeded by VRF:
+  - Fighter: prefers STR → CON → DEX
+  - Rogue: prefers DEX → CON → CHA
+  - Wizard: prefers INT → WIS → DEX
 
-4. **Initialization:** The contract mints the Explorer NFT, sets starting HP (hit die max + CON modifier), assigns starting equipment and AC based on class, and places the explorer in the "no temple" state (ready to enter a temple).
+- **Skill proficiencies:** Fixed skills are granted automatically; optional picks are selected randomly from the valid pool for the class:
+  - **Fighter:** Athletics (auto) + 1 random from [Perception, Acrobatics]
+  - **Rogue:** Stealth + Acrobatics (auto) + 2 random from [Perception, Persuasion, Athletics, Arcana] + 2 random Expertise picks from all proficient skills
+  - **Wizard:** Arcana (auto) + 1 random from [Perception, Persuasion]
 
-All of this happens in a single `mint_explorer` transaction. The parameters are: `class`, `stat_assignment` (array of 6 values mapping to ability scores), and `skill_choices` (array of skill enum values for the optional proficiency picks, plus expertise picks for Rogue).
+- **Initialization:** Starting HP (hit die max + CON modifier), starting equipment and AC (determined by class), and spell slots (Wizard only) are all set by the contract. The explorer starts in "no temple" state (temple_id = 0, chamber_id = 0), ready to enter a temple.
 
 ---
 
@@ -346,18 +350,23 @@ All dice-rolling functions in `utils/d20.cairo` (`roll_d20`, `roll_dice`) now ac
 **Signed integers where D20 demands them.** The D20 system has many naturally negative values: ability modifiers (score 8 → -1), initiative rolls with negative DEX mods, and damage calculations. Cairo supports `i8`, `i16`, `i32`, `i64`, `i128` — use them where the game logic requires negative values. Store HP as `i16` (can go negative to detect overkill), modifiers as `i8` (range -5 to +5 for our score range). Keep unsigned types for values that are never negative (XP, gold, level, ability scores themselves).
 
 ```cairo
-#[derive(Copy, Drop, Serde)]
-#[dojo::model]
-pub struct ExplorerStats {
-    #[key]
-    pub explorer_id: u128,    // Explorer NFT token ID (from cairo-nft-combo _mint_next())
-    // Ability scores (each 3-20)
+// Ability scores packed into a nested struct (IntrospectPacked for efficient storage)
+#[derive(Copy, Drop, Serde, IntrospectPacked, DojoStore, Default)]
+pub struct AbilityScore {
     pub strength: u8,
     pub dexterity: u8,
     pub constitution: u8,
     pub intelligence: u8,
     pub wisdom: u8,
     pub charisma: u8,
+}
+
+#[derive(Copy, Drop, Serde)]
+#[dojo::model]
+pub struct ExplorerStats {
+    #[key]
+    pub explorer_id: u128,    // Explorer NFT token ID (from cairo-nft-combo _mint_next())
+    pub abilities: AbilityScore,  // packed ability scores (each 3-20)
     // Progression
     pub level: u8,
     pub xp: u32,
@@ -414,18 +423,23 @@ pub struct ExplorerPosition {
     pub combat_monster_id: u32,   // MonsterInstance key within chamber (0 if not in combat)
 }
 
-#[derive(Copy, Drop, Serde)]
-#[dojo::model]
-pub struct ExplorerSkills {
-    #[key]
-    pub explorer_id: u128,
-    // Proficiency flags for each skill
+// Skill proficiency flags packed into a nested struct (IntrospectPacked for efficient storage)
+#[derive(Copy, Drop, Serde, IntrospectPacked, DojoStore, Default)]
+pub struct SkillsSet {
     pub athletics: bool,
     pub stealth: bool,
     pub perception: bool,
     pub persuasion: bool,
     pub arcana: bool,
     pub acrobatics: bool,
+}
+
+#[derive(Copy, Drop, Serde)]
+#[dojo::model]
+pub struct ExplorerSkills {
+    #[key]
+    pub explorer_id: u128,
+    pub skills: SkillsSet,    // packed proficiency flags
     // Expertise (double proficiency, Rogue feature)
     pub expertise_1: Skill,
     pub expertise_2: Skill,
@@ -533,6 +547,7 @@ pub struct TempleState {
     pub next_chamber_id: u32,     // auto-incrementing ID for new chambers
     pub boss_chamber_id: u32,     // 0 until boss chamber is generated
     pub boss_alive: bool,
+    pub max_yonder: u8,           // deepest yonder reached in this temple (tracked to prevent frontier dead-ends)
 }
 ```
 
@@ -723,7 +738,7 @@ trait IExplorerTokenPublic<T> {
 // combat_system contract
 // ──────────────────────────────────────────────
 #[starknet::interface]
-trait ICombatActions<T> {
+trait ICombatSystem<T> {
     fn attack(ref self: T, explorer_id: u128);
     fn cast_spell(ref self: T, explorer_id: u128, spell_id: SpellId);
     fn use_item(ref self: T, explorer_id: u128, item_type: ItemType);
@@ -742,7 +757,7 @@ trait ICombatActions<T> {
 // temple_token contract
 // ──────────────────────────────────────────────
 #[starknet::interface]
-trait ITempleActions<T> {
+trait ITempleTokenPublic<T> {
     fn mint_temple(ref self: T, difficulty: u8) -> u128;
     fn enter_temple(ref self: T, explorer_id: u128, temple_id: u128);
     fn exit_temple(ref self: T, explorer_id: u128);
@@ -759,7 +774,7 @@ trait ITempleActions<T> {
 
 ### Events
 
-Events are critical for Torii indexing and for the AI agent to narrate outcomes. All events use `#[dojo::event]` and are emitted via `world.emit_event(...)`.
+Events are critical for Torii indexing and client state updates. All events use `#[dojo::event]` and are emitted via `world.emit_event(...)`.
 
 ```cairo
 #[derive(Copy, Drop, Serde)]
@@ -966,32 +981,37 @@ This creates strategic depth: a player might mint an explorer, grind XP in an ea
 
 ---
 
-## AI Agent (Client-Side)
+## Game Client (Client-Side)
 
-The AI agent is NOT part of the on-chain system. It runs locally on the explorer's machine.
+The game client is NOT part of the on-chain system. It runs in the player's browser.
 
 **Responsibilities:**
-1. Query world state via Torii GraphQL (chamber descriptions, monster info, explorer stats)
-2. Accept natural language input from the player
-3. Map player intent to the correct system call:
-   - "I sneak down the hallway" → `move_to_chamber(explorer_id, exit_index)` then `skill_check(stealth, chamber_dc)`
-   - "I attack the Skeleton with my sword" → `attack(explorer_id)`
-   - "I cast fireball" → `cast_spell(explorer_id, FIREBALL)`
-   - "I search for treasure" → `loot_treasure(explorer_id)` (Perception check + loot pickup)
-   - "I check the dead body" → `loot_fallen(explorer_id, fallen_index)`
-   - "I open the door on the left" → `open_exit(explorer_id, 1)`
-   - "I leave the temple" → `exit_temple(explorer_id)`
-4. Read the transaction result (success/fail, damage dealt, HP remaining, etc.)
-5. Narrate the outcome in rich, atmospheric text
+1. Query world state via Torii gRPC (explorer stats/HP/inventory, chamber type/monster/exits, temple state); subscribe via Torii gRPC subscriptions to the current explorer and their active temple for real-time updates
+2. Compute the list of valid actions from the current state (deterministic — no AI needed):
+   - **Lobby (not in a temple):** Enter available temples, mint a new temple, rest
+   - **Exploring (in temple, not in combat):** Open undiscovered exits, move through discovered exits, loot treasure, disarm trap, loot fallen explorers, use health potion, exit temple
+   - **In combat:** Attack, flee, use health potion, Fighter: second wind / action surge, Rogue: cunning action, Wizard: cast available spells
+3. Display state and action list in the UI
+4. On player click: build and submit the correct transaction (wrapping VRF multicall where required)
+5. Wait for confirmation, re-query state, and refresh the UI
 
-**Context the agent needs per turn:**
-- Explorer's full character sheet (stats, HP, inventory, level, class features)
-- Current chamber state (type, yonder, monsters, traps, items, fallen explorers, exits, other live explorers)
-- Recent action history (for narrative continuity)
-- Available actions given current state (in combat vs exploring)
-- Temple progress (chambers explored, temples conquered)
+**State displayed per turn:**
+- Explorer character sheet: class, level, HP (current/max), AC, inventory, spell slots, class features
+- Current context: chamber type, yonder depth, live monster (type, HP), trap info, fallen explorers, exit count
+- Temple progress: chambers explored, boss status
 
-**Tech stack suggestion:** A lightweight wrapper that connects to Torii for reads, uses starknet.js/starknet.py for transaction submission, and calls an LLM API (Claude) for the NL↔action mapping and narration.
+**Action list examples:**
+
+| Context | Displayed actions |
+|---------|-----------------|
+| Lobby | "Enter Temple #3 (Difficulty 2)", "Mint New Temple", "Rest" |
+| Exploring | "Open Exit 1", "Open Exit 2", "Move → Chamber 4", "Loot Treasure", "Exit Temple" |
+| Combat | "Attack Skeleton", "Flee", "Use Health Potion (×2)", "Second Wind" (Fighter) |
+| Combat (Wizard) | "Attack (Fire Bolt)", "Cast Magic Missile (2 slots left)", "Cast Fireball (1 slot)", "Flee" |
+
+**VRF actions** (marked in UI): `mint_explorer`, `open_exit`, `attack`, `cast_spell`, `use_item`, `flee`, `second_wind`, `disarm_trap`, `loot_treasure` — client auto-prepends `request_random` in the multicall.
+
+**Tech stack:** TypeScript + React (minimal), starknet.js for transaction submission, Torii gRPC for state queries and subscriptions (current explorer + active temple).
 
 ---
 

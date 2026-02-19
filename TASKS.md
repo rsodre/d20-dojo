@@ -62,19 +62,21 @@
 - [ ] **x.10** Refactor explorer and temple as Cairo components
 
 
-## Day 4: AI Agent & Client
+## Day 4: Client
 
-- [ ] **4.0** Adapt client specification. Instead of text input, list the options available to the player, who just clicks on one.
-- [ ] **4.1** Set up client project (TypeScript or Python)
-- [ ] **4.2** Implement Torii GraphQL client: query explorer state (stats, HP, inventory, position, skills), chamber state (type, yonder, monster, exits, fallen explorers), temple state (seed, difficulty, boss status)
-- [ ] **4.3** Implement Starknet transaction submission wrapper: build and sign transactions for each game action
-- [ ] **4.4** Design the AI agent system prompt: D20 rules summary, available actions per context (exploring vs combat vs at entrance), narration style guidelines, examples of NL -> action mapping
-- [ ] **4.5** Implement action mapping layer: LLM parses natural language -> structured action (enum + params), validate action is legal given current state
-- [ ] **4.6** Implement narration layer: LLM reads transaction results + world state -> atmospheric text describing what happened
-- [ ] **4.7** Implement game loop: read state -> show context -> player input -> AI maps action -> submit tx -> wait for result -> AI narrates -> repeat
-- [ ] **4.8** Build simple chat UI (terminal CLI or minimal web interface with chat history)
-- [ ] **4.9** Handle edge cases: invalid actions (AI retries with guidance), ambiguous input (AI asks for clarification), death (narrate death scene, prompt for new explorer)
-- [ ] **4.10** Implement temple selection flow: list available temples, show difficulty tier, let player choose or mint new
+- [x] **4.0** Adapt client specification. Instead of text input, list the options available to the player, who just clicks on one. No AI/LLM — pure state display + deterministic action buttons.
+- [ ] **4.1** Set up client project at /client (basic TypeScript + Vite app)
+- [ ] **4.2** Adapt migration scripts to generate typescript bindings, and copy bindings and manifest to /client/src/generated/<profile>
+- [ ] **4.3** Implement Cartridge controller connect on the client
+- [ ] **4.4** Implement Explorer and Temple minting UI (class picker → `mint_explorer` VRF multicall; difficulty picker → `mint_temple`)
+- [ ] **4.5** Implement Torii GRPC client: query explorer state (stats, HP, inventory, position, skills), chamber state (type, yonder, monster, exits, fallen explorers), temple state (difficulty, boss status). Create hooks to get all relevant state with tanstack-query.
+- [ ] **4.6** Implement Torii GRPC subscription for: current selected explorer, and the temple the explorer is in.
+- [ ] **4.7** Implement action list generator: pure function `getAvailableActions(state) → Action[]` — context-aware (lobby / exploring / in-combat); each action carries label, contract, entrypoint, and calldata; VRF actions are flagged so the caller auto-prepends `request_random`.
+- [ ] **4.8** Implement state display component: explorer character sheet (class, level, HP/max, AC, inventory, spell slots, class features remaining), chamber info (type, yonder, monster type + HP, trap, exits, fallen explorers).
+- [ ] **4.9** Implement action panel: render `getAvailableActions` output as clickable buttons; disable all buttons while a tx is pending; show tx status (pending / confirmed / error).
+- [ ] **4.10** Implement game loop: on mount/update → query state → render state panel + action panel → player clicks → submit tx (with VRF multicall if needed) → wait for confirmation → re-query state → repeat.
+- [ ] **4.11** Handle edge cases: dead explorer (show death screen, "Mint New Explorer" button), no valid actions (display reason), tx error (show error message + retry button).
+- [ ] **4.12** Implement temple selection flow: list available temples (temple ID, difficulty tier, boss alive/dead), "Enter" button per temple, "Mint New Temple" picker.
 
 ## Day 5: Integration, Testing & Deploy
 
@@ -87,6 +89,6 @@
 - [ ] **5.7** Balance tuning: adjust monster stats, XP rewards, treasure distribution, trap DCs, boss probability constants
 - [ ] **5.8** Edge case testing: death at level 1 with empty inventory, chamber with many fallen explorers, dead-end chambers, exiting temple mid-combat
 - [ ] **5.9** Deploy contracts to Starknet testnet (Sepolia) via `sozo migrate --profile sepolia` (requires `dojo_sepolia.toml` with funded account)
-- [ ] **5.10** Configure Torii indexer on testnet, verify GraphQL queries return correct state
+- [ ] **5.10** Configure Torii indexer on testnet, verify gRPC queries and subscriptions return correct state
 - [ ] **5.11** Smoke test the full flow on testnet with live VRF
 - [ ] **5.12** Document setup instructions, known limitations, and tuning constants
