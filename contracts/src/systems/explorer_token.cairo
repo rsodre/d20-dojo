@@ -53,7 +53,7 @@ pub trait IExplorerToken<TState> {
     //-----------------------------------
 
     // IExplorerTokenPublic
-    fn mint_explorer(ref self: TState, class: ExplorerClass) -> u128;
+    fn mint_explorer(ref self: TState, explorer_class: ExplorerClass) -> u128;
     fn rest(ref self: TState, explorer_id: u128);
 }
 
@@ -72,7 +72,7 @@ pub trait IExplorerTokenPublic<TState> {
     /// This call MUST be preceded by `request_random` on the VRF contract (multicall).
     ///
     /// Returns the new explorer's token ID (u128).
-    fn mint_explorer(ref self: TState, class: ExplorerClass) -> u128;
+    fn mint_explorer(ref self: TState, explorer_class: ExplorerClass) -> u128;
 
     /// Restore HP to max, reset spell slots to class/level values,
     /// and reset `second_wind_used` / `action_surge_used`.
@@ -176,8 +176,8 @@ pub mod explorer_token {
 
     #[abi(embed_v0)]
     impl ExplorerTokenPublicImpl of super::IExplorerTokenPublic<ContractState> {
-        fn mint_explorer(ref self: ContractState, class: ExplorerClass) -> u128 {
-            assert(class != ExplorerClass::None, 'must choose a class');
+        fn mint_explorer(ref self: ContractState, explorer_class: ExplorerClass) -> u128 {
+            assert(explorer_class != ExplorerClass::None, 'must choose a class');
 
             let mut world = self.world_default();
             let caller = get_caller_address();
@@ -192,25 +192,25 @@ pub mod explorer_token {
             let explorer_id: u128 = token_id.low;
 
             // Randomly assign stats from standard array [15,14,13,12,10,8] using VRF
-            let abilities = class.random_stat_assignment(ref seeder);
+            let abilities = explorer_class.random_stat_assignment(ref seeder);
 
             let con_mod: i8 = ability_modifier(abilities.constitution);
             let dex_mod: i8 = ability_modifier(abilities.dexterity);
 
             // Starting HP: hit die max + CON modifier (minimum 1)
-            let hit_die = class.hit_die_max();
+            let hit_die = explorer_class.hit_die_max();
             let raw_hp: i16 = hit_die.into() + con_mod.into();
             let max_hp: u16 = if raw_hp < 1 { 1 } else { raw_hp.try_into().unwrap() };
 
             // Starting equipment and AC by class
-            let (primary_weapon, secondary_weapon, armor, has_shield) = class.starting_equipment();
+            let (primary_weapon, secondary_weapon, armor, has_shield) = explorer_class.starting_equipment();
             let armor_class = calculate_ac(armor, has_shield, dex_mod);
 
             // Spell slots (level 1)
-            let (slots_1, slots_2, slots_3) = class.spell_slots_for(1);
+            let (slots_1, slots_2, slots_3) = explorer_class.spell_slots_for(1);
 
             // Randomly pick skills from VRF
-            let (skills, expertise_1, expertise_2) = class.random_skills(ref seeder);
+            let (skills, expertise_1, expertise_2) = explorer_class.random_skills(ref seeder);
 
             // Write all explorer Dojo models
             world.write_model(@ExplorerStats {
@@ -218,7 +218,7 @@ pub mod explorer_token {
                 abilities,
                 level: 1,
                 xp: 0,
-                class,
+                explorer_class,
                 temples_conquered: 0,
             });
 
@@ -267,7 +267,7 @@ pub mod explorer_token {
             // Emit Dojo event
             world.emit_event(@ExplorerMinted {
                 explorer_id,
-                class,
+                explorer_class,
                 player: caller,
             });
 
@@ -282,7 +282,7 @@ pub mod explorer_token {
             assert(explorer_token.owner_of(explorer_id.into()) == get_caller_address(), 'not owner');
 
             let stats: ExplorerStats = world.read_model(explorer_id);
-            assert(stats.class != ExplorerClass::None, 'explorer does not exist');
+            assert(stats.explorer_class != ExplorerClass::None, 'explorer does not exist');
 
             let health: ExplorerHealth = world.read_model(explorer_id);
             assert(!health.is_dead, 'dead explorers cannot rest');
@@ -294,7 +294,7 @@ pub mod explorer_token {
                 is_dead: false,
             });
 
-            let (slots_1, slots_2, slots_3) = stats.class.spell_slots_for(stats.level);
+            let (slots_1, slots_2, slots_3) = stats.explorer_class.spell_slots_for(stats.level);
             let combat: ExplorerCombat = world.read_model(explorer_id);
             world.write_model(@ExplorerCombat {
                 explorer_id,
@@ -341,7 +341,7 @@ pub mod explorer_token {
             let health: ExplorerHealth = world.read_model(explorer_id);
             let combat: ExplorerCombat = world.read_model(explorer_id);
 
-            let class_name: ByteArray = match stats.class {
+            let class_name: ByteArray = match stats.explorer_class {
                 ExplorerClass::None => "None",
                 ExplorerClass::Fighter => "Fighter",
                 ExplorerClass::Rogue => "Rogue",

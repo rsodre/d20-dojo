@@ -793,7 +793,7 @@ mod tests {
             abilities: stats.abilities,
             level: 1,
             xp: 250, // skeleton = 50 XP → total 300 = level 2
-            class: stats.class,
+            explorer_class: stats.explorer_class,
             temples_conquered: stats.temples_conquered,
         });
 
@@ -926,7 +926,7 @@ mod tests {
             abilities,
             level: stats.level,
             xp: stats.xp,
-            class: stats.class,
+            explorer_class: stats.explorer_class,
             temples_conquered: stats.temples_conquered,
         });
 
@@ -1188,7 +1188,7 @@ mod tests {
             abilities: stats.abilities,
             level: stats.level,
             xp: stats.xp,
-            class: stats.class,
+            explorer_class: stats.explorer_class,
             temples_conquered: 1, // previously conquered 1 temple
         });
 
@@ -1253,7 +1253,7 @@ mod tests {
         let explorer_id = mint_fighter(token);
         let stats: ExplorerStats = world.read_model(explorer_id);
         assert(stats.level == 1, 'starts at level 1');
-        assert(stats.class == ExplorerClass::Fighter, 'is a fighter');
+        assert(stats.explorer_class == ExplorerClass::Fighter, 'is a fighter');
 
         // 2. Mint temple
         let temple_id = temple.mint_temple(1_u8);
@@ -1400,7 +1400,7 @@ mod tests {
             abilities,
             level: stats.level,
             xp: stats.xp,
-            class: stats.class,
+            explorer_class: stats.explorer_class,
             temples_conquered: stats.temples_conquered,
         });
 
@@ -1508,7 +1508,7 @@ mod tests {
             abilities: stats.abilities,
             level: 1,
             xp: 150,
-            class: stats.class,
+            explorer_class: stats.explorer_class,
             temples_conquered: stats.temples_conquered,
         });
         temple.exit_temple(explorer_id);

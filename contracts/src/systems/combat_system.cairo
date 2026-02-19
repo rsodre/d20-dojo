@@ -304,12 +304,12 @@ pub mod combat_system {
                 abilities: stats.abilities,
                 level: new_level,
                 xp: stats.xp,
-                class: stats.class,
+                explorer_class: stats.explorer_class,
                 temples_conquered: stats.temples_conquered,
             });
 
             // Roll hit die + CON modifier, minimum 1, add to max HP
-            let hit_sides: u8 = stats.class.hit_die_max();
+            let hit_sides: u8 = stats.explorer_class.hit_die_max();
             let raw_roll: u16 = roll_dice(ref seeder, hit_sides, 1);
             let con_mod: i8 = ability_modifier(stats.abilities.constitution);
             let raw_roll_i32: i32 = raw_roll.into();
@@ -326,9 +326,9 @@ pub mod combat_system {
             });
 
             // Update spell slots for Wizards
-            if stats.class == ExplorerClass::Wizard {
+            if stats.explorer_class == ExplorerClass::Wizard {
                 let combat: ExplorerCombat = world.read_model(explorer_id);
-                let (slots_1, slots_2, slots_3) = stats.class.spell_slots_for(new_level);
+                let (slots_1, slots_2, slots_3) = stats.explorer_class.spell_slots_for(new_level);
                 world.write_model(@ExplorerCombat {
                     explorer_id,
                     armor_class: combat.armor_class,
@@ -459,7 +459,7 @@ pub mod combat_system {
             assert(explorer_token.owner_of(explorer_id.into()) == caller, 'not owner');
 
             let stats: ExplorerStats = world.read_model(explorer_id);
-            assert(stats.class != ExplorerClass::None, 'explorer does not exist');
+            assert(stats.explorer_class != ExplorerClass::None, 'explorer does not exist');
 
             let health: ExplorerHealth = world.read_model(explorer_id);
             assert(!health.is_dead, 'dead explorer cannot act');
@@ -478,7 +478,7 @@ pub mod combat_system {
             let monster_stats = monster.monster_type.get_stats();
 
             // Fighter level 5+: Extra Attack
-            let num_attacks: u8 = if stats.class == ExplorerClass::Fighter && stats.level >= 5 {
+            let num_attacks: u8 = if stats.explorer_class == ExplorerClass::Fighter && stats.level >= 5 {
                 2
             } else {
                 1
@@ -491,7 +491,7 @@ pub mod combat_system {
             let prof_bonus: u8 = proficiency_bonus(stats.level);
 
             // Fighter Champion: crit on 19-20 at level 3+
-            let crit_threshold: u8 = if stats.class == ExplorerClass::Fighter && stats.level >= 3 {
+            let crit_threshold: u8 = if stats.explorer_class == ExplorerClass::Fighter && stats.level >= 3 {
                 19
             } else {
                 20
@@ -521,8 +521,8 @@ pub mod combat_system {
                     let raw_damage: u16 = roll_dice(ref seeder, dice_sides, dice_count);
 
                     // Rogue: Sneak Attack
-                    let sneak_bonus: u16 = if stats.class == ExplorerClass::Rogue {
-                        let sneak_dice: u8 = stats.class.sneak_attack_dice(stats.level);
+                    let sneak_bonus: u16 = if stats.explorer_class == ExplorerClass::Rogue {
+                        let sneak_dice: u8 = stats.explorer_class.sneak_attack_dice(stats.level);
                         let sneak_count: u8 = if is_crit { sneak_dice * 2 } else { sneak_dice };
                         roll_dice(ref seeder, 6, sneak_count)
                     } else {
@@ -634,8 +634,8 @@ pub mod combat_system {
             assert(explorer_token.owner_of(explorer_id.into()) == caller, 'not owner');
 
             let stats: ExplorerStats = world.read_model(explorer_id);
-            assert(stats.class == ExplorerClass::Wizard, 'only wizards cast spells');
-            assert(stats.class != ExplorerClass::None, 'explorer does not exist');
+            assert(stats.explorer_class == ExplorerClass::Wizard, 'only wizards cast spells');
+            assert(stats.explorer_class != ExplorerClass::None, 'explorer does not exist');
 
             let health: ExplorerHealth = world.read_model(explorer_id);
             assert(!health.is_dead, 'dead explorer cannot act');
@@ -984,7 +984,7 @@ pub mod combat_system {
             assert(explorer_token.owner_of(explorer_id.into()) == caller, 'not owner');
 
             let stats: ExplorerStats = world.read_model(explorer_id);
-            assert(stats.class != ExplorerClass::None, 'explorer does not exist');
+            assert(stats.explorer_class != ExplorerClass::None, 'explorer does not exist');
 
             let health: ExplorerHealth = world.read_model(explorer_id);
             assert(!health.is_dead, 'dead explorer cannot act');
@@ -1057,7 +1057,7 @@ pub mod combat_system {
             assert(explorer_token.owner_of(explorer_id.into()) == caller, 'not owner');
 
             let stats: ExplorerStats = world.read_model(explorer_id);
-            assert(stats.class == ExplorerClass::Fighter, 'only fighters can second wind');
+            assert(stats.explorer_class == ExplorerClass::Fighter, 'only fighters can second wind');
 
             let health: ExplorerHealth = world.read_model(explorer_id);
             assert(!health.is_dead, 'dead explorer cannot act');
@@ -1104,7 +1104,7 @@ pub mod combat_system {
             assert(explorer_token.owner_of(explorer_id.into()) == get_caller_address(), 'not owner');
 
             let stats: ExplorerStats = world.read_model(explorer_id);
-            assert(stats.class == ExplorerClass::Rogue, 'only rogues can cunning action');
+            assert(stats.explorer_class == ExplorerClass::Rogue, 'only rogues can cunning action');
             assert(stats.level >= 2, 'cunning action needs level 2');
 
             let health: ExplorerHealth = world.read_model(explorer_id);
@@ -1148,7 +1148,7 @@ pub mod combat_system {
             assert(explorer_token.owner_of(explorer_id.into()) == caller, 'not owner');
 
             let stats: ExplorerStats = world.read_model(explorer_id);
-            assert(stats.class != ExplorerClass::None, 'explorer does not exist');
+            assert(stats.explorer_class != ExplorerClass::None, 'explorer does not exist');
 
             let health: ExplorerHealth = world.read_model(explorer_id);
             assert(!health.is_dead, 'dead explorer cannot act');

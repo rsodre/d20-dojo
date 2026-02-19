@@ -258,7 +258,7 @@ mod tests {
             abilities: stats.abilities,
             level: 2,
             xp: stats.xp,
-            class: stats.class,
+            explorer_class: stats.explorer_class,
             temples_conquered: stats.temples_conquered,
         });
 
@@ -314,7 +314,7 @@ mod tests {
             abilities: stats.abilities,
             level: 2,
             xp: stats.xp,
-            class: stats.class,
+            explorer_class: stats.explorer_class,
             temples_conquered: stats.temples_conquered,
         });
 

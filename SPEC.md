@@ -361,7 +361,7 @@ pub struct ExplorerStats {
     // Progression
     pub level: u8,
     pub xp: u32,
-    pub class: ExplorerClass,
+    pub explorer_class: ExplorerClass,
     // Achievements
     pub temples_conquered: u16,   // how many temple bosses killed
 }
@@ -709,14 +709,9 @@ fn calculate_ac(armor: ArmorType, has_shield: bool, dex_mod: i8) -> u8
 // explorer_token contract
 // ──────────────────────────────────────────────
 #[starknet::interface]
-trait IExplorerActions<T> {
-    fn mint_explorer(
-        ref self: T,
-        class: ExplorerClass,
-        stat_assignment: Span<u8>,      // 6 values mapping to [STR, DEX, CON, INT, WIS, CHA]
-        skill_choices: Span<Skill>,     // optional proficiency picks
-        expertise_choices: Span<Skill>, // Rogue only: 2 skills for double proficiency
-    ) -> u128;  // returns explorer token ID
+trait IExplorerTokenPublic<T> {
+    // VRF multicall required — stats, skills, and expertise are all randomized on-chain.
+    fn mint_explorer(ref self: T, explorer_class: ExplorerClass) -> u128;  // returns explorer token ID
 
     fn rest(ref self: T, explorer_id: u128);  // restore HP, spell slots, class features
 }
@@ -772,7 +767,7 @@ Events are critical for Torii indexing and for the AI agent to narrate outcomes.
 pub struct ExplorerMinted {
     #[key]
     pub explorer_id: u128,
-    pub class: ExplorerClass,
+    pub explorer_class: ExplorerClass,
     pub player: ContractAddress,
 }
 

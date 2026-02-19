@@ -8,7 +8,7 @@ use d20::types::monster::MonsterType;
 pub struct ExplorerMinted {
     #[key]
     pub explorer_id: u128,
-    pub class: ExplorerClass,
+    pub explorer_class: ExplorerClass,
     pub player: ContractAddress,
 }
 

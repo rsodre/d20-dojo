@@ -695,7 +695,7 @@ pub mod temple_token {
             //        acrobatics expertise chosen (acrobatics is a dex skill, close enough).
             // Others: INT-based, proficient only if Arcana trained.
             use d20::types::index::Skill;
-            let (ability_score, prof_mult): (u8, u8) = match stats.class {
+            let (ability_score, prof_mult): (u8, u8) = match stats.explorer_class {
                 ExplorerClass::Rogue => {
                     // Check for expertise on Acrobatics (DEX skill → applies to fine motor work)
                     let expertise_mult: u8 = if skills.expertise_1 == Skill::Acrobatics

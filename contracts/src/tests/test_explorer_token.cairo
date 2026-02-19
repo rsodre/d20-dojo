@@ -108,7 +108,7 @@ mod tests {
         assert(token.owner_of(explorer_id.into()) == caller, 'wrong owner');
 
         let stats: ExplorerStats = world.read_model(explorer_id);
-        assert(stats.class == ExplorerClass::Fighter, 'wrong class');
+        assert(stats.explorer_class == ExplorerClass::Fighter, 'wrong class');
         assert(stats.level == 1, 'wrong level');
         assert(stats.xp == 0, 'wrong xp');
         assert(stats.temples_conquered == 0, 'wrong temples');
@@ -207,7 +207,7 @@ mod tests {
         let explorer_id = token.mint_explorer(ExplorerClass::Rogue);
 
         let stats: ExplorerStats = world.read_model(explorer_id);
-        assert(stats.class == ExplorerClass::Rogue, 'wrong class');
+        assert(stats.explorer_class == ExplorerClass::Rogue, 'wrong class');
         assert_standard_array(@stats);
 
         let health: ExplorerHealth = world.read_model(explorer_id);
@@ -264,7 +264,7 @@ mod tests {
         let explorer_id = token.mint_explorer(ExplorerClass::Wizard);
 
         let stats: ExplorerStats = world.read_model(explorer_id);
-        assert(stats.class == ExplorerClass::Wizard, 'wrong class');
+        assert(stats.explorer_class == ExplorerClass::Wizard, 'wrong class');
         assert_standard_array(@stats);
 
         let health: ExplorerHealth = world.read_model(explorer_id);
@@ -340,9 +340,9 @@ mod tests {
         let s1: ExplorerStats = world.read_model(id1);
         let s2: ExplorerStats = world.read_model(id2);
         let s3: ExplorerStats = world.read_model(id3);
-        assert(s1.class == ExplorerClass::Fighter, 'id1 should be fighter');
-        assert(s2.class == ExplorerClass::Wizard, 'id2 should be wizard');
-        assert(s3.class == ExplorerClass::Rogue, 'id3 should be rogue');
+        assert(s1.explorer_class == ExplorerClass::Fighter, 'id1 should be fighter');
+        assert(s2.explorer_class == ExplorerClass::Wizard, 'id2 should be wizard');
+        assert(s3.explorer_class == ExplorerClass::Rogue, 'id3 should be rogue');
     }
 
     // ── rest() tests ──────────────────────────────────────────────────────────

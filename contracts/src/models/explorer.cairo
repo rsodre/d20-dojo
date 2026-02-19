@@ -11,7 +11,7 @@ pub struct ExplorerStats {
     // Progression
     pub level: u8,
     pub xp: u32,
-    pub class: ExplorerClass,
+    pub explorer_class: ExplorerClass,
     // Achievements
     pub temples_conquered: u16,
 }
