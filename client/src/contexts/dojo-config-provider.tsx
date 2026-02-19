@@ -1,6 +1,5 @@
-import { createContext, useContext, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import type { Connector } from "@starknet-react/core";
-import type { Chain } from "@starknet-react/chains";
 import type { ControllerOptions } from "@cartridge/controller";
 import ControllerConnector from "@cartridge/connector/controller";
 import { getProfileConfig, type ProfileConfig, type ProfileName } from "@/configs";
@@ -10,8 +9,10 @@ import { DojoSdkProvider } from "@dojoengine/sdk/react";
 import { init, SDK } from "@dojoengine/sdk";
 import { setupWorld } from "@/generated/contracts.gen.ts";
 import type { SchemaType } from "@/generated/models.gen.ts";
-import { sepolia } from "@starknet-react/chains";
 
+//----------------------------
+// Profile config
+//
 const profileName: ProfileName = import.meta.env.VITE_PROFILE as ProfileName;
 const profileConfig: ProfileConfig = getProfileConfig(profileName);
 console.log(`ProfileConfig [${profileName}]:`, profileConfig)
@@ -29,22 +30,58 @@ const options: ControllerOptions = {
   },
 };
 
+//----------------------------
+// Dojo SDK
+//
+const dojoConfig = createDojoConfig({
+  manifest: profileConfig.manifest,
+  rpcUrl: profileConfig.rpcUrl,
+  toriiUrl: profileConfig.toriiUrl,
+});
+
+//----------------------------
+// Provider
+//
+let controller: ControllerConnector | undefined = undefined;
+try {
+  controller = new ControllerConnector(options)
+} catch (error) {
+  console.error(">>> Failed to create controller:", error);
+}
 const state = {
   namespace: profileConfig.namespace,
   profileName,
   profileConfig,
   chains: [profileConfig.chain],
-  connectors: [new ControllerConnector(options) as Connector],
+  connectors: [controller as Connector],
 };
-
 type DojoConfigState = typeof state;
 
 const DojoConfigContext = createContext<DojoConfigState>(state);
 
 export function DojoConfigProvider({ children }: { children: ReactNode }) {
+  const [sdk, setSdk] = useState<SDK<SchemaType> | undefined>();
+  
+  useEffect(() => {
+    init<SchemaType>({
+      client: {
+        worldAddress: profileConfig.contractAddresses.world,
+        toriiUrl: profileConfig.toriiUrl,
+      },
+      domain: {
+        name: "D20",
+        version: "0.1.0",
+        chainId: profileConfig.chainId,
+        revision: "1",
+      },
+    }).then(setSdk);
+  }, [])
+
   return (
     <DojoConfigContext.Provider value={state}>
-      {children}
+      <DojoSdkProvider sdk={sdk as any} dojoConfig={dojoConfig} clientFn={setupWorld}>
+        {children}
+      </DojoSdkProvider>
     </DojoConfigContext.Provider>
   );
 }

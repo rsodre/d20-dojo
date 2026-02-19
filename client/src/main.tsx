@@ -2,6 +2,7 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { Theme } from "@radix-ui/themes";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { DojoConfigProvider } from "@/contexts/dojo-config-provider";
 import StarknetProvider from "@/contexts/starknet-provider";
 import App from "./App";
 import "./index.css";
@@ -22,9 +23,11 @@ createRoot(root).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
       <Theme appearance="dark" accentColor="amber" grayColor="sand" radius="medium">
-        <StarknetProvider>
-          <App />
-        </StarknetProvider>
+        <DojoConfigProvider>
+          <StarknetProvider>
+            <App />
+          </StarknetProvider>
+        </DojoConfigProvider>
       </Theme>
     </QueryClientProvider>
   </StrictMode>
