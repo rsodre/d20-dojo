@@ -1,19 +1,22 @@
+import { Link } from "react-router-dom";
 import { Badge, Card, Flex, Heading, Spinner, Text } from "@radix-ui/themes";
 import { usePlayerTokensContext, type TokenInfo } from "@/contexts/player-tokens-provider";
 
 function TempleCard({ token }: { token: TokenInfo }) {
   return (
-    <Card>
-      <Flex direction="column" gap="1">
-        <Flex align="center" gap="2">
-          <Text size="2">🏛️</Text>
-          <Text size="2" weight="bold">Temple #{token.tokenIdNum.toString()}</Text>
+    <Link to={`/temple/${token.tokenIdNum.toString()}`} style={{ textDecoration: "none" }}>
+      <Card style={{ cursor: "pointer" }}>
+        <Flex direction="column" gap="1">
+          <Flex align="center" gap="2">
+            <Text size="2">🏛️</Text>
+            <Text size="2" weight="bold">Temple #{token.tokenIdNum.toString()}</Text>
+          </Flex>
+          <Badge color="blue" size="1" variant="soft">
+            Token ID: {token.tokenIdNum.toString()}
+          </Badge>
         </Flex>
-        <Badge color="blue" size="1" variant="soft">
-          Token ID: {token.tokenIdNum.toString()}
-        </Badge>
-      </Flex>
-    </Card>
+      </Card>
+    </Link>
   );
 }
 

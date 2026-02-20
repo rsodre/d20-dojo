@@ -73,12 +73,14 @@
 - [x] **4.6** Implement Explorer and Temple minting UI (class picker → `mint_explorer` VRF multicall; difficulty picker → `mint_temple`), listing the player's tokens using a dojo sdk token subscription.
 - [x] **4.7** Implement Torii GRPC subscription for: player's explorers and temples.
 - [x] **4.8** Implement Torii GRPC client: query explorer state (stats, HP, inventory, position, skills), chamber state (type, yonder, monster, exits, fallen explorers), temple state (difficulty, boss status). Create hooks to get all relevant state with tanstack-query. use a DojoStore to store all models. Load all models related to the player's explorers and temples, and a subscription that catches everything. Using the fetched models, display class and stats of each  explorer listed in the home screen.
-- [ ] **4.9** Implement action list generator: pure function `getAvailableActions(state) → Action[]` — context-aware (lobby / exploring / in-combat); each action carries label, contract, entrypoint, and calldata; VRF actions are flagged so the caller auto-prepends `request_random`.
-- [ ] **4.10** Implement state display component: explorer character sheet (class, level, HP/max, AC, inventory, spell slots, class features remaining), chamber info (type, yonder, monster type + HP, trap, exits, fallen explorers).
-- [ ] **4.11** Implement action panel: render `getAvailableActions` output as clickable buttons; disable all buttons while a tx is pending; show tx status (pending / confirmed / error).
-- [ ] **4.12** Implement game loop: on mount/update → query state → render state panel + action panel → player clicks → submit tx (with VRF multicall if needed) → wait for confirmation → re-query state → repeat.
-- [ ] **4.13** Handle edge cases: dead explorer (show death screen, "Mint New Explorer" button), no valid actions (display reason), tx error (show error message + retry button).
-- [ ] **4.14** Implement temple selection flow: list available temples (temple ID, difficulty tier, boss alive/dead), "Enter" button per temple, "Mint New Temple" picker.
+- [x] **4.9** Install a Vite router, and a new route: /temple/:templeId displaying the temple state, with a list of chambers and explorers in it.
+- [ ] **4.10** Make the explorers and temples selectable in the lobby, add buttons to each Explorer: "Enter Temple" (selected temple), "Exit Temple" (if in any temple).
+- [ ] **4.11** Implement action list generator: pure function `getAvailableActions(state) → Action[]` — context-aware (lobby / exploring / in-combat); each action carries label, contract, entrypoint, and calldata; VRF actions are flagged so the caller auto-prepends `request_random`.
+- [ ] **4.12** Implement state display component: explorer character sheet (class, level, HP/max, AC, inventory, spell slots, class features remaining), chamber info (type, yonder, monster type + HP, trap, exits, fallen explorers).
+- [ ] **4.13** Implement action panel: render `getAvailableActions` output as clickable buttons; disable all buttons while a tx is pending; show tx status (pending / confirmed / error).
+- [ ] **4.14** Implement game loop: on mount/update → query state → render state panel + action panel → player clicks → submit tx (with VRF multicall if needed) → wait for confirmation → re-query state → repeat.
+- [ ] **4.15** Handle edge cases: dead explorer (show death screen, "Mint New Explorer" button), no valid actions (display reason), tx error (show error message + retry button).
+- [ ] **4.16** Implement temple selection flow: list available temples (temple ID, difficulty tier, boss alive/dead), "Enter" button per temple, "Mint New Temple" picker.
 
 ## Day 5: Integration, Testing & Deploy
 

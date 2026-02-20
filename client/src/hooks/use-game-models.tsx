@@ -1,5 +1,5 @@
 import { useEntityQuery } from "@dojoengine/sdk/react";
-import { KeysClause, ToriiQueryBuilder } from "@dojoengine/sdk";
+import { ToriiQueryBuilder } from "@dojoengine/sdk";
 import type { SchemaType } from "@/generated/models.gen";
 import { useDojoConfig } from "@/contexts/dojo-config-provider";
 import { useMemo } from "react";
