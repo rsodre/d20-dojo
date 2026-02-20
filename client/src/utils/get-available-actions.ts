@@ -10,6 +10,7 @@ export interface Action {
   entrypoint: string;
   calldata: unknown[]; // pre-compilation args passed to CallData.compile(entrypoint, calldata)
   needsVrf: boolean;
+  color: 'red' | 'green' | 'blue' | 'purple' | 'orange' | 'yellow' | undefined;
 }
 
 export interface GameActionContext {
@@ -70,6 +71,7 @@ export function getAvailableActions(ctx: GameActionContext): Action[] {
       entrypoint: "attack",
       calldata: [explorerId],
       needsVrf: true,
+      color: 'green',
     });
 
     if (ctx.explorerClass === "Fighter" && !ctx.secondWindUsed) {
@@ -80,6 +82,7 @@ export function getAvailableActions(ctx: GameActionContext): Action[] {
         entrypoint: "second_wind",
         calldata: [explorerId],
         needsVrf: true,
+        color: 'green',
       });
     }
 
@@ -91,6 +94,7 @@ export function getAvailableActions(ctx: GameActionContext): Action[] {
         entrypoint: "cunning_action",
         calldata: [explorerId],
         needsVrf: false,
+        color: 'green',
       });
     }
 
@@ -103,6 +107,7 @@ export function getAvailableActions(ctx: GameActionContext): Action[] {
         entrypoint: "cast_spell",
         calldata: [explorerId, new CairoCustomEnum({ FireBolt: {} })],
         needsVrf: true,
+        color: 'purple',
       });
 
       if (ctx.spellSlots1 > 0) {
@@ -113,6 +118,7 @@ export function getAvailableActions(ctx: GameActionContext): Action[] {
           entrypoint: "cast_spell",
           calldata: [explorerId, new CairoCustomEnum({ MagicMissile: {} })],
           needsVrf: true,
+          color: 'purple',
         });
         actions.push({
           id: "cast_sleep",
@@ -121,6 +127,7 @@ export function getAvailableActions(ctx: GameActionContext): Action[] {
           entrypoint: "cast_spell",
           calldata: [explorerId, new CairoCustomEnum({ Sleep: {} })],
           needsVrf: true,
+          color: 'purple',
         });
         actions.push({
           id: "cast_shield",
@@ -129,6 +136,7 @@ export function getAvailableActions(ctx: GameActionContext): Action[] {
           entrypoint: "cast_spell",
           calldata: [explorerId, new CairoCustomEnum({ Shield: {} })],
           needsVrf: true,
+          color: 'purple',
         });
       }
 
@@ -140,6 +148,7 @@ export function getAvailableActions(ctx: GameActionContext): Action[] {
           entrypoint: "cast_spell",
           calldata: [explorerId, new CairoCustomEnum({ ScorchingRay: {} })],
           needsVrf: true,
+          color: 'purple',
         });
         actions.push({
           id: "cast_misty_step",
@@ -148,6 +157,7 @@ export function getAvailableActions(ctx: GameActionContext): Action[] {
           entrypoint: "cast_spell",
           calldata: [explorerId, new CairoCustomEnum({ MistyStep: {} })],
           needsVrf: true,
+          color: 'purple',
         });
       }
 
@@ -159,6 +169,7 @@ export function getAvailableActions(ctx: GameActionContext): Action[] {
           entrypoint: "cast_spell",
           calldata: [explorerId, new CairoCustomEnum({ Fireball: {} })],
           needsVrf: true,
+          color: 'purple',
         });
       }
     }
@@ -171,6 +182,7 @@ export function getAvailableActions(ctx: GameActionContext): Action[] {
         entrypoint: "use_item",
         calldata: [explorerId, new CairoCustomEnum({ HealthPotion: {} })],
         needsVrf: true,
+        color: 'purple',
       });
     }
 
@@ -181,6 +193,7 @@ export function getAvailableActions(ctx: GameActionContext): Action[] {
       entrypoint: "flee",
       calldata: [explorerId],
       needsVrf: true,
+      color: 'green',
     });
 
   } else {
@@ -193,21 +206,23 @@ export function getAvailableActions(ctx: GameActionContext): Action[] {
       if (!isDiscovered) {
         actions.push({
           id: `open_exit_${i}`,
-          label: `🚪 Open Exit ${i + 1}`,
+          label: `🚪 Exit ${i + 1}: Open`,
           contract: contracts.temple,
           entrypoint: "open_exit",
           calldata: [explorerId, i],
           needsVrf: true,
+          color: 'orange',
         });
       } else {
         const toChamber = exit ? Number(BigInt(exit.to_chamber_id)) : "?";
         actions.push({
           id: `move_${i}`,
-          label: `➡️ Move to Chamber #${toChamber} (Exit ${i + 1})`,
+          label: `➡️ Exit ${i + 1}: Enter Chamber #${toChamber}`,
           contract: contracts.temple,
           entrypoint: "move_to_chamber",
           calldata: [explorerId, i],
           needsVrf: true,
+          color: 'yellow',
         });
       }
     }
@@ -223,6 +238,7 @@ export function getAvailableActions(ctx: GameActionContext): Action[] {
         entrypoint: "loot_treasure",
         calldata: [explorerId],
         needsVrf: true,
+        color: 'green',
       });
     }
 
@@ -234,6 +250,7 @@ export function getAvailableActions(ctx: GameActionContext): Action[] {
         entrypoint: "disarm_trap",
         calldata: [explorerId],
         needsVrf: true,
+        color: 'green',
       });
     }
 
@@ -247,6 +264,7 @@ export function getAvailableActions(ctx: GameActionContext): Action[] {
           entrypoint: "loot_fallen",
           calldata: [explorerId, idx],
           needsVrf: false,
+          color: 'green',
         });
       }
     }
@@ -258,6 +276,7 @@ export function getAvailableActions(ctx: GameActionContext): Action[] {
       entrypoint: "exit_temple",
       calldata: [explorerId],
       needsVrf: false,
+      color: 'red',
     });
   }
 

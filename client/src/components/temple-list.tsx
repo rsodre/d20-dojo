@@ -67,7 +67,7 @@ export function TempleList({ selectedTempleId, onSelectTemple }: TempleListProps
               selected={selectedTempleId === token.tokenIdNum}
               onSelect={onSelectTemple}
             />
-          ))}
+          )).reverse()}
         </Flex>
       </Flex>
     </Card>

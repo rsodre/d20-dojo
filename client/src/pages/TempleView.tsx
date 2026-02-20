@@ -1,5 +1,5 @@
 import { useParams, Link } from "react-router-dom";
-import { Badge, Button, Card, Flex, Heading, Text } from "@radix-ui/themes";
+import { Badge, Button, Card, Flex, Grid, Heading, Text } from "@radix-ui/themes";
 import { useTempleModels } from "@/hooks/use-temple-state";
 import { useExplorerModels } from "@/hooks/use-explorer-state";
 import { useChambers, useMonsterInstances } from "@/hooks/use-chambers";
@@ -81,12 +81,12 @@ function ChamberCard({
           <Badge color="gray" size="1" variant="soft">
             {chamberType}
           </Badge>
-          <Badge color="blue" size="1" variant="soft">
-            Yonder {yonder}
-          </Badge>
         </Flex>
 
         <Flex gap="2" wrap="wrap">
+          <Badge color="purple" size="1" variant="soft">
+            Yonder {yonder}
+          </Badge>
           <Badge color="gray" size="1" variant="soft">
             {exitCount} exit{exitCount !== 1 ? "s" : ""}
           </Badge>
@@ -175,8 +175,9 @@ function ExplorerInTemple({ explorerId }: { explorerId: bigint }) {
           <Text size="2" weight="bold">
             {className !== "None" ? className : "Explorer"} #{explorerId.toString()}
           </Text>
-          {isDead && <Badge color="red" size="1">Dead</Badge>}
-          {inCombat && <Badge color="orange" size="1">In Combat</Badge>}
+          {chamberId !== undefined && chamberId > 0 && (
+            <Badge color="green" size="1" variant="soft">Chamber #{chamberId}</Badge>
+          )}
         </Flex>
         <Flex gap="2" wrap="wrap">
           {level !== undefined && (
@@ -188,9 +189,8 @@ function ExplorerInTemple({ explorerId }: { explorerId: bigint }) {
           {ac !== undefined && (
             <Badge color="gray" size="1" variant="soft">AC {ac}</Badge>
           )}
-          {chamberId !== undefined && chamberId > 0 && (
-            <Badge color="green" size="1" variant="soft">Chamber #{chamberId}</Badge>
-          )}
+          {isDead && <Badge color="red" size="1">Dead</Badge>}
+          {inCombat && <Badge color="orange" size="1">In Combat</Badge>}
         </Flex>
       </Flex>
     </Card>
@@ -267,7 +267,7 @@ export function TempleView() {
           {chambers.length === 0 ? (
             <Text size="2" color="gray">No chambers discovered yet.</Text>
           ) : (
-            <Flex direction="column" gap="2">
+            <Grid columns={{ initial: "1", sm: "2", md: "4" }} gap="2">
               {chambers.map((chamber) => (
                 <ChamberCard
                   key={Number(chamber.chamber_id)}
@@ -276,7 +276,7 @@ export function TempleView() {
                   isBoss={Number(chamber.chamber_id) === bossChamber}
                 />
               ))}
-            </Flex>
+            </Grid>
           )}
         </Flex>
       </Card>
@@ -284,11 +284,15 @@ export function TempleView() {
       {/* Explorers in temple */}
       <Card>
         <Flex direction="column" gap="3">
-          <Heading size="3">Explorers Inside</Heading>
+          <Flex align="center" gap="2">
+            <Heading size="3">Explorers Inside</Heading>
+            {/* <Badge color="gray" variant="soft">{explorers.length}</Badge> */}
+          </Flex>
+
           {explorers.length === 0 ? (
             <Text size="2" color="gray">No explorers in this temple.</Text>
           ) : (
-            <Flex direction="column" gap="2">
+            <Grid columns={{ initial: "1", sm: "2", md: "4" }} gap="2">
               {explorers.map((token) => (
                 <ExplorerInTempleGate
                   key={token.tokenId}
@@ -296,7 +300,7 @@ export function TempleView() {
                   templeId={templeIdNum}
                 />
               ))}
-            </Flex>
+            </Grid>
           )}
         </Flex>
       </Card>

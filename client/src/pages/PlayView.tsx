@@ -334,6 +334,7 @@ function ActionPanel({
               key={action.id}
               size="2"
               variant={action.needsVrf ? "solid" : "soft"}
+              color={action.color}
               disabled={execute.isPending}
               onClick={() => execute.mutate(action)}
             >

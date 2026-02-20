@@ -77,11 +77,11 @@
 - [x] **4.10** Make the explorers and temples selectable in the lobby, add buttons to each Explorer: "Enter Temple" (selected temple), "Exit Temple" (if in any temple). link the buttons to each contract call.
 - [x] **4.11** Add a PLAY button to the lobby explorer cards, when the explorer is in a temple. Create a route /play/:templeId/:explorerId and a page where the player can see the temple state, with a description of the current chamber and possible acitons.
 - [x] **4.12** Implement action list generator: pure function `getAvailableActions(state) → Action[]` — context-aware (lobby / exploring / in-combat); each action carries label, contract, entrypoint, and calldata; VRF actions are flagged so the caller auto-prepends `request_random`.
-- [ ] **4.13** Implement state display component: explorer character sheet (class, level, HP/max, AC, inventory, spell slots, class features remaining), chamber info (type, yonder, monster type + HP, trap, exits, fallen explorers).
-- [ ] **4.14** Implement action panel: render `getAvailableActions` output as clickable buttons; disable all buttons while a tx is pending; show tx status (pending / confirmed / error).
-- [ ] **4.15** Implement game loop: on mount/update → query state → render state panel + action panel → player clicks → submit tx (with VRF multicall if needed) → wait for confirmation → re-query state → repeat.
-- [ ] **4.16** Handle edge cases: dead explorer (show death screen, "Mint New Explorer" button), no valid actions (display reason), tx error (show error message + retry button).
-- [ ] **4.17** Implement temple selection flow: list available temples (temple ID, difficulty tier, boss alive/dead), "Enter" button per temple, "Mint New Temple" picker.
+- [x] **4.13** Implement state display component: explorer character sheet (class, level, HP/max, AC, inventory, spell slots, class features remaining), chamber info (type, yonder, monster type + HP, trap, exits, fallen explorers).
+- [x] **4.14** Implement action panel: render `getAvailableActions` output as clickable buttons; disable all buttons while a tx is pending; show tx status (pending / confirmed / error).
+- [x] **4.15** Implement game loop: on mount/update → query state → render state panel + action panel → player clicks → submit tx (with VRF multicall if needed) → wait for confirmation → re-query state → repeat.
+- [x] **4.16** Implement temple selection flow: list available temples (temple ID, difficulty tier, boss alive/dead), "Enter" button per temple, "Mint New Temple" picker.
+- [ ] **4.17** Handle edge cases: dead explorer (show death screen, "Mint New Explorer" button), no valid actions (display reason), tx error (show error message + retry button).
 
 ## Day 5: Integration, Testing & Deploy
 
@@ -91,8 +91,8 @@
 - [x] **5.4** Multiplayer testing: two explorers in same temple, verify shared chamber state, shared monster kills, shared chamber generation
 - [x] **5.5** Test boss probability: verify Yonder Formula produces expected distribution over many runs
 - [ ] **5.6** Test all three classes through full temple runs, verify class features work correctly
-- [ ] **5.7** Balance tuning: adjust monster stats, XP rewards, treasure distribution, trap DCs, boss probability constants
-- [ ] **5.8** Edge case testing: death at level 1 with empty inventory, chamber with many fallen explorers, dead-end chambers, exiting temple mid-combat
+- [ ] **5.7** Edge case testing: death at level 1 with empty inventory, chamber with many fallen explorers, dead-end chambers, exiting temple mid-combat
+- [ ] **5.8** Balance tuning: adjust monster stats, XP rewards, treasure distribution, trap DCs, boss probability constants
 - [ ] **5.9** Deploy contracts to Starknet testnet (Sepolia) via `sozo migrate --profile sepolia` (requires `dojo_sepolia.toml` with funded account)
 - [ ] **5.10** Configure Torii indexer on testnet, verify gRPC queries and subscriptions return correct state
 - [ ] **5.11** Smoke test the full flow on testnet with live VRF

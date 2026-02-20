@@ -131,7 +131,7 @@ export function ExplorerList({ selectedTempleId }: ExplorerListProps) {
                     token={token}
                     selectedTempleId={selectedTempleId}
                   />
-                ))}
+                )).reverse()}
               </Flex>
             )
         }
