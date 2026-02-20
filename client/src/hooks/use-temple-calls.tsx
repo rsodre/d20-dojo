@@ -3,9 +3,11 @@ import { useMutation } from "@tanstack/react-query";
 import { useDojoConfig } from "@/contexts/dojo-config-provider";
 import { useAccount } from "@starknet-react/core";
 import { Call, CallData } from "starknet";
+import { useVrfCall } from "@/hooks/use-vrf";
 
 export const useTempleCalls = () => {
   const { account } = useAccount();
+  const { requestRandomCall } = useVrfCall();
   const { profileConfig } = useDojoConfig();
   const contractAddress = profileConfig.contractAddresses.temple;
 
@@ -71,14 +73,18 @@ export const useTempleCalls = () => {
   });
 
   const open_exit = useMutation({
-    mutationFn: account?.address ?
+    mutationFn: (account?.address && requestRandomCall) ?
       ({ explorerId, exitIndex }: { explorerId: bigint; exitIndex: number }) => {
         const entrypoint = "open_exit";
-        const calls: Call[] = [{
-          contractAddress,
-          entrypoint,
-          calldata: callData.compile(entrypoint, [explorerId, exitIndex]),
-        }];
+        const calls: Call[] = [
+          // VRF multicall: request_random must be first
+          requestRandomCall(contractAddress),
+          {
+            contractAddress,
+            entrypoint,
+            calldata: callData.compile(entrypoint, [explorerId, exitIndex]),
+          },
+        ];
         return account.execute(calls);
       } : undefined,
     onSuccess: (data) => {
@@ -90,14 +96,18 @@ export const useTempleCalls = () => {
   });
 
   const move_to_chamber = useMutation({
-    mutationFn: account?.address ?
+    mutationFn: (account?.address && requestRandomCall) ?
       ({ explorerId, exitIndex }: { explorerId: bigint; exitIndex: number }) => {
         const entrypoint = "move_to_chamber";
-        const calls: Call[] = [{
-          contractAddress,
-          entrypoint,
-          calldata: callData.compile(entrypoint, [explorerId, exitIndex]),
-        }];
+        const calls: Call[] = [
+          // VRF multicall: request_random must be first
+          requestRandomCall(contractAddress),
+          {
+            contractAddress,
+            entrypoint,
+            calldata: callData.compile(entrypoint, [explorerId, exitIndex]),
+          },
+        ];
         return account.execute(calls);
       } : undefined,
     onSuccess: (data) => {
@@ -109,14 +119,18 @@ export const useTempleCalls = () => {
   });
 
   const disarm_trap = useMutation({
-    mutationFn: account?.address ?
+    mutationFn: (account?.address && requestRandomCall) ?
       (explorerId: bigint) => {
         const entrypoint = "disarm_trap";
-        const calls: Call[] = [{
-          contractAddress,
-          entrypoint,
-          calldata: callData.compile(entrypoint, [explorerId]),
-        }];
+        const calls: Call[] = [
+          // VRF multicall: request_random must be first
+          requestRandomCall(contractAddress),
+          {
+            contractAddress,
+            entrypoint,
+            calldata: callData.compile(entrypoint, [explorerId]),
+          },
+        ];
         return account.execute(calls);
       } : undefined,
     onSuccess: (data) => {
@@ -128,14 +142,18 @@ export const useTempleCalls = () => {
   });
 
   const loot_treasure = useMutation({
-    mutationFn: account?.address ?
+    mutationFn: (account?.address && requestRandomCall) ?
       (explorerId: bigint) => {
         const entrypoint = "loot_treasure";
-        const calls: Call[] = [{
-          contractAddress,
-          entrypoint,
-          calldata: callData.compile(entrypoint, [explorerId]),
-        }];
+        const calls: Call[] = [
+          // VRF multicall: request_random must be first
+          requestRandomCall(contractAddress),
+          {
+            contractAddress,
+            entrypoint,
+            calldata: callData.compile(entrypoint, [explorerId]),
+          },
+        ];
         return account.execute(calls);
       } : undefined,
     onSuccess: (data) => {

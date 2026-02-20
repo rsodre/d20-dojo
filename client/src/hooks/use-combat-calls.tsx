@@ -3,9 +3,11 @@ import { useMutation } from "@tanstack/react-query";
 import { useDojoConfig } from "@/contexts/dojo-config-provider";
 import { useAccount } from "@starknet-react/core";
 import { CairoCustomEnum, Call, CallData } from "starknet";
+import { useVrfCall } from "@/hooks/use-vrf";
 
 export const useCombatCalls = () => {
   const { account } = useAccount();
+  const { requestRandomCall } = useVrfCall();
   const { profileConfig } = useDojoConfig();
   const contractAddress = profileConfig.contractAddresses.combat;
 
@@ -14,14 +16,18 @@ export const useCombatCalls = () => {
   , [profileConfig]);
 
   const attack = useMutation({
-    mutationFn: account?.address ?
+    mutationFn: (account?.address && requestRandomCall) ?
       (explorerId: bigint) => {
         const entrypoint = "attack";
-        const calls: Call[] = [{
-          contractAddress,
-          entrypoint,
-          calldata: callData.compile(entrypoint, [explorerId]),
-        }];
+        const calls: Call[] = [
+          // VRF multicall: request_random must be first
+          requestRandomCall(contractAddress),
+          {
+            contractAddress,
+            entrypoint,
+            calldata: callData.compile(entrypoint, [explorerId]),
+          },
+        ];
         return account.execute(calls);
       } : undefined,
     onSuccess: (data) => {
@@ -33,15 +39,19 @@ export const useCombatCalls = () => {
   });
 
   const cast_spell = useMutation({
-    mutationFn: account?.address ?
+    mutationFn: (account?.address && requestRandomCall) ?
       ({ explorerId, spellId }: { explorerId: bigint; spellId: string }) => {
         const spellIdEnum = new CairoCustomEnum({ [spellId]: {} });
         const entrypoint = "cast_spell";
-        const calls: Call[] = [{
-          contractAddress,
-          entrypoint,
-          calldata: callData.compile(entrypoint, [explorerId, spellIdEnum]),
-        }];
+        const calls: Call[] = [
+          // VRF multicall: request_random must be first
+          requestRandomCall(contractAddress),
+          {
+            contractAddress,
+            entrypoint,
+            calldata: callData.compile(entrypoint, [explorerId, spellIdEnum]),
+          },
+        ];
         return account.execute(calls);
       } : undefined,
     onSuccess: (data) => {
@@ -53,15 +63,19 @@ export const useCombatCalls = () => {
   });
 
   const use_item = useMutation({
-    mutationFn: account?.address ?
+    mutationFn: (account?.address && requestRandomCall) ?
       ({ explorerId, itemType }: { explorerId: bigint; itemType: string }) => {
         const itemTypeEnum = new CairoCustomEnum({ [itemType]: {} });
         const entrypoint = "use_item";
-        const calls: Call[] = [{
-          contractAddress,
-          entrypoint,
-          calldata: callData.compile(entrypoint, [explorerId, itemTypeEnum]),
-        }];
+        const calls: Call[] = [
+          // VRF multicall: request_random must be first
+          requestRandomCall(contractAddress),
+          {
+            contractAddress,
+            entrypoint,
+            calldata: callData.compile(entrypoint, [explorerId, itemTypeEnum]),
+          },
+        ];
         return account.execute(calls);
       } : undefined,
     onSuccess: (data) => {
@@ -73,14 +87,18 @@ export const useCombatCalls = () => {
   });
 
   const flee = useMutation({
-    mutationFn: account?.address ?
+    mutationFn: (account?.address && requestRandomCall) ?
       (explorerId: bigint) => {
         const entrypoint = "flee";
-        const calls: Call[] = [{
-          contractAddress,
-          entrypoint,
-          calldata: callData.compile(entrypoint, [explorerId]),
-        }];
+        const calls: Call[] = [
+          // VRF multicall: request_random must be first
+          requestRandomCall(contractAddress),
+          {
+            contractAddress,
+            entrypoint,
+            calldata: callData.compile(entrypoint, [explorerId]),
+          },
+        ];
         return account.execute(calls);
       } : undefined,
     onSuccess: (data) => {
@@ -92,14 +110,18 @@ export const useCombatCalls = () => {
   });
 
   const second_wind = useMutation({
-    mutationFn: account?.address ?
+    mutationFn: (account?.address && requestRandomCall) ?
       (explorerId: bigint) => {
         const entrypoint = "second_wind";
-        const calls: Call[] = [{
-          contractAddress,
-          entrypoint,
-          calldata: callData.compile(entrypoint, [explorerId]),
-        }];
+        const calls: Call[] = [
+          // VRF multicall: request_random must be first
+          requestRandomCall(contractAddress),
+          {
+            contractAddress,
+            entrypoint,
+            calldata: callData.compile(entrypoint, [explorerId]),
+          },
+        ];
         return account.execute(calls);
       } : undefined,
     onSuccess: (data) => {

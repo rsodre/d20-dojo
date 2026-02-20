@@ -22,7 +22,7 @@ export const useExplorerCalls = () => {
         const entrypoint = "mint_explorer";
         const calls: Call[] = [
           // VRF multicall: request_random must be first
-          // requestRandomCall, // disabled in KATANA
+          requestRandomCall(contractAddress),
           {
             contractAddress,
             entrypoint,
