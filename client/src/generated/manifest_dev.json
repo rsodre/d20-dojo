@@ -74,8 +74,8 @@
       ]
     },
     {
-      "address": "0x5b7e1e89e4af223d5a2444e304f9c26500311de3bd2184facc3dd3c39d471d9",
-      "class_hash": "0x78f40eb1faff1928b172fc1390acc594101912541132339d461eaf7f792c7c4",
+      "address": "0x1de2cb4291702e400517c18a6200eb1e16751b3dd498c8e23d8edc1212963e9",
+      "class_hash": "0xd0afb8d430c5e8fd059a992ae2ab67606d07bebee1135564166877187eed80",
       "init_calldata": [],
       "tag": "d20_0_1-temple_token",
       "selector": "0x6c84dcfaf0c2645d94dd633dd2b6d079f91d09ec7e63c865482860da03b0de5",

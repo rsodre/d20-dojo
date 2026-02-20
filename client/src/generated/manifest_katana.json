@@ -75,7 +75,7 @@
     },
     {
       "address": "0x5b7e1e89e4af223d5a2444e304f9c26500311de3bd2184facc3dd3c39d471d9",
-      "class_hash": "0x78f40eb1faff1928b172fc1390acc594101912541132339d461eaf7f792c7c4",
+      "class_hash": "0x4a4a0b0692b131bcef7c2ec5166722c5e638280a6e96ffafc2875b7b3db0dba",
       "init_calldata": [],
       "tag": "d20_0_1-temple_token",
       "selector": "0x6c84dcfaf0c2645d94dd633dd2b6d079f91d09ec7e63c865482860da03b0de5",
