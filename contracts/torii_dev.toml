@@ -13,7 +13,7 @@ raw = true
 pending = true
 contracts = [
   "erc721:0x0468d3fbf587e6099286aee2e42f4e8e37bf3f95d0dec368f53b2479f51e882f", # explorer_token
-  "erc721:0x01de2cb4291702e400517c18a6200eb1e16751b3dd498c8e23d8edc1212963e9", # temple_token
+  "erc721:0x027c7a362ba89a2292673d1eb84d37f0b66416b7d1cc43449139f89d45230b9f", # temple_token
 ]
 
 # [sql]
