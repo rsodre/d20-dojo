@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useDojoSDK } from "@dojoengine/sdk/react";
 import { useAccount } from "@starknet-react/core";
 import { useDojoConfig } from "@/contexts/dojo-config-provider";
+import { bigintToAddress } from "@/utils/utils";
 
 export interface TokenInfo {
   contractAddress: string;
@@ -17,7 +18,7 @@ interface RawBalance {
 
 function parseBalance(item: any): RawBalance {
   return {
-    contractAddress: (item.contract_address ?? "").toLowerCase(),
+    contractAddress: bigintToAddress(item.contract_address ?? "0x0"),
     tokenId: item.token_id ?? "0x0",
     balance: item.balance ?? "0x0",
   };
@@ -50,8 +51,8 @@ export function usePlayerTokens() {
       return;
     }
 
-    const explorerAddr = profileConfig.contractAddresses.explorer.toLowerCase();
-    const templeAddr = profileConfig.contractAddresses.temple.toLowerCase();
+    const explorerAddr = bigintToAddress(profileConfig.contractAddresses.explorer);
+    const templeAddr = bigintToAddress(profileConfig.contractAddresses.temple);
 
     const rebuildLists = () => {
       const exps: TokenInfo[] = [];
@@ -79,7 +80,7 @@ export function usePlayerTokens() {
     let sub: { cancel?: () => void; free?: () => void } | undefined;
 
     sdk.subscribeTokenBalance({
-      accountAddresses: [account.address],
+      accountAddresses: [bigintToAddress(account.address)],
       contractAddresses: [explorerAddr, templeAddr],
       callback: ({ data, error }: any) => {
         if (cancelled || error || !data) return;
