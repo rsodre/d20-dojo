@@ -1,27 +1,47 @@
 import { Link } from "react-router-dom";
-import { Badge, Card, Flex, Heading, Spinner, Text } from "@radix-ui/themes";
+import { Badge, Button, Card, Flex, Heading, Spinner, Text } from "@radix-ui/themes";
 import { useAllTemples } from "@/hooks/use-all-temples";
 import type { TokenInfo } from "@/hooks/use-player-tokens";
 
-function TempleCard({ token }: { token: TokenInfo }) {
+interface TempleCardProps {
+  token: TokenInfo;
+  selected: boolean;
+  onSelect: (id: bigint) => void;
+}
+
+function TempleCard({ token, selected, onSelect }: TempleCardProps) {
   return (
-    <Link to={`/temple/${token.tokenIdNum.toString()}`} style={{ textDecoration: "none" }}>
-      <Card style={{ cursor: "pointer" }}>
-        <Flex direction="column" gap="1">
-          <Flex align="center" gap="2">
-            <Text size="2">🏛️</Text>
-            <Text size="2" weight="bold">Temple #{token.tokenIdNum.toString()}</Text>
-          </Flex>
-          <Badge color="blue" size="1" variant="soft">
-            Token ID: {token.tokenIdNum.toString()}
-          </Badge>
+    <Card
+      style={{
+        cursor: "pointer",
+        outline: selected ? "2px solid var(--amber-9)" : undefined,
+      }}
+      onClick={() => onSelect(token.tokenIdNum)}
+    >
+      <Flex align="center" justify="between" gap="2">
+        <Flex align="center" gap="2">
+          <Text size="2">🏛️</Text>
+          <Text size="2" weight="bold">Temple #{token.tokenIdNum.toString()}</Text>
+          {selected && <Badge color="amber" size="1">Selected</Badge>}
         </Flex>
-      </Card>
-    </Link>
+        <Link
+          to={`/temple/${token.tokenIdNum.toString()}`}
+          style={{ textDecoration: "none" }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <Button size="1" variant="ghost">View →</Button>
+        </Link>
+      </Flex>
+    </Card>
   );
 }
 
-export function TempleList() {
+interface TempleListProps {
+  selectedTempleId: bigint | null;
+  onSelectTemple: (id: bigint) => void;
+}
+
+export function TempleList({ selectedTempleId, onSelectTemple }: TempleListProps) {
   const { temples, isLoading } = useAllTemples();
 
   return (
@@ -41,7 +61,12 @@ export function TempleList() {
 
         <Flex direction="column" gap="2">
           {temples.map((token) => (
-            <TempleCard key={`${token.contractAddress}:${token.tokenId}`} token={token} />
+            <TempleCard
+              key={`${token.contractAddress}:${token.tokenId}`}
+              token={token}
+              selected={selectedTempleId === token.tokenIdNum}
+              onSelect={onSelectTemple}
+            />
           ))}
         </Flex>
       </Flex>

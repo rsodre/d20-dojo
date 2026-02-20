@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Routes, Route } from "react-router-dom";
 import { Flex, Grid } from "@radix-ui/themes";
 import { ConnectButton } from "@/components/connect-button";
@@ -10,6 +11,8 @@ import { useGameModels } from "@/hooks/use-game-models";
 import { TempleView } from "@/pages/TempleView";
 
 function LobbyContent() {
+  const [selectedTempleId, setSelectedTempleId] = useState<bigint | null>(null);
+
   return (
     <Flex direction="column" gap="4">
       <Grid columns={{ initial: "1", sm: "2" }} gap="4">
@@ -17,8 +20,8 @@ function LobbyContent() {
         <MintTemplePanel />
       </Grid>
       <Grid columns={{ initial: "1", sm: "2" }} gap="4">
-        <ExplorerList />
-        <TempleList />
+        <ExplorerList selectedTempleId={selectedTempleId} />
+        <TempleList selectedTempleId={selectedTempleId} onSelectTemple={setSelectedTempleId} />
       </Grid>
     </Flex>
   );

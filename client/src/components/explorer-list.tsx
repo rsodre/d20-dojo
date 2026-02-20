@@ -1,6 +1,7 @@
-import { Badge, Card, Flex, Heading, Spinner, Text } from "@radix-ui/themes";
+import { Badge, Button, Card, Flex, Heading, Spinner, Text } from "@radix-ui/themes";
 import { usePlayerTokensContext, type TokenInfo } from "@/contexts/player-tokens-provider";
 import { useExplorerModels } from "@/hooks/use-explorer-state";
+import { useTempleCalls } from "@/hooks/use-temple-calls";
 import { useAccount } from "@starknet-react/core";
 
 const CLASS_EMOJI: Record<string, string> = {
@@ -9,10 +10,14 @@ const CLASS_EMOJI: Record<string, string> = {
   Wizard: "🧙",
 };
 
-function ExplorerCard({ token }: { token: TokenInfo }) {
-  const { stats, health, combat } = useExplorerModels(token.tokenIdNum);
+interface ExplorerCardProps {
+  token: TokenInfo;
+  selectedTempleId: bigint | null;
+}
 
-  // console.log("ExplorerCard", { stats, health, combat });
+function ExplorerCard({ token, selectedTempleId }: ExplorerCardProps) {
+  const { stats, health, combat, position } = useExplorerModels(token.tokenIdNum);
+  const { enter_temple, exit_temple } = useTempleCalls();
 
   const className = stats?.explorer_class as unknown as string ?? undefined;
   const emoji = className ? (CLASS_EMOJI[className] ?? "⚔️") : "⚔️";
@@ -23,6 +28,11 @@ function ExplorerCard({ token }: { token: TokenInfo }) {
   const ac = combat ? Number(combat.armor_class) : undefined;
   const isDead = health?.is_dead ?? false;
 
+  const templeId = position ? BigInt(position.temple_id) : 0n;
+  const isInTemple = templeId > 0n;
+
+  const isPending = enter_temple.isPending || exit_temple.isPending;
+
   return (
     <Card>
       <Flex direction="column" gap="2">
@@ -32,34 +42,63 @@ function ExplorerCard({ token }: { token: TokenInfo }) {
             {className ?? "Explorer"} #{token.tokenIdNum.toString()}
           </Text>
           {isDead && <Badge color="red" size="1">Dead</Badge>}
+          {isInTemple && <Badge color="green" size="1">In Temple #{templeId.toString()}</Badge>}
         </Flex>
 
         {stats ? (
           <Flex gap="2" wrap="wrap">
-            <Badge color="blue" size="1" variant="soft">
-              Lv {level}
-            </Badge>
-            <Badge color="amber" size="1" variant="soft">
-              HP {currentHp}/{maxHp}
-            </Badge>
-            <Badge color="gray" size="1" variant="soft">
-              AC {ac}
-            </Badge>
-            <Badge color="green" size="1" variant="soft">
-              {xp} XP
-            </Badge>
+            <Badge color="blue" size="1" variant="soft">Lv {level}</Badge>
+            <Badge color="amber" size="1" variant="soft">HP {currentHp}/{maxHp}</Badge>
+            <Badge color="gray" size="1" variant="soft">AC {ac}</Badge>
+            <Badge color="green" size="1" variant="soft">{xp} XP</Badge>
           </Flex>
         ) : (
           <Badge color="gray" size="1" variant="soft">
             Token #{token.tokenIdNum.toString()}
           </Badge>
         )}
+
+        {!isDead && (
+          <Flex gap="2">
+            {!isInTemple && selectedTempleId !== null && (
+              <Button
+                size="1"
+                disabled={isPending}
+                loading={enter_temple.isPending}
+                onClick={() =>
+                  enter_temple.mutate({ explorerId: token.tokenIdNum, templeId: selectedTempleId })
+                }
+              >
+                Enter Temple #{selectedTempleId.toString()}
+              </Button>
+            )}
+            {!isInTemple && selectedTempleId === null && (
+              <Text size="1" color="gray">Select a temple to enter</Text>
+            )}
+            {isInTemple && (
+              <Button
+                size="1"
+                variant="soft"
+                color="red"
+                disabled={isPending}
+                loading={exit_temple.isPending}
+                onClick={() => exit_temple.mutate(token.tokenIdNum)}
+              >
+                Exit Temple
+              </Button>
+            )}
+          </Flex>
+        )}
       </Flex>
     </Card>
   );
 }
 
-export function ExplorerList() {
+interface ExplorerListProps {
+  selectedTempleId: bigint | null;
+}
+
+export function ExplorerList({ selectedTempleId }: ExplorerListProps) {
   const { isConnected } = useAccount();
   const { explorers, isLoading } = usePlayerTokensContext();
 
@@ -74,18 +113,22 @@ export function ExplorerList() {
           )}
         </Flex>
 
-        {!isConnected ? <Text color="gray">Connect Cotnroller to see your explorers</Text> :
+        {!isConnected ? <Text color="gray">Connect Controller to see your explorers</Text> :
           isLoading ? <Spinner size="1" /> :
             explorers.length === 0 ? (
               <Text color="gray">No explorers yet. Mint one to begin.</Text>
             ) : (
               <Flex direction="column" gap="2">
                 {explorers.map((token) => (
-                  <ExplorerCard key={`${token.contractAddress}:${token.tokenId}`} token={token} />
+                  <ExplorerCard
+                    key={`${token.contractAddress}:${token.tokenId}`}
+                    token={token}
+                    selectedTempleId={selectedTempleId}
+                  />
                 ))}
               </Flex>
             )
-          }
+        }
       </Flex>
     </Card>
   );
