@@ -1,8 +1,6 @@
 import { useState } from "react";
 import { Button, Card, Flex, Heading, Text } from "@radix-ui/themes";
-import { useAccount } from "@starknet-react/core";
-import { CallData } from "starknet";
-import { useDojoConfig } from "@/contexts/dojo-config-provider";
+import { useTempleCalls } from "@/hooks/use-temple-calls";
 
 interface DifficultyOption {
   value: number;
@@ -18,35 +16,13 @@ const DIFFICULTIES: DifficultyOption[] = [
 ];
 
 export function MintTemplePanel() {
-  const { account } = useAccount();
-  const { profileConfig } = useDojoConfig();
+  const { mint_temple } = useTempleCalls();
 
   const [difficulty, setDifficulty] = useState<number | null>(null);
-  const [isPending, setIsPending] = useState(false);
-  const [txHash, setTxHash] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
 
-  const handleMint = async () => {
-    if (!account || difficulty === null) return;
-
-    setIsPending(true);
-    setTxHash(null);
-    setError(null);
-
-    try {
-      const result = await account.execute([
-        {
-          contractAddress: profileConfig.contractAddresses.temple,
-          entrypoint: "mint_temple",
-          calldata: CallData.compile([difficulty]),
-        },
-      ]);
-      setTxHash(result.transaction_hash);
-    } catch (err: any) {
-      setError(err?.message ?? String(err));
-    } finally {
-      setIsPending(false);
-    }
+  const canMint = mint_temple && difficulty !== null;
+  const handleMint = () => {
+    if (canMint) mint_temple.mutate(difficulty);
   };
 
   return (
@@ -80,8 +56,8 @@ export function MintTemplePanel() {
 
         <Button
           onClick={handleMint}
-          disabled={!account || difficulty === null || isPending}
-          loading={isPending}
+          disabled={!canMint || mint_temple?.isPending}
+          loading={mint_temple.isPending}
           color="amber"
         >
           {difficulty !== null
@@ -89,13 +65,13 @@ export function MintTemplePanel() {
             : "Select difficulty"}
         </Button>
 
-        {txHash && (
+        {mint_temple.isSuccess && (
           <Text size="1" color="green">
-            Minted! tx: {txHash.slice(0, 10)}…
+            Minted! tx: {mint_temple.data?.transaction_hash.slice(0, 10)}…
           </Text>
         )}
-        {error && (
-          <Text size="1" color="red">{error}</Text>
+        {mint_temple.isError && (
+          <Text size="1" color="red">{(mint_temple.error as any)?.message ?? String(mint_temple.error)}</Text>
         )}
       </Flex>
     </Card>

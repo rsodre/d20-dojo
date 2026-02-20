@@ -1,39 +1,27 @@
 import { useState } from "react";
 import { Button, Card, Flex, Heading, Text } from "@radix-ui/themes";
-import { useAccount } from "@starknet-react/core";
 import { useExplorerCalls } from "@/hooks/use-explorer-calls";
 
 type ExplorerClass = "Fighter" | "Rogue" | "Wizard";
 
 const CLASS_INFO: Record<ExplorerClass, { label: string; desc: string; emoji: string }> = {
   Fighter: { label: "Fighter", desc: "d10 HP · Longsword · Chain Mail AC 16", emoji: "⚔️" },
-  Rogue:   { label: "Rogue",   desc: "d8 HP · Dagger + Shortbow · Leather AC",  emoji: "🗡️" },
-  Wizard:  { label: "Wizard",  desc: "d6 HP · Staff · Spells · AC 10+DEX",      emoji: "🧙" },
+  Rogue: { label: "Rogue", desc: "d8 HP · Dagger + Shortbow · Leather AC", emoji: "🗡️" },
+  Wizard: { label: "Wizard", desc: "d6 HP · Staff · Spells · AC 10+DEX", emoji: "🧙" },
 };
 
 export function MintExplorerPanel() {
-  const { isConnected } = useAccount();
   const { mint_explorer } = useExplorerCalls();
 
   const [selectedClass, setSelectedClass] = useState<ExplorerClass | null>(null);
-  const [isPending, setIsPending] = useState(false);
   const [txHash, setTxHash] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
 
+  const canMint = mint_explorer && selectedClass;
   const handleMint = async () => {
-    if (!isConnected || !selectedClass) return;
-
-    setIsPending(true);
-    setTxHash(null);
-    setError(null);
-
-    try {
-      const tx = await mint_explorer(selectedClass);
-      setTxHash(tx);
-    } catch (err: any) {
-      setError(err?.message ?? String(err));
-    } finally {
-      setIsPending(false);
+    if (canMint) {
+      setTxHash(null);
+      const result = await mint_explorer.mutateAsync(selectedClass);
+      setTxHash(result.transaction_hash);
     }
   };
 
@@ -70,8 +58,8 @@ export function MintExplorerPanel() {
 
         <Button
           onClick={handleMint}
-          disabled={!isConnected || !selectedClass || isPending}
-          loading={isPending}
+          disabled={!canMint || mint_explorer?.isPending}
+          loading={mint_explorer.isPending}
           color="amber"
         >
           {selectedClass ? `Mint ${selectedClass}` : "Select a class"}
@@ -82,8 +70,8 @@ export function MintExplorerPanel() {
             Minted! tx: {txHash.slice(0, 10)}…
           </Text>
         )}
-        {error && (
-          <Text size="1" color="red">{error}</Text>
+        {mint_explorer.error && (
+          <Text size="1" color="red">{mint_explorer.error.toString()}</Text>
         )}
       </Flex>
     </Card>
