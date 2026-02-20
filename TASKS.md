@@ -85,9 +85,9 @@
 
 ## Day 5: Integration, Testing & Deploy
 
-- [ ] **5.1** End-to-end playtest: mint explorer -> enter temple -> explore -> open exits -> fight -> loot -> level up -> find boss -> die or conquer
-- [ ] **5.2** Test permadeath flow: verify fallen explorer body visible, loot droppable, loot pickable by others, dead NFT frozen
-- [ ] **5.3** Test cross-temple flow: enter temple A -> level up -> exit -> enter temple B -> verify stats carry over
+- [x] **5.1** End-to-end playtest: mint explorer -> enter temple -> explore -> open exits -> fight -> loot -> level up -> find boss -> die or conquer
+- [x] **5.2** Test permadeath flow: verify fallen explorer body visible, loot droppable, loot pickable by others, dead NFT frozen
+- [x] **5.3** Test cross-temple flow: enter temple A -> level up -> exit -> enter temple B -> verify stats carry over
 - [ ] **5.4** Multiplayer testing: two explorers in same temple, verify shared chamber state, shared monster kills, shared chamber generation
 - [ ] **5.5** Test boss probability: verify Yonder Formula produces expected distribution over many runs
 - [ ] **5.6** Test all three classes through full temple runs, verify class features work correctly

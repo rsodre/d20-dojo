@@ -28,8 +28,10 @@ mod tests {
         MonsterInstance, m_MonsterInstance,
         FallenExplorer, m_FallenExplorer,
         ChamberFallenCount, m_ChamberFallenCount,
+        m_TempleState,
+        m_ExplorerTempleProgress,
     };
-    use d20::events::{e_ExplorerMinted, e_CombatResult, e_ExplorerDied};
+    use d20::events::{e_ExplorerMinted, e_CombatResult, e_ExplorerDied, e_LevelUp, e_BossDefeated};
     use d20::types::index::ItemType;
     use d20::types::items::{WeaponType, ArmorType};
     use d20::types::explorer_class::ExplorerClass;
@@ -53,9 +55,13 @@ mod tests {
                 TestResource::Model(m_MonsterInstance::TEST_CLASS_HASH),
                 TestResource::Model(m_FallenExplorer::TEST_CLASS_HASH),
                 TestResource::Model(m_ChamberFallenCount::TEST_CLASS_HASH),
+                TestResource::Model(m_TempleState::TEST_CLASS_HASH),
+                TestResource::Model(m_ExplorerTempleProgress::TEST_CLASS_HASH),
                 TestResource::Event(e_ExplorerMinted::TEST_CLASS_HASH),
                 TestResource::Event(e_CombatResult::TEST_CLASS_HASH),
                 TestResource::Event(e_ExplorerDied::TEST_CLASS_HASH),
+                TestResource::Event(e_LevelUp::TEST_CLASS_HASH),
+                TestResource::Event(e_BossDefeated::TEST_CLASS_HASH),
                 TestResource::Contract(explorer_token::TEST_CLASS_HASH),
                 TestResource::Contract(combat_system::TEST_CLASS_HASH),
             ].span(),
@@ -722,5 +728,330 @@ mod tests {
         assert(fallen.explorer_id == 999, 'fallen id should be 999');
         assert(fallen.dropped_gold == 100, 'fallen gold = 100');
         assert(!fallen.is_looted, 'not yet looted');
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // Spell casting — Magic Missile (auto-hit, 3×(1d4+1))
+    // ═══════════════════════════════════════════════════════════════════════
+
+    #[test]
+    fn test_magic_missile_auto_hits_and_deals_damage() {
+        let caller: ContractAddress = 'wiz_mm1'.try_into().unwrap();
+        starknet::testing::set_contract_address(caller);
+
+        let (mut world, token, combat_sys) = setup_world();
+        let explorer_id = mint_wizard(token);
+
+        world.write_model_test(@MonsterInstance {
+            temple_id: 1,
+            chamber_id: 1,
+            monster_id: 1,
+            monster_type: MonsterType::Skeleton,
+            current_hp: 100,
+            max_hp: 100,
+            is_alive: true,
+        });
+        world.write_model_test(@ExplorerPosition {
+            explorer_id,
+            temple_id: 1,
+            chamber_id: 1,
+            in_combat: true,
+            combat_monster_id: 1,
+        });
+        world.write_model_test(@ExplorerHealth {
+            explorer_id,
+            current_hp: 50,
+            max_hp: 50,
+            is_dead: false,
+        });
+
+        let combat_before: ExplorerCombat = world.read_model(explorer_id);
+        let slots_before = combat_before.spell_slots_1;
+
+        combat_sys.cast_spell(explorer_id, d20::types::spells::SpellId::MagicMissile);
+
+        // Magic Missile auto-hits: monster must have taken damage
+        let monster_after: MonsterInstance = world.read_model((1_u128, 1_u32, 1_u32));
+        assert(monster_after.current_hp < 100, 'MM must deal damage');
+
+        // Should consume one 1st-level slot
+        let combat_after: ExplorerCombat = world.read_model(explorer_id);
+        assert(combat_after.spell_slots_1 == slots_before - 1, 'slot consumed');
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // Spell casting — Shield (+5 AC)
+    // ═══════════════════════════════════════════════════════════════════════
+
+    #[test]
+    fn test_shield_spell_adds_five_ac() {
+        let caller: ContractAddress = 'wiz_sh1'.try_into().unwrap();
+        starknet::testing::set_contract_address(caller);
+
+        let (mut world, token, combat_sys) = setup_world();
+        let explorer_id = mint_wizard(token);
+
+        let combat_before: ExplorerCombat = world.read_model(explorer_id);
+        let ac_before = combat_before.armor_class;
+
+        combat_sys.cast_spell(explorer_id, d20::types::spells::SpellId::ShieldSpell);
+
+        let combat_after: ExplorerCombat = world.read_model(explorer_id);
+        assert(combat_after.armor_class == ac_before + 5, 'shield adds +5 AC');
+
+        // Should consume one 1st-level slot
+        assert(combat_after.spell_slots_1 == combat_before.spell_slots_1 - 1, 'slot consumed');
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // Spell casting — Misty Step (disengage from combat)
+    // ═══════════════════════════════════════════════════════════════════════
+
+    #[test]
+    fn test_misty_step_disengages_from_combat() {
+        let caller: ContractAddress = 'wiz_ms1'.try_into().unwrap();
+        starknet::testing::set_contract_address(caller);
+
+        let (mut world, token, combat_sys) = setup_world();
+        let explorer_id = mint_wizard(token);
+
+        // Give wizard 2nd level spell slots (requires level 3+)
+        let stats: ExplorerStats = world.read_model(explorer_id);
+        world.write_model_test(@ExplorerStats {
+            explorer_id,
+            abilities: stats.abilities,
+            level: 3,
+            xp: stats.xp,
+            explorer_class: stats.explorer_class,
+            temples_conquered: stats.temples_conquered,
+        });
+        world.write_model_test(@ExplorerCombat {
+            explorer_id,
+            armor_class: 10,
+            spell_slots_1: 4,
+            spell_slots_2: 2,
+            spell_slots_3: 0,
+            second_wind_used: false,
+            action_surge_used: false,
+        });
+
+        world.write_model_test(@MonsterInstance {
+            temple_id: 1,
+            chamber_id: 1,
+            monster_id: 1,
+            monster_type: MonsterType::Skeleton,
+            current_hp: 13,
+            max_hp: 13,
+            is_alive: true,
+        });
+        world.write_model_test(@ExplorerPosition {
+            explorer_id,
+            temple_id: 1,
+            chamber_id: 1,
+            in_combat: true,
+            combat_monster_id: 1,
+        });
+
+        combat_sys.cast_spell(explorer_id, d20::types::spells::SpellId::MistyStep);
+
+        let pos_after: ExplorerPosition = world.read_model(explorer_id);
+        assert(!pos_after.in_combat, 'misty step disengages');
+        assert(pos_after.combat_monster_id == 0, 'monster id cleared');
+        assert(pos_after.chamber_id == 1, 'still in same chamber');
+
+        // Should consume one 2nd-level slot
+        let combat_after: ExplorerCombat = world.read_model(explorer_id);
+        assert(combat_after.spell_slots_2 == 1, '2nd level slot consumed');
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // Spell casting — Sleep (5d8 HP pool vs monster)
+    // ═══════════════════════════════════════════════════════════════════════
+
+    #[test]
+    fn test_sleep_incapacitates_low_hp_monster() {
+        let caller: ContractAddress = 'wiz_sl1'.try_into().unwrap();
+        starknet::testing::set_contract_address(caller);
+
+        let (mut world, token, combat_sys) = setup_world();
+        let explorer_id = mint_wizard(token);
+
+        // 1 HP snake: 5d8 (min 5) always beats 1 HP
+        world.write_model_test(@MonsterInstance {
+            temple_id: 1,
+            chamber_id: 1,
+            monster_id: 1,
+            monster_type: MonsterType::PoisonousSnake,
+            current_hp: 1,
+            max_hp: 2,
+            is_alive: true,
+        });
+        world.write_model_test(@ExplorerPosition {
+            explorer_id,
+            temple_id: 1,
+            chamber_id: 1,
+            in_combat: true,
+            combat_monster_id: 1,
+        });
+        world.write_model_test(@ExplorerHealth {
+            explorer_id,
+            current_hp: 50,
+            max_hp: 50,
+            is_dead: false,
+        });
+
+        combat_sys.cast_spell(explorer_id, d20::types::spells::SpellId::Sleep);
+
+        let monster_after: MonsterInstance = world.read_model((1_u128, 1_u32, 1_u32));
+        assert(!monster_after.is_alive, 'sleep incapacitates weak foe');
+
+        let pos_after: ExplorerPosition = world.read_model(explorer_id);
+        assert(!pos_after.in_combat, 'combat ended after sleep');
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // Spell casting — validation failures
+    // ═══════════════════════════════════════════════════════════════════════
+
+    #[test]
+    #[should_panic]
+    fn test_non_wizard_cannot_cast_spell() {
+        let caller: ContractAddress = 'fighter_cast'.try_into().unwrap();
+        starknet::testing::set_contract_address(caller);
+
+        let (mut world, token, combat_sys) = setup_world();
+        let explorer_id = mint_fighter(token);
+
+        world.write_model_test(@ExplorerPosition {
+            explorer_id,
+            temple_id: 1,
+            chamber_id: 1,
+            in_combat: true,
+            combat_monster_id: 1,
+        });
+        world.write_model_test(@MonsterInstance {
+            temple_id: 1,
+            chamber_id: 1,
+            monster_id: 1,
+            monster_type: MonsterType::Skeleton,
+            current_hp: 13,
+            max_hp: 13,
+            is_alive: true,
+        });
+
+        combat_sys.cast_spell(explorer_id, d20::types::spells::SpellId::FireBolt);
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_dead_wizard_cannot_cast_spell() {
+        let caller: ContractAddress = 'dead_wiz'.try_into().unwrap();
+        starknet::testing::set_contract_address(caller);
+
+        let (mut world, token, combat_sys) = setup_world();
+        let explorer_id = mint_wizard(token);
+
+        world.write_model_test(@ExplorerHealth {
+            explorer_id,
+            current_hp: 0,
+            max_hp: 6,
+            is_dead: true,
+        });
+
+        combat_sys.cast_spell(explorer_id, d20::types::spells::SpellId::FireBolt);
+    }
+
+    #[test]
+    #[should_panic]
+    fn test_no_spell_slots_rejects_leveled_spell() {
+        let caller: ContractAddress = 'wiz_noslots'.try_into().unwrap();
+        starknet::testing::set_contract_address(caller);
+
+        let (mut world, token, combat_sys) = setup_world();
+        let explorer_id = mint_wizard(token);
+
+        // Drain all level 1 slots
+        world.write_model_test(@ExplorerCombat {
+            explorer_id,
+            armor_class: 10,
+            spell_slots_1: 0,
+            spell_slots_2: 0,
+            spell_slots_3: 0,
+            second_wind_used: false,
+            action_surge_used: false,
+        });
+        world.write_model_test(@ExplorerPosition {
+            explorer_id,
+            temple_id: 1,
+            chamber_id: 1,
+            in_combat: true,
+            combat_monster_id: 1,
+        });
+        world.write_model_test(@MonsterInstance {
+            temple_id: 1,
+            chamber_id: 1,
+            monster_id: 1,
+            monster_type: MonsterType::Skeleton,
+            current_hp: 13,
+            max_hp: 13,
+            is_alive: true,
+        });
+
+        // Magic Missile needs a 1st level slot → should panic
+        combat_sys.cast_spell(explorer_id, d20::types::spells::SpellId::MagicMissile);
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // Use item — potion at full HP caps at max
+    // ═══════════════════════════════════════════════════════════════════════
+
+    #[test]
+    fn test_health_potion_caps_at_max_hp() {
+        let caller: ContractAddress = 'potion_cap'.try_into().unwrap();
+        starknet::testing::set_contract_address(caller);
+
+        let (mut world, token, combat_sys) = setup_world();
+        let explorer_id = mint_fighter(token);
+
+        let _health: ExplorerHealth = world.read_model(explorer_id);
+        // At full HP, potion shouldn't exceed max
+        world.write_model_test(@ExplorerInventory {
+            explorer_id,
+            primary_weapon: WeaponType::Longsword,
+            secondary_weapon: WeaponType::None,
+            armor: ArmorType::ChainMail,
+            has_shield: false,
+            gold: 0,
+            potions: 1,
+        });
+
+        combat_sys.use_item(explorer_id, ItemType::HealthPotion);
+
+        let after: ExplorerHealth = world.read_model(explorer_id);
+        assert(after.current_hp <= after.max_hp.try_into().unwrap(), 'hp capped at max');
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // Attack while not in combat should fail
+    // ═══════════════════════════════════════════════════════════════════════
+
+    #[test]
+    #[should_panic]
+    fn test_attack_fails_if_not_in_combat() {
+        let caller: ContractAddress = 'atk_nocombat'.try_into().unwrap();
+        starknet::testing::set_contract_address(caller);
+
+        let (mut world, token, combat_sys) = setup_world();
+        let explorer_id = mint_fighter(token);
+
+        world.write_model_test(@ExplorerPosition {
+            explorer_id,
+            temple_id: 1,
+            chamber_id: 1,
+            in_combat: false,
+            combat_monster_id: 0,
+        });
+
+        combat_sys.attack(explorer_id);
     }
 }
