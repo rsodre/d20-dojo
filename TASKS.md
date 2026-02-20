@@ -70,7 +70,7 @@
 - [x] **4.3** Adapt migration scripts to generate typescript bindings, and copy bindings and manifest to /client/src/generated/<profile>
 - [x] **4.4** Create configs for each profile (dev, katana, sepolia, mainnet) based on the env variable `VITE_PROFILE`. the profile must include the manifest, chain id, torii slot server and VRF address.
 - [x] **4.5** Integrate dojo.js sdk, DojoProvider, torii client.
-- [ ] **4.6** Implement Explorer and Temple minting UI (class picker → `mint_explorer` VRF multicall; difficulty picker → `mint_temple`), listing the player's tokens using a dojo sdk token subscription.
+- [x] **4.6** Implement Explorer and Temple minting UI (class picker → `mint_explorer` VRF multicall; difficulty picker → `mint_temple`), listing the player's tokens using a dojo sdk token subscription.
 - [ ] **4.7** Implement Torii GRPC client: query explorer state (stats, HP, inventory, position, skills), chamber state (type, yonder, monster, exits, fallen explorers), temple state (difficulty, boss status). Create hooks to get all relevant state with tanstack-query.
 - [ ] **4.8** Implement Torii GRPC subscription for: current selected explorer, and the temple the explorer is in.
 - [ ] **4.9** Implement action list generator: pure function `getAvailableActions(state) → Action[]` — context-aware (lobby / exploring / in-combat); each action carries label, contract, entrypoint, and calldata; VRF actions are flagged so the caller auto-prepends `request_random`.

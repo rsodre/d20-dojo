@@ -77,6 +77,8 @@ export function DojoConfigProvider({ children }: { children: ReactNode }) {
     }).then(setSdk);
   }, [])
 
+  if (!sdk) return null;
+
   return (
     <DojoConfigContext.Provider value={state}>
       <DojoSdkProvider sdk={sdk as any} dojoConfig={dojoConfig} clientFn={setupWorld}>

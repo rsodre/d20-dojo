@@ -34,8 +34,8 @@ export type ProfileConfig = {
 
 const NAMESPACE = "d20_0_1";
 
-// Cartridge VRF contract address (same for all environments)
 const CARTRIDGE_VRF_ADDRESS = "0x051fea4450da9d6aee758bdeba88b2f665bcbf549d2c61421aa724e9ac0ced8f";
+// const KATANA_VRF_ADDRESS = "0x15f542e25a4ce31481f986888c179b6e57412be340b8095f72f75a328fbb27b";
 
 const profileConfigs: Record<ProfileName, ProfileConfig> = {
   dev: {
