@@ -1,7 +1,22 @@
-# ai-thon
+# D20 - An on-chain implementation of the D20 system (D&D)
+
 Cartridge AI Hackathon Project
 
-## Steps
+## Features
+
+- Implementation of a complex existing game system.
+- Using a subset of the [D20](./D20.md) character classes.
+- Made with Claude Code: specification, planning, core contract and client development.
+- And Google Antigravity: refactors, manual tasks.
+
+## Gameplay
+TODO
+
+
+
+## Task Log
+
+The agents were instructed to log here all [TASKS](TASKS.md) they complete. Tasks that are skipped were executed by myself.
 
 1. [x] Install [Dojo skills](https://book.dojoengine.org/overview#ai-assisted-development): `npx skills add dojoengine/book --yes`
 2. [x] Create [`.tool-versions`](.tool-versions)
@@ -35,3 +50,4 @@ Cartridge AI Hackathon Project
 30. [x] Task 4.1: Set up client project at `/client` — TypeScript + React + Vite app with `@tanstack/react-query`, `starknet`, `@cartridge/controller`, `@dojoengine/torii-client`; `tsconfig.json` with path aliases, `vite.config.ts` with `@/` alias, placeholder `src/generated/` directory for bindings (task 4.2); `pnpm-workspace.yaml` already includes `client`; `tsc --noEmit` passes clean.
 31. [x] Task 4.2: Cartridge controller connect — `src/controller.ts` singleton (`ControllerProvider` with `defaultChainId`/`rpcUrl` from `VITE_CHAIN_ID`/`VITE_RPC_URL` env vars, defaults to SN_MAIN + Cartridge public RPC); `ControllerContext` with `probe()` on mount to restore sessions, `connect`/`disconnect`/`openProfile` actions; `ConnectButton` component: shows "Connect" (with loading state) when disconnected, shows username and opens profile modal when clicked while connected.
 32. [x] Task 4.6: Explorer and Temple minting UI — `MintExplorerPanel` (class picker: Fighter/Rogue/Wizard → VRF multicall with `request_random` prepended); `MintTemplePanel` (difficulty picker 1–5 → `mint_temple`); `usePlayerTokens` hook subscribes to player's ERC721 balances via `sdk.subscribeTokenBalance`; `ExplorerList`/`TempleList` display owned tokens; `PlayerTokensProvider` context ensures a single subscription; all components render only when wallet is connected.
+33. [x] Task 4.8: Torii gRPC model queries + DojoStore — `useGameModels` hook subscribes to all game model types (ExplorerStats/Health/Combat/Inventory/Position/Skills, TempleState, Chamber/MonsterInstance/ChamberFallenCount/ChamberExit/FallenExplorer/ExplorerTempleProgress) via `useEntityQuery` with wildcard KeysClauses; `useExplorerModels(id)` and `useTempleModels(id)` helpers read from the DojoStore via `useModel`; `ExplorerList` updated to display class emoji, level, HP bar, AC, and XP badges per explorer; `useGameModels` called in `LobbyView` so subscriptions run for all connected-player sessions.

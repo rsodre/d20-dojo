@@ -32,7 +32,7 @@ importers:
         specifier: ^5.0.3
         version: 5.0.3(bufferutil@4.1.0)(get-starknet-core@4.0.0)(react@19.2.4)(starknet@8.9.2)(typescript@5.9.3)(utf-8-validate@5.0.10)
       '@tanstack/react-query':
-        specifier: ^5.90.21
+        specifier: ^5.62.16
         version: 5.90.21(react@19.2.4)
       react:
         specifier: ^19.0.0

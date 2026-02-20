@@ -2,12 +2,23 @@
 
 This document provides a detailed technical reference for the game's systems and public interfaces. It is intended for both human players and autonomous agents who need to understand the underlying contract methods.
 
+## Current deployment
+
+- Katana: https://api.cartridge.gg/x/d20-katana/katana
+- Torii: https://api.cartridge.gg/x/d20-katana/torii
+- Contracts:
+  - World: `0x0400feed25cca789d09cfdc33debcc94c11703995cb3eb3dae2501fd215d1b3a`
+  - Combat: `0x05c6a7b7e245f1bcb01b43966d9fd2c24186b1e8184a54f52e23a9dc1163d780`
+  - Explorer: `0x0468d3fbf587e6099286aee2e42f4e8e37bf3f95d0dec368f53b2479f51e882f`
+  - Temple: `0x05b7e1e89e4af223d5a2444e304f9c26500311de3bd2184facc3dd3c39d471d9`
+  - VRF: `0x051fea4450da9d6aee758bdeba88b2f665bcbf549d2c61421aa724e9ac0ced8f`
+
 ## System Overview
 
 The game logic is divided into three main contracts. Each contract exposes a public interface for player interactions.
 
 > [!IMPORTANT]
-> **VRF Multicall Requirement**: If a function listed below is marked as "(Consumes VRF)", it must be executed as part of a **multicall**. The first transaction in the multicall must be a call to `request_random` on the VRF contract (`0x051fea4450da9d6aee758bdeba88b2f665bcbf549d2c61421aa724e9ac0ced8f`).
+> **VRF Multicall Requirement**: If a function listed below is marked as "(Consumes VRF)", it must be executed as part of a **multicall**. The first transaction in the multicall must be a call to `request_random` on the VRF contract.
 >
 > Example multicall structure:
 > ```javascript
@@ -17,7 +28,7 @@ The game logic is divided into three main contracts. Each contract exposes a pub
 >     entrypoint: 'request_random',
 >     calldata: CallData.compile({
 >       caller: contract_address,
->       source: { type: 0, address: nonceAddress },
+>       source: { type: 0, address: wallet_address },
 >     }),
 >   },
 >   {
@@ -134,3 +145,4 @@ All actions involving dice rolls require Cartridge VRF. These transactions must 
 
 ### Death is Permanent
 When `ExplorerHealth.is_dead` becomes true, the NFT is frozen. The character's inventory is dropped in the chamber where they fell, and can be retrieved by other explorers via `loot_fallen`.
+

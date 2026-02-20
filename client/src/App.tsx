@@ -6,8 +6,12 @@ import { MintTemplePanel } from "@/components/mint-temple-panel";
 import { ExplorerList } from "@/components/explorer-list";
 import { TempleList } from "@/components/temple-list";
 import { PlayerTokensProvider } from "@/contexts/player-tokens-provider";
+import { useGameModels } from "@/hooks/use-game-models";
 
 function LobbyView() {
+  // Subscribe to all game models and populate the DojoStore
+  useGameModels();
+
   return (
     <PlayerTokensProvider>
       <Flex direction="column" gap="4">

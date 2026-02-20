@@ -92,7 +92,6 @@ export function usePlayerTokens() {
     }).then(([initialData, subscription]: any) => {
       if (cancelled) {
         subscription?.cancel?.();
-        subscription?.free?.();
         return;
       }
       sub = subscription;
@@ -115,7 +114,6 @@ export function usePlayerTokens() {
     return () => {
       cancelled = true;
       sub?.cancel?.();
-      sub?.free?.();
     };
   }, [sdk, account?.address, profileConfig.contractAddresses.explorer, profileConfig.contractAddresses.temple]);
 

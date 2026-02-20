@@ -54,6 +54,7 @@ const state = {
   profileConfig,
   chains: [profileConfig.chain],
   connectors: [controller as Connector],
+  model: (name: string) => (`${profileConfig.namespace}-${name}` as `d20-${string}`)
 };
 type DojoConfigState = typeof state;
 

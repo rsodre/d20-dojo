@@ -71,8 +71,8 @@
 - [x] **4.4** Create configs for each profile (dev, katana, sepolia, mainnet) based on the env variable `VITE_PROFILE`. the profile must include the manifest, chain id, torii slot server and VRF address.
 - [x] **4.5** Integrate dojo.js sdk, DojoProvider, torii client.
 - [x] **4.6** Implement Explorer and Temple minting UI (class picker → `mint_explorer` VRF multicall; difficulty picker → `mint_temple`), listing the player's tokens using a dojo sdk token subscription.
-- [ ] **4.7** Implement Torii GRPC client: query explorer state (stats, HP, inventory, position, skills), chamber state (type, yonder, monster, exits, fallen explorers), temple state (difficulty, boss status). Create hooks to get all relevant state with tanstack-query.
-- [ ] **4.8** Implement Torii GRPC subscription for: current selected explorer, and the temple the explorer is in.
+- [x] **4.7** Implement Torii GRPC subscription for: player's explorers and temples.
+- [x] **4.8** Implement Torii GRPC client: query explorer state (stats, HP, inventory, position, skills), chamber state (type, yonder, monster, exits, fallen explorers), temple state (difficulty, boss status). Create hooks to get all relevant state with tanstack-query. use a DojoStore to store all models. Load all models related to the player's explorers and temples, and a subscription that catches everything. Using the fetched models, display class and stats of each  explorer listed in the home screen.
 - [ ] **4.9** Implement action list generator: pure function `getAvailableActions(state) → Action[]` — context-aware (lobby / exploring / in-combat); each action carries label, contract, entrypoint, and calldata; VRF actions are flagged so the caller auto-prepends `request_random`.
 - [ ] **4.10** Implement state display component: explorer character sheet (class, level, HP/max, AC, inventory, spell slots, class features remaining), chamber info (type, yonder, monster type + HP, trap, exits, fallen explorers).
 - [ ] **4.11** Implement action panel: render `getAvailableActions` output as clickable buttons; disable all buttons while a tx is pending; show tx status (pending / confirmed / error).
