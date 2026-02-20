@@ -89,7 +89,7 @@
 - [x] **5.2** Test permadeath flow: verify fallen explorer body visible, loot droppable, loot pickable by others, dead NFT frozen
 - [x] **5.3** Test cross-temple flow: enter temple A -> level up -> exit -> enter temple B -> verify stats carry over
 - [x] **5.4** Multiplayer testing: two explorers in same temple, verify shared chamber state, shared monster kills, shared chamber generation
-- [ ] **5.5** Test boss probability: verify Yonder Formula produces expected distribution over many runs
+- [x] **5.5** Test boss probability: verify Yonder Formula produces expected distribution over many runs
 - [ ] **5.6** Test all three classes through full temple runs, verify class features work correctly
 - [ ] **5.7** Balance tuning: adjust monster stats, XP rewards, treasure distribution, trap DCs, boss probability constants
 - [ ] **5.8** Edge case testing: death at level 1 with empty inventory, chamber with many fallen explorers, dead-end chambers, exiting temple mid-combat
