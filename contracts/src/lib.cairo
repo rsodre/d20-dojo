@@ -36,6 +36,15 @@ pub mod tests {
     pub mod mock_vrf;
     pub mod test_explorer_token;
     pub mod test_combat_system;
-    pub mod test_integration;
-    pub mod test_ownership;
+    pub mod tester;
+    pub mod test_temple_lifecycle;
+    pub mod test_exploration;
+    pub mod test_combat_and_progression;
+    pub mod test_traps;
+    pub mod test_looting;
+    pub mod test_permadeath;
+    pub mod test_boss_mechanics;
+    pub mod test_cross_temple;
+    pub mod test_multiplayer;
+    pub mod test_full_flows;
 }
