@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { Badge, Card, Flex, Heading, Spinner, Text } from "@radix-ui/themes";
-import { usePlayerTokensContext, type TokenInfo } from "@/contexts/player-tokens-provider";
+import { useAllTemples } from "@/hooks/use-all-temples";
+import type { TokenInfo } from "@/hooks/use-player-tokens";
 
 function TempleCard({ token }: { token: TokenInfo }) {
   return (
@@ -21,13 +22,13 @@ function TempleCard({ token }: { token: TokenInfo }) {
 }
 
 export function TempleList() {
-  const { temples, isLoading } = usePlayerTokensContext();
+  const { temples, isLoading } = useAllTemples();
 
   return (
     <Card>
       <Flex direction="column" gap="3">
         <Flex align="center" gap="2">
-          <Heading size="3">My Temples</Heading>
+          <Heading size="3">Existing Temples</Heading>
           {isLoading && <Spinner size="1" />}
           {!isLoading && (
             <Badge color="gray" variant="soft">{temples.length}</Badge>
@@ -35,7 +36,7 @@ export function TempleList() {
         </Flex>
 
         {!isLoading && temples.length === 0 && (
-          <Text size="2" color="gray">No temples yet. Mint one to build your dungeon.</Text>
+          <Text size="2" color="gray">No temples minted yet.</Text>
         )}
 
         <Flex direction="column" gap="2">

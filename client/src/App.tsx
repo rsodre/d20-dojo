@@ -1,6 +1,5 @@
 import { Routes, Route } from "react-router-dom";
-import { useAccount } from "@starknet-react/core";
-import { Flex, Grid, Text } from "@radix-ui/themes";
+import { Flex, Grid } from "@radix-ui/themes";
 import { ConnectButton } from "@/components/connect-button";
 import { MintExplorerPanel } from "@/components/mint-explorer-panel";
 import { MintTemplePanel } from "@/components/mint-temple-panel";
@@ -43,8 +42,6 @@ function ConnectedRoutes() {
 }
 
 export default function App() {
-  const { isConnected } = useAccount();
-
   return (
     <div className="min-h-screen">
       <header className="flex items-center justify-between px-6 py-4 border-b border-[var(--gray-6)]">
@@ -54,11 +51,7 @@ export default function App() {
         <ConnectButton />
       </header>
       <main className="p-6">
-        {isConnected ? (
-          <ConnectedRoutes />
-        ) : (
-          <Text color="gray">Connect your wallet to start playing.</Text>
-        )}
+        <ConnectedRoutes />
       </main>
     </div>
   );

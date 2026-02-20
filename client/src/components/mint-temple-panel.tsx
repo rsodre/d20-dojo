@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Button, Card, Flex, Heading, Text } from "@radix-ui/themes";
 import { useTempleCalls } from "@/hooks/use-temple-calls";
+import { useAccount } from "@starknet-react/core";
 
 interface DifficultyOption {
   value: number;
@@ -16,6 +17,7 @@ const DIFFICULTIES: DifficultyOption[] = [
 ];
 
 export function MintTemplePanel() {
+  const { isConnected } = useAccount();
   const { mint_temple } = useTempleCalls();
 
   const [difficulty, setDifficulty] = useState<number | null>(null);
@@ -56,13 +58,11 @@ export function MintTemplePanel() {
 
         <Button
           onClick={handleMint}
-          disabled={!canMint || mint_temple?.isPending}
+          disabled={!canMint || mint_temple?.isPending || !isConnected}
           loading={mint_temple.isPending}
           color="amber"
         >
-          {difficulty !== null
-            ? `Mint ${DIFFICULTIES.find((d) => d.value === difficulty)?.label} Temple`
-            : "Select difficulty"}
+          {!difficulty ? "Select difficulty" : !isConnected ? "Connect Cotnroller to mint" : `Mint ${DIFFICULTIES.find((d) => d.value === difficulty)?.label} Temple`}
         </Button>
 
         {mint_temple.isSuccess && (

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Button, Card, Flex, Heading, Text } from "@radix-ui/themes";
 import { useExplorerCalls } from "@/hooks/use-explorer-calls";
+import { useAccount } from "@starknet-react/core";
 
 type ExplorerClass = "Fighter" | "Rogue" | "Wizard";
 
@@ -11,6 +12,7 @@ const CLASS_INFO: Record<ExplorerClass, { label: string; desc: string; emoji: st
 };
 
 export function MintExplorerPanel() {
+  const { isConnected } = useAccount();
   const { mint_explorer } = useExplorerCalls();
 
   const [selectedClass, setSelectedClass] = useState<ExplorerClass | null>(null);
@@ -58,11 +60,11 @@ export function MintExplorerPanel() {
 
         <Button
           onClick={handleMint}
-          disabled={!canMint || mint_explorer?.isPending}
+          disabled={!canMint || mint_explorer?.isPending || !isConnected}
           loading={mint_explorer.isPending}
           color="amber"
         >
-          {selectedClass ? `Mint ${selectedClass}` : "Select a class"}
+          {!selectedClass ? "Select a class" : !isConnected ? "Connect Cotnroller to mint" : `Mint ${selectedClass}`}
         </Button>
 
         {txHash && (

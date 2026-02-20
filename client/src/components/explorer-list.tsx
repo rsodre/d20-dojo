@@ -1,6 +1,7 @@
 import { Badge, Card, Flex, Heading, Spinner, Text } from "@radix-ui/themes";
 import { usePlayerTokensContext, type TokenInfo } from "@/contexts/player-tokens-provider";
 import { useExplorerModels } from "@/hooks/use-explorer-state";
+import { useAccount } from "@starknet-react/core";
 
 const CLASS_EMOJI: Record<string, string> = {
   Fighter: "⚔️",
@@ -59,6 +60,7 @@ function ExplorerCard({ token }: { token: TokenInfo }) {
 }
 
 export function ExplorerList() {
+  const { isConnected } = useAccount();
   const { explorers, isLoading } = usePlayerTokensContext();
 
   return (
@@ -72,15 +74,18 @@ export function ExplorerList() {
           )}
         </Flex>
 
-        {!isLoading && explorers.length === 0 && (
-          <Text size="2" color="gray">No explorers yet. Mint one to begin.</Text>
-        )}
-
-        <Flex direction="column" gap="2">
-          {explorers.map((token) => (
-            <ExplorerCard key={`${token.contractAddress}:${token.tokenId}`} token={token} />
-          ))}
-        </Flex>
+        {!isConnected ? <Text color="gray">Connect Cotnroller to see your explorers</Text> :
+          isLoading ? <Spinner size="1" /> :
+            explorers.length === 0 ? (
+              <Text color="gray">No explorers yet. Mint one to begin.</Text>
+            ) : (
+              <Flex direction="column" gap="2">
+                {explorers.map((token) => (
+                  <ExplorerCard key={`${token.contractAddress}:${token.tokenId}`} token={token} />
+                ))}
+              </Flex>
+            )
+          }
       </Flex>
     </Card>
   );

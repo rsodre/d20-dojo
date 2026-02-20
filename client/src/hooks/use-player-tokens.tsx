@@ -64,6 +64,7 @@ export function usePlayerTokens() {
           continue;
         }
         const info = toTokenInfo(raw);
+        if (info.tokenIdNum === 0n) continue;
         if (raw.contractAddress === explorerAddr) exps.push(info);
         else if (raw.contractAddress === templeAddr) tmps.push(info);
       }
