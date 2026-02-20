@@ -4,13 +4,13 @@ This document provides a detailed technical reference for the game's systems and
 
 ## Current deployment
 
-- Katana: https://api.cartridge.gg/x/d20-katana/katana
-- Torii: https://api.cartridge.gg/x/d20-katana/torii
+- RPC: https://api.cartridge.gg/x/starknet/sepolia/rpc/v0_9
+- Torii: https://api.cartridge.gg/x/d20-sepolia/torii
 - Contracts:
   - World: `0x0400feed25cca789d09cfdc33debcc94c11703995cb3eb3dae2501fd215d1b3a`
-  - Combat: `0x059116853679adbb10fdc4c894c98291885485850ac3c843de4d3fc8c574642a`
-  - Explorer: `0x03a583e3442d9966d609e6111e9969feb4cf3195aa286cc06c26479741a10ff0`
-  - Temple: `0x005fdb053fae338322f7b439cd73c869bd9432d1640f84b77194c8012b6dfd98`
+  - Combat: `0x05c6a7b7e245f1bcb01b43966d9fd2c24186b1e8184a54f52e23a9dc1163d780`
+  - Explorer: `0x0468d3fbf587e6099286aee2e42f4e8e37bf3f95d0dec368f53b2479f51e882f`
+  - Temple: `0x027c7a362ba89a2292673d1eb84d37f0b66416b7d1cc43449139f89d45230b9f`
   - VRF: `0x051fea4450da9d6aee758bdeba88b2f665bcbf549d2c61421aa724e9ac0ced8f`
 
 ## System Overview

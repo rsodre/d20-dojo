@@ -80,7 +80,7 @@ name = "My Game"
 seed = "my-game-sepolia"
 
 [env]
-rpc_url = "https://api.cartridge.gg/x/starknet/sepolia"
+rpc_url = "https://api.cartridge.gg/x/starknet/sepolia/rpc/v0_9"
 account_address = "YOUR_ACCOUNT"
 private_key = "YOUR_KEY"
 
@@ -373,7 +373,7 @@ After deployment, `manifest_<profile>.json` contains:
 - Pre-funded accounts printed on startup
 
 ### Sepolia (Testnet)
-- RPC: `https://api.cartridge.gg/x/starknet/sepolia`
+- RPC: `https://api.cartridge.gg/x/starknet/sepolia/rpc/v0_9`
 - Faucet: https://faucet.starknet.io
 - Explorer: https://sepolia.voyager.online
 

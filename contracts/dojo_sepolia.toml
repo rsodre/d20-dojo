@@ -19,5 +19,6 @@ world_address = "0x0400feed25cca789d09cfdc33debcc94c11703995cb3eb3dae2501fd215d1
 "d20_0_1" = ["d20_0_1-explorer_token", "d20_0_1-combat_system", "d20_0_1-temple_token"]
 
 [init_call_args]
-# Cartridge VRF provider address (same on Mainnet and Sepolia).
+# VRF provider address
+"d20_0_1-explorer_token" = ["0x051fea4450da9d6aee758bdeba88b2f665bcbf549d2c61421aa724e9ac0ced8f"]
 "d20_0_1-combat_system" = ["0x051fea4450da9d6aee758bdeba88b2f665bcbf549d2c61421aa724e9ac0ced8f"]

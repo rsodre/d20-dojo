@@ -1,0 +1,24 @@
+#
+# torii config for profile [dev]
+#
+world_address = "0x0400feed25cca789d09cfdc33debcc94c11703995cb3eb3dae2501fd215d1b3a"
+rpc = "https://api.cartridge.gg/x/starknet/sepolia/rpc/v0_9"
+
+[events]
+raw = true
+
+[indexing]
+# transactions = true
+# controllers = true
+pending = true
+contracts = [
+  "erc721:0x0468d3fbf587e6099286aee2e42f4e8e37bf3f95d0dec368f53b2479f51e882f", # explorer_token
+  "erc721:0x027c7a362ba89a2292673d1eb84d37f0b66416b7d1cc43449139f89d45230b9f", # temple_token
+]
+
+# [sql]
+# historical = [
+#   "dojo_starter-Moves",
+#   "dojo_starter-Moved",
+# ]
+
