@@ -9,6 +9,7 @@ import { TempleList } from "@/components/temple-list";
 import { PlayerTokensProvider } from "@/contexts/player-tokens-provider";
 import { useGameModels } from "@/hooks/use-game-models";
 import { TempleView } from "@/pages/TempleView";
+import { PlayView } from "@/pages/PlayView";
 
 function LobbyContent() {
   const [selectedTempleId, setSelectedTempleId] = useState<bigint | null>(null);
@@ -39,6 +40,7 @@ function ConnectedRoutes() {
       <Routes>
         <Route path="/" element={<LobbyContent />} />
         <Route path="/temple/:templeId" element={<TempleView />} />
+        <Route path="/play/:templeId/:explorerId" element={<PlayView />} />
       </Routes>
     </PlayerTokensProvider>
   );

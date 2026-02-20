@@ -413,15 +413,42 @@ pub mod temple_token {
             // Dojo models use u128 keys — high part is always 0 for counter-minted IDs
             let temple_id: u128 = token_id.low;
 
-            // Initialize TempleState
+            // Initialize TempleState (max_yonder=1 because entrance is at yonder 1)
             world.write_model(@TempleState {
                 temple_id,
                 difficulty_tier: difficulty,
                 next_chamber_id: 2, // chamber 1 is the entrance; next new chamber gets id 2
                 boss_chamber_id: 0,
                 boss_alive: true,
-                max_yonder: 0,
+                max_yonder: 1,
             });
+
+            // Create entrance Chamber (id=1, yonder=1, always 3 exits)
+            let entrance_exit_count: u8 = 3;
+            world.write_model(@Chamber {
+                temple_id,
+                chamber_id: 1,
+                chamber_type: ChamberType::Entrance,
+                yonder: 1,
+                exit_count: entrance_exit_count,
+                is_revealed: true,
+                treasure_looted: false,
+                trap_disarmed: false,
+                trap_dc: 0,
+            });
+
+            // Write undiscovered exit stubs so open_exit can validate bounds
+            let mut i: u8 = 0;
+            while i < entrance_exit_count {
+                world.write_model(@ChamberExit {
+                    temple_id,
+                    from_chamber_id: 1,
+                    exit_index: i,
+                    to_chamber_id: 0,
+                    is_discovered: false,
+                });
+                i += 1;
+            };
 
             temple_id
         }

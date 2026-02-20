@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { Badge, Button, Card, Flex, Heading, Spinner, Text } from "@radix-ui/themes";
 import { usePlayerTokensContext, type TokenInfo } from "@/contexts/player-tokens-provider";
 import { useExplorerModels } from "@/hooks/use-explorer-state";
@@ -59,7 +60,7 @@ function ExplorerCard({ token, selectedTempleId }: ExplorerCardProps) {
         )}
 
         {!isDead && (
-          <Flex gap="2">
+          <Flex gap="2" wrap="wrap">
             {!isInTemple && selectedTempleId !== null && (
               <Button
                 size="1"
@@ -76,16 +77,21 @@ function ExplorerCard({ token, selectedTempleId }: ExplorerCardProps) {
               <Text size="1" color="gray">Select a temple to enter</Text>
             )}
             {isInTemple && (
-              <Button
-                size="1"
-                variant="soft"
-                color="red"
-                disabled={isPending}
-                loading={exit_temple.isPending}
-                onClick={() => exit_temple.mutate(token.tokenIdNum)}
-              >
-                Exit Temple
-              </Button>
+              <>
+                <Link to={`/play/${templeId}/${token.tokenIdNum}`} style={{ textDecoration: "none" }}>
+                  <Button size="1" color="amber">Play →</Button>
+                </Link>
+                <Button
+                  size="1"
+                  variant="soft"
+                  color="red"
+                  disabled={isPending}
+                  loading={exit_temple.isPending}
+                  onClick={() => exit_temple.mutate(token.tokenIdNum)}
+                >
+                  Exit Temple
+                </Button>
+              </>
             )}
           </Flex>
         )}

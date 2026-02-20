@@ -165,6 +165,28 @@ mod tests {
         assert(state.boss_alive, 'boss should start alive');
         assert(state.next_chamber_id == 2, 'next chamber starts at 2');
         assert(state.boss_chamber_id == 0, 'no boss chamber yet');
+        assert(state.max_yonder == 1, 'max_yonder should be 1');
+
+        // Verify entrance Chamber was created by mint_temple
+        let entrance: Chamber = world.read_model((temple_id, 1_u32));
+        assert(entrance.chamber_type == ChamberType::Entrance, 'entrance type');
+        assert(entrance.yonder == 1, 'entrance yonder == 1');
+        assert(entrance.exit_count == 3, 'entrance has 3 exits');
+        assert(entrance.is_revealed, 'entrance is revealed');
+        assert(!entrance.treasure_looted, 'entrance not looted');
+
+        // Verify 3 undiscovered exit stubs
+        let exit0: ChamberExit = world.read_model((temple_id, 1_u32, 0_u8));
+        assert(!exit0.is_discovered, 'exit 0 undiscovered');
+        assert(exit0.to_chamber_id == 0, 'exit 0 points nowhere');
+
+        let exit1: ChamberExit = world.read_model((temple_id, 1_u32, 1_u8));
+        assert(!exit1.is_discovered, 'exit 1 undiscovered');
+        assert(exit1.to_chamber_id == 0, 'exit 1 points nowhere');
+
+        let exit2: ChamberExit = world.read_model((temple_id, 1_u32, 2_u8));
+        assert(!exit2.is_discovered, 'exit 2 undiscovered');
+        assert(exit2.to_chamber_id == 0, 'exit 2 points nowhere');
 
         // Verify ERC721 state
         assert(temple.total_supply() == 1_u256, 'supply should be 1');
@@ -326,7 +348,7 @@ mod tests {
             temple_id,
             chamber_id: 1,
             chamber_type: ChamberType::Entrance,
-            yonder: 0,
+            yonder: 1,
             exit_count: 2,
             is_revealed: true,
             treasure_looted: false,
@@ -347,7 +369,7 @@ mod tests {
         // A new chamber (id=2) should now exist
         let new_chamber: Chamber = world.read_model((temple_id, 2_u32));
         assert(new_chamber.is_revealed, 'new chamber should be revealed');
-        assert(new_chamber.yonder == 1, 'yonder should be 1');
+        assert(new_chamber.yonder == 2, 'yonder should be 2');
 
         // Exit should be marked discovered
         let exit: ChamberExit = world.read_model((temple_id, 1_u32, 0_u8));
@@ -356,7 +378,7 @@ mod tests {
 
         // TempleState.max_yonder should be updated to the new chamber's yonder
         let state: TempleState = world.read_model(temple_id);
-        assert(state.max_yonder == 1, 'max_yonder should be 1');
+        assert(state.max_yonder == 2, 'max_yonder should be 2');
     }
 
     #[test]
@@ -373,7 +395,7 @@ mod tests {
             temple_id,
             chamber_id: 1,
             chamber_type: ChamberType::Entrance,
-            yonder: 0,
+            yonder: 1,
             exit_count: 2,
             is_revealed: true,
             treasure_looted: false,
@@ -409,7 +431,7 @@ mod tests {
             temple_id,
             chamber_id: 1,
             chamber_type: ChamberType::Entrance,
-            yonder: 0,
+            yonder: 1,
             exit_count: 1,
             is_revealed: true,
             treasure_looted: false,
@@ -448,7 +470,7 @@ mod tests {
             temple_id,
             chamber_id: 1,
             chamber_type: ChamberType::Entrance,
-            yonder: 0,
+            yonder: 1,
             exit_count: 1,
             is_revealed: true,
             treasure_looted: false,
@@ -487,7 +509,7 @@ mod tests {
             temple_id,
             chamber_id: 1,
             chamber_type: ChamberType::Entrance,
-            yonder: 0,
+            yonder: 1,
             exit_count: 1,
             is_revealed: true,
             treasure_looted: false,
@@ -505,7 +527,7 @@ mod tests {
             temple_id,
             chamber_id: 2,
             chamber_type: ChamberType::Empty,
-            yonder: 1,
+            yonder: 2,
             exit_count: 0,
             is_revealed: true,
             treasure_looted: false,
@@ -535,7 +557,7 @@ mod tests {
             temple_id,
             chamber_id: 1,
             chamber_type: ChamberType::Entrance,
-            yonder: 0,
+            yonder: 1,
             exit_count: 1,
             is_revealed: true,
             treasure_looted: false,
@@ -553,7 +575,7 @@ mod tests {
             temple_id,
             chamber_id: 2,
             chamber_type: ChamberType::Monster,
-            yonder: 1,
+            yonder: 2,
             exit_count: 0,
             is_revealed: true,
             treasure_looted: false,
@@ -594,7 +616,7 @@ mod tests {
             temple_id,
             chamber_id: 1,
             chamber_type: ChamberType::Entrance,
-            yonder: 0,
+            yonder: 1,
             exit_count: 1,
             is_revealed: true,
             treasure_looted: false,
@@ -862,7 +884,7 @@ mod tests {
             temple_id,
             chamber_id: 2,
             chamber_type: ChamberType::Treasure,
-            yonder: 1,
+            yonder: 2,
             exit_count: 0,
             is_revealed: true,
             treasure_looted: false,
@@ -902,7 +924,7 @@ mod tests {
             temple_id,
             chamber_id: 2,
             chamber_type: ChamberType::Treasure,
-            yonder: 1,
+            yonder: 2,
             exit_count: 0,
             is_revealed: true,
             treasure_looted: false,
@@ -952,7 +974,7 @@ mod tests {
             temple_id,
             chamber_id: 2,
             chamber_type: ChamberType::Treasure,
-            yonder: 1,
+            yonder: 2,
             exit_count: 0,
             is_revealed: true,
             treasure_looted: true, // already looted
@@ -985,7 +1007,7 @@ mod tests {
             temple_id,
             chamber_id: 2,
             chamber_type: ChamberType::Monster,
-            yonder: 1,
+            yonder: 2,
             exit_count: 0,
             is_revealed: true,
             treasure_looted: false,
@@ -1271,7 +1293,7 @@ mod tests {
             temple_id,
             chamber_id: 1,
             chamber_type: ChamberType::Entrance,
-            yonder: 0,
+            yonder: 1,
             exit_count: 1,
             is_revealed: true,
             treasure_looted: false,
