@@ -28,6 +28,7 @@ pub mod utils {
     pub mod vrf;
     pub mod seeder;
     pub mod dns;
+    pub mod damage;
 }
 
 #[cfg(test)]

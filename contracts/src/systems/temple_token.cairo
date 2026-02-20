@@ -154,6 +154,7 @@ pub mod temple_token {
     use d20::models::explorer::{ExplorerStats, ExplorerInventory, ExplorerSkills};
     use d20::constants::{TEMPLE_TOKEN_DESCRIPTION, TEMPLE_TOKEN_EXTERNAL_LINK};
     use d20::utils::dns::{DnsTrait};
+    use d20::utils::damage::DamageImpl;
     use d20::systems::explorer_token::{IExplorerTokenDispatcherTrait};
 
     // Metadata types
@@ -648,9 +649,9 @@ pub mod temple_token {
             // On failed save, explorer takes 1d6 + yonder/2 damage.
             // (Full save resolution reuses VRF; simplified to automatic partial damage here
             //  until task 3.9 disarm_trap is implemented)
+            let mut seeder = SeederTrait::from_consume_vrf(world, caller);
             if dest_chamber.chamber_type == ChamberType::Trap && !dest_chamber.trap_disarmed
                 && dest_chamber.trap_dc > 0 {
-                let mut seeder = SeederTrait::from_consume_vrf(world, caller);
                 let stats: ExplorerStats = world.read_model(explorer_id);
                 let dex_mod: i8 = ability_modifier(stats.abilities.dexterity);
                 // DEX saving throw
@@ -661,22 +662,17 @@ pub mod temple_token {
                     let base_dmg: u16 = roll_dice(ref seeder, 6, 1);
                     let bonus: u16 = (dest_chamber.yonder / 2).into();
                     let damage: u16 = base_dmg + bonus;
-                    let new_hp: i16 = health.current_hp - damage.try_into().unwrap();
-                    if new_hp <= 0 {
-                        world.write_model(@ExplorerHealth {
-                            explorer_id,
-                            current_hp: 0,
-                            max_hp: health.max_hp,
-                            is_dead: true,
-                        });
-                    } else {
-                        world.write_model(@ExplorerHealth {
-                            explorer_id,
-                            current_hp: new_hp,
-                            max_hp: health.max_hp,
-                            is_dead: false,
-                        });
-                    }
+                    // Use the destination position so handle_death records the right chamber
+                    let dest_position = ExplorerPosition {
+                        explorer_id,
+                        temple_id,
+                        chamber_id: dest_chamber_id,
+                        in_combat: enters_combat,
+                        combat_monster_id: if enters_combat { 1 } else { 0 },
+                    };
+                    DamageImpl::apply_explorer_damage(
+                        ref world, explorer_id, health, dest_position, MonsterType::None, damage,
+                    );
                 }
             }
         }
@@ -765,22 +761,9 @@ pub mod temple_token {
                     let base_dmg: u16 = roll_dice(ref seeder, 6, 1);
                     let bonus: u16 = (chamber.yonder / 2).into();
                     let damage: u16 = base_dmg + bonus;
-                    let new_hp: i16 = health.current_hp - damage.try_into().unwrap();
-                    if new_hp <= 0 {
-                        world.write_model(@ExplorerHealth {
-                            explorer_id,
-                            current_hp: 0,
-                            max_hp: health.max_hp,
-                            is_dead: true,
-                        });
-                    } else {
-                        world.write_model(@ExplorerHealth {
-                            explorer_id,
-                            current_hp: new_hp,
-                            max_hp: health.max_hp,
-                            is_dead: false,
-                        });
-                    }
+                    DamageImpl::apply_explorer_damage(
+                        ref world, explorer_id, health, position, MonsterType::None, damage,
+                    );
                 }
                 // On success of the DEX save: no damage, but trap still armed (can retry)
             }

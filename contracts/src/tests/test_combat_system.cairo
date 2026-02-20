@@ -112,6 +112,40 @@ mod tests {
         token.mint_explorer(ExplorerClass::Wizard)
     }
 
+    // ── Death assertion helper ────────────────────────────────────────────────
+
+    /// Validates all invariants that must hold after an explorer dies:
+    /// - is_dead flag set, HP at 0, not in combat
+    /// - FallenExplorer record created in the correct chamber
+    /// - ChamberFallenCount incremented
+    /// - Inventory gold and potions zeroed (dropped as loot)
+    fn assert_explorer_dead(
+        ref world: dojo::world::WorldStorage,
+        explorer_id: u128,
+        temple_id: u128,
+        chamber_id: u32,
+    ) {
+        let health: ExplorerHealth = world.read_model(explorer_id);
+        assert(health.is_dead, 'explorer should be dead');
+        assert(health.current_hp == 0, 'hp should be 0 on death');
+
+        let pos: ExplorerPosition = world.read_model(explorer_id);
+        assert(!pos.in_combat, 'dead explorer not in combat');
+
+        let fallen_count: ChamberFallenCount = world.read_model((temple_id, chamber_id));
+        assert(fallen_count.count >= 1, 'fallen count should be >= 1');
+
+        let fallen: FallenExplorer = world.read_model(
+            (temple_id, chamber_id, fallen_count.count - 1)
+        );
+        assert(fallen.explorer_id == explorer_id, 'fallen explorer id mismatch');
+        assert(!fallen.is_looted, 'fallen should not be looted');
+
+        let inv: ExplorerInventory = world.read_model(explorer_id);
+        assert(inv.gold == 0, 'gold dropped on death');
+        assert(inv.potions == 0, 'potions dropped on death');
+    }
+
     // ═══════════════════════════════════════════════════════════════════════
     // Pure math tests (no world needed)
     // ═══════════════════════════════════════════════════════════════════════
@@ -628,16 +662,13 @@ mod tests {
         let after: ExplorerHealth = world.read_model(explorer_id);
 
         if after.is_dead {
-            let fallen: FallenExplorer = world.read_model((10_u128, 5_u32, 0_u32));
-            assert(fallen.explorer_id == explorer_id, 'fallen id matches');
-            assert(!fallen.is_looted, 'not yet looted');
+            assert_explorer_dead(ref world, explorer_id, 10_u128, 5_u32);
 
-            let count: ChamberFallenCount = world.read_model((10_u128, 5_u32));
-            assert(count.count == 1, 'fallen count should be 1');
-
-            let after_inv: ExplorerInventory = world.read_model(explorer_id);
-            assert(after_inv.gold == 0, 'gold dropped on death');
-            assert(after_inv.potions == 0, 'potions dropped on death');
+            // Verify loot values recorded in the FallenExplorer record
+            let fallen_count: ChamberFallenCount = world.read_model((10_u128, 5_u32));
+            let fallen: FallenExplorer = world.read_model(
+                (10_u128, 5_u32, fallen_count.count - 1)
+            );
             assert(fallen.dropped_gold == 50, 'dropped gold = 50');
             assert(fallen.dropped_potions == 2, 'dropped potions = 2');
         }

@@ -146,6 +146,40 @@ mod tests {
         token.mint_explorer(ExplorerClass::Wizard)
     }
 
+    // ── Death assertion helper ────────────────────────────────────────────────
+
+    /// Validates all invariants that must hold after an explorer dies:
+    /// - is_dead flag set, HP at 0, not in combat
+    /// - FallenExplorer record created in the correct chamber
+    /// - ChamberFallenCount incremented
+    /// - Inventory gold and potions zeroed (dropped as loot)
+    fn assert_explorer_dead(
+        ref world: dojo::world::WorldStorage,
+        explorer_id: u128,
+        temple_id: u128,
+        chamber_id: u32,
+    ) {
+        let health: ExplorerHealth = world.read_model(explorer_id);
+        assert(health.is_dead, 'explorer should be dead');
+        assert(health.current_hp == 0, 'hp should be 0 on death');
+
+        let pos: ExplorerPosition = world.read_model(explorer_id);
+        assert(!pos.in_combat, 'dead explorer not in combat');
+
+        let fallen_count: ChamberFallenCount = world.read_model((temple_id, chamber_id));
+        assert(fallen_count.count >= 1, 'fallen count should be >= 1');
+
+        let fallen: FallenExplorer = world.read_model(
+            (temple_id, chamber_id, fallen_count.count - 1)
+        );
+        assert(fallen.explorer_id == explorer_id, 'fallen explorer id mismatch');
+        assert(!fallen.is_looted, 'fallen should not be looted');
+
+        let inv: ExplorerInventory = world.read_model(explorer_id);
+        assert(inv.gold == 0, 'gold dropped on death');
+        assert(inv.potions == 0, 'potions dropped on death');
+    }
+
     // ═══════════════════════════════════════════════════════════════════════
     // Temple minting
     // ═══════════════════════════════════════════════════════════════════════
@@ -1546,5 +1580,152 @@ mod tests {
         let pos: ExplorerPosition = world.read_model(explorer_id);
         assert(pos.temple_id == temple_b, 'in temple B');
         assert(pos.chamber_id == 1, 'at entrance of B');
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // Trap death calls handle_death (move_to_chamber)
+    // ═══════════════════════════════════════════════════════════════════════
+
+    /// Trap with DC 21 always fails (d20 max = 20).
+    /// Explorer at 1 HP always dies from any damage.
+    /// Verifies that move_to_chamber calls handle_death: FallenExplorer is
+    /// created, inventory zeroed, in_combat cleared.
+    #[test]
+    fn test_trap_in_move_to_chamber_kills_explorer_via_handle_death() {
+        let caller: ContractAddress = 'traptest1'.try_into().unwrap();
+        starknet::testing::set_contract_address(caller);
+
+        let (mut world, token, _combat, temple) = setup_world();
+
+        let explorer_id = mint_fighter(token);
+        let temple_id = temple.mint_temple(1_u8);
+
+        // Set up entrance with a discovered exit to a trap chamber
+        world.write_model_test(@Chamber {
+            temple_id,
+            chamber_id: 1,
+            chamber_type: ChamberType::Entrance,
+            yonder: 1,
+            exit_count: 1,
+            is_revealed: true,
+            treasure_looted: false,
+            trap_disarmed: false,
+            trap_dc: 0,
+        });
+        world.write_model_test(@ChamberExit {
+            temple_id,
+            from_chamber_id: 1,
+            exit_index: 0,
+            to_chamber_id: 2,
+            is_discovered: true,
+        });
+        // Trap chamber: DC 21 (impossible to pass with d20)
+        world.write_model_test(@Chamber {
+            temple_id,
+            chamber_id: 2,
+            chamber_type: ChamberType::Trap,
+            yonder: 2,
+            exit_count: 0,
+            is_revealed: true,
+            treasure_looted: false,
+            trap_disarmed: false,
+            trap_dc: 21,
+        });
+
+        // 1 HP explorer with DEX 10 (modifier 0) — any damage is fatal
+        world.write_model_test(@ExplorerHealth {
+            explorer_id,
+            current_hp: 1,
+            max_hp: 11,
+            is_dead: false,
+        });
+        // Give some gold/potions so we can verify they get dropped
+        world.write_model_test(@ExplorerInventory {
+            explorer_id,
+            primary_weapon: d20::types::items::WeaponType::Longsword,
+            secondary_weapon: d20::types::items::WeaponType::None,
+            armor: d20::types::items::ArmorType::ChainMail,
+            has_shield: false,
+            gold: 30,
+            potions: 1,
+        });
+
+        temple.enter_temple(explorer_id, temple_id);
+        temple.move_to_chamber(explorer_id, 0);
+
+        // DC 21 guarantees save fails; 1 HP means any hit is lethal
+        assert_explorer_dead(ref world, explorer_id, temple_id, 2_u32);
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════
+    // Trap death calls handle_death (disarm_trap)
+    // ═══════════════════════════════════════════════════════════════════════
+
+    /// Disarm check with INT mod −1 and no proficiency can't beat DC 21.
+    /// The triggered DEX save also can't beat DC 21.
+    /// Explorer at 1 HP always dies from any damage.
+    #[test]
+    fn test_disarm_trap_failure_kills_explorer_via_handle_death() {
+        let caller: ContractAddress = 'traptest2'.try_into().unwrap();
+        starknet::testing::set_contract_address(caller);
+
+        let (mut world, token, _combat, temple) = setup_world();
+
+        let explorer_id = mint_fighter(token);
+        let temple_id = temple.mint_temple(1_u8);
+
+        // Place explorer in a trap chamber with DC 21
+        world.write_model_test(@Chamber {
+            temple_id,
+            chamber_id: 2,
+            chamber_type: ChamberType::Trap,
+            yonder: 2,
+            exit_count: 0,
+            is_revealed: true,
+            treasure_looted: false,
+            trap_disarmed: false,
+            trap_dc: 21,
+        });
+        world.write_model_test(@ExplorerPosition {
+            explorer_id,
+            temple_id,
+            chamber_id: 2,
+            in_combat: false,
+            combat_monster_id: 0,
+        });
+        world.write_model_test(@ExplorerHealth {
+            explorer_id,
+            current_hp: 1,
+            max_hp: 11,
+            is_dead: false,
+        });
+        world.write_model_test(@ExplorerInventory {
+            explorer_id,
+            primary_weapon: d20::types::items::WeaponType::Longsword,
+            secondary_weapon: d20::types::items::WeaponType::None,
+            armor: d20::types::items::ArmorType::ChainMail,
+            has_shield: false,
+            gold: 20,
+            potions: 2,
+        });
+
+        // Use a fighter with INT 8 (mod −1) and no Arcana → effective bonus = 0
+        // Disarm roll can't beat DC 21; triggered DEX save also can't beat DC 21
+        let stats: ExplorerStats = world.read_model(explorer_id);
+        let mut abilities = stats.abilities;
+        abilities.intelligence = 8;
+        abilities.dexterity = 10;
+        world.write_model_test(@ExplorerStats {
+            explorer_id,
+            abilities,
+            level: stats.level,
+            xp: stats.xp,
+            explorer_class: stats.explorer_class,
+            temples_conquered: stats.temples_conquered,
+        });
+
+        temple.disarm_trap(explorer_id);
+
+        assert_explorer_dead(ref world, explorer_id, temple_id, 2_u32);
     }
 }
