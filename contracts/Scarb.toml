@@ -15,16 +15,24 @@ starknet = "2.13.1"
 openzeppelin = "3.0.0"
 nft_combo = { git = "https://github.com/underware-gg/cairo-nft-combo" }
 
-[[target.starknet-contract]]
-build-external-contracts = ["dojo::world::world_contract::world"]
-
-[tool.scarb]
-allow-prebuilt-plugins = ["dojo_cairo_macros"]
-
 [dev-dependencies]
 cairo_test = "2.13.1"
 dojo_cairo_test = "1.8.0"
 
+[tool.scarb]
+allow-prebuilt-plugins = ["dojo_cairo_macros"]
+
+[[target.starknet-contract]]
+build-external-contracts = ["dojo::world::world_contract::world"]
+
+# debug contract size issues
+# https://docs.starknet.io/resources/chain-info/
+# max felts = 81,920 felts
+# usage: sozo build --stats.by-tag`
+# [[target.starknet-contract]]
+# casm = true
+
+# Dojo profiles
 [profile.dev]
 [profile.katana]
 [profile.sepolia]
