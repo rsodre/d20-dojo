@@ -85,7 +85,6 @@ pub trait IExplorerTokenPublic<TState> {
 pub mod explorer_token {
     use starknet::{get_caller_address, ContractAddress};
     use dojo::model::ModelStorage;
-    use dojo::event::EventStorage;
     use dojo::world::WorldStorage;
 
     // ERC-721 components (OpenZeppelin + cairo-nft-combo)
@@ -104,22 +103,15 @@ pub mod explorer_token {
     // D20 character component
     use d20::d20::components::character_component::CharacterComponent;
     component!(path: CharacterComponent, storage: character, event: CharacterEvent);
-    #[abi(embed_v0)]
-    impl CharacterImpl = CharacterComponent::CharacterImpl<ContractState>;
+    impl CharacterInternalImpl = CharacterComponent::InternalImpl<ContractState>;
 
     // Game types and models
-    use d20::types::explorer_class::{ExplorerClass, ExplorerClassTrait};
-    use d20::models::explorer::{
-        ExplorerStats, ExplorerHealth, ExplorerCombat, ExplorerInventory,
-        ExplorerPosition, ExplorerSkills,
-    };
+    use d20::types::explorer_class::ExplorerClass;
+    use d20::d20::types::attributes::CharacterAttributes;
     use d20::models::config::Config;
     use d20::utils::dns::{DnsTrait};
     use super::{IExplorerTokenDispatcherTrait};
-    use d20::events::ExplorerMinted;
-    use d20::utils::dice::{ability_modifier, calculate_ac};
     use d20::utils::seeder::{SeederTrait};
-    use d20::types::explorer_generator::ExplorerClassGeneratorTrait;
     use d20::constants::{EXPLORER_TOKEN_DESCRIPTION, EXPLORER_TOKEN_EXTERNAL_LINK};
 
     // Metadata types
@@ -200,85 +192,7 @@ pub mod explorer_token {
             // Dojo models use u128 keys — high part is always 0 for counter-minted IDs
             let explorer_id: u128 = token_id.low;
 
-            // Randomly assign stats from standard array [15,14,13,12,10,8] using VRF
-            let abilities = explorer_class.random_stat_assignment(ref seeder);
-
-            let con_mod: i8 = ability_modifier(abilities.constitution);
-            let dex_mod: i8 = ability_modifier(abilities.dexterity);
-
-            // Starting HP: hit die max + CON modifier (minimum 1)
-            let hit_die = explorer_class.hit_die_max();
-            let raw_hp: i16 = hit_die.into() + con_mod.into();
-            let max_hp: u16 = if raw_hp < 1 { 1 } else { raw_hp.try_into().unwrap() };
-
-            // Starting equipment and AC by class
-            let (primary_weapon, secondary_weapon, armor, has_shield) = explorer_class.starting_equipment();
-            let armor_class = calculate_ac(armor, has_shield, dex_mod);
-
-            // Spell slots (level 1)
-            let (slots_1, slots_2, slots_3) = explorer_class.spell_slots_for(1);
-
-            // Randomly pick skills from VRF
-            let (skills, expertise_1, expertise_2) = explorer_class.random_skills(ref seeder);
-
-            // Write all explorer Dojo models
-            world.write_model(@ExplorerStats {
-                explorer_id,
-                abilities,
-                level: 1,
-                xp: 0,
-                explorer_class,
-                temples_conquered: 0,
-            });
-
-            world.write_model(@ExplorerHealth {
-                explorer_id,
-                current_hp: max_hp.try_into().unwrap(),
-                max_hp,
-                is_dead: false,
-            });
-
-            world.write_model(@ExplorerCombat {
-                explorer_id,
-                armor_class,
-                spell_slots_1: slots_1,
-                spell_slots_2: slots_2,
-                spell_slots_3: slots_3,
-                second_wind_used: false,
-                action_surge_used: false,
-            });
-
-            world.write_model(@ExplorerInventory {
-                explorer_id,
-                primary_weapon,
-                secondary_weapon,
-                armor,
-                has_shield,
-                gold: 0,
-                potions: 0,
-            });
-
-            world.write_model(@ExplorerPosition {
-                explorer_id,
-                temple_id: 0,
-                chamber_id: 0,
-                in_combat: false,
-                combat_monster_id: 0,
-            });
-
-            world.write_model(@ExplorerSkills {
-                explorer_id,
-                skills,
-                expertise_1,
-                expertise_2,
-            });
-
-            // Emit Dojo event
-            world.emit_event(@ExplorerMinted {
-                explorer_id,
-                explorer_class,
-                player: caller,
-            });
+            self.character.generate_character(ref world, explorer_id, explorer_class, caller, ref seeder);
 
             explorer_id
         }
@@ -290,30 +204,7 @@ pub mod explorer_token {
             let explorer_token = world.explorer_token_dispatcher();
             assert(explorer_token.owner_of(explorer_id.into()) == get_caller_address(), 'not owner');
 
-            let stats: ExplorerStats = world.read_model(explorer_id);
-            assert(stats.explorer_class != ExplorerClass::None, 'explorer does not exist');
-
-            let health: ExplorerHealth = world.read_model(explorer_id);
-            assert(!health.is_dead, 'dead explorers cannot rest');
-
-            world.write_model(@ExplorerHealth {
-                explorer_id,
-                current_hp: health.max_hp.try_into().unwrap(),
-                max_hp: health.max_hp,
-                is_dead: false,
-            });
-
-            let (slots_1, slots_2, slots_3) = stats.explorer_class.spell_slots_for(stats.level);
-            let combat: ExplorerCombat = world.read_model(explorer_id);
-            world.write_model(@ExplorerCombat {
-                explorer_id,
-                armor_class: combat.armor_class,
-                spell_slots_1: slots_1,
-                spell_slots_2: slots_2,
-                spell_slots_3: slots_3,
-                second_wind_used: false,
-                action_surge_used: false,
-            });
+            self.character.rest(ref world, explorer_id);
         }
     }
 
@@ -346,36 +237,24 @@ pub mod explorer_token {
             let mut world = s.world_default();
             let explorer_id: u128 = token_id.low;
 
-            let stats: ExplorerStats = world.read_model(explorer_id);
-            let health: ExplorerHealth = world.read_model(explorer_id);
-            let combat: ExplorerCombat = world.read_model(explorer_id);
-
-            let class_name: ByteArray = match stats.explorer_class {
-                ExplorerClass::None => "None",
-                ExplorerClass::Fighter => "Fighter",
-                ExplorerClass::Rogue => "Rogue",
-                ExplorerClass::Wizard => "Wizard",
-            };
-
-            let status: ByteArray = if health.is_dead { "Dead" } else { "Alive" };
-
+            let char_attrs: CharacterAttributes = s.character.get_attributes(ref world, explorer_id);
             let attributes: Array<Attribute> = array![
-                Attribute { key: "Class", value: class_name.clone() },
-                Attribute { key: "Level", value: format!("{}", stats.level) },
-                Attribute { key: "HP", value: format!("{}/{}", health.current_hp, health.max_hp) },
-                Attribute { key: "AC", value: format!("{}", combat.armor_class) },
-                Attribute { key: "STR", value: format!("{}", stats.abilities.strength) },
-                Attribute { key: "DEX", value: format!("{}", stats.abilities.dexterity) },
-                Attribute { key: "CON", value: format!("{}", stats.abilities.constitution) },
-                Attribute { key: "INT", value: format!("{}", stats.abilities.intelligence) },
-                Attribute { key: "WIS", value: format!("{}", stats.abilities.wisdom) },
-                Attribute { key: "CHA", value: format!("{}", stats.abilities.charisma) },
-                Attribute { key: "Status", value: status },
+                Attribute { key: "Class", value: char_attrs.explorer_class.clone() },
+                Attribute { key: "Level", value: format!("{}", char_attrs.level) },
+                Attribute { key: "HP", value: format!("{}/{}", char_attrs.current_hp, char_attrs.max_hp) },
+                Attribute { key: "AC", value: format!("{}", char_attrs.armor_class) },
+                Attribute { key: "STR", value: format!("{}", char_attrs.strength) },
+                Attribute { key: "DEX", value: format!("{}", char_attrs.dexterity) },
+                Attribute { key: "CON", value: format!("{}", char_attrs.constitution) },
+                Attribute { key: "INT", value: format!("{}", char_attrs.intelligence) },
+                Attribute { key: "WIS", value: format!("{}", char_attrs.wisdom) },
+                Attribute { key: "CHA", value: format!("{}", char_attrs.charisma) },
+                Attribute { key: "Status", value: if char_attrs.is_dead { "Dead" } else { "Alive" } },
             ];
 
             let metadata = TokenMetadata {
                 token_id,
-                name: format!("{} #{}", class_name, token_id.low),
+                name: format!("{} #{}", char_attrs.explorer_class, token_id.low),
                 description: EXPLORER_TOKEN_DESCRIPTION(),
                 image: Option::None,
                 image_data: Option::None,
