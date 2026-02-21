@@ -1,6 +1,6 @@
-use starknet::{ContractAddress, SyscallResultTrait};
+use starknet::{SyscallResultTrait};
 use starknet::syscalls::{deploy_syscall};
-use dojo::model::{ModelStorage, ModelStorageTest};
+use dojo::model::{ModelStorage};
 use dojo::world::{WorldStorageTrait, world};
 use dojo_cairo_test::{
     spawn_test_world, NamespaceDef, TestResource, ContractDefTrait, ContractDef,
@@ -11,37 +11,34 @@ use d20::systems::explorer_token::{
     explorer_token, IExplorerTokenDispatcher, IExplorerTokenDispatcherTrait,
 };
 use d20::systems::combat_system::{
-    combat_system, ICombatSystemDispatcher, ICombatSystemDispatcherTrait,
+    combat_system, ICombatSystemDispatcher,
 };
 use d20::systems::temple_token::{
-    temple_token, ITempleTokenDispatcher, ITempleTokenDispatcherTrait,
+    temple_token, ITempleTokenDispatcher,
 };
 use d20::models::config::m_Config;
 use d20::d20::models::adventurer::{
-    ExplorerStats, m_ExplorerStats,
-    ExplorerHealth, m_ExplorerHealth,
-    ExplorerCombat, m_ExplorerCombat,
-    ExplorerInventory, m_ExplorerInventory,
-    ExplorerPosition, m_ExplorerPosition,
+    m_ExplorerStats,
+    m_ExplorerHealth, ExplorerHealth,
+    m_ExplorerCombat,
+    m_ExplorerInventory, ExplorerInventory,
+    m_ExplorerPosition, ExplorerPosition,
     m_ExplorerSkills,
 };
 use d20::models::temple::{
-    TempleState, m_TempleState,
-    Chamber, m_Chamber,
-    MonsterInstance, m_MonsterInstance,
-    ChamberExit, m_ChamberExit,
-    FallenExplorer, m_FallenExplorer,
-    ChamberFallenCount, m_ChamberFallenCount,
-    ExplorerTempleProgress, m_ExplorerTempleProgress,
+    m_TempleState,
+    m_Chamber,
+    m_MonsterInstance,
+    m_ChamberExit,
+    m_FallenExplorer, FallenExplorer,
+    m_ChamberFallenCount, ChamberFallenCount,
+    m_ExplorerTempleProgress,
 };
 use d20::events::{
     e_ExplorerMinted, e_CombatResult, e_ExplorerDied,
     e_ChamberRevealed, e_LevelUp, e_BossDefeated,
 };
-use d20::types::index::{ChamberType, ItemType};
-use d20::types::items::{WeaponType, ArmorType};
 use d20::d20::types::adventurer_class::AdventurerClass;
-use d20::types::monster::MonsterType;
 use d20::tests::mock_vrf::MockVrf;
 
 // ── Test world setup ──────────────────────────────────────────────────────

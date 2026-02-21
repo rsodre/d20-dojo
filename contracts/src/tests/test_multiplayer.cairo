@@ -3,11 +3,10 @@ mod tests {
 
     use starknet::{ContractAddress};
     use dojo::model::{ModelStorage, ModelStorageTest};
-    use dojo::world::{WorldStorageTrait};
 
     use d20::d20::models::adventurer::{
-        ExplorerStats, ExplorerHealth, ExplorerCombat, ExplorerInventory,
-        ExplorerPosition, ExplorerSkills
+        ExplorerStats, ExplorerHealth, ExplorerInventory,
+        ExplorerPosition
     };
     use d20::models::temple::{
         TempleState, Chamber, ChamberExit, MonsterInstance,
@@ -15,12 +14,10 @@ mod tests {
     };
     use d20::types::index::{ChamberType};
     use d20::types::items::{WeaponType, ArmorType};
-    use d20::d20::types::adventurer_class::AdventurerClass;
     use d20::types::monster::MonsterType;
     use d20::tests::tester::{
-        setup_world, mint_fighter, mint_rogue, mint_wizard, assert_explorer_dead,
+        setup_world, mint_fighter, mint_rogue,
     };
-    use d20::systems::explorer_token::{IExplorerTokenDispatcherTrait};
     use d20::systems::combat_system::{ICombatSystemDispatcherTrait};
     use d20::systems::temple_token::{ITempleTokenDispatcherTrait};
 
