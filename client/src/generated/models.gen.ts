@@ -18,8 +18,8 @@ export interface AbilityScore {
 	charisma: BigNumberish;
 }
 
-// Type definition for `d20::d20::models::adventurer::ExplorerCombat` struct
-export interface ExplorerCombat {
+// Type definition for `d20::d20::models::adventurer::AdventurerCombat` struct
+export interface AdventurerCombat {
 	adventurer_id: BigNumberish;
 	armor_class: BigNumberish;
 	spell_slots_1: BigNumberish;
@@ -29,16 +29,16 @@ export interface ExplorerCombat {
 	action_surge_used: boolean;
 }
 
-// Type definition for `d20::d20::models::adventurer::ExplorerHealth` struct
-export interface ExplorerHealth {
+// Type definition for `d20::d20::models::adventurer::AdventurerHealth` struct
+export interface AdventurerHealth {
 	adventurer_id: BigNumberish;
 	current_hp: BigNumberish;
 	max_hp: BigNumberish;
 	is_dead: boolean;
 }
 
-// Type definition for `d20::d20::models::adventurer::ExplorerInventory` struct
-export interface ExplorerInventory {
+// Type definition for `d20::d20::models::adventurer::AdventurerInventory` struct
+export interface AdventurerInventory {
 	adventurer_id: BigNumberish;
 	primary_weapon: WeaponTypeEnum;
 	secondary_weapon: WeaponTypeEnum;
@@ -48,8 +48,8 @@ export interface ExplorerInventory {
 	potions: BigNumberish;
 }
 
-// Type definition for `d20::d20::models::adventurer::ExplorerPosition` struct
-export interface ExplorerPosition {
+// Type definition for `d20::d20::models::adventurer::AdventurerPosition` struct
+export interface AdventurerPosition {
 	adventurer_id: BigNumberish;
 	temple_id: BigNumberish;
 	chamber_id: BigNumberish;
@@ -57,16 +57,16 @@ export interface ExplorerPosition {
 	combat_monster_id: BigNumberish;
 }
 
-// Type definition for `d20::d20::models::adventurer::ExplorerSkills` struct
-export interface ExplorerSkills {
+// Type definition for `d20::d20::models::adventurer::AdventurerSkills` struct
+export interface AdventurerSkills {
 	adventurer_id: BigNumberish;
 	skills: SkillsSet;
 	expertise_1: SkillEnum;
 	expertise_2: SkillEnum;
 }
 
-// Type definition for `d20::d20::models::adventurer::ExplorerStats` struct
-export interface ExplorerStats {
+// Type definition for `d20::d20::models::adventurer::AdventurerStats` struct
+export interface AdventurerStats {
 	adventurer_id: BigNumberish;
 	abilities: AbilityScore;
 	level: BigNumberish;
@@ -348,12 +348,12 @@ export interface SchemaType extends ISchemaType {
 	d20: {
 		Config: Config,
 		AbilityScore: AbilityScore,
-		ExplorerCombat: ExplorerCombat,
-		ExplorerHealth: ExplorerHealth,
-		ExplorerInventory: ExplorerInventory,
-		ExplorerPosition: ExplorerPosition,
-		ExplorerSkills: ExplorerSkills,
-		ExplorerStats: ExplorerStats,
+		AdventurerCombat: AdventurerCombat,
+		AdventurerHealth: AdventurerHealth,
+		AdventurerInventory: AdventurerInventory,
+		AdventurerPosition: AdventurerPosition,
+		AdventurerSkills: AdventurerSkills,
+		AdventurerStats: AdventurerStats,
 		SkillsSet: SkillsSet,
 		Chamber: Chamber,
 		ChamberExit: ChamberExit,
@@ -389,7 +389,7 @@ export const schema: SchemaType = {
 			wisdom: 0,
 			charisma: 0,
 		},
-		ExplorerCombat: {
+		AdventurerCombat: {
 			adventurer_id: 0,
 			armor_class: 0,
 			spell_slots_1: 0,
@@ -398,13 +398,13 @@ export const schema: SchemaType = {
 			second_wind_used: false,
 			action_surge_used: false,
 		},
-		ExplorerHealth: {
+		AdventurerHealth: {
 			adventurer_id: 0,
 			current_hp: 0,
 			max_hp: 0,
 			is_dead: false,
 		},
-		ExplorerInventory: {
+		AdventurerInventory: {
 			adventurer_id: 0,
 		primary_weapon: new CairoCustomEnum({ 
 					None: "",
@@ -428,14 +428,14 @@ export const schema: SchemaType = {
 			gold: 0,
 			potions: 0,
 		},
-		ExplorerPosition: {
+		AdventurerPosition: {
 			adventurer_id: 0,
 			temple_id: 0,
 			chamber_id: 0,
 			in_combat: false,
 			combat_monster_id: 0,
 		},
-		ExplorerSkills: {
+		AdventurerSkills: {
 			adventurer_id: 0,
 		skills: { athletics: false, stealth: false, perception: false, persuasion: false, arcana: false, acrobatics: false, },
 		expertise_1: new CairoCustomEnum({ 
@@ -455,7 +455,7 @@ export const schema: SchemaType = {
 				Arcana: undefined,
 				Acrobatics: undefined, }),
 		},
-		ExplorerStats: {
+		AdventurerStats: {
 			adventurer_id: 0,
 		abilities: { strength: 0, dexterity: 0, constitution: 0, intelligence: 0, wisdom: 0, charisma: 0, },
 			level: 0,
@@ -653,12 +653,12 @@ export const schema: SchemaType = {
 export enum ModelsMapping {
 	Config = 'd20-Config',
 	AbilityScore = 'd20-AbilityScore',
-	ExplorerCombat = 'd20-ExplorerCombat',
-	ExplorerHealth = 'd20-ExplorerHealth',
-	ExplorerInventory = 'd20-ExplorerInventory',
-	ExplorerPosition = 'd20-ExplorerPosition',
-	ExplorerSkills = 'd20-ExplorerSkills',
-	ExplorerStats = 'd20-ExplorerStats',
+	AdventurerCombat = 'd20-AdventurerCombat',
+	AdventurerHealth = 'd20-AdventurerHealth',
+	AdventurerInventory = 'd20-AdventurerInventory',
+	AdventurerPosition = 'd20-AdventurerPosition',
+	AdventurerSkills = 'd20-AdventurerSkills',
+	AdventurerStats = 'd20-AdventurerStats',
 	SkillsSet = 'd20-SkillsSet',
 	Chamber = 'd20-Chamber',
 	ChamberExit = 'd20-ChamberExit',

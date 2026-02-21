@@ -12,8 +12,8 @@ mod tests {
     use d20::systems::temple_token::{temple_token, ITempleTokenDispatcher, ITempleTokenDispatcherTrait};
     use d20::models::config::m_Config;
     use d20::d20::models::adventurer::{
-        m_ExplorerStats, m_ExplorerHealth, m_ExplorerCombat,
-        m_ExplorerInventory, m_ExplorerPosition, m_ExplorerSkills,
+        m_AdventurerStats, m_AdventurerHealth, m_AdventurerCombat,
+        m_AdventurerInventory, m_AdventurerPosition, m_AdventurerSkills,
     };
     use d20::events::e_ExplorerMinted;
     use d20::d20::types::adventurer_class::AdventurerClass;
@@ -24,12 +24,12 @@ mod tests {
             namespace: "d20_0_1",
             resources: array![
                 TestResource::Model(m_Config::TEST_CLASS_HASH),
-                TestResource::Model(m_ExplorerStats::TEST_CLASS_HASH),
-                TestResource::Model(m_ExplorerHealth::TEST_CLASS_HASH),
-                TestResource::Model(m_ExplorerCombat::TEST_CLASS_HASH),
-                TestResource::Model(m_ExplorerInventory::TEST_CLASS_HASH),
-                TestResource::Model(m_ExplorerPosition::TEST_CLASS_HASH),
-                TestResource::Model(m_ExplorerSkills::TEST_CLASS_HASH),
+                TestResource::Model(m_AdventurerStats::TEST_CLASS_HASH),
+                TestResource::Model(m_AdventurerHealth::TEST_CLASS_HASH),
+                TestResource::Model(m_AdventurerCombat::TEST_CLASS_HASH),
+                TestResource::Model(m_AdventurerInventory::TEST_CLASS_HASH),
+                TestResource::Model(m_AdventurerPosition::TEST_CLASS_HASH),
+                TestResource::Model(m_AdventurerSkills::TEST_CLASS_HASH),
                 TestResource::Event(e_ExplorerMinted::TEST_CLASS_HASH),
                 TestResource::Contract(explorer_token::TEST_CLASS_HASH),
                 TestResource::Contract(temple_token::TEST_CLASS_HASH),

@@ -5,8 +5,8 @@ mod tests {
     use dojo::model::{ModelStorage, ModelStorageTest};
 
     use d20::d20::models::adventurer::{
-        ExplorerStats, ExplorerInventory,
-        ExplorerPosition,
+        AdventurerStats, AdventurerInventory,
+        AdventurerPosition,
     };
     use d20::models::temple::{
         Chamber,
@@ -28,7 +28,7 @@ mod tests {
         let adventurer_id = mint_fighter(token);
         let temple_id = temple.mint_temple(1_u8);
 
-        let inv_before: ExplorerInventory = world.read_model(adventurer_id);
+        let inv_before: AdventurerInventory = world.read_model(adventurer_id);
 
         world.write_model_test(@Chamber {
             temple_id,
@@ -41,7 +41,7 @@ mod tests {
             trap_disarmed: false,
             trap_dc: 0,
         });
-        world.write_model_test(@ExplorerPosition {
+        world.write_model_test(@AdventurerPosition {
             adventurer_id,
             temple_id,
             chamber_id: 2,
@@ -52,7 +52,7 @@ mod tests {
         temple.loot_treasure(adventurer_id);
 
         let chamber_after: Chamber = world.read_model((temple_id, 2_u32));
-        let inv_after: ExplorerInventory = world.read_model(adventurer_id);
+        let inv_after: AdventurerInventory = world.read_model(adventurer_id);
 
         // On success (perception DC 10) gold should increase; on fail no change
         if chamber_after.treasure_looted {
@@ -82,7 +82,7 @@ mod tests {
             trap_disarmed: false,
             trap_dc: 0,
         });
-        world.write_model_test(@ExplorerPosition {
+        world.write_model_test(@AdventurerPosition {
             adventurer_id,
             temple_id,
             chamber_id: 2,
@@ -91,10 +91,10 @@ mod tests {
         });
 
         // Boost WIS to guarantee perception check passes (no modifier needed)
-        let stats: ExplorerStats = world.read_model(adventurer_id);
+        let stats: AdventurerStats = world.read_model(adventurer_id);
         let mut abilities = stats.abilities;
         abilities.wisdom = 20; // +5 mod guarantees DC 10
-        world.write_model_test(@ExplorerStats {
+        world.write_model_test(@AdventurerStats {
             adventurer_id,
             abilities,
             level: stats.level,
@@ -133,7 +133,7 @@ mod tests {
             trap_disarmed: false,
             trap_dc: 0,
         });
-        world.write_model_test(@ExplorerPosition {
+        world.write_model_test(@AdventurerPosition {
             adventurer_id,
             temple_id,
             chamber_id: 2,
@@ -167,7 +167,7 @@ mod tests {
             trap_disarmed: false,
             trap_dc: 0,
         });
-        world.write_model_test(@ExplorerPosition {
+        world.write_model_test(@AdventurerPosition {
             adventurer_id,
             temple_id,
             chamber_id: 2,
@@ -190,7 +190,7 @@ mod tests {
         let temple_id = temple.mint_temple(1_u8);
 
         world.write_model_test(@Chamber { temple_id, chamber_id: 2, chamber_type: ChamberType::Treasure, yonder: 1, exit_count: 0, is_revealed: true, treasure_looted: false, trap_disarmed: false, trap_dc: 0 });
-        world.write_model_test(@ExplorerPosition { adventurer_id, temple_id, chamber_id: 2, in_combat: true, combat_monster_id: 1 });
+        world.write_model_test(@AdventurerPosition { adventurer_id, temple_id, chamber_id: 2, in_combat: true, combat_monster_id: 1 });
 
         temple.loot_treasure(adventurer_id);
     }
@@ -206,18 +206,18 @@ mod tests {
         let temple_id = temple.mint_temple(1_u8);
 
         world.write_model_test(@Chamber { temple_id, chamber_id: 2, chamber_type: ChamberType::Empty, yonder: 1, exit_count: 0, is_revealed: true, treasure_looted: false, trap_disarmed: false, trap_dc: 0 });
-        world.write_model_test(@ExplorerPosition { adventurer_id, temple_id, chamber_id: 2, in_combat: false, combat_monster_id: 0 });
+        world.write_model_test(@AdventurerPosition { adventurer_id, temple_id, chamber_id: 2, in_combat: false, combat_monster_id: 0 });
 
-        let stats: ExplorerStats = world.read_model(adventurer_id);
+        let stats: AdventurerStats = world.read_model(adventurer_id);
         let mut abilities = stats.abilities;
         abilities.wisdom = 20;
-        world.write_model_test(@ExplorerStats { adventurer_id, abilities, level: stats.level, xp: stats.xp, adventurer_class: stats.adventurer_class, temples_conquered: stats.temples_conquered });
+        world.write_model_test(@AdventurerStats { adventurer_id, abilities, level: stats.level, xp: stats.xp, adventurer_class: stats.adventurer_class, temples_conquered: stats.temples_conquered });
 
         temple.loot_treasure(adventurer_id);
 
         let chamber_after: Chamber = world.read_model((temple_id, 2_u32));
         if chamber_after.treasure_looted {
-            let inv: ExplorerInventory = world.read_model(adventurer_id);
+            let inv: AdventurerInventory = world.read_model(adventurer_id);
             assert(inv.gold > 0, 'gold from empty loot');
         }
     }

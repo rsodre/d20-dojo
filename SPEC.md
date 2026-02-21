@@ -363,7 +363,7 @@ pub struct AbilityScore {
 
 #[derive(Copy, Drop, Serde)]
 #[dojo::model]
-pub struct ExplorerStats {
+pub struct AdventurerStats {
     #[key]
     pub adventurer_id: u128,    // Explorer NFT token ID (from cairo-nft-combo _mint_next())
     pub abilities: AbilityScore,  // packed ability scores (each 3-20)
@@ -377,7 +377,7 @@ pub struct ExplorerStats {
 
 #[derive(Copy, Drop, Serde)]
 #[dojo::model]
-pub struct ExplorerHealth {
+pub struct AdventurerHealth {
     #[key]
     pub adventurer_id: u128,
     pub current_hp: i16,      // signed — can go negative (overkill detection, then clamped to 0)
@@ -387,7 +387,7 @@ pub struct ExplorerHealth {
 
 #[derive(Copy, Drop, Serde)]
 #[dojo::model]
-pub struct ExplorerCombat {
+pub struct AdventurerCombat {
     #[key]
     pub adventurer_id: u128,
     pub armor_class: u8,
@@ -401,7 +401,7 @@ pub struct ExplorerCombat {
 
 #[derive(Copy, Drop, Serde)]
 #[dojo::model]
-pub struct ExplorerInventory {
+pub struct AdventurerInventory {
     #[key]
     pub adventurer_id: u128,
     pub primary_weapon: WeaponType,
@@ -414,7 +414,7 @@ pub struct ExplorerInventory {
 
 #[derive(Copy, Drop, Serde)]
 #[dojo::model]
-pub struct ExplorerPosition {
+pub struct AdventurerPosition {
     #[key]
     pub adventurer_id: u128,
     pub temple_id: u128,      // 0 if not in any temple
@@ -436,7 +436,7 @@ pub struct SkillsSet {
 
 #[derive(Copy, Drop, Serde)]
 #[dojo::model]
-pub struct ExplorerSkills {
+pub struct AdventurerSkills {
     #[key]
     pub adventurer_id: u128,
     pub skills: SkillsSet,    // packed proficiency flags
@@ -601,7 +601,7 @@ pub enum WeaponType {
 }
 
 // ArmorType does NOT include Shield — shields are tracked separately
-// via `has_shield: bool` on ExplorerInventory. In D&D, shields stack
+// via `has_shield: bool` on AdventurerInventory. In D&D, shields stack
 // with armor (e.g., Chain Mail + Shield = AC 18).
 #[derive(Serde, Copy, Drop, Introspect, PartialEq, Debug, DojoStore, Default)]
 pub enum ArmorType {
@@ -698,9 +698,9 @@ Systems are `#[dojo::contract]` modules, not free functions. Each contract has a
 
 | Contract | Tag | Writes to |
 |----------|-----|-----------|
-| `explorer_token` | `d20_0_1-explorer_token` | ExplorerStats, ExplorerHealth, ExplorerCombat, ExplorerInventory, ExplorerSkills |
-| `combat_system` | `d20_0_1-combat_system` | ExplorerHealth, ExplorerCombat, ExplorerInventory, ExplorerPosition, MonsterInstance, FallenExplorer, ChamberFallenCount |
-| `temple_token` | `d20_0_1-temple_token` | ExplorerPosition, ExplorerTempleProgress, ExplorerStats, ExplorerHealth, ExplorerInventory, TempleState, Chamber, MonsterInstance, ChamberExit, FallenExplorer, ChamberFallenCount |
+| `explorer_token` | `d20_0_1-explorer_token` | AdventurerStats, AdventurerHealth, AdventurerCombat, AdventurerInventory, AdventurerSkills |
+| `combat_system` | `d20_0_1-combat_system` | AdventurerHealth, AdventurerCombat, AdventurerInventory, AdventurerPosition, MonsterInstance, FallenExplorer, ChamberFallenCount |
+| `temple_token` | `d20_0_1-temple_token` | AdventurerPosition, ExplorerTempleProgress, AdventurerStats, AdventurerHealth, AdventurerInventory, TempleState, Chamber, MonsterInstance, ChamberExit, FallenExplorer, ChamberFallenCount |
 
 ```cairo
 // ──────────────────────────────────────────────
@@ -748,7 +748,7 @@ trait ICombatSystem<T> {
 }
 
 // Death logic is an internal function called when HP reaches 0:
-// - sets is_dead = true on ExplorerHealth
+// - sets is_dead = true on AdventurerHealth
 // - creates FallenExplorer with dropped loot in current chamber
 // - increments ChamberFallenCount
 // - emits ExplorerDied event

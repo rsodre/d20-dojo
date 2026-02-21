@@ -7,8 +7,8 @@ pub mod CharacterComponent {
 
     use d20::d20::models::adventurer::{
         AbilityScore, SkillsSet,
-        ExplorerStats, ExplorerHealth, ExplorerCombat, ExplorerInventory,
-        ExplorerPosition, ExplorerSkills,
+        AdventurerStats, AdventurerHealth, AdventurerCombat, AdventurerInventory,
+        AdventurerPosition, AdventurerSkills,
     };
     use d20::types::index::Skill;
     use d20::d20::types::adventurer_class::{AdventurerClass, AdventurerClassTrait};
@@ -58,7 +58,7 @@ pub mod CharacterComponent {
             let (skills, expertise_1, expertise_2) = random_skills(adventurer_class, ref seeder);
 
             // Write all explorer Dojo models
-            world.write_model(@ExplorerStats {
+            world.write_model(@AdventurerStats {
                 adventurer_id,
                 abilities,
                 level: 1,
@@ -67,14 +67,14 @@ pub mod CharacterComponent {
                 temples_conquered: 0,
             });
 
-            world.write_model(@ExplorerHealth {
+            world.write_model(@AdventurerHealth {
                 adventurer_id,
                 current_hp: max_hp.try_into().unwrap(),
                 max_hp,
                 is_dead: false,
             });
 
-            world.write_model(@ExplorerCombat {
+            world.write_model(@AdventurerCombat {
                 adventurer_id,
                 armor_class,
                 spell_slots_1: slots_1,
@@ -84,7 +84,7 @@ pub mod CharacterComponent {
                 action_surge_used: false,
             });
 
-            world.write_model(@ExplorerInventory {
+            world.write_model(@AdventurerInventory {
                 adventurer_id,
                 primary_weapon,
                 secondary_weapon,
@@ -94,7 +94,7 @@ pub mod CharacterComponent {
                 potions: 0,
             });
 
-            world.write_model(@ExplorerPosition {
+            world.write_model(@AdventurerPosition {
                 adventurer_id,
                 temple_id: 0,
                 chamber_id: 0,
@@ -102,7 +102,7 @@ pub mod CharacterComponent {
                 combat_monster_id: 0,
             });
 
-            world.write_model(@ExplorerSkills {
+            world.write_model(@AdventurerSkills {
                 adventurer_id,
                 skills,
                 expertise_1,
@@ -122,9 +122,9 @@ pub mod CharacterComponent {
             ref world: WorldStorage,
             adventurer_id: u128,
         ) -> CharacterAttributes {
-            let stats: ExplorerStats = world.read_model(adventurer_id);
-            let health: ExplorerHealth = world.read_model(adventurer_id);
-            let combat: ExplorerCombat = world.read_model(adventurer_id);
+            let stats: AdventurerStats = world.read_model(adventurer_id);
+            let health: AdventurerHealth = world.read_model(adventurer_id);
+            let combat: AdventurerCombat = world.read_model(adventurer_id);
 
             let class_name: ByteArray = match stats.adventurer_class {
                 AdventurerClass::None => "None",
@@ -154,13 +154,13 @@ pub mod CharacterComponent {
             ref world: WorldStorage,
             adventurer_id: u128,
         ) {
-            let stats: ExplorerStats = world.read_model(adventurer_id);
+            let stats: AdventurerStats = world.read_model(adventurer_id);
             assert(stats.adventurer_class != AdventurerClass::None, 'explorer does not exist');
 
-            let health: ExplorerHealth = world.read_model(adventurer_id);
+            let health: AdventurerHealth = world.read_model(adventurer_id);
             assert(!health.is_dead, 'dead explorers cannot rest');
 
-            world.write_model(@ExplorerHealth {
+            world.write_model(@AdventurerHealth {
                 adventurer_id,
                 current_hp: health.max_hp.try_into().unwrap(),
                 max_hp: health.max_hp,
@@ -168,8 +168,8 @@ pub mod CharacterComponent {
             });
 
             let (slots_1, slots_2, slots_3) = stats.adventurer_class.spell_slots_for(stats.level);
-            let combat: ExplorerCombat = world.read_model(adventurer_id);
-            world.write_model(@ExplorerCombat {
+            let combat: AdventurerCombat = world.read_model(adventurer_id);
+            world.write_model(@AdventurerCombat {
                 adventurer_id,
                 armor_class: combat.armor_class,
                 spell_slots_1: slots_1,

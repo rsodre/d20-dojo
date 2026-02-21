@@ -13,12 +13,12 @@ export function useGameModels() {
   const { model } = useDojoConfig();
 
   const models = useMemo(() => ([
-    model("ExplorerStats"),
-    model("ExplorerHealth"),
-    model("ExplorerCombat"),
-    model("ExplorerInventory"),
-    model("ExplorerPosition"),
-    model("ExplorerSkills"),
+    model("AdventurerStats"),
+    model("AdventurerHealth"),
+    model("AdventurerCombat"),
+    model("AdventurerInventory"),
+    model("AdventurerPosition"),
+    model("AdventurerSkills"),
     model("TempleState"),
     model("Chamber"),
     model("ChamberFallenCount"),

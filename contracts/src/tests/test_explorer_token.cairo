@@ -15,12 +15,12 @@ mod tests {
     };
     use d20::models::config::m_Config;
     use d20::d20::models::adventurer::{
-        ExplorerStats, m_ExplorerStats,
-        ExplorerHealth, m_ExplorerHealth,
-        ExplorerCombat, m_ExplorerCombat,
-        ExplorerInventory, m_ExplorerInventory,
-        ExplorerPosition, m_ExplorerPosition,
-        ExplorerSkills, m_ExplorerSkills,
+        AdventurerStats, m_AdventurerStats,
+        AdventurerHealth, m_AdventurerHealth,
+        AdventurerCombat, m_AdventurerCombat,
+        AdventurerInventory, m_AdventurerInventory,
+        AdventurerPosition, m_AdventurerPosition,
+        AdventurerSkills, m_AdventurerSkills,
     };
     use d20::events::{e_ExplorerMinted};
     use d20::types::index::Skill;
@@ -35,12 +35,12 @@ mod tests {
             namespace: "d20_0_1",
             resources: [
                 TestResource::Model(m_Config::TEST_CLASS_HASH),
-                TestResource::Model(m_ExplorerStats::TEST_CLASS_HASH),
-                TestResource::Model(m_ExplorerHealth::TEST_CLASS_HASH),
-                TestResource::Model(m_ExplorerCombat::TEST_CLASS_HASH),
-                TestResource::Model(m_ExplorerInventory::TEST_CLASS_HASH),
-                TestResource::Model(m_ExplorerPosition::TEST_CLASS_HASH),
-                TestResource::Model(m_ExplorerSkills::TEST_CLASS_HASH),
+                TestResource::Model(m_AdventurerStats::TEST_CLASS_HASH),
+                TestResource::Model(m_AdventurerHealth::TEST_CLASS_HASH),
+                TestResource::Model(m_AdventurerCombat::TEST_CLASS_HASH),
+                TestResource::Model(m_AdventurerInventory::TEST_CLASS_HASH),
+                TestResource::Model(m_AdventurerPosition::TEST_CLASS_HASH),
+                TestResource::Model(m_AdventurerSkills::TEST_CLASS_HASH),
                 TestResource::Event(e_ExplorerMinted::TEST_CLASS_HASH),
                 TestResource::Contract(explorer_token::TEST_CLASS_HASH),
             ].span(),
@@ -69,7 +69,7 @@ mod tests {
     // ── Helper: verify standard array invariant ───────────────────────────────
 
     /// Assert each stat value is from [15,14,13,12,10,8].
-    fn assert_standard_array(stats: @ExplorerStats) {
+    fn assert_standard_array(stats: @AdventurerStats) {
         assert_valid_stat(*stats.abilities.strength);
         assert_valid_stat(*stats.abilities.dexterity);
         assert_valid_stat(*stats.abilities.constitution);
@@ -107,7 +107,7 @@ mod tests {
         assert(token.balance_of(caller) == 1_u256, 'balance should be 1');
         assert(token.owner_of(adventurer_id.into()) == caller, 'wrong owner');
 
-        let stats: ExplorerStats = world.read_model(adventurer_id);
+        let stats: AdventurerStats = world.read_model(adventurer_id);
         assert(stats.adventurer_class == AdventurerClass::Fighter, 'wrong class');
         assert(stats.level == 1, 'wrong level');
         assert(stats.xp == 0, 'wrong xp');
@@ -126,9 +126,9 @@ mod tests {
 
         let adventurer_id = token.mint_explorer(AdventurerClass::Fighter);
 
-        // let stats: ExplorerStats = world.read_model(adventurer_id);
-        let health: ExplorerHealth = world.read_model(adventurer_id);
-        let combat: ExplorerCombat = world.read_model(adventurer_id);
+        // let stats: AdventurerStats = world.read_model(adventurer_id);
+        let health: AdventurerHealth = world.read_model(adventurer_id);
+        let combat: AdventurerCombat = world.read_model(adventurer_id);
 
         // Fighter hit die = 10, CON mod in [-1, +2] → HP in [9, 12]
         assert(health.max_hp >= 9 && health.max_hp <= 12, 'fighter HP out of range');
@@ -150,7 +150,7 @@ mod tests {
         let (world, token) = setup_world();
         let adventurer_id = token.mint_explorer(AdventurerClass::Fighter);
 
-        let inv: ExplorerInventory = world.read_model(adventurer_id);
+        let inv: AdventurerInventory = world.read_model(adventurer_id);
         assert(inv.primary_weapon == WeaponType::Longsword, 'fighter weapon: longsword');
         assert(inv.secondary_weapon == WeaponType::None, 'fighter no secondary');
         assert(inv.armor == ArmorType::ChainMail, 'fighter armor: chain mail');
@@ -167,7 +167,7 @@ mod tests {
         let (world, token) = setup_world();
         let adventurer_id = token.mint_explorer(AdventurerClass::Fighter);
 
-        let skills: ExplorerSkills = world.read_model(adventurer_id);
+        let skills: AdventurerSkills = world.read_model(adventurer_id);
         // Fighter always has Athletics
         assert(skills.skills.athletics, 'fighter: athletics auto');
         // Fighter gets exactly one of Perception or Acrobatics (not both, not neither)
@@ -188,7 +188,7 @@ mod tests {
         let (world, token) = setup_world();
         let adventurer_id = token.mint_explorer(AdventurerClass::Fighter);
 
-        let pos: ExplorerPosition = world.read_model(adventurer_id);
+        let pos: AdventurerPosition = world.read_model(adventurer_id);
         assert(pos.temple_id == 0, 'not in a temple');
         assert(pos.chamber_id == 0, 'not in a chamber');
         assert(!pos.in_combat, 'not in combat');
@@ -206,15 +206,15 @@ mod tests {
 
         let adventurer_id = token.mint_explorer(AdventurerClass::Rogue);
 
-        let stats: ExplorerStats = world.read_model(adventurer_id);
+        let stats: AdventurerStats = world.read_model(adventurer_id);
         assert(stats.adventurer_class == AdventurerClass::Rogue, 'wrong class');
         assert_standard_array(@stats);
 
-        let health: ExplorerHealth = world.read_model(adventurer_id);
+        let health: AdventurerHealth = world.read_model(adventurer_id);
         // Rogue hit die = 8, CON mod in [-1, +2] → HP in [7, 10]
         assert(health.max_hp >= 7 && health.max_hp <= 10, 'rogue HP out of range');
 
-        let combat: ExplorerCombat = world.read_model(adventurer_id);
+        let combat: AdventurerCombat = world.read_model(adventurer_id);
         // Rogue: Leather AC = 11 + DEX mod. DEX mod in [-1, +2] → AC in [10, 13]
         assert(combat.armor_class >= 10 && combat.armor_class <= 13, 'rogue AC out of range');
         assert(combat.spell_slots_1 == 0, 'rogue has no spell slots');
@@ -228,7 +228,7 @@ mod tests {
         let (world, token) = setup_world();
         let adventurer_id = token.mint_explorer(AdventurerClass::Rogue);
 
-        let inv: ExplorerInventory = world.read_model(adventurer_id);
+        let inv: AdventurerInventory = world.read_model(adventurer_id);
         assert(inv.primary_weapon == WeaponType::Dagger, 'rogue weapon: dagger');
         assert(inv.secondary_weapon == WeaponType::Shortbow, 'rogue secondary: shortbow');
         assert(inv.armor == ArmorType::Leather, 'rogue armor: leather');
@@ -242,7 +242,7 @@ mod tests {
         let (world, token) = setup_world();
         let adventurer_id = token.mint_explorer(AdventurerClass::Rogue);
 
-        let skills: ExplorerSkills = world.read_model(adventurer_id);
+        let skills: AdventurerSkills = world.read_model(adventurer_id);
         // Rogue always has Stealth and Acrobatics
         assert(skills.skills.stealth, 'rogue: stealth auto');
         assert(skills.skills.acrobatics, 'rogue: acrobatics auto');
@@ -263,15 +263,15 @@ mod tests {
 
         let adventurer_id = token.mint_explorer(AdventurerClass::Wizard);
 
-        let stats: ExplorerStats = world.read_model(adventurer_id);
+        let stats: AdventurerStats = world.read_model(adventurer_id);
         assert(stats.adventurer_class == AdventurerClass::Wizard, 'wrong class');
         assert_standard_array(@stats);
 
-        let health: ExplorerHealth = world.read_model(adventurer_id);
+        let health: AdventurerHealth = world.read_model(adventurer_id);
         // Wizard hit die = 6, CON mod in [-1, +2] → HP in [5, 8]
         assert(health.max_hp >= 5 && health.max_hp <= 8, 'wizard HP out of range');
 
-        let combat: ExplorerCombat = world.read_model(adventurer_id);
+        let combat: AdventurerCombat = world.read_model(adventurer_id);
         // Wizard: no armor AC = 10 + DEX mod. DEX mod in [-1, +2] → AC in [9, 12]
         assert(combat.armor_class >= 9 && combat.armor_class <= 12, 'wizard AC out of range');
         assert(combat.spell_slots_1 == 2, 'wizard level1 slots = 2');
@@ -287,7 +287,7 @@ mod tests {
         let (world, token) = setup_world();
         let adventurer_id = token.mint_explorer(AdventurerClass::Wizard);
 
-        let inv: ExplorerInventory = world.read_model(adventurer_id);
+        let inv: AdventurerInventory = world.read_model(adventurer_id);
         assert(inv.primary_weapon == WeaponType::Staff, 'wizard weapon: staff');
         assert(inv.secondary_weapon == WeaponType::None, 'wizard no secondary');
         assert(inv.armor == ArmorType::None, 'wizard no armor');
@@ -301,7 +301,7 @@ mod tests {
         let (world, token) = setup_world();
         let adventurer_id = token.mint_explorer(AdventurerClass::Wizard);
 
-        let skills: ExplorerSkills = world.read_model(adventurer_id);
+        let skills: AdventurerSkills = world.read_model(adventurer_id);
         // Wizard always has Arcana
         assert(skills.skills.arcana, 'wizard: arcana auto');
         // Wizard gets exactly one of Perception or Persuasion
@@ -337,9 +337,9 @@ mod tests {
         assert(token.owner_of(id3.into()) == caller, 'wrong owner id3');
 
         // Each explorer has independent state
-        let s1: ExplorerStats = world.read_model(id1);
-        let s2: ExplorerStats = world.read_model(id2);
-        let s3: ExplorerStats = world.read_model(id3);
+        let s1: AdventurerStats = world.read_model(id1);
+        let s2: AdventurerStats = world.read_model(id2);
+        let s3: AdventurerStats = world.read_model(id3);
         assert(s1.adventurer_class == AdventurerClass::Fighter, 'id1 should be fighter');
         assert(s2.adventurer_class == AdventurerClass::Wizard, 'id2 should be wizard');
         assert(s3.adventurer_class == AdventurerClass::Rogue, 'id3 should be rogue');
@@ -356,7 +356,7 @@ mod tests {
         let adventurer_id = token.mint_explorer(AdventurerClass::Fighter);
 
         // Simulate damage by writing model directly
-        let mut health: ExplorerHealth = world.read_model(adventurer_id);
+        let mut health: AdventurerHealth = world.read_model(adventurer_id);
         let max_hp = health.max_hp;
         health.current_hp = 3;
         world.write_model_test(@health);
@@ -364,7 +364,7 @@ mod tests {
         // Rest should restore HP
         token.rest(adventurer_id);
 
-        let health: ExplorerHealth = world.read_model(adventurer_id);
+        let health: AdventurerHealth = world.read_model(adventurer_id);
         assert(health.current_hp == max_hp.try_into().unwrap(), 'HP should be restored');
     }
 
@@ -377,14 +377,14 @@ mod tests {
         let adventurer_id = token.mint_explorer(AdventurerClass::Fighter);
 
         // Simulate spent class resources
-        let mut combat: ExplorerCombat = world.read_model(adventurer_id);
+        let mut combat: AdventurerCombat = world.read_model(adventurer_id);
         combat.second_wind_used = true;
         combat.action_surge_used = true;
         world.write_model_test(@combat);
 
         token.rest(adventurer_id);
 
-        let combat: ExplorerCombat = world.read_model(adventurer_id);
+        let combat: AdventurerCombat = world.read_model(adventurer_id);
         assert(!combat.second_wind_used, 'second_wind reset');
         assert(!combat.action_surge_used, 'action_surge reset');
     }
@@ -398,13 +398,13 @@ mod tests {
         let adventurer_id = token.mint_explorer(AdventurerClass::Wizard);
 
         // Spend all spell slots
-        let mut combat: ExplorerCombat = world.read_model(adventurer_id);
+        let mut combat: AdventurerCombat = world.read_model(adventurer_id);
         combat.spell_slots_1 = 0;
         world.write_model_test(@combat);
 
         token.rest(adventurer_id);
 
-        let combat: ExplorerCombat = world.read_model(adventurer_id);
+        let combat: AdventurerCombat = world.read_model(adventurer_id);
         assert(combat.spell_slots_1 == 2, 'wizard level1 slots restored');
     }
 
@@ -430,7 +430,7 @@ mod tests {
         let adventurer_id = token.mint_explorer(AdventurerClass::Fighter);
 
         // Kill the explorer via write_model_test
-        let mut health: ExplorerHealth = world.read_model(adventurer_id);
+        let mut health: AdventurerHealth = world.read_model(adventurer_id);
         health.is_dead = true;
         health.current_hp = 0;
         world.write_model_test(@health);

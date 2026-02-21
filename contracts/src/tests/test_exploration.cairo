@@ -5,7 +5,7 @@ mod tests {
     use dojo::model::{ModelStorage, ModelStorageTest};
 
     use d20::d20::models::adventurer::{
-        ExplorerHealth, ExplorerPosition,
+        AdventurerHealth, AdventurerPosition,
     };
     use d20::models::temple::{
         TempleState, Chamber, ChamberExit,
@@ -206,10 +206,10 @@ mod tests {
         let adventurer_id = mint_fighter(token);
         let temple_id = temple.mint_temple(1_u8);
 
-        world.write_model_test(@ExplorerHealth { adventurer_id, current_hp: 0, max_hp: 11, is_dead: true });
+        world.write_model_test(@AdventurerHealth { adventurer_id, current_hp: 0, max_hp: 11, is_dead: true });
         world.write_model_test(@Chamber { temple_id, chamber_id: 1, chamber_type: ChamberType::Entrance, yonder: 0, exit_count: 1, is_revealed: true, treasure_looted: false, trap_disarmed: false, trap_dc: 0 });
         world.write_model_test(@ChamberExit { temple_id, from_chamber_id: 1, exit_index: 0, to_chamber_id: 0, is_discovered: false });
-        world.write_model_test(@ExplorerPosition { adventurer_id, temple_id, chamber_id: 1, in_combat: false, combat_monster_id: 0 });
+        world.write_model_test(@AdventurerPosition { adventurer_id, temple_id, chamber_id: 1, in_combat: false, combat_monster_id: 0 });
 
         temple.open_exit(adventurer_id, 0);
     }
@@ -227,7 +227,7 @@ mod tests {
 
         world.write_model_test(@Chamber { temple_id, chamber_id: 1, chamber_type: ChamberType::Entrance, yonder: 0, exit_count: 1, is_revealed: true, treasure_looted: false, trap_disarmed: false, trap_dc: 0 });
         world.write_model_test(@ChamberExit { temple_id, from_chamber_id: 1, exit_index: 0, to_chamber_id: 0, is_discovered: false });
-        world.write_model_test(@ExplorerPosition { adventurer_id, temple_id, chamber_id: 1, in_combat: true, combat_monster_id: 1 });
+        world.write_model_test(@AdventurerPosition { adventurer_id, temple_id, chamber_id: 1, in_combat: true, combat_monster_id: 1 });
 
         temple.open_exit(adventurer_id, 0);
     }
@@ -277,7 +277,7 @@ mod tests {
         temple.enter_temple(adventurer_id, temple_id);
         temple.move_to_chamber(adventurer_id, 0);
 
-        let pos: ExplorerPosition = world.read_model(adventurer_id);
+        let pos: AdventurerPosition = world.read_model(adventurer_id);
         assert(pos.chamber_id == 2, 'should be in chamber 2');
         assert(!pos.in_combat, 'no combat in empty chamber');
     }
@@ -328,11 +328,11 @@ mod tests {
         let adventurer_id = mint_fighter(token);
         let temple_id = temple.mint_temple(1_u8);
 
-        world.write_model_test(@ExplorerHealth { adventurer_id, current_hp: 0, max_hp: 11, is_dead: true });
+        world.write_model_test(@AdventurerHealth { adventurer_id, current_hp: 0, max_hp: 11, is_dead: true });
         world.write_model_test(@Chamber { temple_id, chamber_id: 1, chamber_type: ChamberType::Entrance, yonder: 0, exit_count: 1, is_revealed: true, treasure_looted: false, trap_disarmed: false, trap_dc: 0 });
         world.write_model_test(@ChamberExit { temple_id, from_chamber_id: 1, exit_index: 0, to_chamber_id: 2, is_discovered: true });
         world.write_model_test(@Chamber { temple_id, chamber_id: 2, chamber_type: ChamberType::Empty, yonder: 1, exit_count: 0, is_revealed: true, treasure_looted: false, trap_disarmed: false, trap_dc: 0 });
-        world.write_model_test(@ExplorerPosition { adventurer_id, temple_id, chamber_id: 1, in_combat: false, combat_monster_id: 0 });
+        world.write_model_test(@AdventurerPosition { adventurer_id, temple_id, chamber_id: 1, in_combat: false, combat_monster_id: 0 });
 
         temple.move_to_chamber(adventurer_id, 0);
     }
@@ -350,7 +350,7 @@ mod tests {
 
         world.write_model_test(@Chamber { temple_id, chamber_id: 1, chamber_type: ChamberType::Entrance, yonder: 0, exit_count: 1, is_revealed: true, treasure_looted: false, trap_disarmed: false, trap_dc: 0 });
         world.write_model_test(@ChamberExit { temple_id, from_chamber_id: 1, exit_index: 0, to_chamber_id: 2, is_discovered: true });
-        world.write_model_test(@ExplorerPosition { adventurer_id, temple_id, chamber_id: 1, in_combat: true, combat_monster_id: 1 });
+        world.write_model_test(@AdventurerPosition { adventurer_id, temple_id, chamber_id: 1, in_combat: true, combat_monster_id: 1 });
 
         temple.move_to_chamber(adventurer_id, 0);
     }

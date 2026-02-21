@@ -1,7 +1,7 @@
 use dojo::model::ModelStorage;
 use dojo::event::EventStorage;
 use dojo::world::WorldStorage;
-use d20::d20::models::adventurer::{ExplorerHealth, ExplorerPosition, ExplorerInventory};
+use d20::d20::models::adventurer::{AdventurerHealth, AdventurerPosition, AdventurerInventory};
 use d20::models::temple::{FallenExplorer, ChamberFallenCount};
 use d20::events::ExplorerDied;
 use d20::types::monster::MonsterType;
@@ -10,8 +10,8 @@ pub trait DamageTrait {
     fn apply_explorer_damage(
         ref world: WorldStorage,
         adventurer_id: u128,
-        health: ExplorerHealth,
-        position: ExplorerPosition,
+        health: AdventurerHealth,
+        position: AdventurerPosition,
         monster_type: MonsterType,
         damage: u16,
     ) -> u16;
@@ -19,8 +19,8 @@ pub trait DamageTrait {
     fn handle_death(
         ref world: WorldStorage,
         adventurer_id: u128,
-        health: ExplorerHealth,
-        position: ExplorerPosition,
+        health: AdventurerHealth,
+        position: AdventurerPosition,
         monster_type: MonsterType,
     );
 }
@@ -31,8 +31,8 @@ pub impl DamageImpl of DamageTrait {
     fn apply_explorer_damage(
         ref world: WorldStorage,
         adventurer_id: u128,
-        health: ExplorerHealth,
-        position: ExplorerPosition,
+        health: AdventurerHealth,
+        position: AdventurerPosition,
         monster_type: MonsterType,
         damage: u16,
     ) -> u16 {
@@ -44,7 +44,7 @@ pub impl DamageImpl of DamageTrait {
             // Return actual HP lost (capped at what the explorer had)
             health.current_hp.try_into().unwrap()
         } else {
-            world.write_model(@ExplorerHealth {
+            world.write_model(@AdventurerHealth {
                 adventurer_id,
                 current_hp: new_hp,
                 max_hp: health.max_hp,
@@ -55,8 +55,8 @@ pub impl DamageImpl of DamageTrait {
     }
 
     /// Handle explorer death:
-    ///   1. Set is_dead on ExplorerHealth, clear HP to 0.
-    ///   2. Clear combat state on ExplorerPosition.
+    ///   1. Set is_dead on AdventurerHealth, clear HP to 0.
+    ///   2. Clear combat state on AdventurerPosition.
     ///   3. Read inventory and create FallenExplorer with dropped loot.
     ///   4. Increment ChamberFallenCount.
     ///   5. Zero out inventory (items are now on the ground).
@@ -64,12 +64,12 @@ pub impl DamageImpl of DamageTrait {
     fn handle_death(
         ref world: WorldStorage,
         adventurer_id: u128,
-        health: ExplorerHealth,
-        position: ExplorerPosition,
+        health: AdventurerHealth,
+        position: AdventurerPosition,
         monster_type: MonsterType,
     ) {
         // 1. Mark explorer dead
-        world.write_model(@ExplorerHealth {
+        world.write_model(@AdventurerHealth {
             adventurer_id,
             current_hp: 0,
             max_hp: health.max_hp,
@@ -77,7 +77,7 @@ pub impl DamageImpl of DamageTrait {
         });
 
         // 2. Clear combat state
-        world.write_model(@ExplorerPosition {
+        world.write_model(@AdventurerPosition {
             adventurer_id,
             temple_id: position.temple_id,
             chamber_id: position.chamber_id,
@@ -86,7 +86,7 @@ pub impl DamageImpl of DamageTrait {
         });
 
         // 3. Read inventory for loot drop
-        let inventory: ExplorerInventory = world.read_model(adventurer_id);
+        let inventory: AdventurerInventory = world.read_model(adventurer_id);
 
         // 4. Determine fallen_index from ChamberFallenCount (read-then-increment)
         let fallen_count: ChamberFallenCount = world.read_model(
@@ -115,7 +115,7 @@ pub impl DamageImpl of DamageTrait {
         });
 
         // 7. Zero out explorer inventory (loot is now on the ground)
-        world.write_model(@ExplorerInventory {
+        world.write_model(@AdventurerInventory {
             adventurer_id,
             primary_weapon: inventory.primary_weapon,
             secondary_weapon: inventory.secondary_weapon,

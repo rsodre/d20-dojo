@@ -8,7 +8,7 @@
 
 - [x] **1.1** Replace starter code: update namespace from `dojo_starter` to `d20_0_1` in `Scarb.toml` and `dojo_dev.toml`, update world name/seed, remove starter models/systems
 - [x] **1.2** Define all enums in `src/types.cairo` with correct derives (`Serde, Copy, Drop, Introspect, PartialEq, Debug, DojoStore, Default`)
-- [x] **1.3** Implement explorer models in `src/models/` (ExplorerStats, ExplorerHealth, ExplorerCombat, ExplorerInventory, ExplorerPosition, ExplorerSkills) with `#[dojo::model]` and `#[derive(Copy, Drop, Serde)]`
+- [x] **1.3** Implement explorer models in `src/models/` (AdventurerStats, AdventurerHealth, AdventurerCombat, AdventurerInventory, AdventurerPosition, AdventurerSkills) with `#[dojo::model]` and `#[derive(Copy, Drop, Serde)]`
 - [x] **1.4** Implement temple/chamber models (TempleState, Chamber, MonsterInstance, ChamberExit, FallenExplorer, ChamberFallenCount, ExplorerTempleProgress)
 - [x] **1.5** Implement D20 utility module (`src/utils/d20.cairo`): `roll_d20`, `roll_dice`, `ability_modifier`, `proficiency_bonus`, `calculate_ac`
 - [x] **1.6** Implement monster stat lookup (`src/utils/monsters.cairo`): pure function returning stats for each MonsterType

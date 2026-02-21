@@ -152,12 +152,12 @@ pub mod temple_token {
         TempleState, Chamber, MonsterInstance, ChamberExit, ExplorerTempleProgress,
         FallenExplorer, ChamberFallenCount,
     };
-    use d20::d20::models::adventurer::{ExplorerHealth, ExplorerPosition};
+    use d20::d20::models::adventurer::{AdventurerHealth, AdventurerPosition};
     use d20::events::ChamberRevealed;
     use d20::utils::dice::{roll_d20, roll_dice, ability_modifier, proficiency_bonus};
     use d20::utils::seeder::{Seeder, SeederTrait};
     // use d20::utils::monsters::MonsterTypeTrait; // Removed as it is now in types::monster
-    use d20::d20::models::adventurer::{ExplorerStats, ExplorerInventory, ExplorerSkills};
+    use d20::d20::models::adventurer::{AdventurerStats, AdventurerInventory, AdventurerSkills};
     use d20::constants::{TEMPLE_TOKEN_DESCRIPTION, TEMPLE_TOKEN_EXTERNAL_LINK};
     use d20::utils::dns::{DnsTrait};
     use d20::utils::damage::DamageImpl;
@@ -475,15 +475,15 @@ pub mod temple_token {
             assert(temple.difficulty_tier >= 1, 'temple does not exist');
 
             // Validate explorer is alive
-            let health: ExplorerHealth = world.read_model(adventurer_id);
+            let health: AdventurerHealth = world.read_model(adventurer_id);
             assert(!health.is_dead, 'dead explorers cannot enter');
 
             // Validate explorer is not in combat; auto-exit current temple if in one
-            let position: ExplorerPosition = world.read_model(adventurer_id);
+            let position: AdventurerPosition = world.read_model(adventurer_id);
             assert(!position.in_combat, 'explorer is in combat');
 
             // Place explorer at entrance chamber (overwrites any previous temple position)
-            world.write_model(@ExplorerPosition {
+            world.write_model(@AdventurerPosition {
                 adventurer_id,
                 temple_id,
                 chamber_id: 1, // entrance chamber is always id 1
@@ -513,13 +513,13 @@ pub mod temple_token {
             assert(explorer_token.owner_of(adventurer_id.into()) == get_caller_address(), 'not owner');
 
             // Validate explorer is in a temple
-            let position: ExplorerPosition = world.read_model(adventurer_id);
+            let position: AdventurerPosition = world.read_model(adventurer_id);
             assert(position.temple_id != 0, 'not inside any temple');
             assert(!position.in_combat, 'cannot exit during combat');
 
             // Clear temple/chamber position — stats, inventory, XP, and
             // ExplorerTempleProgress are all untouched (persisted on-chain).
-            world.write_model(@ExplorerPosition {
+            world.write_model(@AdventurerPosition {
                 adventurer_id,
                 temple_id: 0,
                 chamber_id: 0,
@@ -537,10 +537,10 @@ pub mod temple_token {
             assert(explorer_token.owner_of(adventurer_id.into()) == caller, 'not owner');
 
             // ── Validate explorer state ──────────────────────────────────────
-            let health: ExplorerHealth = world.read_model(adventurer_id);
+            let health: AdventurerHealth = world.read_model(adventurer_id);
             assert(!health.is_dead, 'dead explorers cannot explore');
 
-            let position: ExplorerPosition = world.read_model(adventurer_id);
+            let position: AdventurerPosition = world.read_model(adventurer_id);
             assert(position.temple_id != 0, 'not inside any temple');
             assert(!position.in_combat, 'cannot open exit in combat');
 
@@ -618,10 +618,10 @@ pub mod temple_token {
             assert(explorer_token.owner_of(adventurer_id.into()) == caller, 'not owner');
 
             // ── Validate explorer state ──────────────────────────────────────
-            let health: ExplorerHealth = world.read_model(adventurer_id);
+            let health: AdventurerHealth = world.read_model(adventurer_id);
             assert(!health.is_dead, 'dead explorers cannot move');
 
-            let position: ExplorerPosition = world.read_model(adventurer_id);
+            let position: AdventurerPosition = world.read_model(adventurer_id);
             assert(position.temple_id != 0, 'not inside any temple');
             assert(!position.in_combat, 'cannot move during combat');
 
@@ -645,7 +645,7 @@ pub mod temple_token {
             let enters_combat: bool = monster.is_alive && dest_chamber.chamber_type == ChamberType::Monster
                 || (monster.is_alive && dest_chamber.chamber_type == ChamberType::Boss);
 
-            world.write_model(@ExplorerPosition {
+            world.write_model(@AdventurerPosition {
                 adventurer_id,
                 temple_id,
                 chamber_id: dest_chamber_id,
@@ -661,7 +661,7 @@ pub mod temple_token {
             let mut seeder = SeederTrait::from_consume_vrf(world, caller);
             if dest_chamber.chamber_type == ChamberType::Trap && !dest_chamber.trap_disarmed
                 && dest_chamber.trap_dc > 0 {
-                let stats: ExplorerStats = world.read_model(adventurer_id);
+                let stats: AdventurerStats = world.read_model(adventurer_id);
                 let dex_mod: i8 = ability_modifier(stats.abilities.dexterity);
                 // DEX saving throw
                 let save_roll: i16 = roll_d20(ref seeder).into() + dex_mod.into();
@@ -672,7 +672,7 @@ pub mod temple_token {
                     let bonus: u16 = (dest_chamber.yonder / 2).into();
                     let damage: u16 = base_dmg + bonus;
                     // Use the destination position so handle_death records the right chamber
-                    let dest_position = ExplorerPosition {
+                    let dest_position = AdventurerPosition {
                         adventurer_id,
                         temple_id,
                         chamber_id: dest_chamber_id,
@@ -695,10 +695,10 @@ pub mod temple_token {
             assert(explorer_token.owner_of(adventurer_id.into()) == caller, 'not owner');
 
             // ── Validate explorer state ──────────────────────────────────────
-            let health: ExplorerHealth = world.read_model(adventurer_id);
+            let health: AdventurerHealth = world.read_model(adventurer_id);
             assert(!health.is_dead, 'dead explorers cannot disarm');
 
-            let position: ExplorerPosition = world.read_model(adventurer_id);
+            let position: AdventurerPosition = world.read_model(adventurer_id);
             assert(position.temple_id != 0, 'not inside any temple');
             assert(!position.in_combat, 'cannot disarm during combat');
 
@@ -718,8 +718,8 @@ pub mod temple_token {
             // Others: INT-based, proficient only if Arcana trained.
             // Expertise on the relevant skill doubles the proficiency bonus.
             let mut seeder = SeederTrait::from_consume_vrf(world, caller);
-            let stats: ExplorerStats = world.read_model(adventurer_id);
-            let skills: ExplorerSkills = world.read_model(adventurer_id);
+            let stats: AdventurerStats = world.read_model(adventurer_id);
+            let skills: AdventurerSkills = world.read_model(adventurer_id);
             let prof: u8 = proficiency_bonus(stats.level);
 
             // Determine ability score and proficiency multiplier by class
@@ -787,10 +787,10 @@ pub mod temple_token {
             assert(explorer_token.owner_of(adventurer_id.into()) == caller, 'not owner');
 
             // ── Validate explorer state ──────────────────────────────────────
-            let health: ExplorerHealth = world.read_model(adventurer_id);
+            let health: AdventurerHealth = world.read_model(adventurer_id);
             assert(!health.is_dead, 'dead explorers cannot loot');
 
-            let position: ExplorerPosition = world.read_model(adventurer_id);
+            let position: AdventurerPosition = world.read_model(adventurer_id);
             assert(position.temple_id != 0, 'not inside any temple');
             assert(!position.in_combat, 'cannot loot during combat');
 
@@ -809,8 +809,8 @@ pub mod temple_token {
             // ── Perception check: d20 + WIS mod [+ proficiency if trained] ───
             // DC 12 for Empty chambers, DC 10 for Treasure chambers
             let mut seeder = SeederTrait::from_consume_vrf(world, caller);
-            let stats: ExplorerStats = world.read_model(adventurer_id);
-            let skills: ExplorerSkills = world.read_model(adventurer_id);
+            let stats: AdventurerStats = world.read_model(adventurer_id);
+            let skills: AdventurerSkills = world.read_model(adventurer_id);
 
             let wis_mod: i8 = ability_modifier(stats.abilities.wisdom);
             let prof: u8 = proficiency_bonus(stats.level);
@@ -834,8 +834,8 @@ pub mod temple_token {
                 // Potion found on total roll >= 15
                 let potion_found: u8 = if roll >= 15 { 1 } else { 0 };
 
-                let inventory: ExplorerInventory = world.read_model(adventurer_id);
-                world.write_model(@ExplorerInventory {
+                let inventory: AdventurerInventory = world.read_model(adventurer_id);
+                world.write_model(@AdventurerInventory {
                     adventurer_id,
                     primary_weapon: inventory.primary_weapon,
                     secondary_weapon: inventory.secondary_weapon,
@@ -869,10 +869,10 @@ pub mod temple_token {
             assert(explorer_token.owner_of(adventurer_id.into()) == get_caller_address(), 'not owner');
 
             // ── Validate explorer state ──────────────────────────────────────
-            let health: ExplorerHealth = world.read_model(adventurer_id);
+            let health: AdventurerHealth = world.read_model(adventurer_id);
             assert(!health.is_dead, 'dead explorers cannot loot');
 
-            let position: ExplorerPosition = world.read_model(adventurer_id);
+            let position: AdventurerPosition = world.read_model(adventurer_id);
             assert(position.temple_id != 0, 'not inside any temple');
             assert(!position.in_combat, 'cannot loot during combat');
 
@@ -894,7 +894,7 @@ pub mod temple_token {
             // Weapons: only take if explorer has None in that slot
             // Armor:   only upgrade if dropped armor > current (or current is None)
             // Gold + potions: always add
-            let inventory: ExplorerInventory = world.read_model(adventurer_id);
+            let inventory: AdventurerInventory = world.read_model(adventurer_id);
 
             use d20::types::items::{WeaponType, ArmorType};
 
@@ -919,7 +919,7 @@ pub mod temple_token {
                 inventory.armor
             };
 
-            world.write_model(@ExplorerInventory {
+            world.write_model(@AdventurerInventory {
                 adventurer_id,
                 primary_weapon: new_primary,
                 secondary_weapon: new_secondary,

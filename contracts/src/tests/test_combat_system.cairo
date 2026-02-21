@@ -17,12 +17,12 @@ mod tests {
     };
     use d20::models::config::{Config, m_Config};
     use d20::d20::models::adventurer::{
-        ExplorerStats, m_ExplorerStats,
-        ExplorerHealth, m_ExplorerHealth,
-        ExplorerCombat, m_ExplorerCombat,
-        ExplorerInventory, m_ExplorerInventory,
-        ExplorerPosition, m_ExplorerPosition,
-        m_ExplorerSkills,
+        AdventurerStats, m_AdventurerStats,
+        AdventurerHealth, m_AdventurerHealth,
+        AdventurerCombat, m_AdventurerCombat,
+        AdventurerInventory, m_AdventurerInventory,
+        AdventurerPosition, m_AdventurerPosition,
+        m_AdventurerSkills,
     };
     use d20::models::temple::{
         MonsterInstance, m_MonsterInstance,
@@ -46,12 +46,12 @@ mod tests {
             namespace: "d20_0_1",
             resources: [
                 TestResource::Model(m_Config::TEST_CLASS_HASH),
-                TestResource::Model(m_ExplorerStats::TEST_CLASS_HASH),
-                TestResource::Model(m_ExplorerHealth::TEST_CLASS_HASH),
-                TestResource::Model(m_ExplorerCombat::TEST_CLASS_HASH),
-                TestResource::Model(m_ExplorerInventory::TEST_CLASS_HASH),
-                TestResource::Model(m_ExplorerPosition::TEST_CLASS_HASH),
-                TestResource::Model(m_ExplorerSkills::TEST_CLASS_HASH),
+                TestResource::Model(m_AdventurerStats::TEST_CLASS_HASH),
+                TestResource::Model(m_AdventurerHealth::TEST_CLASS_HASH),
+                TestResource::Model(m_AdventurerCombat::TEST_CLASS_HASH),
+                TestResource::Model(m_AdventurerInventory::TEST_CLASS_HASH),
+                TestResource::Model(m_AdventurerPosition::TEST_CLASS_HASH),
+                TestResource::Model(m_AdventurerSkills::TEST_CLASS_HASH),
                 TestResource::Model(m_MonsterInstance::TEST_CLASS_HASH),
                 TestResource::Model(m_FallenExplorer::TEST_CLASS_HASH),
                 TestResource::Model(m_ChamberFallenCount::TEST_CLASS_HASH),
@@ -131,11 +131,11 @@ mod tests {
         temple_id: u128,
         chamber_id: u32,
     ) {
-        let health: ExplorerHealth = world.read_model(adventurer_id);
+        let health: AdventurerHealth = world.read_model(adventurer_id);
         assert(health.is_dead, 'explorer should be dead');
         assert(health.current_hp == 0, 'hp should be 0 on death');
 
-        let pos: ExplorerPosition = world.read_model(adventurer_id);
+        let pos: AdventurerPosition = world.read_model(adventurer_id);
         assert(!pos.in_combat, 'dead explorer not in combat');
 
         let fallen_count: ChamberFallenCount = world.read_model((temple_id, chamber_id));
@@ -147,7 +147,7 @@ mod tests {
         assert(fallen.adventurer_id == adventurer_id, 'fallen explorer id mismatch');
         assert(!fallen.is_looted, 'fallen should not be looted');
 
-        let inv: ExplorerInventory = world.read_model(adventurer_id);
+        let inv: AdventurerInventory = world.read_model(adventurer_id);
         assert(inv.gold == 0, 'gold dropped on death');
         assert(inv.potions == 0, 'potions dropped on death');
     }
@@ -204,9 +204,9 @@ mod tests {
         let adventurer_id = mint_fighter(token);
 
         // Reduce HP to 3 to simulate damage
-        let health: ExplorerHealth = world.read_model(adventurer_id);
+        let health: AdventurerHealth = world.read_model(adventurer_id);
         let max_hp = health.max_hp;
-        world.write_model_test(@ExplorerHealth {
+        world.write_model_test(@AdventurerHealth {
             adventurer_id,
             current_hp: 3,
             max_hp,
@@ -215,7 +215,7 @@ mod tests {
 
         combat_sys.second_wind(adventurer_id);
 
-        let after: ExplorerHealth = world.read_model(adventurer_id);
+        let after: AdventurerHealth = world.read_model(adventurer_id);
         // 1d10+level heal from 3 HP.
         assert(after.current_hp > 3, 'second wind should heal');
         assert(after.current_hp <= max_hp.try_into().unwrap(), 'cannot exceed max hp');
@@ -230,12 +230,12 @@ mod tests {
         let (mut world, token, combat_sys) = setup_world();
         let adventurer_id = mint_fighter(token);
 
-        let before: ExplorerCombat = world.read_model(adventurer_id);
+        let before: AdventurerCombat = world.read_model(adventurer_id);
         assert(!before.second_wind_used, 'fresh before use');
 
         combat_sys.second_wind(adventurer_id);
 
-        let after: ExplorerCombat = world.read_model(adventurer_id);
+        let after: AdventurerCombat = world.read_model(adventurer_id);
         assert(after.second_wind_used, 'marked used after');
     }
 
@@ -274,7 +274,7 @@ mod tests {
         // Fighter starts at full HP. Second wind should not exceed max.
         combat_sys.second_wind(adventurer_id);
 
-        let after: ExplorerHealth = world.read_model(adventurer_id);
+        let after: AdventurerHealth = world.read_model(adventurer_id);
         assert(after.current_hp <= after.max_hp.try_into().unwrap(), 'hp cannot exceed max');
         assert(after.current_hp >= 1, 'hp must be at least 1');
     }
@@ -292,8 +292,8 @@ mod tests {
         let adventurer_id = mint_rogue(token);
 
         // Level to 2
-        let stats: ExplorerStats = world.read_model(adventurer_id);
-        world.write_model_test(@ExplorerStats {
+        let stats: AdventurerStats = world.read_model(adventurer_id);
+        world.write_model_test(@AdventurerStats {
             adventurer_id,
             abilities: stats.abilities,
             level: 2,
@@ -302,7 +302,7 @@ mod tests {
             temples_conquered: stats.temples_conquered,
         });
 
-        world.write_model_test(@ExplorerPosition {
+        world.write_model_test(@AdventurerPosition {
             adventurer_id,
             temple_id: 1,
             chamber_id: 1,
@@ -312,7 +312,7 @@ mod tests {
 
         combat_sys.cunning_action(adventurer_id);
 
-        let after: ExplorerPosition = world.read_model(adventurer_id);
+        let after: AdventurerPosition = world.read_model(adventurer_id);
         assert(!after.in_combat, 'should not be in combat');
         assert(after.combat_monster_id == 0, 'monster id cleared');
         assert(after.chamber_id == 1, 'chamber unchanged');
@@ -327,7 +327,7 @@ mod tests {
         let (mut world, token, combat_sys) = setup_world();
         let adventurer_id = mint_fighter(token);
 
-        world.write_model_test(@ExplorerPosition {
+        world.write_model_test(@AdventurerPosition {
             adventurer_id,
             temple_id: 1,
             chamber_id: 1,
@@ -348,8 +348,8 @@ mod tests {
         let adventurer_id = mint_rogue(token);
 
         // Level to 2
-        let stats: ExplorerStats = world.read_model(adventurer_id);
-        world.write_model_test(@ExplorerStats {
+        let stats: AdventurerStats = world.read_model(adventurer_id);
+        world.write_model_test(@AdventurerStats {
             adventurer_id,
             abilities: stats.abilities,
             level: 2,
@@ -358,7 +358,7 @@ mod tests {
             temples_conquered: stats.temples_conquered,
         });
 
-        world.write_model_test(@ExplorerPosition {
+        world.write_model_test(@AdventurerPosition {
             adventurer_id,
             temple_id: 1,
             chamber_id: 1,
@@ -391,7 +391,7 @@ mod tests {
             is_alive: true,
         });
 
-        world.write_model_test(@ExplorerPosition {
+        world.write_model_test(@AdventurerPosition {
             adventurer_id,
             temple_id: 1,
             chamber_id: 1,
@@ -400,7 +400,7 @@ mod tests {
         });
 
         // Give enough HP to survive a counter-attack
-        world.write_model_test(@ExplorerHealth {
+        world.write_model_test(@AdventurerHealth {
             adventurer_id,
             current_hp: 50,
             max_hp: 50,
@@ -410,7 +410,7 @@ mod tests {
         combat_sys.flee(adventurer_id);
 
         // Explorer should be alive regardless of flee outcome
-        let after: ExplorerHealth = world.read_model(adventurer_id);
+        let after: AdventurerHealth = world.read_model(adventurer_id);
         assert(!after.is_dead, 'explorer should survive flee');
     }
 
@@ -423,7 +423,7 @@ mod tests {
         let (mut world, token, combat_sys) = setup_world();
         let adventurer_id = mint_fighter(token);
 
-        world.write_model_test(@ExplorerPosition {
+        world.write_model_test(@AdventurerPosition {
             adventurer_id,
             temple_id: 1,
             chamber_id: 1,
@@ -443,14 +443,14 @@ mod tests {
         let (mut world, token, combat_sys) = setup_world();
         let adventurer_id = mint_fighter(token);
 
-        world.write_model_test(@ExplorerHealth {
+        world.write_model_test(@AdventurerHealth {
             adventurer_id,
             current_hp: 0,
             max_hp: 11,
             is_dead: true,
         });
 
-        world.write_model_test(@ExplorerPosition {
+        world.write_model_test(@AdventurerPosition {
             adventurer_id,
             temple_id: 1,
             chamber_id: 1,
@@ -474,7 +474,7 @@ mod tests {
         let (mut world, token, combat_sys) = setup_world();
         let adventurer_id = mint_fighter(token);
 
-        world.write_model_test(@ExplorerHealth {
+        world.write_model_test(@AdventurerHealth {
             adventurer_id,
             current_hp: 0,
             max_hp: 11,
@@ -491,7 +491,7 @@ mod tests {
             is_alive: true,
         });
 
-        world.write_model_test(@ExplorerPosition {
+        world.write_model_test(@AdventurerPosition {
             adventurer_id,
             temple_id: 1,
             chamber_id: 1,
@@ -511,7 +511,7 @@ mod tests {
         let (mut world, token, combat_sys) = setup_world();
         let adventurer_id = mint_fighter(token);
 
-        world.write_model_test(@ExplorerHealth {
+        world.write_model_test(@AdventurerHealth {
             adventurer_id,
             current_hp: 0,
             max_hp: 11,
@@ -533,13 +533,13 @@ mod tests {
         let (mut world, token, combat_sys) = setup_world();
         let adventurer_id = mint_fighter(token);
 
-        world.write_model_test(@ExplorerHealth {
+        world.write_model_test(@AdventurerHealth {
             adventurer_id,
             current_hp: 3,
             max_hp: 11,
             is_dead: false,
         });
-        world.write_model_test(@ExplorerInventory {
+        world.write_model_test(@AdventurerInventory {
             adventurer_id,
             primary_weapon: WeaponType::Longsword,
             secondary_weapon: WeaponType::None,
@@ -551,11 +551,11 @@ mod tests {
 
         combat_sys.use_item(adventurer_id, ItemType::HealthPotion);
 
-        let after: ExplorerHealth = world.read_model(adventurer_id);
+        let after: AdventurerHealth = world.read_model(adventurer_id);
         assert(after.current_hp > 3, 'potion should heal');
         assert(after.current_hp <= 11, 'cannot exceed max hp');
 
-        let after_inv: ExplorerInventory = world.read_model(adventurer_id);
+        let after_inv: AdventurerInventory = world.read_model(adventurer_id);
         assert(after_inv.potions == 1, 'potion count decremented');
     }
 
@@ -594,7 +594,7 @@ mod tests {
             is_alive: true,
         });
 
-        world.write_model_test(@ExplorerPosition {
+        world.write_model_test(@AdventurerPosition {
             adventurer_id,
             temple_id: 1,
             chamber_id: 1,
@@ -603,7 +603,7 @@ mod tests {
         });
 
         // Give high HP so explorer survives counter-attack
-        world.write_model_test(@ExplorerHealth {
+        world.write_model_test(@AdventurerHealth {
             adventurer_id,
             current_hp: 50,
             max_hp: 50,
@@ -637,7 +637,7 @@ mod tests {
             is_alive: true,
         });
 
-        world.write_model_test(@ExplorerPosition {
+        world.write_model_test(@AdventurerPosition {
             adventurer_id,
             temple_id: 10,
             chamber_id: 5,
@@ -646,14 +646,14 @@ mod tests {
         });
 
         // 1 HP — any monster hit kills the explorer
-        world.write_model_test(@ExplorerHealth {
+        world.write_model_test(@AdventurerHealth {
             adventurer_id,
             current_hp: 1,
             max_hp: 11,
             is_dead: false,
         });
 
-        world.write_model_test(@ExplorerInventory {
+        world.write_model_test(@AdventurerInventory {
             adventurer_id,
             primary_weapon: WeaponType::Longsword,
             secondary_weapon: WeaponType::None,
@@ -665,7 +665,7 @@ mod tests {
 
         combat_sys.attack(adventurer_id);
 
-        let after: ExplorerHealth = world.read_model(adventurer_id);
+        let after: AdventurerHealth = world.read_model(adventurer_id);
 
         if after.is_dead {
             assert_explorer_dead(ref world, adventurer_id, 10_u128, 5_u32);
@@ -751,21 +751,21 @@ mod tests {
             max_hp: 100,
             is_alive: true,
         });
-        world.write_model_test(@ExplorerPosition {
+        world.write_model_test(@AdventurerPosition {
             adventurer_id,
             temple_id: 1,
             chamber_id: 1,
             in_combat: true,
             combat_monster_id: 1,
         });
-        world.write_model_test(@ExplorerHealth {
+        world.write_model_test(@AdventurerHealth {
             adventurer_id,
             current_hp: 50,
             max_hp: 50,
             is_dead: false,
         });
 
-        let combat_before: ExplorerCombat = world.read_model(adventurer_id);
+        let combat_before: AdventurerCombat = world.read_model(adventurer_id);
         let slots_before = combat_before.spell_slots_1;
 
         combat_sys.cast_spell(adventurer_id, d20::types::spells::SpellId::MagicMissile);
@@ -775,7 +775,7 @@ mod tests {
         assert(monster_after.current_hp < 100, 'MM must deal damage');
 
         // Should consume one 1st-level slot
-        let combat_after: ExplorerCombat = world.read_model(adventurer_id);
+        let combat_after: AdventurerCombat = world.read_model(adventurer_id);
         assert(combat_after.spell_slots_1 == slots_before - 1, 'slot consumed');
     }
 
@@ -791,12 +791,12 @@ mod tests {
         let (mut world, token, combat_sys) = setup_world();
         let adventurer_id = mint_wizard(token);
 
-        let combat_before: ExplorerCombat = world.read_model(adventurer_id);
+        let combat_before: AdventurerCombat = world.read_model(adventurer_id);
         let ac_before = combat_before.armor_class;
 
         combat_sys.cast_spell(adventurer_id, d20::types::spells::SpellId::ShieldSpell);
 
-        let combat_after: ExplorerCombat = world.read_model(adventurer_id);
+        let combat_after: AdventurerCombat = world.read_model(adventurer_id);
         assert(combat_after.armor_class == ac_before + 5, 'shield adds +5 AC');
 
         // Should consume one 1st-level slot
@@ -816,8 +816,8 @@ mod tests {
         let adventurer_id = mint_wizard(token);
 
         // Give wizard 2nd level spell slots (requires level 3+)
-        let stats: ExplorerStats = world.read_model(adventurer_id);
-        world.write_model_test(@ExplorerStats {
+        let stats: AdventurerStats = world.read_model(adventurer_id);
+        world.write_model_test(@AdventurerStats {
             adventurer_id,
             abilities: stats.abilities,
             level: 3,
@@ -825,7 +825,7 @@ mod tests {
             adventurer_class: stats.adventurer_class,
             temples_conquered: stats.temples_conquered,
         });
-        world.write_model_test(@ExplorerCombat {
+        world.write_model_test(@AdventurerCombat {
             adventurer_id,
             armor_class: 10,
             spell_slots_1: 4,
@@ -844,7 +844,7 @@ mod tests {
             max_hp: 13,
             is_alive: true,
         });
-        world.write_model_test(@ExplorerPosition {
+        world.write_model_test(@AdventurerPosition {
             adventurer_id,
             temple_id: 1,
             chamber_id: 1,
@@ -854,13 +854,13 @@ mod tests {
 
         combat_sys.cast_spell(adventurer_id, d20::types::spells::SpellId::MistyStep);
 
-        let pos_after: ExplorerPosition = world.read_model(adventurer_id);
+        let pos_after: AdventurerPosition = world.read_model(adventurer_id);
         assert(!pos_after.in_combat, 'misty step disengages');
         assert(pos_after.combat_monster_id == 0, 'monster id cleared');
         assert(pos_after.chamber_id == 1, 'still in same chamber');
 
         // Should consume one 2nd-level slot
-        let combat_after: ExplorerCombat = world.read_model(adventurer_id);
+        let combat_after: AdventurerCombat = world.read_model(adventurer_id);
         assert(combat_after.spell_slots_2 == 1, '2nd level slot consumed');
     }
 
@@ -886,14 +886,14 @@ mod tests {
             max_hp: 2,
             is_alive: true,
         });
-        world.write_model_test(@ExplorerPosition {
+        world.write_model_test(@AdventurerPosition {
             adventurer_id,
             temple_id: 1,
             chamber_id: 1,
             in_combat: true,
             combat_monster_id: 1,
         });
-        world.write_model_test(@ExplorerHealth {
+        world.write_model_test(@AdventurerHealth {
             adventurer_id,
             current_hp: 50,
             max_hp: 50,
@@ -905,7 +905,7 @@ mod tests {
         let monster_after: MonsterInstance = world.read_model((1_u128, 1_u32, 1_u32));
         assert(!monster_after.is_alive, 'sleep incapacitates weak foe');
 
-        let pos_after: ExplorerPosition = world.read_model(adventurer_id);
+        let pos_after: AdventurerPosition = world.read_model(adventurer_id);
         assert(!pos_after.in_combat, 'combat ended after sleep');
     }
 
@@ -922,7 +922,7 @@ mod tests {
         let (mut world, token, combat_sys) = setup_world();
         let adventurer_id = mint_fighter(token);
 
-        world.write_model_test(@ExplorerPosition {
+        world.write_model_test(@AdventurerPosition {
             adventurer_id,
             temple_id: 1,
             chamber_id: 1,
@@ -951,7 +951,7 @@ mod tests {
         let (mut world, token, combat_sys) = setup_world();
         let adventurer_id = mint_wizard(token);
 
-        world.write_model_test(@ExplorerHealth {
+        world.write_model_test(@AdventurerHealth {
             adventurer_id,
             current_hp: 0,
             max_hp: 6,
@@ -971,7 +971,7 @@ mod tests {
         let adventurer_id = mint_wizard(token);
 
         // Drain all level 1 slots
-        world.write_model_test(@ExplorerCombat {
+        world.write_model_test(@AdventurerCombat {
             adventurer_id,
             armor_class: 10,
             spell_slots_1: 0,
@@ -980,7 +980,7 @@ mod tests {
             second_wind_used: false,
             action_surge_used: false,
         });
-        world.write_model_test(@ExplorerPosition {
+        world.write_model_test(@AdventurerPosition {
             adventurer_id,
             temple_id: 1,
             chamber_id: 1,
@@ -1013,9 +1013,9 @@ mod tests {
         let (mut world, token, combat_sys) = setup_world();
         let adventurer_id = mint_fighter(token);
 
-        let _health: ExplorerHealth = world.read_model(adventurer_id);
+        let _health: AdventurerHealth = world.read_model(adventurer_id);
         // At full HP, potion shouldn't exceed max
-        world.write_model_test(@ExplorerInventory {
+        world.write_model_test(@AdventurerInventory {
             adventurer_id,
             primary_weapon: WeaponType::Longsword,
             secondary_weapon: WeaponType::None,
@@ -1027,7 +1027,7 @@ mod tests {
 
         combat_sys.use_item(adventurer_id, ItemType::HealthPotion);
 
-        let after: ExplorerHealth = world.read_model(adventurer_id);
+        let after: AdventurerHealth = world.read_model(adventurer_id);
         assert(after.current_hp <= after.max_hp.try_into().unwrap(), 'hp capped at max');
     }
 
@@ -1044,7 +1044,7 @@ mod tests {
         let (mut world, token, combat_sys) = setup_world();
         let adventurer_id = mint_fighter(token);
 
-        world.write_model_test(@ExplorerPosition {
+        world.write_model_test(@AdventurerPosition {
             adventurer_id,
             temple_id: 1,
             chamber_id: 1,

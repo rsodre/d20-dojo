@@ -150,8 +150,8 @@ mod tests {
     use dojo::world::{WorldStorageTrait};
 
     use d20::d20::models::adventurer::{
-        ExplorerStats, ExplorerHealth, ExplorerCombat, ExplorerInventory,
-        ExplorerPosition, ExplorerSkills
+        AdventurerStats, AdventurerHealth, AdventurerCombat, AdventurerInventory,
+        AdventurerPosition, AdventurerSkills
     };
     use d20::models::temple::{
         TempleState, Chamber, ChamberExit, MonsterInstance,

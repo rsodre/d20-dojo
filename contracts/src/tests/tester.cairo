@@ -18,12 +18,12 @@ use d20::systems::temple_token::{
 };
 use d20::models::config::m_Config;
 use d20::d20::models::adventurer::{
-    m_ExplorerStats,
-    m_ExplorerHealth, ExplorerHealth,
-    m_ExplorerCombat,
-    m_ExplorerInventory, ExplorerInventory,
-    m_ExplorerPosition, ExplorerPosition,
-    m_ExplorerSkills,
+    m_AdventurerStats,
+    m_AdventurerHealth, AdventurerHealth,
+    m_AdventurerCombat,
+    m_AdventurerInventory, AdventurerInventory,
+    m_AdventurerPosition, AdventurerPosition,
+    m_AdventurerSkills,
 };
 use d20::models::temple::{
     m_TempleState,
@@ -50,12 +50,12 @@ pub fn namespace_def() -> NamespaceDef {
             // Config
             TestResource::Model(m_Config::TEST_CLASS_HASH),
             // Explorer models
-            TestResource::Model(m_ExplorerStats::TEST_CLASS_HASH),
-            TestResource::Model(m_ExplorerHealth::TEST_CLASS_HASH),
-            TestResource::Model(m_ExplorerCombat::TEST_CLASS_HASH),
-            TestResource::Model(m_ExplorerInventory::TEST_CLASS_HASH),
-            TestResource::Model(m_ExplorerPosition::TEST_CLASS_HASH),
-            TestResource::Model(m_ExplorerSkills::TEST_CLASS_HASH),
+            TestResource::Model(m_AdventurerStats::TEST_CLASS_HASH),
+            TestResource::Model(m_AdventurerHealth::TEST_CLASS_HASH),
+            TestResource::Model(m_AdventurerCombat::TEST_CLASS_HASH),
+            TestResource::Model(m_AdventurerInventory::TEST_CLASS_HASH),
+            TestResource::Model(m_AdventurerPosition::TEST_CLASS_HASH),
+            TestResource::Model(m_AdventurerSkills::TEST_CLASS_HASH),
             // Temple models
             TestResource::Model(m_TempleState::TEST_CLASS_HASH),
             TestResource::Model(m_Chamber::TEST_CLASS_HASH),
@@ -149,11 +149,11 @@ pub fn assert_explorer_dead(
     temple_id: u128,
     chamber_id: u32,
 ) {
-    let health: ExplorerHealth = world.read_model(adventurer_id);
+    let health: AdventurerHealth = world.read_model(adventurer_id);
     assert(health.is_dead, 'explorer should be dead');
     assert(health.current_hp == 0, 'hp should be 0 on death');
 
-    let pos: ExplorerPosition = world.read_model(adventurer_id);
+    let pos: AdventurerPosition = world.read_model(adventurer_id);
     assert(!pos.in_combat, 'dead explorer not in combat');
 
     let fallen_count: ChamberFallenCount = world.read_model((temple_id, chamber_id));
@@ -165,7 +165,7 @@ pub fn assert_explorer_dead(
     assert(fallen.adventurer_id == adventurer_id, 'fallen explorer id mismatch');
     assert(!fallen.is_looted, 'fallen should not be looted');
 
-    let inv: ExplorerInventory = world.read_model(adventurer_id);
+    let inv: AdventurerInventory = world.read_model(adventurer_id);
     assert(inv.gold == 0, 'gold dropped on death');
     assert(inv.potions == 0, 'potions dropped on death');
 }

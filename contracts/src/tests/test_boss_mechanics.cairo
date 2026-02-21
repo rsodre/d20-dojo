@@ -5,8 +5,8 @@ mod tests {
     use dojo::model::{ModelStorage, ModelStorageTest};
 
     use d20::d20::models::adventurer::{
-        ExplorerStats, ExplorerHealth,
-        ExplorerPosition,
+        AdventurerStats, AdventurerHealth,
+        AdventurerPosition,
     };
     use d20::models::temple::{
         TempleState, MonsterInstance,
@@ -50,14 +50,14 @@ mod tests {
             max_hp: 45,
             is_alive: true,
         });
-        world.write_model_test(@ExplorerPosition {
+        world.write_model_test(@AdventurerPosition {
             adventurer_id,
             temple_id,
             chamber_id: 2,
             in_combat: true,
             combat_monster_id: 1,
         });
-        world.write_model_test(@ExplorerHealth {
+        world.write_model_test(@AdventurerHealth {
             adventurer_id,
             current_hp: 50,
             max_hp: 50,
@@ -77,7 +77,7 @@ mod tests {
             let temple_after: TempleState = world.read_model(temple_id);
             assert(!temple_after.boss_alive, 'boss should be marked dead');
 
-            let stats_after: ExplorerStats = world.read_model(adventurer_id);
+            let stats_after: AdventurerStats = world.read_model(adventurer_id);
             assert(stats_after.temples_conquered == 1, 'temples_conquered should be 1');
         }
     }
@@ -94,8 +94,8 @@ mod tests {
         let temple_id = temple.mint_temple(1_u8);
 
         // Explorer with 1 prior conquest
-        let stats: ExplorerStats = world.read_model(adventurer_id);
-        world.write_model_test(@ExplorerStats {
+        let stats: AdventurerStats = world.read_model(adventurer_id);
+        world.write_model_test(@AdventurerStats {
             adventurer_id,
             abilities: stats.abilities,
             level: stats.level,
@@ -121,14 +121,14 @@ mod tests {
             max_hp: 45,
             is_alive: true,
         });
-        world.write_model_test(@ExplorerPosition {
+        world.write_model_test(@AdventurerPosition {
             adventurer_id,
             temple_id,
             chamber_id: 2,
             in_combat: true,
             combat_monster_id: 1,
         });
-        world.write_model_test(@ExplorerHealth {
+        world.write_model_test(@AdventurerHealth {
             adventurer_id,
             current_hp: 50,
             max_hp: 50,
@@ -145,7 +145,7 @@ mod tests {
 
         let monster_after: MonsterInstance = world.read_model((temple_id, 2_u32, 1_u32));
         if !monster_after.is_alive {
-            let stats_after: ExplorerStats = world.read_model(adventurer_id);
+            let stats_after: AdventurerStats = world.read_model(adventurer_id);
             assert(stats_after.temples_conquered == 2, 'should have 2 conquests now');
         }
     }

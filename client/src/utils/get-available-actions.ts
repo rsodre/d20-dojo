@@ -23,7 +23,7 @@ export interface GameActionContext {
   templeId: bigint;
   chamberId: bigint;
   potions: number;
-  // ExplorerCombat
+  // AdventurerCombat
   secondWindUsed: boolean;
   spellSlots1: number;
   spellSlots2: number;

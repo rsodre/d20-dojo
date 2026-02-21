@@ -4,7 +4,7 @@ use d20::d20::types::adventurer_class::AdventurerClass;
 
 #[derive(Copy, Drop, Serde)]
 #[dojo::model]
-pub struct ExplorerStats {
+pub struct AdventurerStats {
     #[key]
     pub adventurer_id: u128,
     pub abilities: AbilityScore,
@@ -28,7 +28,7 @@ pub struct AbilityScore {
 
 #[derive(Copy, Drop, Serde)]
 #[dojo::model]
-pub struct ExplorerHealth {
+pub struct AdventurerHealth {
     #[key]
     pub adventurer_id: u128,
     pub current_hp: i16,
@@ -38,7 +38,7 @@ pub struct ExplorerHealth {
 
 #[derive(Copy, Drop, Serde)]
 #[dojo::model]
-pub struct ExplorerCombat {
+pub struct AdventurerCombat {
     #[key]
     pub adventurer_id: u128,
     pub armor_class: u8,
@@ -52,7 +52,7 @@ pub struct ExplorerCombat {
 
 #[derive(Copy, Drop, Serde)]
 #[dojo::model]
-pub struct ExplorerInventory {
+pub struct AdventurerInventory {
     #[key]
     pub adventurer_id: u128,
     pub primary_weapon: WeaponType,
@@ -65,7 +65,7 @@ pub struct ExplorerInventory {
 
 #[derive(Copy, Drop, Serde)]
 #[dojo::model]
-pub struct ExplorerPosition {
+pub struct AdventurerPosition {
     #[key]
     pub adventurer_id: u128,
     pub temple_id: u128,
@@ -76,7 +76,7 @@ pub struct ExplorerPosition {
 
 #[derive(Copy, Drop, Serde)]
 #[dojo::model]
-pub struct ExplorerSkills {
+pub struct AdventurerSkills {
     #[key]
     pub adventurer_id: u128,
     // Proficiency flags for each skill
