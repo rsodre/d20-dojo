@@ -33,12 +33,12 @@ mod tests {
         assert(state.boss_alive, 'boss should start alive');
         assert(state.next_chamber_id == 2, 'next chamber starts at 2');
         assert(state.boss_chamber_id == 0, 'no boss chamber yet');
-        assert(state.max_yonder == 1, 'max_yonder should be 1');
+        assert(state.max_depth == 1, 'max_depth should be 1');
 
         // Verify entrance Chamber was created by mint_temple
         let entrance: Chamber = world.read_model((dungeon_id, 1_u32));
         assert(entrance.chamber_type == ChamberType::Entrance, 'entrance type');
-        assert(entrance.yonder == 1, 'entrance yonder == 1');
+        assert(entrance.depth == 1, 'entrance depth == 1');
         assert(entrance.exit_count == 3, 'entrance has 3 exits');
         assert(entrance.is_revealed, 'entrance is revealed');
         assert(!entrance.treasure_looted, 'entrance not looted');

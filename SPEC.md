@@ -256,9 +256,9 @@ All monsters are from the **SRD 5.1 (CC-BY-4.0)**. Selected for thematic fit wit
 Monster ability scores are used for saving throws and contested checks (e.g., monster STR vs explorer STR for grapple). Monster stats are stored as **compile-time constants** in a lookup function, not as mutable models — they're templates instantiated into `MonsterInstance` models when a chamber is generated.
 
 **Thematic progression as explorers go deeper:**
-- **Entrance (yonder 0-2):** Poisonous Snakes nesting in overgrown cracks, Skeletons of former worshippers
-- **Outer chambers (yonder 3-5):** Shadows lurking in dark corridors, Animated Armor standing vigil at sealed doors
-- **Inner sanctum (yonder 6-9):** Gargoyles perched on pillars awakening, Mummies in sealed sarcophagi
+- **Entrance (depth 0-2):** Poisonous Snakes nesting in overgrown cracks, Skeletons of former worshippers
+- **Outer chambers (depth 3-5):** Shadows lurking in dark corridors, Animated Armor standing vigil at sealed doors
+- **Inner sanctum (depth 6-9):** Gargoyles perched on pillars awakening, Mummies in sealed sarcophagi
 - **Boss chamber:** Wraith — the spirit of the temple's high priest, still guarding the sacred heart
 ---
 
@@ -467,7 +467,7 @@ pub struct Chamber {
     #[key]
     pub chamber_id: u32,
     pub chamber_type: ChamberType,
-    pub yonder: u8,               // distance from entrance (0 = entrance)
+    pub depth: u8,               // distance from entrance (0 = entrance)
     pub exit_count: u8,           // number of exits from this chamber
     pub is_revealed: bool,        // whether this chamber has been generated
     pub treasure_looted: bool,
@@ -547,7 +547,7 @@ pub struct DungeonState {
     pub next_chamber_id: u32,     // auto-incrementing ID for new chambers
     pub boss_chamber_id: u32,     // 0 until boss chamber is generated
     pub boss_alive: bool,
-    pub max_yonder: u8,           // deepest yonder reached in this temple (tracked to prevent frontier dead-ends)
+    pub max_depth: u8,           // deepest depth reached in this temple (tracked to prevent frontier dead-ends)
 }
 ```
 
@@ -815,7 +815,7 @@ pub struct ChamberRevealed {
     pub dungeon_id: u128,
     pub chamber_id: u32,
     pub chamber_type: ChamberType,
-    pub yonder: u8,
+    pub depth: u8,
     pub revealed_by: u128,    // explorer who opened the exit
 }
 
@@ -845,14 +845,14 @@ Chambers are **not** pre-generated. They are created one at a time as explorers 
 
 ### How it works
 
-1. **Temple minting** creates a single entrance chamber (chamber_id=1, yonder=0, type=Entrance). The entrance has a random number of exits (determined by seed) leading to unexplored space.
+1. **Temple minting** creates a single entrance chamber (chamber_id=1, depth=0, type=Entrance). The entrance has a random number of exits (determined by seed) leading to unexplored space.
 
 2. **Opening an exit** triggers `generate_chamber`. The new chamber is created from the vrf seed. This determines:
    - **Chamber type**: Monster, Treasure, Trap, Empty, or Boss (see boss probability below)
    - **Number of exits**: 0 to 3 (a dead end has 0 exits beyond the one you came from)
-   - **Yonder value**: parent chamber's yonder + 1
-   - **Monster type and stats**: based on difficulty tier and yonder
-   - **Trap DC**: based on difficulty tier and yonder
+   - **Depth value**: parent chamber's depth + 1
+   - **Monster type and stats**: based on difficulty tier and depth
+   - **Trap DC**: based on difficulty tier and depth
 
 3. **Bidirectional linking**: When a new chamber is generated, both the ChamberExit from the parent and a new ChamberExit back to the parent are created. Chambers always know how to reach each other.
 
@@ -862,11 +862,11 @@ Chambers are **not** pre-generated. They are created one at a time as explorers 
 
 ---
 
-## Boss Chamber Probability: The Yonder Formula
+## Boss Chamber Probability: The Depth Formula
 
 When a new chamber is generated, the system calculates the probability that it becomes the **Boss Chamber**. This probability increases with three factors:
 
-- **Yonder (y)**: Distance from the entrance. The deeper you go, the more likely the boss appears.
+- **Depth (y)**: Distance from the entrance. The deeper you go, the more likely the boss appears.
 - **Chambers explored (c)**: How many chambers the adventurer who opened this exit has explored in this temple.
 - **XP earned (x)**: How much XP the adventurer has earned in this temple, as a proxy for "experience" (combat survived, challenges overcome).
 
@@ -876,38 +876,38 @@ When a new chamber is generated, the system calculates the probability that it b
 
 ```
 // Constants (tunable)
-MIN_YONDER: u8 = 5         // Boss can never appear before yonder 5
-YONDER_WEIGHT: u32 = 50    // bps per effective_yonder² (controls depth scaling)
+MIN_DEPTH: u8 = 5         // Boss can never appear before depth 5
+DEPTH_WEIGHT: u32 = 50    // bps per effective_depth² (controls depth scaling)
 XP_WEIGHT: u32 = 2         // bps per xp_earned (direct multiplier, no division)
 MAX_PROB: u32 = 9500       // Cap at 95% (9500 bps out of 10000)
 
 // Input
-yonder: u8                  // distance from entrance
+depth: u8                  // distance from entrance
 xp_earned: u32              // XP earned in THIS temple
 
 // Calculation (all integer math)
-if yonder < MIN_YONDER:
+if depth < MIN_DEPTH:
     return 0
 
-effective_yonder: u32 = (yonder - MIN_YONDER).into()
+effective_depth: u32 = (depth - MIN_DEPTH).into()
 
-// Quadratic yonder component: slow start, rapid growth at depth
+// Quadratic depth component: slow start, rapid growth at depth
 // e.g., eff=1 → 50, eff=5 → 1250, eff=10 → 5000
-yonder_component: u32 = effective_yonder * effective_yonder * YONDER_WEIGHT
+depth_component: u32 = effective_depth * effective_depth * DEPTH_WEIGHT
 
 // Linear XP component: direct multiplication, NO DIVISION
 // e.g., xp=150 → 300, xp=800 → 1600, xp=2500 → 5000
 xp_component: u32 = xp_earned * XP_WEIGHT
 
 // Final probability in basis points (0–10000)
-boss_probability_bps: u32 = min(MAX_PROB, yonder_component + xp_component)
+boss_probability_bps: u32 = min(MAX_PROB, depth_component + xp_component)
 ```
 
 **Why `XP_WEIGHT = 2` instead of `(xp / 100) * 200`?** In Cairo, `xp_earned / 100` would truncate to zero for any XP below 100 — which covers most early encounters (Poisonous Snakes give 25 XP, Skeletons give 50 XP). By using `xp_earned * 2` directly, every point of XP contributes to boss probability without any precision loss. The constant `2` is algebraically equivalent to `200 / 100` but safe for integer math.
 
 ### Probability Table (examples, assuming XP earned from typical combat)
 
-| Yonder | Eff. Yonder | XP Earned | Yonder bps | XP bps | Total bps | Boss % |
+| Depth | Eff. Depth | XP Earned | Depth bps | XP bps | Total bps | Boss % |
 |--------|-------------|-----------|------------|--------|-----------|--------|
 | 1-4    | —           | any       | 0          | —      | 0         | 0%     |
 | 5      | 0           | 150       | 0          | 300    | 300       | 3%     |
@@ -918,18 +918,18 @@ boss_probability_bps: u32 = min(MAX_PROB, yonder_component + xp_component)
 | 18     | 13          | 3000      | 8450       | 6000   | 9500      | 95% (cap) |
 
 ### Design Intent
-- **Yonder 1-4**: Impossible. The entrance area is always safe to explore.
-- **Yonder 5-9**: Unlikely (0-10%). The temple is revealing itself, tension is building.
-- **Yonder 10-14**: Moderate (10-60%). Every new exit could be the boss. This is the "danger zone."
-- **Yonder 15+**: Near-certain (60-95%). You've gone deep. The boss is waiting.
+- **Depth 1-4**: Impossible. The entrance area is always safe to explore.
+- **Depth 5-9**: Unlikely (0-10%). The temple is revealing itself, tension is building.
+- **Depth 10-14**: Moderate (10-60%). Every new exit could be the boss. This is the "danger zone."
+- **Depth 15+**: Near-certain (60-95%). You've gone deep. The boss is waiting.
 - **The 5% uncertainty**: Even at 95%, there's always a slim chance the next chamber isn't the boss. Keeps the tension alive.
 
-The quadratic yonder curve means early exploration feels safe and rewarding, while deep exploration becomes increasingly perilous. The XP component ensures that explorers who've been fighting and solving challenges (rather than sneaking past everything) encounter the boss sooner — they've "attracted the temple's attention."
+The quadratic depth curve means early exploration feels safe and rewarding, while deep exploration becomes increasingly perilous. The XP component ensures that explorers who've been fighting and solving challenges (rather than sneaking past everything) encounter the boss sooner — they've "attracted the temple's attention."
 
 ### On-chain Resolution (Cairo-safe)
 The boss probability is compared against a VRF roll:
 ```cairo
-let prob_bps: u32 = calculate_boss_probability(dungeon_id, adventurer_id, yonder);
+let prob_bps: u32 = calculate_boss_probability(dungeon_id, adventurer_id, depth);
 let roll: u32 = (vrf.consume_random(source) % 10000).try_into().unwrap();  // 0-9999
 let is_boss: bool = roll < prob_bps;
 ```
@@ -957,7 +957,7 @@ The player must mint a new Explorer NFT. They start fresh — level 1, new class
 Explorers are not locked into a single temple. The flow is:
 
 1. **Mint explorer** → explorer is in "no temple" state (dungeon_id = 0, chamber_id = 0)
-2. **Enter temple** → explorer is placed at the entrance chamber (yonder = 0)
+2. **Enter temple** → explorer is placed at the entrance chamber (depth = 0)
 3. **Explore** → open exits, fight monsters, find loot, go deeper
 4. **Exit temple** → explorer returns to "no temple" state. Progress in the temple (opened chambers, killed monsters) persists for everyone. The explorer's personal stats, inventory, and XP are retained.
 5. **Enter another temple** → same explorer, different temple. Can be easier or harder.
@@ -997,7 +997,7 @@ The game client is NOT part of the on-chain system. It runs in the player's brow
 
 **State displayed per turn:**
 - Explorer character sheet: class, level, HP (current/max), AC, inventory, spell slots, class features
-- Current context: chamber type, yonder depth, live monster (type, HP), trap info, fallen explorers, exit count
+- Current context: chamber type, depth depth, live monster (type, HP), trap info, fallen explorers, exit count
 - Temple progress: chambers explored, boss status
 
 **Action list examples:**
@@ -1025,7 +1025,7 @@ See **[TASKS.md](TASKS.md)** for the full tickable task list.
 - Should fallen explorers drop class abilities / skill proficiencies in addition to items ("soul harvesting")?
 - Locked exits requiring specific loot items to open (key-and-lock mechanic for branching paths)
 - PvP in v2?
-- On-chain leaderboard (temples conquered, deepest yonder reached, most monsters killed)?
+- On-chain leaderboard (temples conquered, deepest depth reached, most monsters killed)?
 - Player-deployed autonomous agents (auto-play while AFK)?
 - Player-owned NFTs as equipment (bring external NFTs for in-game bonuses)?
 - Expanding the D20 subset: more classes, races, feats, levels beyond 5?

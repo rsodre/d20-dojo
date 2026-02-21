@@ -62,7 +62,7 @@ function ChamberCard({
   isBoss: boolean;
 }) {
   const chamberId = Number(chamber.chamber_id);
-  const yonder = Number(chamber.yonder);
+  const depth = Number(chamber.depth);
   const exitCount = Number(chamber.exit_count);
   const chamberType = enumVariant(chamber.chamber_type);
   const emoji = CHAMBER_TYPE_EMOJI[chamberType] ?? "?";
@@ -85,7 +85,7 @@ function ChamberCard({
 
         <Flex gap="2" wrap="wrap">
           <Badge color="purple" size="1" variant="soft">
-            Yonder {yonder}
+            Depth {depth}
           </Badge>
           <Badge color="gray" size="1" variant="soft">
             {exitCount} exit{exitCount !== 1 ? "s" : ""}
@@ -127,7 +127,7 @@ function TempleStats({ templeId }: { templeId: bigint }) {
   const difficulty = Number(state.difficulty_tier);
   const difficultyLabel = DIFFICULTY_LABEL[difficulty] ?? `Tier ${difficulty}`;
   const bossAlive = state.boss_alive;
-  const maxYonder = Number(state.max_yonder);
+  const maxDepth = Number(state.max_depth);
   const nextChamberId = Number(state.next_chamber_id);
   const bossChamber = Number(state.boss_chamber_id);
 
@@ -141,7 +141,7 @@ function TempleStats({ templeId }: { templeId: bigint }) {
         Chambers: {nextChamberId - 1}
       </Badge>
       <Badge color="purple" size="2" variant="soft">
-        Max Yonder: {maxYonder}
+        Max Depth: {maxDepth}
       </Badge>
       {bossChamber > 0 && (
         <Badge color="crimson" size="2" variant="soft">

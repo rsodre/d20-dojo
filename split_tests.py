@@ -74,10 +74,10 @@ groups = {
     "test_boss_mechanics": [
         "test_boss_defeat_marks_boss_dead",
         "test_boss_defeat_increments_dungeons_conquered",
-        "test_boss_prob_zero_below_min_yonder",
-        "test_boss_prob_at_min_yonder",
-        "test_boss_prob_yonder_quadratic_growth",
-        "test_boss_prob_combined_yonder_and_xp",
+        "test_boss_prob_zero_below_min_depth",
+        "test_boss_prob_at_min_depth",
+        "test_boss_prob_depth_quadratic_growth",
+        "test_boss_prob_combined_depth_and_xp",
         "test_boss_prob_caps_at_95_percent",
         "test_boss_prob_progression_milestones",
         "test_boss_prob_roll_range_alignment"

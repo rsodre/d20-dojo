@@ -90,7 +90,7 @@ export interface Chamber {
 	dungeon_id: BigNumberish;
 	chamber_id: BigNumberish;
 	chamber_type: ChamberTypeEnum;
-	yonder: BigNumberish;
+	depth: BigNumberish;
 	exit_count: BigNumberish;
 	is_revealed: boolean;
 	treasure_looted: boolean;
@@ -153,7 +153,7 @@ export interface DungeonState {
 	next_chamber_id: BigNumberish;
 	boss_chamber_id: BigNumberish;
 	boss_alive: boolean;
-	max_yonder: BigNumberish;
+	max_depth: BigNumberish;
 }
 
 // Type definition for `d20::d20::models::events::BossDefeated` struct
@@ -168,7 +168,7 @@ export interface ChamberRevealed {
 	dungeon_id: BigNumberish;
 	chamber_id: BigNumberish;
 	chamber_type: ChamberTypeEnum;
-	yonder: BigNumberish;
+	depth: BigNumberish;
 	revealed_by: BigNumberish;
 }
 
@@ -486,7 +486,7 @@ export const schema: SchemaType = {
 				Treasure: undefined,
 				Trap: undefined,
 				Boss: undefined, }),
-			yonder: 0,
+			depth: 0,
 			exit_count: 0,
 			is_revealed: false,
 			treasure_looted: false,
@@ -554,7 +554,7 @@ export const schema: SchemaType = {
 			next_chamber_id: 0,
 			boss_chamber_id: 0,
 			boss_alive: false,
-			max_yonder: 0,
+			max_depth: 0,
 		},
 		BossDefeated: {
 			dungeon_id: 0,
@@ -580,7 +580,7 @@ export const schema: SchemaType = {
 				Treasure: undefined,
 				Trap: undefined,
 				Boss: undefined, }),
-			yonder: 0,
+			depth: 0,
 			revealed_by: 0,
 		},
 		CombatResult: {

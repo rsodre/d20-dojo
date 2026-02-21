@@ -217,7 +217,7 @@ function ChamberInfo({
 
   const chamberType = enumVariant(chamber.chamber_type);
   const emoji = CHAMBER_TYPE_EMOJI[chamberType] ?? "?";
-  const yonder = Number(chamber.yonder);
+  const depth = Number(chamber.depth);
   const exitCount = Number(chamber.exit_count);
 
   return (
@@ -228,7 +228,7 @@ function ChamberInfo({
         </Heading>
 
         <Flex gap="2" wrap="wrap">
-          <Badge color="blue" size="1" variant="soft">Yonder {yonder}</Badge>
+          <Badge color="blue" size="1" variant="soft">Depth {depth}</Badge>
           <Badge color="gray" size="1" variant="soft">
             {exitCount} exit{exitCount !== 1 ? "s" : ""}
           </Badge>

@@ -37,7 +37,7 @@ mod tests {
             next_chamber_id: 3,
             boss_chamber_id: 2,
             boss_alive: true,
-            max_yonder: 1,
+            max_depth: 1,
         });
 
         // Boss = Wraith with 1 HP (guaranteed kill)
@@ -110,7 +110,7 @@ mod tests {
             next_chamber_id: 3,
             boss_chamber_id: 2,
             boss_alive: true,
-            max_yonder: 1,
+            max_depth: 1,
         });
         world.write_model_test(@MonsterInstance {
             dungeon_id,
@@ -151,33 +151,33 @@ mod tests {
     }
 
     // ═══════════════════════════════════════════════════════════════════════
-    fn boss_prob(yonder: u8, xp_earned: u32) -> u32 {
-        let min_yonder: u8 = 5;
-        let yonder_weight: u32 = 50;
+    fn boss_prob(depth: u8, xp_earned: u32) -> u32 {
+        let min_depth: u8 = 5;
+        let depth_weight: u32 = 50;
         let xp_weight: u32 = 2;
         let max_prob: u32 = 9500;
-        if yonder < min_yonder {
+        if depth < min_depth {
             return 0;
         }
-        let ey: u32 = (yonder - min_yonder).into();
-        let total: u32 = ey * ey * yonder_weight + xp_earned * xp_weight;
+        let ey: u32 = (depth - min_depth).into();
+        let total: u32 = ey * ey * depth_weight + xp_earned * xp_weight;
         if total > max_prob { max_prob } else { total }
     }
 
     // ═══════════════════════════════════════════════════════════════════════
     #[test]
-    fn test_boss_prob_zero_below_min_yonder() {
-        assert(boss_prob(0, 0) == 0, 'yonder 0 xp 0');
-        assert(boss_prob(1, 0) == 0, 'yonder 1 xp 0');
-        assert(boss_prob(2, 500) == 0, 'yonder 2 xp 500');
-        assert(boss_prob(3, 1000) == 0, 'yonder 3 xp 1000');
-        assert(boss_prob(4, 9999) == 0, 'yonder 4 xp 9999');
+    fn test_boss_prob_zero_below_min_depth() {
+        assert(boss_prob(0, 0) == 0, 'depth 0 xp 0');
+        assert(boss_prob(1, 0) == 0, 'depth 1 xp 0');
+        assert(boss_prob(2, 500) == 0, 'depth 2 xp 500');
+        assert(boss_prob(3, 1000) == 0, 'depth 3 xp 1000');
+        assert(boss_prob(4, 9999) == 0, 'depth 4 xp 9999');
     }
 
     // ═══════════════════════════════════════════════════════════════════════
     #[test]
-    fn test_boss_prob_at_min_yonder() {
-        // ey=0 → yonder component=0; xp component = xp_earned × 2
+    fn test_boss_prob_at_min_depth() {
+        // ey=0 → depth component=0; xp component = xp_earned × 2
         assert(boss_prob(5, 0) == 0, 'y5 xp0 = 0');
         assert(boss_prob(5, 100) == 200, 'y5 xp100 = 200');
         assert(boss_prob(5, 500) == 1000, 'y5 xp500 = 1000');
@@ -186,8 +186,8 @@ mod tests {
 
     // ═══════════════════════════════════════════════════════════════════════
     #[test]
-    fn test_boss_prob_yonder_quadratic_growth() {
-        // All with xp=0 to isolate yonder component
+    fn test_boss_prob_depth_quadratic_growth() {
+        // All with xp=0 to isolate depth component
         // ey=1 → 1×50=50
         assert(boss_prob(6, 0) == 50, 'y6 = 50 bps');
         // ey=2 → 4×50=200
@@ -204,7 +204,7 @@ mod tests {
 
     // ═══════════════════════════════════════════════════════════════════════
     #[test]
-    fn test_boss_prob_combined_yonder_and_xp() {
+    fn test_boss_prob_combined_depth_and_xp() {
         // ey=2 → 200 bps; xp=300 → 600 bps; total=800
         assert(boss_prob(7, 300) == 800, 'y7 xp300 = 800');
         // ey=5 → 1250; xp=500 → 1000; total=2250
@@ -229,16 +229,16 @@ mod tests {
     // ═══════════════════════════════════════════════════════════════════════
     #[test]
     fn test_boss_prob_progression_milestones() {
-        // Early exploration (yonder 5-7, low XP): very low probability
+        // Early exploration (depth 5-7, low XP): very low probability
         assert(boss_prob(5, 0) == 0, 'start: 0%');
         assert(boss_prob(6, 50) == 150, 'early: 1.5%');
         assert(boss_prob(7, 150) == 500, 'mid-early: 5%');
 
-        // Mid-game (yonder 8-10, moderate XP): noticeable probability
+        // Mid-game (depth 8-10, moderate XP): noticeable probability
         assert(boss_prob(8, 300) == 1050, 'mid: 10.5%');
         assert(boss_prob(10, 500) == 2250, 'mid-late: 22.5%');
 
-        // Late-game (yonder 12+, high XP): high probability
+        // Late-game (depth 12+, high XP): high probability
         assert(boss_prob(12, 1000) == 4450, 'late: 44.5%');
         assert(boss_prob(15, 2000) == 9000, 'very late: 90%');
 

@@ -29,7 +29,7 @@ pub struct ChamberRevealed {
     pub dungeon_id: u128,
     pub chamber_id: u32,
     pub chamber_type: ChamberType,
-    pub yonder: u8,
+    pub depth: u8,
     pub revealed_by: u128,
 }
 

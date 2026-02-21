@@ -51,7 +51,7 @@ mod tests {
             dungeon_id,
             chamber_id: 1,
             chamber_type: ChamberType::Entrance,
-            yonder: 1,
+            depth: 1,
             exit_count: 1,
             is_revealed: true,
             treasure_looted: false,
@@ -157,7 +157,7 @@ mod tests {
             dungeon_id,
             chamber_id: 3,
             chamber_type: ChamberType::Treasure,
-            yonder: 2,
+            depth: 2,
             exit_count: 0,
             is_revealed: true,
             treasure_looted: false,
@@ -192,7 +192,7 @@ mod tests {
         let inv_after: AdventurerInventory = world.read_model(adventurer_id);
 
         assert(chamber_after.treasure_looted, 'treasure looted');
-        // difficulty=2, yonder=2: gold = d6 * 3 * 2 = at least 6
+        // difficulty=2, depth=2: gold = d6 * 3 * 2 = at least 6
         assert(inv_after.gold >= inv_before.gold, 'gold should not decrease');
 
         // Exit

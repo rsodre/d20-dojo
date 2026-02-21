@@ -22,10 +22,10 @@ pub mod DungeonComponent {
     use d20::utils::dice::{roll_d20, roll_dice, ability_modifier, proficiency_bonus};
     use d20::utils::seeder::{Seeder, SeederTrait};
 
-    // ── Boss probability constants (Yonder Formula) ──────────────────────────
+    // ── Boss probability constants (Depth Formula) ──────────────────────────
     // See SPEC.md §"Boss Chamber Probability"
-    const MIN_YONDER: u8 = 5;
-    const YONDER_WEIGHT: u32 = 50;  // bps per effective_yonder²
+    const MIN_DEPTH: u8 = 5;
+    const DEPTH_WEIGHT: u32 = 50;  // bps per effective_depth²
     const XP_WEIGHT: u32 = 2;       // bps per xp_earned
     const MAX_PROB: u32 = 9500;     // cap at 95%
 
@@ -47,23 +47,23 @@ pub mod DungeonComponent {
             dungeon_id: u128,
             difficulty: u8,
         ) {
-            // Initialize DungeonState (max_yonder=1 because entrance is at yonder 1)
+            // Initialize DungeonState (max_depth=1 because entrance is at depth 1)
             world.write_model(@DungeonState {
                 dungeon_id,
                 difficulty_tier: difficulty,
                 next_chamber_id: 2, // chamber 1 is the entrance; next new chamber gets id 2
                 boss_chamber_id: 0,
                 boss_alive: true,
-                max_yonder: 1,
+                max_depth: 1,
             });
 
-            // Create entrance Chamber (id=1, yonder=1, always 3 exits)
+            // Create entrance Chamber (id=1, depth=1, always 3 exits)
             let entrance_exit_count: u8 = 3;
             world.write_model(@Chamber {
                 dungeon_id,
                 chamber_id: 1,
                 chamber_type: ChamberType::Entrance,
-                yonder: 1,
+                depth: 1,
                 exit_count: entrance_exit_count,
                 is_revealed: true,
                 treasure_looted: false,
@@ -187,19 +187,19 @@ pub mod DungeonComponent {
             let progress: AdventurerDungeonProgress = world.read_model((adventurer_id, dungeon_id));
 
             // ── Generate the new chamber ─────────────────────────────────────
-            let new_yonder: u8 = current_chamber.yonder + 1;
+            let new_depth: u8 = current_chamber.depth + 1;
             generate_chamber(
                 ref world,
                 ref seeder,
                 dungeon_id,
                 current_chamber_id,
                 new_chamber_id,
-                new_yonder,
+                new_depth,
                 adventurer_id,
                 adventurer_id, // revealed_by
                 temple.difficulty_tier,
                 progress.xp_earned,
-                temple.max_yonder,
+                temple.max_depth,
             );
 
             // ── Create bidirectional ChamberExit links ───────────────────────
@@ -276,7 +276,7 @@ pub mod DungeonComponent {
 
             // ── Trigger trap on entry if not disarmed ────────────────────────
             // Trap damage dealt on entry: DEX save vs trap_dc.
-            // On failed save, explorer takes 1d6 + yonder/2 damage.
+            // On failed save, explorer takes 1d6 + depth/2 damage.
             if dest_chamber.chamber_type == ChamberType::Trap && !dest_chamber.trap_disarmed
                 && dest_chamber.trap_dc > 0 {
                 let stats: AdventurerStats = world.read_model(adventurer_id);
@@ -285,9 +285,9 @@ pub mod DungeonComponent {
                 let save_roll: i16 = roll_d20(ref seeder).into() + dex_mod.into();
                 let dc_i16: i16 = dest_chamber.trap_dc.into();
                 if save_roll < dc_i16 {
-                    // Failed save: take 1d6 + yonder/2 piercing damage
+                    // Failed save: take 1d6 + depth/2 piercing damage
                     let base_dmg: u16 = roll_dice(ref seeder, 6, 1);
-                    let bonus: u16 = (dest_chamber.yonder / 2).into();
+                    let bonus: u16 = (dest_chamber.depth / 2).into();
                     let damage: u16 = base_dmg + bonus;
                     // Use the destination position so handle_death records the right chamber
                     let dest_position = AdventurerPosition {
@@ -362,7 +362,7 @@ pub mod DungeonComponent {
                     dungeon_id,
                     chamber_id,
                     chamber_type: chamber.chamber_type,
-                    yonder: chamber.yonder,
+                    depth: chamber.depth,
                     exit_count: chamber.exit_count,
                     is_revealed: chamber.is_revealed,
                     treasure_looted: chamber.treasure_looted,
@@ -372,12 +372,12 @@ pub mod DungeonComponent {
             } else {
                 // ── Failure: trap fires — DEX save or take damage ────────────
                 // Failed disarm attempt triggers the trap:
-                // DEX saving throw vs trap_dc; fail → 1d6 + yonder/2 damage.
+                // DEX saving throw vs trap_dc; fail → 1d6 + depth/2 damage.
                 let dex_mod: i8 = ability_modifier(stats.abilities.dexterity);
                 let save_roll: i16 = roll_d20(ref seeder).into() + dex_mod.into();
                 if save_roll < dc {
                     let base_dmg: u16 = roll_dice(ref seeder, 6, 1);
-                    let bonus: u16 = (chamber.yonder / 2).into();
+                    let bonus: u16 = (chamber.depth / 2).into();
                     let damage: u16 = base_dmg + bonus;
                     DamageTrait::apply_adventurer_damage(
                         ref world, adventurer_id, health, position, MonsterType::None, damage,
@@ -430,11 +430,11 @@ pub mod DungeonComponent {
 
             if roll >= dc {
                 // ── Success: award gold and possibly a potion ─────────────────
-                // Gold: 1d6 × (yonder + 1) × difficulty
+                // Gold: 1d6 × (depth + 1) × difficulty
                 let gold_roll: u32 = roll_dice(ref seeder, 6, 1).into();
                 let temple: DungeonState = world.read_model(dungeon_id);
                 let gold_found: u32 = gold_roll
-                    * (chamber.yonder.into() + 1)
+                    * (chamber.depth.into() + 1)
                     * temple.difficulty_tier.into();
 
                 // Potion found on total roll >= 15
@@ -456,7 +456,7 @@ pub mod DungeonComponent {
                     dungeon_id,
                     chamber_id,
                     chamber_type: chamber.chamber_type,
-                    yonder: chamber.yonder,
+                    depth: chamber.depth,
                     exit_count: chamber.exit_count,
                     is_revealed: chamber.is_revealed,
                     treasure_looted: true,
@@ -550,28 +550,28 @@ pub mod DungeonComponent {
 
     // ── Internal helpers ──────────────────────────────────────────────────────
 
-    /// Boss probability: Yonder Formula (integer-only, bps).
-    fn calculate_boss_probability(yonder: u8, xp_earned: u32) -> u32 {
-        if yonder < MIN_YONDER {
+    /// Boss probability: Depth Formula (integer-only, bps).
+    fn calculate_boss_probability(depth: u8, xp_earned: u32) -> u32 {
+        if depth < MIN_DEPTH {
             return 0;
         }
-        let effective_yonder: u32 = (yonder - MIN_YONDER).into();
-        let yonder_component: u32 = effective_yonder * effective_yonder * YONDER_WEIGHT;
+        let effective_depth: u32 = (depth - MIN_DEPTH).into();
+        let depth_component: u32 = effective_depth * effective_depth * DEPTH_WEIGHT;
         let xp_component: u32 = xp_earned * XP_WEIGHT;
-        let total: u32 = yonder_component + xp_component;
+        let total: u32 = depth_component + xp_component;
         if total > MAX_PROB { MAX_PROB } else { total }
     }
 
-    /// Monster type by yonder and difficulty.
+    /// Monster type by depth and difficulty.
     /// Derives from a random value from the seeder.
-    fn monster_for_yonder(yonder: u8, difficulty: u8, hash: u256) -> MonsterType {
+    fn monster_for_depth(depth: u8, difficulty: u8, hash: u256) -> MonsterType {
         // Thematic progression per SPEC:
-        //   yonder 0-2:  Snakes, Skeletons
-        //   yonder 3-5:  Shadows, Animated Armor
-        //   yonder 6-9:  Gargoyles, Mummies
-        //   yonder 10+:  Mummies, (Wraith reserved for boss)
-        let tier: u8 = if yonder <= 2 { 0 }
-            else if yonder <= 5 { 1 }
+        //   depth 0-2:  Snakes, Skeletons
+        //   depth 3-5:  Shadows, Animated Armor
+        //   depth 6-9:  Gargoyles, Mummies
+        //   depth 10+:  Mummies, (Wraith reserved for boss)
+        let tier: u8 = if depth <= 2 { 0 }
+            else if depth <= 5 { 1 }
             else { 2 };
 
         // difficulty shifts tier up by (difficulty - 1), capped
@@ -594,15 +594,15 @@ pub mod DungeonComponent {
         dungeon_id: u128,
         parent_chamber_id: u32,
         new_chamber_id: u32,
-        yonder: u8,
+        depth: u8,
         adventurer_id: u128,
         revealed_by: u128,
         difficulty: u8,
         xp_earned: u32,
-        current_max_yonder: u8,
+        current_max_depth: u8,
     ) {
         // ── Is this a boss chamber? ──────────────────────────────────────────
-        let boss_prob: u32 = calculate_boss_probability(yonder, xp_earned);
+        let boss_prob: u32 = calculate_boss_probability(depth, xp_earned);
         let is_boss: bool = if boss_prob > 0 {
             let roll: u32 = roll_d20(ref seeder).into() * 500_u32; // scale 1-20 → 500-10000 bps
             roll <= boss_prob
@@ -626,7 +626,7 @@ pub mod DungeonComponent {
 
             let mt: MonsterType = if ct == ChamberType::Monster {
                 let random_val = seeder.random_u256();
-                monster_for_yonder(yonder, difficulty, random_val)
+                monster_for_depth(depth, difficulty, random_val)
             } else {
                 MonsterType::None
             };
@@ -634,18 +634,18 @@ pub mod DungeonComponent {
         };
 
         // ── Exit count: 0-3 new exits (dead end = 0) ────────────────────────
-        // At the frontier (yonder >= current max), enforce at least 1 exit
+        // At the frontier (depth >= current max), enforce at least 1 exit
         // so the dungeon always has a path forward.
         let raw_exit_count: u8 = seeder.random_u8() % 4;
-        let exit_count: u8 = if raw_exit_count == 0 && yonder >= current_max_yonder {
+        let exit_count: u8 = if raw_exit_count == 0 && depth >= current_max_depth {
             1
         } else {
             raw_exit_count
         };
 
-        // ── Trap DC: 10 + yonder/2 + (difficulty - 1)*2 ─────────────────────
+        // ── Trap DC: 10 + depth/2 + (difficulty - 1)*2 ─────────────────────
         let trap_dc: u8 = if chamber_type == ChamberType::Trap {
-            10_u8 + yonder / 2 + (difficulty - 1) * 2
+            10_u8 + depth / 2 + (difficulty - 1) * 2
         } else {
             0
         };
@@ -655,7 +655,7 @@ pub mod DungeonComponent {
             dungeon_id,
             chamber_id: new_chamber_id,
             chamber_type,
-            yonder,
+            depth,
             exit_count,
             is_revealed: true,
             treasure_looted: false,
@@ -691,15 +691,15 @@ pub mod DungeonComponent {
             i += 1;
         };
 
-        // ── Update DungeonState: record boss chamber and max_yonder ───────────
+        // ── Update DungeonState: record boss chamber and max_depth ───────────
         // (next_chamber_id already incremented by caller before this call)
-        if is_boss || yonder > current_max_yonder {
+        if is_boss || depth > current_max_depth {
             let mut temple: DungeonState = world.read_model(dungeon_id);
             if is_boss {
                 temple.boss_chamber_id = new_chamber_id;
             }
-            if yonder > current_max_yonder {
-                temple.max_yonder = yonder;
+            if depth > current_max_depth {
+                temple.max_depth = depth;
             }
             world.write_model(@temple);
         }
@@ -709,7 +709,7 @@ pub mod DungeonComponent {
             dungeon_id,
             chamber_id: new_chamber_id,
             chamber_type,
-            yonder,
+            depth,
             revealed_by,
         });
     }

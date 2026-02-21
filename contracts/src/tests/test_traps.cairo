@@ -34,7 +34,7 @@ mod tests {
             dungeon_id,
             chamber_id: 1,
             chamber_type: ChamberType::Entrance,
-            yonder: 1,
+            depth: 1,
             exit_count: 1,
             is_revealed: true,
             treasure_looted: false,
@@ -53,7 +53,7 @@ mod tests {
             dungeon_id,
             chamber_id: 2,
             chamber_type: ChamberType::Trap,
-            yonder: 2,
+            depth: 2,
             exit_count: 0,
             is_revealed: true,
             treasure_looted: false,
@@ -102,7 +102,7 @@ mod tests {
             dungeon_id,
             chamber_id: 2,
             chamber_type: ChamberType::Trap,
-            yonder: 2,
+            depth: 2,
             exit_count: 0,
             is_revealed: true,
             treasure_looted: false,
@@ -167,7 +167,7 @@ mod tests {
             dungeon_id,
             chamber_id: 3,
             chamber_type: ChamberType::Trap,
-            yonder: 2,
+            depth: 2,
             exit_count: 1,
             is_revealed: true,
             treasure_looted: false,
@@ -222,7 +222,7 @@ mod tests {
             dungeon_id,
             chamber_id: 2,
             chamber_type: ChamberType::Empty,
-            yonder: 1,
+            depth: 1,
             exit_count: 0,
             is_revealed: true,
             treasure_looted: false,
@@ -255,7 +255,7 @@ mod tests {
             dungeon_id,
             chamber_id: 3,
             chamber_type: ChamberType::Trap,
-            yonder: 2,
+            depth: 2,
             exit_count: 1,
             is_revealed: true,
             treasure_looted: false,
@@ -285,7 +285,7 @@ mod tests {
         let dungeon_id = temple.mint_temple(1_u8);
 
         world.write_model_test(@AdventurerHealth { adventurer_id, current_hp: 0, max_hp: 11, is_dead: true });
-        world.write_model_test(@Chamber { dungeon_id, chamber_id: 3, chamber_type: ChamberType::Trap, yonder: 2, exit_count: 1, is_revealed: true, treasure_looted: false, trap_disarmed: false, trap_dc: 10 });
+        world.write_model_test(@Chamber { dungeon_id, chamber_id: 3, chamber_type: ChamberType::Trap, depth: 2, exit_count: 1, is_revealed: true, treasure_looted: false, trap_disarmed: false, trap_dc: 10 });
         world.write_model_test(@AdventurerPosition { adventurer_id, dungeon_id, chamber_id: 3, in_combat: false, combat_monster_id: 0 });
 
         temple.disarm_trap(adventurer_id);
@@ -302,7 +302,7 @@ mod tests {
         let adventurer_id = mint_fighter(token);
         let dungeon_id = temple.mint_temple(1_u8);
 
-        world.write_model_test(@Chamber { dungeon_id, chamber_id: 3, chamber_type: ChamberType::Trap, yonder: 2, exit_count: 1, is_revealed: true, treasure_looted: false, trap_disarmed: false, trap_dc: 10 });
+        world.write_model_test(@Chamber { dungeon_id, chamber_id: 3, chamber_type: ChamberType::Trap, depth: 2, exit_count: 1, is_revealed: true, treasure_looted: false, trap_disarmed: false, trap_dc: 10 });
         world.write_model_test(@AdventurerPosition { adventurer_id, dungeon_id, chamber_id: 3, in_combat: true, combat_monster_id: 1 });
 
         temple.disarm_trap(adventurer_id);
@@ -318,9 +318,9 @@ mod tests {
         let adventurer_id = mint_fighter(token);
         let dungeon_id = temple.mint_temple(1_u8);
 
-        world.write_model_test(@Chamber { dungeon_id, chamber_id: 1, chamber_type: ChamberType::Entrance, yonder: 0, exit_count: 1, is_revealed: true, treasure_looted: false, trap_disarmed: false, trap_dc: 0 });
+        world.write_model_test(@Chamber { dungeon_id, chamber_id: 1, chamber_type: ChamberType::Entrance, depth: 0, exit_count: 1, is_revealed: true, treasure_looted: false, trap_disarmed: false, trap_dc: 0 });
         world.write_model_test(@ChamberExit { dungeon_id, from_chamber_id: 1, exit_index: 0, to_chamber_id: 2, is_discovered: true });
-        world.write_model_test(@Chamber { dungeon_id, chamber_id: 2, chamber_type: ChamberType::Trap, yonder: 4, exit_count: 0, is_revealed: true, treasure_looted: false, trap_disarmed: false, trap_dc: 25 });
+        world.write_model_test(@Chamber { dungeon_id, chamber_id: 2, chamber_type: ChamberType::Trap, depth: 4, exit_count: 0, is_revealed: true, treasure_looted: false, trap_disarmed: false, trap_dc: 25 });
 
         temple.enter_temple(adventurer_id, dungeon_id);
         world.write_model_test(@AdventurerHealth { adventurer_id, current_hp: 50, max_hp: 50, is_dead: false });
@@ -341,9 +341,9 @@ mod tests {
         let adventurer_id = mint_fighter(token);
         let dungeon_id = temple.mint_temple(1_u8);
 
-        world.write_model_test(@Chamber { dungeon_id, chamber_id: 1, chamber_type: ChamberType::Entrance, yonder: 0, exit_count: 1, is_revealed: true, treasure_looted: false, trap_disarmed: false, trap_dc: 0 });
+        world.write_model_test(@Chamber { dungeon_id, chamber_id: 1, chamber_type: ChamberType::Entrance, depth: 0, exit_count: 1, is_revealed: true, treasure_looted: false, trap_disarmed: false, trap_dc: 0 });
         world.write_model_test(@ChamberExit { dungeon_id, from_chamber_id: 1, exit_index: 0, to_chamber_id: 2, is_discovered: true });
-        world.write_model_test(@Chamber { dungeon_id, chamber_id: 2, chamber_type: ChamberType::Trap, yonder: 1, exit_count: 0, is_revealed: true, treasure_looted: false, trap_disarmed: true, trap_dc: 15 });
+        world.write_model_test(@Chamber { dungeon_id, chamber_id: 2, chamber_type: ChamberType::Trap, depth: 1, exit_count: 0, is_revealed: true, treasure_looted: false, trap_disarmed: true, trap_dc: 15 });
 
         temple.enter_temple(adventurer_id, dungeon_id);
         let health_before: AdventurerHealth = world.read_model(adventurer_id);

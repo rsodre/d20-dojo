@@ -11,7 +11,7 @@ pub struct DungeonState {
     pub next_chamber_id: u32,
     pub boss_chamber_id: u32,
     pub boss_alive: bool,
-    pub max_yonder: u8,
+    pub max_depth: u8,
 }
 
 #[derive(Copy, Drop, Serde)]
@@ -22,7 +22,7 @@ pub struct Chamber {
     #[key]
     pub chamber_id: u32,
     pub chamber_type: ChamberType,
-    pub yonder: u8,
+    pub depth: u8,
     pub exit_count: u8,
     pub is_revealed: bool,
     pub treasure_looted: bool,

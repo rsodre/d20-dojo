@@ -34,7 +34,7 @@ mod tests {
             dungeon_id,
             chamber_id: 2,
             chamber_type: ChamberType::Treasure,
-            yonder: 2,
+            depth: 2,
             exit_count: 0,
             is_revealed: true,
             treasure_looted: false,
@@ -75,7 +75,7 @@ mod tests {
             dungeon_id,
             chamber_id: 2,
             chamber_type: ChamberType::Treasure,
-            yonder: 2,
+            depth: 2,
             exit_count: 0,
             is_revealed: true,
             treasure_looted: false,
@@ -126,7 +126,7 @@ mod tests {
             dungeon_id,
             chamber_id: 2,
             chamber_type: ChamberType::Treasure,
-            yonder: 2,
+            depth: 2,
             exit_count: 0,
             is_revealed: true,
             treasure_looted: true, // already looted
@@ -160,7 +160,7 @@ mod tests {
             dungeon_id,
             chamber_id: 2,
             chamber_type: ChamberType::Monster,
-            yonder: 2,
+            depth: 2,
             exit_count: 0,
             is_revealed: true,
             treasure_looted: false,
@@ -189,7 +189,7 @@ mod tests {
         let adventurer_id = mint_fighter(token);
         let dungeon_id = temple.mint_temple(1_u8);
 
-        world.write_model_test(@Chamber { dungeon_id, chamber_id: 2, chamber_type: ChamberType::Treasure, yonder: 1, exit_count: 0, is_revealed: true, treasure_looted: false, trap_disarmed: false, trap_dc: 0 });
+        world.write_model_test(@Chamber { dungeon_id, chamber_id: 2, chamber_type: ChamberType::Treasure, depth: 1, exit_count: 0, is_revealed: true, treasure_looted: false, trap_disarmed: false, trap_dc: 0 });
         world.write_model_test(@AdventurerPosition { adventurer_id, dungeon_id, chamber_id: 2, in_combat: true, combat_monster_id: 1 });
 
         temple.loot_treasure(adventurer_id);
@@ -205,7 +205,7 @@ mod tests {
         let adventurer_id = mint_fighter(token);
         let dungeon_id = temple.mint_temple(1_u8);
 
-        world.write_model_test(@Chamber { dungeon_id, chamber_id: 2, chamber_type: ChamberType::Empty, yonder: 1, exit_count: 0, is_revealed: true, treasure_looted: false, trap_disarmed: false, trap_dc: 0 });
+        world.write_model_test(@Chamber { dungeon_id, chamber_id: 2, chamber_type: ChamberType::Empty, depth: 1, exit_count: 0, is_revealed: true, treasure_looted: false, trap_disarmed: false, trap_dc: 0 });
         world.write_model_test(@AdventurerPosition { adventurer_id, dungeon_id, chamber_id: 2, in_combat: false, combat_monster_id: 0 });
 
         let stats: AdventurerStats = world.read_model(adventurer_id);

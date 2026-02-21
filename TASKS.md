@@ -34,18 +34,18 @@
 ## Day 3: Temple & Exploration
 
 - [x] **3.1** Implement `temple_token` contract (`src/systems/temple_token.cairo`)
-- [ ] **3.2** Implement `mint_temple`: mint Temple NFT via cairo-nft-combo `_mint_next()`, create DungeonState, create entrance chamber (chamber_id=1, yonder=0, type=Entrance), generate entrance exits from seed
+- [ ] **3.2** Implement `mint_temple`: mint Temple NFT via cairo-nft-combo `_mint_next()`, create DungeonState, create entrance chamber (chamber_id=1, depth=0, type=Entrance), generate entrance exits from seed
 - [x] **3.3** Implement `enter_temple`: validate explorer is alive and not in another temple, place at entrance chamber, initialize `AdventurerDungeonProgress`
 - [x] **3.4** Implement `exit_temple`: remove explorer from temple (set dungeon_id=0, chamber_id=0), retain stats/inventory/XP
-- [x] **3.5** Implement `generate_chamber` (internal fn): derive chamber properties from temple seed + chamber position, calculate boss probability via Yonder Formula, determine chamber type / monster type / exit count / trap DC, create `MonsterInstance` model for monster chambers, emit ChamberRevealed event
+- [x] **3.5** Implement `generate_chamber` (internal fn): derive chamber properties from temple seed + chamber position, calculate boss probability via Depth Formula, determine chamber type / monster type / exit count / trap DC, create `MonsterInstance` model for monster chambers, emit ChamberRevealed event
 - [x] **3.6** Implement `open_exit`: call `generate_chamber` for undiscovered exits, create bidirectional `ChamberExit` links, increment `chambers_explored` on `AdventurerDungeonProgress`
 - [x] **3.7** Implement `move_to_chamber`: validate exit is discovered, move explorer, trigger chamber events (monster encounter / trap)
-- [x] **3.8** Implement `loot_treasure`: Perception skill check (d20 + WIS mod + proficiency), DC 10 Treasure / DC 12 Empty; success awards gold (1d6 × (yonder+1) × difficulty) + potion on roll ≥15; marks `treasure_looted=true`. Note: `search_chamber` was removed — traps fire immediately on `move_to_chamber` entry; loot pickup and treasure detection are merged into `loot_treasure`.
+- [x] **3.8** Implement `loot_treasure`: Perception skill check (d20 + WIS mod + proficiency), DC 10 Treasure / DC 12 Empty; success awards gold (1d6 × (depth+1) × difficulty) + potion on roll ≥15; marks `treasure_looted=true`. Note: `search_chamber` was removed — traps fire immediately on `move_to_chamber` entry; loot pickup and treasure detection are merged into `loot_treasure`.
 - [x] **3.9** Implement trap mechanics: saving throw to avoid, damage on failure, `disarm_trap` skill check
 - [x] **3.10** Implement `loot_fallen`: pick up a fallen explorer's items, update inventory, mark `is_looted=true`
 - [x] **3.11** Implement XP gain and level-up: check thresholds, increase max HP (roll hit die + CON), update proficiency bonus, unlock class features, add spell slots for Wizard
 - [x] **3.12** Implement boss defeat: on boss kill, increment `dungeons_conquered`, mark `boss_alive = false`, emit BossDefeated event
-- [x] **3.13** Implement `calculate_boss_probability` with the Yonder Formula (quadratic yonder + XP component)
+- [x] **3.13** Implement `calculate_boss_probability` with the Depth Formula (quadratic depth + XP component)
 - [x] **3.14** Write integration tests: full explorer-mints -> enters-temple -> opens-exits -> explores -> fights -> loots -> levels-up -> finds-boss flow
 
 ## Housekeeping -- additional steps added after analyzing generated contracts
@@ -72,12 +72,12 @@
 - [x] **4.5** Integrate dojo.js sdk, DojoProvider, torii client.
 - [x] **4.6** Implement Explorer and Temple minting UI (class picker → `mint_explorer` VRF multicall; difficulty picker → `mint_temple`), listing the player's tokens using a dojo sdk token subscription.
 - [x] **4.7** Implement Torii GRPC subscription for: player's explorers and temples.
-- [x] **4.8** Implement Torii GRPC client: query explorer state (stats, HP, inventory, position, skills), chamber state (type, yonder, monster, exits, fallen explorers), temple state (difficulty, boss status). Create hooks to get all relevant state with tanstack-query. use a DojoStore to store all models. Load all models related to the player's explorers and temples, and a subscription that catches everything. Using the fetched models, display class and stats of each  explorer listed in the home screen.
+- [x] **4.8** Implement Torii GRPC client: query explorer state (stats, HP, inventory, position, skills), chamber state (type, depth, monster, exits, fallen explorers), temple state (difficulty, boss status). Create hooks to get all relevant state with tanstack-query. use a DojoStore to store all models. Load all models related to the player's explorers and temples, and a subscription that catches everything. Using the fetched models, display class and stats of each  explorer listed in the home screen.
 - [x] **4.9** Install a Vite router, and a new route: /temple/:templeId displaying the temple state, with a list of chambers and explorers in it.
 - [x] **4.10** Make the adventurers and temples selectable in the lobby, add buttons to each Explorer: "Enter Temple" (selected temple), "Exit Temple" (if in any temple). link the buttons to each contract call.
 - [x] **4.11** Add a PLAY button to the lobby explorer cards, when the adventurer is in a temple. Create a route /play/:templeId/:explorerId and a page where the player can see the temple state, with a description of the current chamber and possible acitons.
 - [x] **4.12** Implement action list generator: pure function `getAvailableActions(state) → Action[]` — context-aware (lobby / exploring / in-combat); each action carries label, contract, entrypoint, and calldata; VRF actions are flagged so the caller auto-prepends `request_random`.
-- [x] **4.13** Implement state display component: explorer character sheet (class, level, HP/max, AC, inventory, spell slots, class features remaining), chamber info (type, yonder, monster type + HP, trap, exits, fallen explorers).
+- [x] **4.13** Implement state display component: explorer character sheet (class, level, HP/max, AC, inventory, spell slots, class features remaining), chamber info (type, depth, monster type + HP, trap, exits, fallen explorers).
 - [x] **4.14** Implement action panel: render `getAvailableActions` output as clickable buttons; disable all buttons while a tx is pending; show tx status (pending / confirmed / error).
 - [x] **4.15** Implement game loop: on mount/update → query state → render state panel + action panel → player clicks → submit tx (with VRF multicall if needed) → wait for confirmation → re-query state → repeat.
 - [x] **4.16** Implement temple selection flow: list available temples (temple ID, difficulty tier, boss alive/dead), "Enter" button per temple, "Mint New Temple" picker.
@@ -89,7 +89,7 @@
 - [x] **5.2** Test permadeath flow: verify fallen explorer body visible, loot droppable, loot pickable by others, dead NFT frozen
 - [x] **5.3** Test cross-temple flow: enter temple A -> level up -> exit -> enter temple B -> verify stats carry over
 - [x] **5.4** Multiplayer testing: two explorers in same temple, verify shared chamber state, shared monster kills, shared chamber generation
-- [x] **5.5** Test boss probability: verify Yonder Formula produces expected distribution over many runs
+- [x] **5.5** Test boss probability: verify Depth Formula produces expected distribution over many runs
 - [ ] **5.6** Test all three classes through full temple runs, verify class features work correctly
 - [ ] **5.7** Edge case testing: death at level 1 with empty inventory, chamber with many fallen explorers, dead-end chambers, exiting temple mid-combat
 - [ ] **5.8** Balance tuning: adjust monster stats, XP rewards, treasure distribution, trap DCs, boss probability constants
