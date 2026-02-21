@@ -156,14 +156,14 @@ export interface DungeonState {
 	max_yonder: BigNumberish;
 }
 
-// Type definition for `d20::events::BossDefeated` struct
+// Type definition for `d20::d20::models::events::BossDefeated` struct
 export interface BossDefeated {
 	dungeon_id: BigNumberish;
 	adventurer_id: BigNumberish;
 	monster_type: MonsterTypeEnum;
 }
 
-// Type definition for `d20::events::ChamberRevealed` struct
+// Type definition for `d20::d20::models::events::ChamberRevealed` struct
 export interface ChamberRevealed {
 	dungeon_id: BigNumberish;
 	chamber_id: BigNumberish;
@@ -172,7 +172,7 @@ export interface ChamberRevealed {
 	revealed_by: BigNumberish;
 }
 
-// Type definition for `d20::events::CombatResult` struct
+// Type definition for `d20::d20::models::events::CombatResult` struct
 export interface CombatResult {
 	adventurer_id: BigNumberish;
 	action: CombatActionEnum;
@@ -182,22 +182,22 @@ export interface CombatResult {
 	monster_killed: boolean;
 }
 
-// Type definition for `d20::events::ExplorerDied` struct
-export interface ExplorerDied {
+// Type definition for `d20::d20::models::events::AdventurerDied` struct
+export interface AdventurerDied {
 	adventurer_id: BigNumberish;
 	dungeon_id: BigNumberish;
 	chamber_id: BigNumberish;
 	killed_by: MonsterTypeEnum;
 }
 
-// Type definition for `d20::events::ExplorerMinted` struct
-export interface ExplorerMinted {
+// Type definition for `d20::d20::models::events::AdventurerMinted` struct
+export interface AdventurerMinted {
 	adventurer_id: BigNumberish;
 	adventurer_class: AdventurerClassEnum;
 	player: string;
 }
 
-// Type definition for `d20::events::LevelUp` struct
+// Type definition for `d20::d20::models::events::LevelUp` struct
 export interface LevelUp {
 	adventurer_id: BigNumberish;
 	new_level: BigNumberish;
@@ -365,8 +365,8 @@ export interface SchemaType extends ISchemaType {
 		BossDefeated: BossDefeated,
 		ChamberRevealed: ChamberRevealed,
 		CombatResult: CombatResult,
-		ExplorerDied: ExplorerDied,
-		ExplorerMinted: ExplorerMinted,
+		AdventurerDied: AdventurerDied,
+		AdventurerMinted: AdventurerMinted,
 		LevelUp: LevelUp,
 		BatchMetadataUpdate: BatchMetadataUpdate,
 		MetadataUpdate: MetadataUpdate,
@@ -599,7 +599,7 @@ export const schema: SchemaType = {
 			damage_taken: 0,
 			monster_killed: false,
 		},
-		ExplorerDied: {
+		AdventurerDied: {
 			adventurer_id: 0,
 			dungeon_id: 0,
 			chamber_id: 0,
@@ -613,7 +613,7 @@ export const schema: SchemaType = {
 				Mummy: undefined,
 				Wraith: undefined, }),
 		},
-		ExplorerMinted: {
+		AdventurerMinted: {
 			adventurer_id: 0,
 		adventurer_class: new CairoCustomEnum({ 
 					None: "",
@@ -676,8 +676,8 @@ export enum ModelsMapping {
 	BossDefeated = 'd20-BossDefeated',
 	ChamberRevealed = 'd20-ChamberRevealed',
 	CombatResult = 'd20-CombatResult',
-	ExplorerDied = 'd20-ExplorerDied',
-	ExplorerMinted = 'd20-ExplorerMinted',
+	AdventurerDied = 'd20-AdventurerDied',
+	AdventurerMinted = 'd20-AdventurerMinted',
 	LevelUp = 'd20-LevelUp',
 	CombatAction = 'd20-CombatAction',
 	ItemType = 'd20-ItemType',

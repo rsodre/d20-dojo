@@ -18,7 +18,7 @@ pub mod DungeonComponent {
         AdventurerSkills, Skill,
     };
     use d20::d20::types::damage::DamageTrait;
-    use d20::events::ChamberRevealed;
+    use d20::d20::models::events::ChamberRevealed;
     use d20::utils::dice::{roll_d20, roll_dice, ability_modifier, proficiency_bonus};
     use d20::utils::seeder::{Seeder, SeederTrait};
 

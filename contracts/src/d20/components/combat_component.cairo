@@ -13,7 +13,7 @@ pub mod CombatComponent {
         AdventurerStats, AdventurerHealth, AdventurerCombat, AdventurerInventory, AdventurerPosition,
     };
     use d20::d20::models::dungeon::{MonsterInstance, AdventurerDungeonProgress, DungeonState};
-    use d20::events::{CombatResult, LevelUp, BossDefeated};
+    use d20::d20::models::events::{CombatResult, LevelUp, BossDefeated};
     use d20::utils::dice::{roll_d20, roll_dice, ability_modifier, proficiency_bonus};
     use d20::utils::seeder::Seeder;
     use d20::d20::models::monster::{MonsterType, MonsterTypeTrait};

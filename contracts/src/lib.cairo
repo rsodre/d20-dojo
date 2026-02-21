@@ -8,6 +8,7 @@ pub mod d20 {
         pub mod adventurer;
         pub mod dungeon;
         pub mod monster;
+        pub mod events;
     }
     pub mod types {
         pub mod adventurer_class;
@@ -28,8 +29,6 @@ pub mod systems {
 pub mod models {
     pub mod config;
 }
-
-pub mod events;
 
 pub mod constants;
 

@@ -751,7 +751,7 @@ trait ICombatSystem<T> {
 // - sets is_dead = true on AdventurerHealth
 // - creates FallenAdventurer with dropped loot in current chamber
 // - increments ChamberFallenCount
-// - emits ExplorerDied event
+// - emits AdventurerDied event
 
 // ──────────────────────────────────────────────
 // temple_token contract
@@ -779,7 +779,7 @@ Events are critical for Torii indexing and client state updates. All events use 
 ```cairo
 #[derive(Copy, Drop, Serde)]
 #[dojo::event]
-pub struct ExplorerMinted {
+pub struct AdventurerMinted {
     #[key]
     pub adventurer_id: u128,
     pub adventurer_class: AdventurerClass,
@@ -800,7 +800,7 @@ pub struct CombatResult {
 
 #[derive(Copy, Drop, Serde)]
 #[dojo::event]
-pub struct ExplorerDied {
+pub struct AdventurerDied {
     #[key]
     pub adventurer_id: u128,
     pub dungeon_id: u128,

@@ -3,7 +3,7 @@ use dojo::event::EventStorage;
 use dojo::world::WorldStorage;
 use d20::d20::models::adventurer::{AdventurerHealth, AdventurerPosition, AdventurerInventory};
 use d20::d20::models::dungeon::{FallenAdventurer, ChamberFallenCount};
-use d20::events::ExplorerDied;
+use d20::d20::models::events::AdventurerDied;
 use d20::d20::models::monster::MonsterType;
 
 #[derive(Serde, Copy, Drop, Introspect, PartialEq, Debug, DojoStore, Default)]
@@ -74,7 +74,7 @@ pub impl DamageImpl of DamageTrait {
     ///   3. Read inventory and create FallenAdventurer with dropped loot.
     ///   4. Increment ChamberFallenCount.
     ///   5. Zero out inventory (items are now on the ground).
-    ///   6. Emit ExplorerDied event.
+    ///   6. Emit AdventurerDied event.
     fn handle_death(
         ref world: WorldStorage,
         adventurer_id: u128,
@@ -139,8 +139,8 @@ pub impl DamageImpl of DamageTrait {
             potions: 0,
         });
 
-        // 8. Emit ExplorerDied event
-        world.emit_event(@ExplorerDied {
+        // 8. Emit AdventurerDied event
+        world.emit_event(@AdventurerDied {
             adventurer_id,
             dungeon_id: position.dungeon_id,
             chamber_id: position.chamber_id,

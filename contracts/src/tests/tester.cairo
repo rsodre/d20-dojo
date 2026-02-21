@@ -44,12 +44,12 @@ pub fn namespace_def() -> NamespaceDef {
             TestResource::Model(d20::d20::models::dungeon::m_ChamberFallenCount::TEST_CLASS_HASH),
             TestResource::Model(d20::d20::models::dungeon::m_AdventurerDungeonProgress::TEST_CLASS_HASH),
             // Events
-            TestResource::Event(d20::events::e_ExplorerMinted::TEST_CLASS_HASH),
-            TestResource::Event(d20::events::e_CombatResult::TEST_CLASS_HASH),
-            TestResource::Event(d20::events::e_ExplorerDied::TEST_CLASS_HASH),
-            TestResource::Event(d20::events::e_ChamberRevealed::TEST_CLASS_HASH),
-            TestResource::Event(d20::events::e_LevelUp::TEST_CLASS_HASH),
-            TestResource::Event(d20::events::e_BossDefeated::TEST_CLASS_HASH),
+            TestResource::Event(d20::d20::models::events::e_AdventurerMinted::TEST_CLASS_HASH),
+            TestResource::Event(d20::d20::models::events::e_CombatResult::TEST_CLASS_HASH),
+            TestResource::Event(d20::d20::models::events::e_AdventurerDied::TEST_CLASS_HASH),
+            TestResource::Event(d20::d20::models::events::e_ChamberRevealed::TEST_CLASS_HASH),
+            TestResource::Event(d20::d20::models::events::e_LevelUp::TEST_CLASS_HASH),
+            TestResource::Event(d20::d20::models::events::e_BossDefeated::TEST_CLASS_HASH),
             // Contracts
             TestResource::Contract(d20::systems::explorer_token::explorer_token::TEST_CLASS_HASH),
             TestResource::Contract(d20::systems::combat_system::combat_system::TEST_CLASS_HASH),

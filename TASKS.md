@@ -12,14 +12,14 @@
 - [x] **1.4** Implement temple/chamber models (DungeonState, Chamber, MonsterInstance, ChamberExit, FallenAdventurer, ChamberFallenCount, AdventurerDungeonProgress)
 - [x] **1.5** Implement D20 utility module (`src/utils/d20.cairo`): `roll_d20`, `roll_dice`, `ability_modifier`, `proficiency_bonus`, `calculate_ac`
 - [x] **1.6** Implement monster stat lookup (`src/utils/monsters.cairo`): pure function returning stats for each MonsterType
-- [x] **1.7** Define all events (`src/events.cairo`): ExplorerMinted, CombatResult, ExplorerDied, ChamberRevealed, LevelUp, BossDefeated
+- [x] **1.7** Define all events (`src/events.cairo`): AdventurerMinted, CombatResult, AdventurerDied, ChamberRevealed, LevelUp, BossDefeated
 - [x] **1.8** Write unit tests for all D20 math (modifier calculation for all 18 scores, proficiency by level, roll bounds)
 - [x] **1.9** Configure `dojo_dev.toml` writer permissions for all 3 contracts
 - [x] **1.10** Set up Cartridge VRF integration (import VRF contract interface, configure provider)
 
 ## Day 2: Explorer & Combat Systems
 
-- [x] **2.1** Implement `explorer_token` contract (`src/systems/explorer_token.cairo`): `mint_explorer` via cairo-nft-combo `_mint_next()`, validate standard array assignment, initialize all explorer models based on class, emit ExplorerMinted event
+- [x] **2.1** Implement `explorer_token` contract (`src/systems/explorer_token.cairo`): `mint_explorer` via cairo-nft-combo `_mint_next()`, validate standard array assignment, initialize all explorer models based on class, emit AdventurerMinted event
 - [x] **2.2** Implement class-specific initialization: Fighter (Longsword primary, None secondary, Chain Mail, AC 16, Athletics + choice), Rogue (Dagger primary, Shortbow secondary, Leather, AC 11+DEX, Stealth/Acrobatics + 2 choices + expertise), Wizard (Staff primary, None secondary, no armor, AC 10+DEX, Arcana + choice, spell slots)
 - [x] **2.3** Implement `rest` on `explorer_token`: restore `current_hp` to `max_hp`, reset spell slots to class/level values, reset `second_wind_used` and `action_surge_used`
 - [x] **2.4** Implement `combat_system` contract (`src/systems/combat_system.cairo`): `attack` with attack rolls vs monster AC, damage rolls, HP deduction on MonsterInstance, emit CombatResult event
@@ -27,7 +27,7 @@
 - [x] **2.6** Implement Fighter features (second_wind heal 1d10+level, Action Surge extra action, Champion crit on 19-20 at level 3, Extra Attack at level 5)
 - [x] **2.7** Implement Rogue features (Sneak Attack bonus dice 1d6/2d6/3d6 by level, Expertise double proficiency, cunning_action disengage/hide, Uncanny Dodge halve damage at level 5)
 - [x] **2.8** Implement Wizard spell casting: spell slot tracking per level, cantrip resolution (Fire Bolt attack roll + 1d10), leveled spell resolution (Magic Missile auto-hit 3x1d4+1, Shield +5 AC reaction, Sleep 5d8 HP, Scorching Ray 3x2d6, Misty Step, Fireball 8d6 DEX save using monster ability scores)
-- [x] **2.9** Implement death (internal fn): set `is_dead`, create `FallenAdventurer` with dropped loot, increment `ChamberFallenCount`, emit ExplorerDied event
+- [x] **2.9** Implement death (internal fn): set `is_dead`, create `FallenAdventurer` with dropped loot, increment `ChamberFallenCount`, emit AdventurerDied event
 - [x] **2.10** Implement `flee` mechanic: contested DEX check (explorer DEX vs monster DEX), on success move back to previous chamber
 - [x] **2.11** Write unit tests for combat math, each class feature, and death flow using `spawn_test_world` and `write_model_test`
 

@@ -14,7 +14,7 @@ pub mod CharacterComponent {
     use d20::d20::types::attributes::CharacterAttributes;
     use d20::utils::seeder::{Seeder, SeederTrait};
     use d20::utils::dice::{ability_modifier, calculate_ac};
-    use d20::events::ExplorerMinted;
+    use d20::d20::models::events::AdventurerMinted;
 
     #[storage]
     pub struct Storage {}
@@ -109,7 +109,7 @@ pub mod CharacterComponent {
             });
 
             // Emit Dojo event
-            world.emit_event(@ExplorerMinted {
+            world.emit_event(@AdventurerMinted {
                 adventurer_id,
                 adventurer_class,
                 player: caller,

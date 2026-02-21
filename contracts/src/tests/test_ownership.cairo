@@ -24,7 +24,7 @@ mod tests {
                 TestResource::Model(d20::d20::models::adventurer::m_AdventurerInventory::TEST_CLASS_HASH),
                 TestResource::Model(d20::d20::models::adventurer::m_AdventurerPosition::TEST_CLASS_HASH),
                 TestResource::Model(d20::d20::models::adventurer::m_AdventurerSkills::TEST_CLASS_HASH),
-                TestResource::Event(d20::events::e_ExplorerMinted::TEST_CLASS_HASH),
+                TestResource::Event(d20::d20::models::events::e_AdventurerMinted::TEST_CLASS_HASH),
                 TestResource::Contract(d20::systems::explorer_token::explorer_token::TEST_CLASS_HASH),
                 TestResource::Contract(d20::systems::temple_token::temple_token::TEST_CLASS_HASH),
             ].span(),

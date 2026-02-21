@@ -5,7 +5,7 @@ use d20::d20::models::monster::MonsterType;
 
 #[derive(Copy, Drop, Serde)]
 #[dojo::event]
-pub struct ExplorerMinted {
+pub struct AdventurerMinted {
     #[key]
     pub adventurer_id: u128,
     pub adventurer_class: AdventurerClass,
@@ -14,19 +14,7 @@ pub struct ExplorerMinted {
 
 #[derive(Copy, Drop, Serde)]
 #[dojo::event]
-pub struct CombatResult {
-    #[key]
-    pub adventurer_id: u128,
-    pub action: CombatAction,
-    pub roll: u8,
-    pub damage_dealt: u16,
-    pub damage_taken: u16,
-    pub monster_killed: bool,
-}
-
-#[derive(Copy, Drop, Serde)]
-#[dojo::event]
-pub struct ExplorerDied {
+pub struct AdventurerDied {
     #[key]
     pub adventurer_id: u128,
     pub dungeon_id: u128,
@@ -47,10 +35,14 @@ pub struct ChamberRevealed {
 
 #[derive(Copy, Drop, Serde)]
 #[dojo::event]
-pub struct LevelUp {
+pub struct CombatResult {
     #[key]
     pub adventurer_id: u128,
-    pub new_level: u8,
+    pub action: CombatAction,
+    pub roll: u8,
+    pub damage_dealt: u16,
+    pub damage_taken: u16,
+    pub monster_killed: bool,
 }
 
 #[derive(Copy, Drop, Serde)]
@@ -60,4 +52,12 @@ pub struct BossDefeated {
     pub dungeon_id: u128,
     pub adventurer_id: u128,
     pub monster_type: MonsterType,
+}
+
+#[derive(Copy, Drop, Serde)]
+#[dojo::event]
+pub struct LevelUp {
+    #[key]
+    pub adventurer_id: u128,
+    pub new_level: u8,
 }
