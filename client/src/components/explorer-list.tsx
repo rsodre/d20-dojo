@@ -20,7 +20,7 @@ function ExplorerCard({ token, selectedTempleId }: ExplorerCardProps) {
   const { stats, health, combat, position } = useExplorerModels(token.tokenIdNum);
   const { enter_temple, exit_temple } = useTempleCalls();
 
-  const className = stats?.explorer_class as unknown as string ?? undefined;
+  const className = stats?.adventurer_class as unknown as string ?? undefined;
   const emoji = className ? (CLASS_EMOJI[className] ?? "⚔️") : "⚔️";
   const level = stats ? Number(stats.level) : undefined;
   const xp = stats ? Number(stats.xp) : undefined;

@@ -149,7 +149,7 @@ mod tests {
     use dojo::model::{ModelStorage, ModelStorageTest};
     use dojo::world::{WorldStorageTrait};
 
-    use d20::models::explorer::{
+    use d20::d20::models::adventurer::{
         ExplorerStats, ExplorerHealth, ExplorerCombat, ExplorerInventory,
         ExplorerPosition, ExplorerSkills
     };
@@ -159,7 +159,7 @@ mod tests {
     };
     use d20::types::index::{ChamberType};
     use d20::types::items::{WeaponType, ArmorType};
-    use d20::types::explorer_class::ExplorerClass;
+    use d20::d20::types::adventurer_class::AdventurerClass;
     use d20::types::monster::MonsterType;
     use d20::tests::tester::{
         setup_world, mint_fighter, mint_rogue, mint_wizard, assert_explorer_dead,

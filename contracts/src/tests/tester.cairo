@@ -17,7 +17,7 @@ use d20::systems::temple_token::{
     temple_token, ITempleTokenDispatcher, ITempleTokenDispatcherTrait,
 };
 use d20::models::config::m_Config;
-use d20::models::explorer::{
+use d20::d20::models::adventurer::{
     ExplorerStats, m_ExplorerStats,
     ExplorerHealth, m_ExplorerHealth,
     ExplorerCombat, m_ExplorerCombat,
@@ -40,7 +40,7 @@ use d20::events::{
 };
 use d20::types::index::{ChamberType, ItemType};
 use d20::types::items::{WeaponType, ArmorType};
-use d20::types::explorer_class::ExplorerClass;
+use d20::d20::types::adventurer_class::AdventurerClass;
 use d20::types::monster::MonsterType;
 use d20::tests::mock_vrf::MockVrf;
 
@@ -128,15 +128,15 @@ pub fn setup_world() -> (
 // ── Mint helpers ──────────────────────────────────────────────────────────
 
 pub fn mint_fighter(token: IExplorerTokenDispatcher) -> u128 {
-    token.mint_explorer(ExplorerClass::Fighter)
+    token.mint_explorer(AdventurerClass::Fighter)
 }
 
 pub fn mint_rogue(token: IExplorerTokenDispatcher) -> u128 {
-    token.mint_explorer(ExplorerClass::Rogue)
+    token.mint_explorer(AdventurerClass::Rogue)
 }
 
 pub fn mint_wizard(token: IExplorerTokenDispatcher) -> u128 {
-    token.mint_explorer(ExplorerClass::Wizard)
+    token.mint_explorer(AdventurerClass::Wizard)
 }
 
 // ── Death assertion helper ────────────────────────────────────────────────
@@ -148,15 +148,15 @@ pub fn mint_wizard(token: IExplorerTokenDispatcher) -> u128 {
 /// - Inventory gold and potions zeroed (dropped as loot)
 pub fn assert_explorer_dead(
     ref world: dojo::world::WorldStorage,
-    explorer_id: u128,
+    adventurer_id: u128,
     temple_id: u128,
     chamber_id: u32,
 ) {
-    let health: ExplorerHealth = world.read_model(explorer_id);
+    let health: ExplorerHealth = world.read_model(adventurer_id);
     assert(health.is_dead, 'explorer should be dead');
     assert(health.current_hp == 0, 'hp should be 0 on death');
 
-    let pos: ExplorerPosition = world.read_model(explorer_id);
+    let pos: ExplorerPosition = world.read_model(adventurer_id);
     assert(!pos.in_combat, 'dead explorer not in combat');
 
     let fallen_count: ChamberFallenCount = world.read_model((temple_id, chamber_id));
@@ -165,10 +165,10 @@ pub fn assert_explorer_dead(
     let fallen: FallenExplorer = world.read_model(
         (temple_id, chamber_id, fallen_count.count - 1)
     );
-    assert(fallen.explorer_id == explorer_id, 'fallen explorer id mismatch');
+    assert(fallen.adventurer_id == adventurer_id, 'fallen explorer id mismatch');
     assert(!fallen.is_looted, 'fallen should not be looted');
 
-    let inv: ExplorerInventory = world.read_model(explorer_id);
+    let inv: ExplorerInventory = world.read_model(adventurer_id);
     assert(inv.gold == 0, 'gold dropped on death');
     assert(inv.potions == 0, 'potions dropped on death');
 }

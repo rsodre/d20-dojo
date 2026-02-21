@@ -4,7 +4,11 @@ pub mod d20 {
         pub mod combat_component;
         pub mod dungeon_component;
     }
+    pub mod models {
+        pub mod adventurer;
+    }
     pub mod types {
+        pub mod adventurer_class;
         pub mod attributes;
     }
 }
@@ -17,14 +21,11 @@ pub mod systems {
 
 pub mod models {
     pub mod config;
-    pub mod explorer;
     pub mod temple;
 }
 
 pub mod types {
     pub mod index;
-    pub mod explorer_class;
-
     pub mod items;
     pub mod spells;
     pub mod monster;

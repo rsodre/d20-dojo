@@ -8,7 +8,7 @@ export interface Config {
 	vrf_address: string;
 }
 
-// Type definition for `d20::models::explorer::AbilityScore` struct
+// Type definition for `d20::d20::models::adventurer::AbilityScore` struct
 export interface AbilityScore {
 	strength: BigNumberish;
 	dexterity: BigNumberish;
@@ -18,9 +18,9 @@ export interface AbilityScore {
 	charisma: BigNumberish;
 }
 
-// Type definition for `d20::models::explorer::ExplorerCombat` struct
+// Type definition for `d20::d20::models::adventurer::ExplorerCombat` struct
 export interface ExplorerCombat {
-	explorer_id: BigNumberish;
+	adventurer_id: BigNumberish;
 	armor_class: BigNumberish;
 	spell_slots_1: BigNumberish;
 	spell_slots_2: BigNumberish;
@@ -29,17 +29,17 @@ export interface ExplorerCombat {
 	action_surge_used: boolean;
 }
 
-// Type definition for `d20::models::explorer::ExplorerHealth` struct
+// Type definition for `d20::d20::models::adventurer::ExplorerHealth` struct
 export interface ExplorerHealth {
-	explorer_id: BigNumberish;
+	adventurer_id: BigNumberish;
 	current_hp: BigNumberish;
 	max_hp: BigNumberish;
 	is_dead: boolean;
 }
 
-// Type definition for `d20::models::explorer::ExplorerInventory` struct
+// Type definition for `d20::d20::models::adventurer::ExplorerInventory` struct
 export interface ExplorerInventory {
-	explorer_id: BigNumberish;
+	adventurer_id: BigNumberish;
 	primary_weapon: WeaponTypeEnum;
 	secondary_weapon: WeaponTypeEnum;
 	armor: ArmorTypeEnum;
@@ -48,34 +48,34 @@ export interface ExplorerInventory {
 	potions: BigNumberish;
 }
 
-// Type definition for `d20::models::explorer::ExplorerPosition` struct
+// Type definition for `d20::d20::models::adventurer::ExplorerPosition` struct
 export interface ExplorerPosition {
-	explorer_id: BigNumberish;
+	adventurer_id: BigNumberish;
 	temple_id: BigNumberish;
 	chamber_id: BigNumberish;
 	in_combat: boolean;
 	combat_monster_id: BigNumberish;
 }
 
-// Type definition for `d20::models::explorer::ExplorerSkills` struct
+// Type definition for `d20::d20::models::adventurer::ExplorerSkills` struct
 export interface ExplorerSkills {
-	explorer_id: BigNumberish;
+	adventurer_id: BigNumberish;
 	skills: SkillsSet;
 	expertise_1: SkillEnum;
 	expertise_2: SkillEnum;
 }
 
-// Type definition for `d20::models::explorer::ExplorerStats` struct
+// Type definition for `d20::d20::models::adventurer::ExplorerStats` struct
 export interface ExplorerStats {
-	explorer_id: BigNumberish;
+	adventurer_id: BigNumberish;
 	abilities: AbilityScore;
 	level: BigNumberish;
 	xp: BigNumberish;
-	explorer_class: ExplorerClassEnum;
+	adventurer_class: AdventurerClassEnum;
 	temples_conquered: BigNumberish;
 }
 
-// Type definition for `d20::models::explorer::SkillsSet` struct
+// Type definition for `d20::d20::models::adventurer::SkillsSet` struct
 export interface SkillsSet {
 	athletics: boolean;
 	stealth: boolean;
@@ -116,7 +116,7 @@ export interface ChamberFallenCount {
 
 // Type definition for `d20::models::temple::ExplorerTempleProgress` struct
 export interface ExplorerTempleProgress {
-	explorer_id: BigNumberish;
+	adventurer_id: BigNumberish;
 	temple_id: BigNumberish;
 	chambers_explored: BigNumberish;
 	xp_earned: BigNumberish;
@@ -127,7 +127,7 @@ export interface FallenExplorer {
 	temple_id: BigNumberish;
 	chamber_id: BigNumberish;
 	fallen_index: BigNumberish;
-	explorer_id: BigNumberish;
+	adventurer_id: BigNumberish;
 	dropped_weapon: WeaponTypeEnum;
 	dropped_armor: ArmorTypeEnum;
 	dropped_gold: BigNumberish;
@@ -159,7 +159,7 @@ export interface TempleState {
 // Type definition for `d20::events::BossDefeated` struct
 export interface BossDefeated {
 	temple_id: BigNumberish;
-	explorer_id: BigNumberish;
+	adventurer_id: BigNumberish;
 	monster_type: MonsterTypeEnum;
 }
 
@@ -174,7 +174,7 @@ export interface ChamberRevealed {
 
 // Type definition for `d20::events::CombatResult` struct
 export interface CombatResult {
-	explorer_id: BigNumberish;
+	adventurer_id: BigNumberish;
 	action: CombatActionEnum;
 	roll: BigNumberish;
 	damage_dealt: BigNumberish;
@@ -184,7 +184,7 @@ export interface CombatResult {
 
 // Type definition for `d20::events::ExplorerDied` struct
 export interface ExplorerDied {
-	explorer_id: BigNumberish;
+	adventurer_id: BigNumberish;
 	temple_id: BigNumberish;
 	chamber_id: BigNumberish;
 	killed_by: MonsterTypeEnum;
@@ -192,14 +192,14 @@ export interface ExplorerDied {
 
 // Type definition for `d20::events::ExplorerMinted` struct
 export interface ExplorerMinted {
-	explorer_id: BigNumberish;
-	explorer_class: ExplorerClassEnum;
+	adventurer_id: BigNumberish;
+	adventurer_class: AdventurerClassEnum;
 	player: string;
 }
 
 // Type definition for `d20::events::LevelUp` struct
 export interface LevelUp {
-	explorer_id: BigNumberish;
+	adventurer_id: BigNumberish;
 	new_level: BigNumberish;
 }
 
@@ -235,15 +235,15 @@ export interface Transfer {
 	token_id: BigNumberish;
 }
 
-// Type definition for `d20::types::explorer_class::ExplorerClass` enum
+// Type definition for `d20::d20::types::adventurer_class::AdventurerClass` enum
 export const explorerClass = [
 	'None',
 	'Fighter',
 	'Rogue',
 	'Wizard',
 ] as const;
-export type ExplorerClass = { [key in typeof explorerClass[number]]: string };
-export type ExplorerClassEnum = CairoCustomEnum;
+export type AdventurerClass = { [key in typeof explorerClass[number]]: string };
+export type AdventurerClassEnum = CairoCustomEnum;
 
 // Type definition for `d20::types::index::ChamberType` enum
 export const chamberType = [
@@ -390,7 +390,7 @@ export const schema: SchemaType = {
 			charisma: 0,
 		},
 		ExplorerCombat: {
-			explorer_id: 0,
+			adventurer_id: 0,
 			armor_class: 0,
 			spell_slots_1: 0,
 			spell_slots_2: 0,
@@ -399,13 +399,13 @@ export const schema: SchemaType = {
 			action_surge_used: false,
 		},
 		ExplorerHealth: {
-			explorer_id: 0,
+			adventurer_id: 0,
 			current_hp: 0,
 			max_hp: 0,
 			is_dead: false,
 		},
 		ExplorerInventory: {
-			explorer_id: 0,
+			adventurer_id: 0,
 		primary_weapon: new CairoCustomEnum({ 
 					None: "",
 				Longsword: undefined,
@@ -429,14 +429,14 @@ export const schema: SchemaType = {
 			potions: 0,
 		},
 		ExplorerPosition: {
-			explorer_id: 0,
+			adventurer_id: 0,
 			temple_id: 0,
 			chamber_id: 0,
 			in_combat: false,
 			combat_monster_id: 0,
 		},
 		ExplorerSkills: {
-			explorer_id: 0,
+			adventurer_id: 0,
 		skills: { athletics: false, stealth: false, perception: false, persuasion: false, arcana: false, acrobatics: false, },
 		expertise_1: new CairoCustomEnum({ 
 					None: "",
@@ -456,11 +456,11 @@ export const schema: SchemaType = {
 				Acrobatics: undefined, }),
 		},
 		ExplorerStats: {
-			explorer_id: 0,
+			adventurer_id: 0,
 		abilities: { strength: 0, dexterity: 0, constitution: 0, intelligence: 0, wisdom: 0, charisma: 0, },
 			level: 0,
 			xp: 0,
-		explorer_class: new CairoCustomEnum({ 
+		adventurer_class: new CairoCustomEnum({ 
 					None: "",
 				Fighter: undefined,
 				Rogue: undefined,
@@ -506,7 +506,7 @@ export const schema: SchemaType = {
 			count: 0,
 		},
 		ExplorerTempleProgress: {
-			explorer_id: 0,
+			adventurer_id: 0,
 			temple_id: 0,
 			chambers_explored: 0,
 			xp_earned: 0,
@@ -515,7 +515,7 @@ export const schema: SchemaType = {
 			temple_id: 0,
 			chamber_id: 0,
 			fallen_index: 0,
-			explorer_id: 0,
+			adventurer_id: 0,
 		dropped_weapon: new CairoCustomEnum({ 
 					None: "",
 				Longsword: undefined,
@@ -558,7 +558,7 @@ export const schema: SchemaType = {
 		},
 		BossDefeated: {
 			temple_id: 0,
-			explorer_id: 0,
+			adventurer_id: 0,
 		monster_type: new CairoCustomEnum({ 
 					None: "",
 				PoisonousSnake: undefined,
@@ -584,7 +584,7 @@ export const schema: SchemaType = {
 			revealed_by: 0,
 		},
 		CombatResult: {
-			explorer_id: 0,
+			adventurer_id: 0,
 		action: new CairoCustomEnum({ 
 					None: "",
 				Attack: undefined,
@@ -600,7 +600,7 @@ export const schema: SchemaType = {
 			monster_killed: false,
 		},
 		ExplorerDied: {
-			explorer_id: 0,
+			adventurer_id: 0,
 			temple_id: 0,
 			chamber_id: 0,
 		killed_by: new CairoCustomEnum({ 
@@ -614,8 +614,8 @@ export const schema: SchemaType = {
 				Wraith: undefined, }),
 		},
 		ExplorerMinted: {
-			explorer_id: 0,
-		explorer_class: new CairoCustomEnum({ 
+			adventurer_id: 0,
+		adventurer_class: new CairoCustomEnum({ 
 					None: "",
 				Fighter: undefined,
 				Rogue: undefined,
@@ -623,7 +623,7 @@ export const schema: SchemaType = {
 			player: "",
 		},
 		LevelUp: {
-			explorer_id: 0,
+			adventurer_id: 0,
 			new_level: 0,
 		},
 		BatchMetadataUpdate: {
@@ -667,7 +667,7 @@ export enum ModelsMapping {
 	FallenExplorer = 'd20-FallenExplorer',
 	MonsterInstance = 'd20-MonsterInstance',
 	TempleState = 'd20-TempleState',
-	ExplorerClass = 'd20-ExplorerClass',
+	AdventurerClass = 'd20-AdventurerClass',
 	ChamberType = 'd20-ChamberType',
 	Skill = 'd20-Skill',
 	ArmorType = 'd20-ArmorType',

@@ -29,7 +29,7 @@ export function useGameModels() {
 
   ]), [model])
 
-  // Explorer models — single key: explorer_id
+  // Explorer models — single key: adventurer_id
   useEntityQuery(
     new ToriiQueryBuilder<SchemaType>()
       // .withClause(

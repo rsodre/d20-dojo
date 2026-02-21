@@ -67,7 +67,7 @@ pub struct FallenExplorer {
     pub chamber_id: u32,
     #[key]
     pub fallen_index: u32,
-    pub explorer_id: u128,
+    pub adventurer_id: u128,
     // Dropped loot
     pub dropped_weapon: WeaponType,
     pub dropped_armor: ArmorType,
@@ -90,7 +90,7 @@ pub struct ChamberFallenCount {
 #[dojo::model]
 pub struct ExplorerTempleProgress {
     #[key]
-    pub explorer_id: u128,
+    pub adventurer_id: u128,
     #[key]
     pub temple_id: u128,
     pub chambers_explored: u16,

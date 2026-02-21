@@ -11,12 +11,12 @@ mod tests {
     use d20::systems::explorer_token::{explorer_token, IExplorerTokenDispatcher, IExplorerTokenDispatcherTrait};
     use d20::systems::temple_token::{temple_token, ITempleTokenDispatcher, ITempleTokenDispatcherTrait};
     use d20::models::config::m_Config;
-    use d20::models::explorer::{
+    use d20::d20::models::adventurer::{
         m_ExplorerStats, m_ExplorerHealth, m_ExplorerCombat,
         m_ExplorerInventory, m_ExplorerPosition, m_ExplorerSkills,
     };
     use d20::events::e_ExplorerMinted;
-    use d20::types::explorer_class::ExplorerClass;
+    use d20::d20::types::adventurer_class::AdventurerClass;
     use d20::tests::mock_vrf::MockVrf;
 
     fn namespace_def() -> NamespaceDef {
@@ -69,11 +69,11 @@ mod tests {
 
         // Mint explorer as owner
         starknet::testing::set_contract_address(owner);
-        let explorer_id = explorer_token.mint_explorer(ExplorerClass::Fighter);
+        let adventurer_id = explorer_token.mint_explorer(AdventurerClass::Fighter);
 
         // Try to rest as non-owner
         starknet::testing::set_contract_address(non_owner);
-        explorer_token.rest(explorer_id);
+        explorer_token.rest(adventurer_id);
     }
 
     #[test]
@@ -95,10 +95,10 @@ mod tests {
 
         // Mint explorer as owner
         starknet::testing::set_contract_address(owner);
-        let explorer_id = explorer_token.mint_explorer(ExplorerClass::Fighter);
+        let adventurer_id = explorer_token.mint_explorer(AdventurerClass::Fighter);
 
         // Try to enter temple as non-owner
         starknet::testing::set_contract_address(non_owner);
-        temple_token.enter_temple(explorer_id, 1);
+        temple_token.enter_temple(adventurer_id, 1);
     }
 }

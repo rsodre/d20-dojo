@@ -5,7 +5,7 @@ mod tests {
     use dojo::model::{ModelStorage, ModelStorageTest};
     use dojo::world::{WorldStorageTrait};
 
-    use d20::models::explorer::{
+    use d20::d20::models::adventurer::{
         ExplorerStats, ExplorerHealth, ExplorerCombat, ExplorerInventory,
         ExplorerPosition, ExplorerSkills
     };
@@ -15,7 +15,7 @@ mod tests {
     };
     use d20::types::index::{ChamberType};
     use d20::types::items::{WeaponType, ArmorType};
-    use d20::types::explorer_class::ExplorerClass;
+    use d20::d20::types::adventurer_class::AdventurerClass;
     use d20::types::monster::MonsterType;
     use d20::tests::tester::{
         setup_world, mint_fighter, mint_rogue, mint_wizard, assert_explorer_dead,
@@ -198,11 +198,11 @@ mod tests {
         let mut abilities_a = stats_a.abilities;
         abilities_a.wisdom = 20;
         world.write_model_test(@ExplorerStats {
-            explorer_id: explorer_a,
+            adventurer_id: explorer_a,
             abilities: abilities_a,
             level: stats_a.level,
             xp: stats_a.xp,
-            explorer_class: stats_a.explorer_class,
+            adventurer_class: stats_a.adventurer_class,
             temples_conquered: stats_a.temples_conquered,
         });
 
@@ -216,14 +216,14 @@ mod tests {
         starknet::testing::set_contract_address(player_b);
         let explorer_b = mint_fighter(token);
         world.write_model_test(@ExplorerPosition {
-            explorer_id: explorer_b,
+            adventurer_id: explorer_b,
             temple_id,
             chamber_id: 1,
             in_combat: false,
             combat_monster_id: 0,
         });
         world.write_model_test(@ExplorerHealth {
-            explorer_id: explorer_b,
+            adventurer_id: explorer_b,
             current_hp: 10,
             max_hp: 10,
             is_dead: false,
@@ -473,20 +473,20 @@ mod tests {
             is_alive: true,
         });
         world.write_model_test(@ExplorerPosition {
-            explorer_id: explorer_a,
+            adventurer_id: explorer_a,
             temple_id,
             chamber_id: 1,
             in_combat: true,
             combat_monster_id: 1,
         });
         world.write_model_test(@ExplorerHealth {
-            explorer_id: explorer_a,
+            adventurer_id: explorer_a,
             current_hp: 1,
             max_hp: 11,
             is_dead: false,
         });
         world.write_model_test(@ExplorerInventory {
-            explorer_id: explorer_a,
+            adventurer_id: explorer_a,
             primary_weapon: WeaponType::Longsword,
             secondary_weapon: WeaponType::None,
             armor: ArmorType::ChainMail,
@@ -513,7 +513,7 @@ mod tests {
         assert(fallen_count.count >= 1, 'B sees fallen count');
 
         let fallen: FallenExplorer = world.read_model((temple_id, 1_u32, 0_u32));
-        assert(fallen.explorer_id == explorer_a, 'body is A');
+        assert(fallen.adventurer_id == explorer_a, 'body is A');
         assert(!fallen.is_looted, 'not yet looted');
         assert(fallen.dropped_gold == 50, 'gold on body');
 

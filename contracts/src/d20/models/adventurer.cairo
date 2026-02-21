@@ -1,17 +1,17 @@
 use d20::types::index::Skill;
 use d20::types::items::{WeaponType, ArmorType};
-use d20::types::explorer_class::ExplorerClass;
+use d20::d20::types::adventurer_class::AdventurerClass;
 
 #[derive(Copy, Drop, Serde)]
 #[dojo::model]
 pub struct ExplorerStats {
     #[key]
-    pub explorer_id: u128,
+    pub adventurer_id: u128,
     pub abilities: AbilityScore,
     // Progression
     pub level: u8,
     pub xp: u32,
-    pub explorer_class: ExplorerClass,
+    pub adventurer_class: AdventurerClass,
     // Achievements
     pub temples_conquered: u16,
 }
@@ -30,7 +30,7 @@ pub struct AbilityScore {
 #[dojo::model]
 pub struct ExplorerHealth {
     #[key]
-    pub explorer_id: u128,
+    pub adventurer_id: u128,
     pub current_hp: i16,
     pub max_hp: u16,
     pub is_dead: bool,
@@ -40,7 +40,7 @@ pub struct ExplorerHealth {
 #[dojo::model]
 pub struct ExplorerCombat {
     #[key]
-    pub explorer_id: u128,
+    pub adventurer_id: u128,
     pub armor_class: u8,
     // Class resources
     pub spell_slots_1: u8,
@@ -54,7 +54,7 @@ pub struct ExplorerCombat {
 #[dojo::model]
 pub struct ExplorerInventory {
     #[key]
-    pub explorer_id: u128,
+    pub adventurer_id: u128,
     pub primary_weapon: WeaponType,
     pub secondary_weapon: WeaponType,
     pub armor: ArmorType,
@@ -67,7 +67,7 @@ pub struct ExplorerInventory {
 #[dojo::model]
 pub struct ExplorerPosition {
     #[key]
-    pub explorer_id: u128,
+    pub adventurer_id: u128,
     pub temple_id: u128,
     pub chamber_id: u32,
     pub in_combat: bool,
@@ -78,7 +78,7 @@ pub struct ExplorerPosition {
 #[dojo::model]
 pub struct ExplorerSkills {
     #[key]
-    pub explorer_id: u128,
+    pub adventurer_id: u128,
     // Proficiency flags for each skill
     pub skills: SkillsSet,
     // Expertise (double proficiency, Rogue feature)

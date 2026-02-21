@@ -5,7 +5,7 @@ mod tests {
     use dojo::model::{ModelStorage, ModelStorageTest};
     use dojo::world::{WorldStorageTrait};
 
-    use d20::models::explorer::{
+    use d20::d20::models::adventurer::{
         ExplorerStats, ExplorerHealth, ExplorerCombat, ExplorerInventory,
         ExplorerPosition, ExplorerSkills
     };
@@ -15,7 +15,7 @@ mod tests {
     };
     use d20::types::index::{ChamberType};
     use d20::types::items::{WeaponType, ArmorType};
-    use d20::types::explorer_class::ExplorerClass;
+    use d20::d20::types::adventurer_class::AdventurerClass;
     use d20::types::monster::MonsterType;
     use d20::tests::tester::{
         setup_world, mint_fighter, mint_rogue, mint_wizard, assert_explorer_dead,
@@ -104,12 +104,12 @@ mod tests {
 
         let (world, token, _combat, temple) = setup_world();
 
-        let explorer_id = mint_fighter(token);
+        let adventurer_id = mint_fighter(token);
         let temple_id = temple.mint_temple(1_u8);
 
-        temple.enter_temple(explorer_id, temple_id);
+        temple.enter_temple(adventurer_id, temple_id);
 
-        let pos: ExplorerPosition = world.read_model(explorer_id);
+        let pos: ExplorerPosition = world.read_model(adventurer_id);
         assert(pos.temple_id == temple_id, 'in correct temple');
         assert(pos.chamber_id == 1, 'at entrance chamber');
         assert(!pos.in_combat, 'not in combat on entry');
@@ -123,12 +123,12 @@ mod tests {
 
         let (world, token, _combat, temple) = setup_world();
 
-        let explorer_id = mint_fighter(token);
+        let adventurer_id = mint_fighter(token);
         let temple_id = temple.mint_temple(1_u8);
 
-        temple.enter_temple(explorer_id, temple_id);
+        temple.enter_temple(adventurer_id, temple_id);
 
-        let progress: ExplorerTempleProgress = world.read_model((explorer_id, temple_id));
+        let progress: ExplorerTempleProgress = world.read_model((adventurer_id, temple_id));
         assert(progress.chambers_explored == 0, 'fresh progress');
         assert(progress.xp_earned == 0, 'no xp yet');
     }
@@ -142,17 +142,17 @@ mod tests {
 
         let (mut world, token, _combat, temple) = setup_world();
 
-        let explorer_id = mint_fighter(token);
+        let adventurer_id = mint_fighter(token);
         let temple_id = temple.mint_temple(1_u8);
 
         world.write_model_test(@ExplorerHealth {
-            explorer_id,
+            adventurer_id,
             current_hp: 0,
             max_hp: 11,
             is_dead: true,
         });
 
-        temple.enter_temple(explorer_id, temple_id);
+        temple.enter_temple(adventurer_id, temple_id);
     }
 
     // ═══════════════════════════════════════════════════════════════════════
@@ -163,13 +163,13 @@ mod tests {
 
         let (world, token, _combat, temple) = setup_world();
 
-        let explorer_id = mint_fighter(token);
+        let adventurer_id = mint_fighter(token);
         let temple_id = temple.mint_temple(1_u8);
 
-        temple.enter_temple(explorer_id, temple_id);
-        temple.exit_temple(explorer_id);
+        temple.enter_temple(adventurer_id, temple_id);
+        temple.exit_temple(adventurer_id);
 
-        let pos: ExplorerPosition = world.read_model(explorer_id);
+        let pos: ExplorerPosition = world.read_model(adventurer_id);
         assert(pos.temple_id == 0, 'temple_id cleared');
         assert(pos.chamber_id == 0, 'chamber_id cleared');
     }
@@ -182,15 +182,15 @@ mod tests {
 
         let (world, token, _combat, temple) = setup_world();
 
-        let explorer_id = mint_fighter(token);
+        let adventurer_id = mint_fighter(token);
         let temple_id = temple.mint_temple(1_u8);
 
-        let stats_before: ExplorerStats = world.read_model(explorer_id);
+        let stats_before: ExplorerStats = world.read_model(adventurer_id);
 
-        temple.enter_temple(explorer_id, temple_id);
-        temple.exit_temple(explorer_id);
+        temple.enter_temple(adventurer_id, temple_id);
+        temple.exit_temple(adventurer_id);
 
-        let stats_after: ExplorerStats = world.read_model(explorer_id);
+        let stats_after: ExplorerStats = world.read_model(adventurer_id);
         assert(stats_after.level == stats_before.level, 'level preserved');
         assert(stats_after.xp == stats_before.xp, 'xp preserved');
     }
@@ -204,8 +204,8 @@ mod tests {
 
         let (_world, token, _combat, temple) = setup_world();
 
-        let explorer_id = mint_fighter(token);
-        temple.exit_temple(explorer_id);
+        let adventurer_id = mint_fighter(token);
+        temple.exit_temple(adventurer_id);
     }
 
     // ═══════════════════════════════════════════════════════════════════════
@@ -216,11 +216,11 @@ mod tests {
         starknet::testing::set_contract_address(caller);
 
         let (mut world, token, _combat, temple) = setup_world();
-        let explorer_id = mint_fighter(token);
+        let adventurer_id = mint_fighter(token);
         let temple_id = temple.mint_temple(1_u8);
-        temple.enter_temple(explorer_id, temple_id);
-        world.write_model_test(@ExplorerPosition { explorer_id, temple_id, chamber_id: 2, in_combat: true, combat_monster_id: 1 });
-        temple.exit_temple(explorer_id);
+        temple.enter_temple(adventurer_id, temple_id);
+        world.write_model_test(@ExplorerPosition { adventurer_id, temple_id, chamber_id: 2, in_combat: true, combat_monster_id: 1 });
+        temple.exit_temple(adventurer_id);
     }
 
     // ═══════════════════════════════════════════════════════════════════════
@@ -231,13 +231,13 @@ mod tests {
         starknet::testing::set_contract_address(caller);
 
         let (mut world, token, _combat, temple) = setup_world();
-        let explorer_id = mint_fighter(token);
+        let adventurer_id = mint_fighter(token);
         let temple_a = temple.mint_temple(1_u8);
         let temple_b = temple.mint_temple(2_u8);
 
-        world.write_model_test(@ExplorerPosition { explorer_id, temple_id: temple_a, chamber_id: 2, in_combat: true, combat_monster_id: 1 });
+        world.write_model_test(@ExplorerPosition { adventurer_id, temple_id: temple_a, chamber_id: 2, in_combat: true, combat_monster_id: 1 });
 
-        temple.enter_temple(explorer_id, temple_b);
+        temple.enter_temple(adventurer_id, temple_b);
     }
 
     // ═══════════════════════════════════════════════════════════════════════
@@ -247,19 +247,19 @@ mod tests {
         starknet::testing::set_contract_address(caller);
 
         let (mut world, token, _combat, temple) = setup_world();
-        let explorer_id = mint_fighter(token);
+        let adventurer_id = mint_fighter(token);
         let temple_id = temple.mint_temple(1_u8);
 
-        temple.enter_temple(explorer_id, temple_id);
-        world.write_model_test(@ExplorerTempleProgress { explorer_id, temple_id, chambers_explored: 5, xp_earned: 200 });
-        temple.exit_temple(explorer_id);
-        temple.enter_temple(explorer_id, temple_id);
+        temple.enter_temple(adventurer_id, temple_id);
+        world.write_model_test(@ExplorerTempleProgress { adventurer_id, temple_id, chambers_explored: 5, xp_earned: 200 });
+        temple.exit_temple(adventurer_id);
+        temple.enter_temple(adventurer_id, temple_id);
 
-        let progress: ExplorerTempleProgress = world.read_model((explorer_id, temple_id));
+        let progress: ExplorerTempleProgress = world.read_model((adventurer_id, temple_id));
         assert(progress.chambers_explored == 5, 'chambers preserved');
         assert(progress.xp_earned == 200, 'xp preserved');
 
-        let pos: ExplorerPosition = world.read_model(explorer_id);
+        let pos: ExplorerPosition = world.read_model(adventurer_id);
         assert(pos.chamber_id == 1, 'at entrance on re-entry');
     }
 

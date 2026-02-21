@@ -5,7 +5,7 @@ mod tests {
     use dojo::model::{ModelStorage, ModelStorageTest};
     use dojo::world::{WorldStorageTrait};
 
-    use d20::models::explorer::{
+    use d20::d20::models::adventurer::{
         ExplorerStats, ExplorerHealth, ExplorerCombat, ExplorerInventory,
         ExplorerPosition, ExplorerSkills
     };
@@ -15,7 +15,7 @@ mod tests {
     };
     use d20::types::index::{ChamberType};
     use d20::types::items::{WeaponType, ArmorType};
-    use d20::types::explorer_class::ExplorerClass;
+    use d20::d20::types::adventurer_class::AdventurerClass;
     use d20::types::monster::MonsterType;
     use d20::tests::tester::{
         setup_world, mint_fighter, mint_rogue, mint_wizard, assert_explorer_dead,
@@ -32,7 +32,7 @@ mod tests {
 
         let (mut world, token, _combat, temple) = setup_world();
 
-        let explorer_id = mint_fighter(token);
+        let adventurer_id = mint_fighter(token);
         let temple_id = temple.mint_temple(1_u8);
 
         // Set up entrance chamber with 2 exits
@@ -55,8 +55,8 @@ mod tests {
             is_discovered: false,
         });
 
-        temple.enter_temple(explorer_id, temple_id);
-        temple.open_exit(explorer_id, 0);
+        temple.enter_temple(adventurer_id, temple_id);
+        temple.open_exit(adventurer_id, 0);
 
         // A new chamber (id=2) should now exist
         let new_chamber: Chamber = world.read_model((temple_id, 2_u32));
@@ -81,7 +81,7 @@ mod tests {
 
         let (mut world, token, _combat, temple) = setup_world();
 
-        let explorer_id = mint_fighter(token);
+        let adventurer_id = mint_fighter(token);
         let temple_id = temple.mint_temple(1_u8);
 
         world.write_model_test(@Chamber {
@@ -103,10 +103,10 @@ mod tests {
             is_discovered: false,
         });
 
-        temple.enter_temple(explorer_id, temple_id);
-        temple.open_exit(explorer_id, 0);
+        temple.enter_temple(adventurer_id, temple_id);
+        temple.open_exit(adventurer_id, 0);
 
-        let progress: ExplorerTempleProgress = world.read_model((explorer_id, temple_id));
+        let progress: ExplorerTempleProgress = world.read_model((adventurer_id, temple_id));
         assert(progress.chambers_explored == 1, 'should have explored 1 chamber');
     }
 
@@ -118,7 +118,7 @@ mod tests {
 
         let (mut world, token, _combat, temple) = setup_world();
 
-        let explorer_id = mint_fighter(token);
+        let adventurer_id = mint_fighter(token);
         let temple_id = temple.mint_temple(1_u8);
 
         world.write_model_test(@Chamber {
@@ -140,8 +140,8 @@ mod tests {
             is_discovered: false,
         });
 
-        temple.enter_temple(explorer_id, temple_id);
-        temple.open_exit(explorer_id, 0);
+        temple.enter_temple(adventurer_id, temple_id);
+        temple.open_exit(adventurer_id, 0);
 
         // Back exit from chamber 2 to chamber 1 should be discovered
         let back_exit: ChamberExit = world.read_model((temple_id, 2_u32, 0_u8));
@@ -158,7 +158,7 @@ mod tests {
 
         let (mut world, token, _combat, temple) = setup_world();
 
-        let explorer_id = mint_fighter(token);
+        let adventurer_id = mint_fighter(token);
         let temple_id = temple.mint_temple(1_u8);
 
         world.write_model_test(@Chamber {
@@ -180,9 +180,9 @@ mod tests {
             is_discovered: false,
         });
 
-        temple.enter_temple(explorer_id, temple_id);
-        temple.open_exit(explorer_id, 0); // first time: ok
-        temple.open_exit(explorer_id, 0); // second time: should panic
+        temple.enter_temple(adventurer_id, temple_id);
+        temple.open_exit(adventurer_id, 0); // first time: ok
+        temple.open_exit(adventurer_id, 0); // second time: should panic
     }
 
     // ═══════════════════════════════════════════════════════════════════════
@@ -193,13 +193,13 @@ mod tests {
         starknet::testing::set_contract_address(caller);
 
         let (mut world, token, _combat, temple) = setup_world();
-        let explorer_id = mint_fighter(token);
+        let adventurer_id = mint_fighter(token);
         let temple_id = temple.mint_temple(1_u8);
 
         world.write_model_test(@Chamber { temple_id, chamber_id: 1, chamber_type: ChamberType::Entrance, yonder: 0, exit_count: 1, is_revealed: true, treasure_looted: false, trap_disarmed: false, trap_dc: 0 });
 
-        temple.enter_temple(explorer_id, temple_id);
-        temple.open_exit(explorer_id, 5);
+        temple.enter_temple(adventurer_id, temple_id);
+        temple.open_exit(adventurer_id, 5);
     }
 
     // ═══════════════════════════════════════════════════════════════════════
@@ -210,15 +210,15 @@ mod tests {
         starknet::testing::set_contract_address(caller);
 
         let (mut world, token, _combat, temple) = setup_world();
-        let explorer_id = mint_fighter(token);
+        let adventurer_id = mint_fighter(token);
         let temple_id = temple.mint_temple(1_u8);
 
-        world.write_model_test(@ExplorerHealth { explorer_id, current_hp: 0, max_hp: 11, is_dead: true });
+        world.write_model_test(@ExplorerHealth { adventurer_id, current_hp: 0, max_hp: 11, is_dead: true });
         world.write_model_test(@Chamber { temple_id, chamber_id: 1, chamber_type: ChamberType::Entrance, yonder: 0, exit_count: 1, is_revealed: true, treasure_looted: false, trap_disarmed: false, trap_dc: 0 });
         world.write_model_test(@ChamberExit { temple_id, from_chamber_id: 1, exit_index: 0, to_chamber_id: 0, is_discovered: false });
-        world.write_model_test(@ExplorerPosition { explorer_id, temple_id, chamber_id: 1, in_combat: false, combat_monster_id: 0 });
+        world.write_model_test(@ExplorerPosition { adventurer_id, temple_id, chamber_id: 1, in_combat: false, combat_monster_id: 0 });
 
-        temple.open_exit(explorer_id, 0);
+        temple.open_exit(adventurer_id, 0);
     }
 
     // ═══════════════════════════════════════════════════════════════════════
@@ -229,14 +229,14 @@ mod tests {
         starknet::testing::set_contract_address(caller);
 
         let (mut world, token, _combat, temple) = setup_world();
-        let explorer_id = mint_fighter(token);
+        let adventurer_id = mint_fighter(token);
         let temple_id = temple.mint_temple(1_u8);
 
         world.write_model_test(@Chamber { temple_id, chamber_id: 1, chamber_type: ChamberType::Entrance, yonder: 0, exit_count: 1, is_revealed: true, treasure_looted: false, trap_disarmed: false, trap_dc: 0 });
         world.write_model_test(@ChamberExit { temple_id, from_chamber_id: 1, exit_index: 0, to_chamber_id: 0, is_discovered: false });
-        world.write_model_test(@ExplorerPosition { explorer_id, temple_id, chamber_id: 1, in_combat: true, combat_monster_id: 1 });
+        world.write_model_test(@ExplorerPosition { adventurer_id, temple_id, chamber_id: 1, in_combat: true, combat_monster_id: 1 });
 
-        temple.open_exit(explorer_id, 0);
+        temple.open_exit(adventurer_id, 0);
     }
 
     // ═══════════════════════════════════════════════════════════════════════
@@ -247,7 +247,7 @@ mod tests {
 
         let (mut world, token, _combat, temple) = setup_world();
 
-        let explorer_id = mint_fighter(token);
+        let adventurer_id = mint_fighter(token);
         let temple_id = temple.mint_temple(1_u8);
 
         // Set up entrance with one discovered exit to an empty chamber
@@ -281,10 +281,10 @@ mod tests {
             trap_dc: 0,
         });
 
-        temple.enter_temple(explorer_id, temple_id);
-        temple.move_to_chamber(explorer_id, 0);
+        temple.enter_temple(adventurer_id, temple_id);
+        temple.move_to_chamber(adventurer_id, 0);
 
-        let pos: ExplorerPosition = world.read_model(explorer_id);
+        let pos: ExplorerPosition = world.read_model(adventurer_id);
         assert(pos.chamber_id == 2, 'should be in chamber 2');
         assert(!pos.in_combat, 'no combat in empty chamber');
     }
@@ -298,7 +298,7 @@ mod tests {
 
         let (mut world, token, _combat, temple) = setup_world();
 
-        let explorer_id = mint_fighter(token);
+        let adventurer_id = mint_fighter(token);
         let temple_id = temple.mint_temple(1_u8);
 
         world.write_model_test(@Chamber {
@@ -320,8 +320,8 @@ mod tests {
             is_discovered: false, // not yet discovered
         });
 
-        temple.enter_temple(explorer_id, temple_id);
-        temple.move_to_chamber(explorer_id, 0); // should panic
+        temple.enter_temple(adventurer_id, temple_id);
+        temple.move_to_chamber(adventurer_id, 0); // should panic
     }
 
     // ═══════════════════════════════════════════════════════════════════════
@@ -332,16 +332,16 @@ mod tests {
         starknet::testing::set_contract_address(caller);
 
         let (mut world, token, _combat, temple) = setup_world();
-        let explorer_id = mint_fighter(token);
+        let adventurer_id = mint_fighter(token);
         let temple_id = temple.mint_temple(1_u8);
 
-        world.write_model_test(@ExplorerHealth { explorer_id, current_hp: 0, max_hp: 11, is_dead: true });
+        world.write_model_test(@ExplorerHealth { adventurer_id, current_hp: 0, max_hp: 11, is_dead: true });
         world.write_model_test(@Chamber { temple_id, chamber_id: 1, chamber_type: ChamberType::Entrance, yonder: 0, exit_count: 1, is_revealed: true, treasure_looted: false, trap_disarmed: false, trap_dc: 0 });
         world.write_model_test(@ChamberExit { temple_id, from_chamber_id: 1, exit_index: 0, to_chamber_id: 2, is_discovered: true });
         world.write_model_test(@Chamber { temple_id, chamber_id: 2, chamber_type: ChamberType::Empty, yonder: 1, exit_count: 0, is_revealed: true, treasure_looted: false, trap_disarmed: false, trap_dc: 0 });
-        world.write_model_test(@ExplorerPosition { explorer_id, temple_id, chamber_id: 1, in_combat: false, combat_monster_id: 0 });
+        world.write_model_test(@ExplorerPosition { adventurer_id, temple_id, chamber_id: 1, in_combat: false, combat_monster_id: 0 });
 
-        temple.move_to_chamber(explorer_id, 0);
+        temple.move_to_chamber(adventurer_id, 0);
     }
 
     // ═══════════════════════════════════════════════════════════════════════
@@ -352,14 +352,14 @@ mod tests {
         starknet::testing::set_contract_address(caller);
 
         let (mut world, token, _combat, temple) = setup_world();
-        let explorer_id = mint_fighter(token);
+        let adventurer_id = mint_fighter(token);
         let temple_id = temple.mint_temple(1_u8);
 
         world.write_model_test(@Chamber { temple_id, chamber_id: 1, chamber_type: ChamberType::Entrance, yonder: 0, exit_count: 1, is_revealed: true, treasure_looted: false, trap_disarmed: false, trap_dc: 0 });
         world.write_model_test(@ChamberExit { temple_id, from_chamber_id: 1, exit_index: 0, to_chamber_id: 2, is_discovered: true });
-        world.write_model_test(@ExplorerPosition { explorer_id, temple_id, chamber_id: 1, in_combat: true, combat_monster_id: 1 });
+        world.write_model_test(@ExplorerPosition { adventurer_id, temple_id, chamber_id: 1, in_combat: true, combat_monster_id: 1 });
 
-        temple.move_to_chamber(explorer_id, 0);
+        temple.move_to_chamber(adventurer_id, 0);
     }
 
 }

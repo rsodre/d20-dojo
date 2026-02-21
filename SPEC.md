@@ -68,7 +68,7 @@ All NFTs use dedicated ERC-721 contracts built with **OpenZeppelin ERC-721 compo
 - On-chain metadata rendering via `ERC721ComboHooksTrait`
 - ERC-7572, ERC-4906, ERC-2981 extensions
 
-**Token IDs** are `u256` (OpenZeppelin standard). The internal counter auto-increments on each `_mint_next()` call. All Dojo models use `u128` keys — conversion: `let explorer_id: u128 = token_id.low;` (high part is always 0 for counter-minted IDs).
+**Token IDs** are `u256` (OpenZeppelin standard). The internal counter auto-increments on each `_mint_next()` call. All Dojo models use `u128` keys — conversion: `let adventurer_id: u128 = token_id.low;` (high part is always 0 for counter-minted IDs).
 
 ### Explorer NFT
 - Each explorer is an NFT minted when a player creates a character
@@ -365,12 +365,12 @@ pub struct AbilityScore {
 #[dojo::model]
 pub struct ExplorerStats {
     #[key]
-    pub explorer_id: u128,    // Explorer NFT token ID (from cairo-nft-combo _mint_next())
+    pub adventurer_id: u128,    // Explorer NFT token ID (from cairo-nft-combo _mint_next())
     pub abilities: AbilityScore,  // packed ability scores (each 3-20)
     // Progression
     pub level: u8,
     pub xp: u32,
-    pub explorer_class: ExplorerClass,
+    pub adventurer_class: AdventurerClass,
     // Achievements
     pub temples_conquered: u16,   // how many temple bosses killed
 }
@@ -379,7 +379,7 @@ pub struct ExplorerStats {
 #[dojo::model]
 pub struct ExplorerHealth {
     #[key]
-    pub explorer_id: u128,
+    pub adventurer_id: u128,
     pub current_hp: i16,      // signed — can go negative (overkill detection, then clamped to 0)
     pub max_hp: u16,
     pub is_dead: bool,
@@ -389,7 +389,7 @@ pub struct ExplorerHealth {
 #[dojo::model]
 pub struct ExplorerCombat {
     #[key]
-    pub explorer_id: u128,
+    pub adventurer_id: u128,
     pub armor_class: u8,
     // Class resources
     pub spell_slots_1: u8,
@@ -403,7 +403,7 @@ pub struct ExplorerCombat {
 #[dojo::model]
 pub struct ExplorerInventory {
     #[key]
-    pub explorer_id: u128,
+    pub adventurer_id: u128,
     pub primary_weapon: WeaponType,
     pub secondary_weapon: WeaponType,   // Rogue starts with Dagger + Shortbow
     pub armor: ArmorType,
@@ -416,7 +416,7 @@ pub struct ExplorerInventory {
 #[dojo::model]
 pub struct ExplorerPosition {
     #[key]
-    pub explorer_id: u128,
+    pub adventurer_id: u128,
     pub temple_id: u128,      // 0 if not in any temple
     pub chamber_id: u32,      // 0 if not in any temple
     pub in_combat: bool,
@@ -438,7 +438,7 @@ pub struct SkillsSet {
 #[dojo::model]
 pub struct ExplorerSkills {
     #[key]
-    pub explorer_id: u128,
+    pub adventurer_id: u128,
     pub skills: SkillsSet,    // packed proficiency flags
     // Expertise (double proficiency, Rogue feature)
     pub expertise_1: Skill,
@@ -450,7 +450,7 @@ pub struct ExplorerSkills {
 #[dojo::model]
 pub struct ExplorerTempleProgress {
     #[key]
-    pub explorer_id: u128,
+    pub adventurer_id: u128,
     #[key]
     pub temple_id: u128,
     pub chambers_explored: u16,   // how many chambers this explorer has opened
@@ -518,7 +518,7 @@ pub struct FallenExplorer {
     pub chamber_id: u32,
     #[key]
     pub fallen_index: u32,        // sequential index per chamber
-    pub explorer_id: u128,        // the dead explorer's token ID
+    pub adventurer_id: u128,        // the dead explorer's token ID
     // Dropped loot
     pub dropped_weapon: WeaponType,
     pub dropped_armor: ArmorType,
@@ -557,7 +557,7 @@ All enums stored in Dojo models must derive `Introspect`, `DojoStore`, and `Defa
 
 ```cairo
 #[derive(Serde, Copy, Drop, Introspect, PartialEq, Debug, DojoStore, Default)]
-pub enum ExplorerClass {
+pub enum AdventurerClass {
     #[default]
     None,
     Fighter,
@@ -726,9 +726,9 @@ fn calculate_ac(armor: ArmorType, has_shield: bool, dex_mod: i8) -> u8
 #[starknet::interface]
 trait IExplorerTokenPublic<T> {
     // VRF multicall required — stats, skills, and expertise are all randomized on-chain.
-    fn mint_explorer(ref self: T, explorer_class: ExplorerClass) -> u128;  // returns explorer token ID
+    fn mint_explorer(ref self: T, adventurer_class: AdventurerClass) -> u128;  // returns explorer token ID
 
-    fn rest(ref self: T, explorer_id: u128);  // restore HP, spell slots, class features
+    fn rest(ref self: T, adventurer_id: u128);  // restore HP, spell slots, class features
 }
 
 // gain_xp and level_up are internal helpers called by combat/temple systems,
@@ -739,12 +739,12 @@ trait IExplorerTokenPublic<T> {
 // ──────────────────────────────────────────────
 #[starknet::interface]
 trait ICombatSystem<T> {
-    fn attack(ref self: T, explorer_id: u128);
-    fn cast_spell(ref self: T, explorer_id: u128, spell_id: SpellId);
-    fn use_item(ref self: T, explorer_id: u128, item_type: ItemType);
-    fn flee(ref self: T, explorer_id: u128);   // contested DEX check
-    fn second_wind(ref self: T, explorer_id: u128);   // Fighter: heal 1d10+level
-    fn cunning_action(ref self: T, explorer_id: u128); // Rogue: disengage/hide
+    fn attack(ref self: T, adventurer_id: u128);
+    fn cast_spell(ref self: T, adventurer_id: u128, spell_id: SpellId);
+    fn use_item(ref self: T, adventurer_id: u128, item_type: ItemType);
+    fn flee(ref self: T, adventurer_id: u128);   // contested DEX check
+    fn second_wind(ref self: T, adventurer_id: u128);   // Fighter: heal 1d10+level
+    fn cunning_action(ref self: T, adventurer_id: u128); // Rogue: disengage/hide
 }
 
 // Death logic is an internal function called when HP reaches 0:
@@ -759,13 +759,13 @@ trait ICombatSystem<T> {
 #[starknet::interface]
 trait ITempleTokenPublic<T> {
     fn mint_temple(ref self: T, difficulty: u8) -> u128;
-    fn enter_temple(ref self: T, explorer_id: u128, temple_id: u128);
-    fn exit_temple(ref self: T, explorer_id: u128);
-    fn open_exit(ref self: T, explorer_id: u128, exit_index: u8);
-    fn move_to_chamber(ref self: T, explorer_id: u128, exit_index: u8);
-    fn disarm_trap(ref self: T, explorer_id: u128);      // DEX/skill check
-    fn loot_treasure(ref self: T, explorer_id: u128);    // Perception check + loot pickup
-    fn loot_fallen(ref self: T, explorer_id: u128, fallen_index: u32);
+    fn enter_temple(ref self: T, adventurer_id: u128, temple_id: u128);
+    fn exit_temple(ref self: T, adventurer_id: u128);
+    fn open_exit(ref self: T, adventurer_id: u128, exit_index: u8);
+    fn move_to_chamber(ref self: T, adventurer_id: u128, exit_index: u8);
+    fn disarm_trap(ref self: T, adventurer_id: u128);      // DEX/skill check
+    fn loot_treasure(ref self: T, adventurer_id: u128);    // Perception check + loot pickup
+    fn loot_fallen(ref self: T, adventurer_id: u128, fallen_index: u32);
 }
 
 // generate_chamber and calculate_boss_probability are internal helpers,
@@ -781,8 +781,8 @@ Events are critical for Torii indexing and client state updates. All events use 
 #[dojo::event]
 pub struct ExplorerMinted {
     #[key]
-    pub explorer_id: u128,
-    pub explorer_class: ExplorerClass,
+    pub adventurer_id: u128,
+    pub adventurer_class: AdventurerClass,
     pub player: ContractAddress,
 }
 
@@ -790,7 +790,7 @@ pub struct ExplorerMinted {
 #[dojo::event]
 pub struct CombatResult {
     #[key]
-    pub explorer_id: u128,
+    pub adventurer_id: u128,
     pub action: CombatAction,
     pub roll: u8,
     pub damage_dealt: u16,
@@ -802,7 +802,7 @@ pub struct CombatResult {
 #[dojo::event]
 pub struct ExplorerDied {
     #[key]
-    pub explorer_id: u128,
+    pub adventurer_id: u128,
     pub temple_id: u128,
     pub chamber_id: u32,
     pub killed_by: MonsterType,
@@ -823,7 +823,7 @@ pub struct ChamberRevealed {
 #[dojo::event]
 pub struct LevelUp {
     #[key]
-    pub explorer_id: u128,
+    pub adventurer_id: u128,
     pub new_level: u8,
 }
 
@@ -832,7 +832,7 @@ pub struct LevelUp {
 pub struct BossDefeated {
     #[key]
     pub temple_id: u128,
-    pub explorer_id: u128,
+    pub adventurer_id: u128,
     pub monster_type: MonsterType,
 }
 ```
@@ -929,7 +929,7 @@ The quadratic yonder curve means early exploration feels safe and rewarding, whi
 ### On-chain Resolution (Cairo-safe)
 The boss probability is compared against a VRF roll:
 ```cairo
-let prob_bps: u32 = calculate_boss_probability(temple_id, explorer_id, yonder);
+let prob_bps: u32 = calculate_boss_probability(temple_id, adventurer_id, yonder);
 let roll: u32 = (vrf.consume_random(source) % 10000).try_into().unwrap();  // 0-9999
 let is_boss: bool = roll < prob_bps;
 ```
@@ -943,7 +943,7 @@ let is_boss: bool = roll < prob_bps;
 1. **Explorer dies forever.** The `is_dead` flag is set to true. The Explorer NFT remains on-chain as a permanent record but can never take another action.
 2. **Loot drops.** A `FallenExplorer` record is created in the current chamber, containing the explorer's weapon, armor, gold, and potions. The `ChamberFallenCount` is incremented.
 3. **The body remains.** Other explorers entering the chamber can see the fallen explorer's body. The AI narrator describes them and their dropped loot.
-4. **Loot is first-come-first-served.** Any living explorer in the chamber can call `loot_fallen(explorer_id, fallen_index)` to pick up items. Once looted, `is_looted` is set to true.
+4. **Loot is first-come-first-served.** Any living explorer in the chamber can call `loot_fallen(adventurer_id, fallen_index)` to pick up items. Once looted, `is_looted` is set to true.
 5. **Multiple bodies can accumulate.** A particularly deadly chamber might have many fallen explorers, each with their own loot. This creates "loot graveyards" that attract other explorers.
 6. **MAYBE: Abilities drop too.** Open question — should fallen explorers also drop class abilities or skill proficiencies that other explorers can absorb? This could create interesting "soul harvesting" mechanics but needs careful balancing.
 

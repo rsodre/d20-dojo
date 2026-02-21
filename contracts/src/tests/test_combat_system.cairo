@@ -16,7 +16,7 @@ mod tests {
         combat_system, ICombatSystemDispatcher, ICombatSystemDispatcherTrait,
     };
     use d20::models::config::{Config, m_Config};
-    use d20::models::explorer::{
+    use d20::d20::models::adventurer::{
         ExplorerStats, m_ExplorerStats,
         ExplorerHealth, m_ExplorerHealth,
         ExplorerCombat, m_ExplorerCombat,
@@ -34,7 +34,7 @@ mod tests {
     use d20::events::{e_ExplorerMinted, e_CombatResult, e_ExplorerDied, e_LevelUp, e_BossDefeated};
     use d20::types::index::ItemType;
     use d20::types::items::{WeaponType, ArmorType};
-    use d20::types::explorer_class::ExplorerClass;
+    use d20::d20::types::adventurer_class::AdventurerClass;
     use d20::types::monster::MonsterType;
     use d20::utils::dice::{ability_modifier, proficiency_bonus};
     use d20::tests::mock_vrf::MockVrf;
@@ -107,15 +107,15 @@ mod tests {
     // ── Mint helpers ─────────────────────────────────────────────────────────
 
     fn mint_fighter(token: IExplorerTokenDispatcher) -> u128 {
-        token.mint_explorer(ExplorerClass::Fighter)
+        token.mint_explorer(AdventurerClass::Fighter)
     }
 
     fn mint_rogue(token: IExplorerTokenDispatcher) -> u128 {
-        token.mint_explorer(ExplorerClass::Rogue)
+        token.mint_explorer(AdventurerClass::Rogue)
     }
 
     fn mint_wizard(token: IExplorerTokenDispatcher) -> u128 {
-        token.mint_explorer(ExplorerClass::Wizard)
+        token.mint_explorer(AdventurerClass::Wizard)
     }
 
     // ── Death assertion helper ────────────────────────────────────────────────
@@ -127,15 +127,15 @@ mod tests {
     /// - Inventory gold and potions zeroed (dropped as loot)
     fn assert_explorer_dead(
         ref world: dojo::world::WorldStorage,
-        explorer_id: u128,
+        adventurer_id: u128,
         temple_id: u128,
         chamber_id: u32,
     ) {
-        let health: ExplorerHealth = world.read_model(explorer_id);
+        let health: ExplorerHealth = world.read_model(adventurer_id);
         assert(health.is_dead, 'explorer should be dead');
         assert(health.current_hp == 0, 'hp should be 0 on death');
 
-        let pos: ExplorerPosition = world.read_model(explorer_id);
+        let pos: ExplorerPosition = world.read_model(adventurer_id);
         assert(!pos.in_combat, 'dead explorer not in combat');
 
         let fallen_count: ChamberFallenCount = world.read_model((temple_id, chamber_id));
@@ -144,10 +144,10 @@ mod tests {
         let fallen: FallenExplorer = world.read_model(
             (temple_id, chamber_id, fallen_count.count - 1)
         );
-        assert(fallen.explorer_id == explorer_id, 'fallen explorer id mismatch');
+        assert(fallen.adventurer_id == adventurer_id, 'fallen explorer id mismatch');
         assert(!fallen.is_looted, 'fallen should not be looted');
 
-        let inv: ExplorerInventory = world.read_model(explorer_id);
+        let inv: ExplorerInventory = world.read_model(adventurer_id);
         assert(inv.gold == 0, 'gold dropped on death');
         assert(inv.potions == 0, 'potions dropped on death');
     }
@@ -201,21 +201,21 @@ mod tests {
         starknet::testing::set_contract_address(caller);
 
         let (mut world, token, combat_sys) = setup_world();
-        let explorer_id = mint_fighter(token);
+        let adventurer_id = mint_fighter(token);
 
         // Reduce HP to 3 to simulate damage
-        let health: ExplorerHealth = world.read_model(explorer_id);
+        let health: ExplorerHealth = world.read_model(adventurer_id);
         let max_hp = health.max_hp;
         world.write_model_test(@ExplorerHealth {
-            explorer_id,
+            adventurer_id,
             current_hp: 3,
             max_hp,
             is_dead: false,
         });
 
-        combat_sys.second_wind(explorer_id);
+        combat_sys.second_wind(adventurer_id);
 
-        let after: ExplorerHealth = world.read_model(explorer_id);
+        let after: ExplorerHealth = world.read_model(adventurer_id);
         // 1d10+level heal from 3 HP.
         assert(after.current_hp > 3, 'second wind should heal');
         assert(after.current_hp <= max_hp.try_into().unwrap(), 'cannot exceed max hp');
@@ -228,14 +228,14 @@ mod tests {
         starknet::testing::set_contract_address(caller);
 
         let (mut world, token, combat_sys) = setup_world();
-        let explorer_id = mint_fighter(token);
+        let adventurer_id = mint_fighter(token);
 
-        let before: ExplorerCombat = world.read_model(explorer_id);
+        let before: ExplorerCombat = world.read_model(adventurer_id);
         assert(!before.second_wind_used, 'fresh before use');
 
-        combat_sys.second_wind(explorer_id);
+        combat_sys.second_wind(adventurer_id);
 
-        let after: ExplorerCombat = world.read_model(explorer_id);
+        let after: ExplorerCombat = world.read_model(adventurer_id);
         assert(after.second_wind_used, 'marked used after');
     }
 
@@ -246,10 +246,10 @@ mod tests {
         starknet::testing::set_contract_address(caller);
 
         let (_world, token, combat_sys) = setup_world();
-        let explorer_id = mint_fighter(token);
+        let adventurer_id = mint_fighter(token);
 
-        combat_sys.second_wind(explorer_id);   // ok
-        combat_sys.second_wind(explorer_id);   // should panic
+        combat_sys.second_wind(adventurer_id);   // ok
+        combat_sys.second_wind(adventurer_id);   // should panic
     }
 
     #[test]
@@ -259,8 +259,8 @@ mod tests {
         starknet::testing::set_contract_address(caller);
 
         let (_world, token, combat_sys) = setup_world();
-        let explorer_id = mint_rogue(token);
-        combat_sys.second_wind(explorer_id);
+        let adventurer_id = mint_rogue(token);
+        combat_sys.second_wind(adventurer_id);
     }
 
     #[test]
@@ -269,12 +269,12 @@ mod tests {
         starknet::testing::set_contract_address(caller);
 
         let (mut world, token, combat_sys) = setup_world();
-        let explorer_id = mint_fighter(token);
+        let adventurer_id = mint_fighter(token);
 
         // Fighter starts at full HP. Second wind should not exceed max.
-        combat_sys.second_wind(explorer_id);
+        combat_sys.second_wind(adventurer_id);
 
-        let after: ExplorerHealth = world.read_model(explorer_id);
+        let after: ExplorerHealth = world.read_model(adventurer_id);
         assert(after.current_hp <= after.max_hp.try_into().unwrap(), 'hp cannot exceed max');
         assert(after.current_hp >= 1, 'hp must be at least 1');
     }
@@ -289,30 +289,30 @@ mod tests {
         starknet::testing::set_contract_address(caller);
 
         let (mut world, token, combat_sys) = setup_world();
-        let explorer_id = mint_rogue(token);
+        let adventurer_id = mint_rogue(token);
 
         // Level to 2
-        let stats: ExplorerStats = world.read_model(explorer_id);
+        let stats: ExplorerStats = world.read_model(adventurer_id);
         world.write_model_test(@ExplorerStats {
-            explorer_id,
+            adventurer_id,
             abilities: stats.abilities,
             level: 2,
             xp: stats.xp,
-            explorer_class: stats.explorer_class,
+            adventurer_class: stats.adventurer_class,
             temples_conquered: stats.temples_conquered,
         });
 
         world.write_model_test(@ExplorerPosition {
-            explorer_id,
+            adventurer_id,
             temple_id: 1,
             chamber_id: 1,
             in_combat: true,
             combat_monster_id: 1,
         });
 
-        combat_sys.cunning_action(explorer_id);
+        combat_sys.cunning_action(adventurer_id);
 
-        let after: ExplorerPosition = world.read_model(explorer_id);
+        let after: ExplorerPosition = world.read_model(adventurer_id);
         assert(!after.in_combat, 'should not be in combat');
         assert(after.combat_monster_id == 0, 'monster id cleared');
         assert(after.chamber_id == 1, 'chamber unchanged');
@@ -325,17 +325,17 @@ mod tests {
         starknet::testing::set_contract_address(caller);
 
         let (mut world, token, combat_sys) = setup_world();
-        let explorer_id = mint_fighter(token);
+        let adventurer_id = mint_fighter(token);
 
         world.write_model_test(@ExplorerPosition {
-            explorer_id,
+            adventurer_id,
             temple_id: 1,
             chamber_id: 1,
             in_combat: true,
             combat_monster_id: 1,
         });
 
-        combat_sys.cunning_action(explorer_id);
+        combat_sys.cunning_action(adventurer_id);
     }
 
     #[test]
@@ -345,28 +345,28 @@ mod tests {
         starknet::testing::set_contract_address(caller);
 
         let (mut world, token, combat_sys) = setup_world();
-        let explorer_id = mint_rogue(token);
+        let adventurer_id = mint_rogue(token);
 
         // Level to 2
-        let stats: ExplorerStats = world.read_model(explorer_id);
+        let stats: ExplorerStats = world.read_model(adventurer_id);
         world.write_model_test(@ExplorerStats {
-            explorer_id,
+            adventurer_id,
             abilities: stats.abilities,
             level: 2,
             xp: stats.xp,
-            explorer_class: stats.explorer_class,
+            adventurer_class: stats.adventurer_class,
             temples_conquered: stats.temples_conquered,
         });
 
         world.write_model_test(@ExplorerPosition {
-            explorer_id,
+            adventurer_id,
             temple_id: 1,
             chamber_id: 1,
             in_combat: false,
             combat_monster_id: 0,
         });
 
-        combat_sys.cunning_action(explorer_id);
+        combat_sys.cunning_action(adventurer_id);
     }
 
     // ═══════════════════════════════════════════════════════════════════════
@@ -379,7 +379,7 @@ mod tests {
         starknet::testing::set_contract_address(caller);
 
         let (mut world, token, combat_sys) = setup_world();
-        let explorer_id = mint_fighter(token);
+        let adventurer_id = mint_fighter(token);
 
         world.write_model_test(@MonsterInstance {
             temple_id: 1,
@@ -392,7 +392,7 @@ mod tests {
         });
 
         world.write_model_test(@ExplorerPosition {
-            explorer_id,
+            adventurer_id,
             temple_id: 1,
             chamber_id: 1,
             in_combat: true,
@@ -401,16 +401,16 @@ mod tests {
 
         // Give enough HP to survive a counter-attack
         world.write_model_test(@ExplorerHealth {
-            explorer_id,
+            adventurer_id,
             current_hp: 50,
             max_hp: 50,
             is_dead: false,
         });
 
-        combat_sys.flee(explorer_id);
+        combat_sys.flee(adventurer_id);
 
         // Explorer should be alive regardless of flee outcome
-        let after: ExplorerHealth = world.read_model(explorer_id);
+        let after: ExplorerHealth = world.read_model(adventurer_id);
         assert(!after.is_dead, 'explorer should survive flee');
     }
 
@@ -421,17 +421,17 @@ mod tests {
         starknet::testing::set_contract_address(caller);
 
         let (mut world, token, combat_sys) = setup_world();
-        let explorer_id = mint_fighter(token);
+        let adventurer_id = mint_fighter(token);
 
         world.write_model_test(@ExplorerPosition {
-            explorer_id,
+            adventurer_id,
             temple_id: 1,
             chamber_id: 1,
             in_combat: false,
             combat_monster_id: 0,
         });
 
-        combat_sys.flee(explorer_id);
+        combat_sys.flee(adventurer_id);
     }
 
     #[test]
@@ -441,24 +441,24 @@ mod tests {
         starknet::testing::set_contract_address(caller);
 
         let (mut world, token, combat_sys) = setup_world();
-        let explorer_id = mint_fighter(token);
+        let adventurer_id = mint_fighter(token);
 
         world.write_model_test(@ExplorerHealth {
-            explorer_id,
+            adventurer_id,
             current_hp: 0,
             max_hp: 11,
             is_dead: true,
         });
 
         world.write_model_test(@ExplorerPosition {
-            explorer_id,
+            adventurer_id,
             temple_id: 1,
             chamber_id: 1,
             in_combat: true,
             combat_monster_id: 1,
         });
 
-        combat_sys.flee(explorer_id);
+        combat_sys.flee(adventurer_id);
     }
 
     // ═══════════════════════════════════════════════════════════════════════
@@ -472,10 +472,10 @@ mod tests {
         starknet::testing::set_contract_address(caller);
 
         let (mut world, token, combat_sys) = setup_world();
-        let explorer_id = mint_fighter(token);
+        let adventurer_id = mint_fighter(token);
 
         world.write_model_test(@ExplorerHealth {
-            explorer_id,
+            adventurer_id,
             current_hp: 0,
             max_hp: 11,
             is_dead: true,
@@ -492,14 +492,14 @@ mod tests {
         });
 
         world.write_model_test(@ExplorerPosition {
-            explorer_id,
+            adventurer_id,
             temple_id: 1,
             chamber_id: 1,
             in_combat: true,
             combat_monster_id: 1,
         });
 
-        combat_sys.attack(explorer_id);
+        combat_sys.attack(adventurer_id);
     }
 
     #[test]
@@ -509,16 +509,16 @@ mod tests {
         starknet::testing::set_contract_address(caller);
 
         let (mut world, token, combat_sys) = setup_world();
-        let explorer_id = mint_fighter(token);
+        let adventurer_id = mint_fighter(token);
 
         world.write_model_test(@ExplorerHealth {
-            explorer_id,
+            adventurer_id,
             current_hp: 0,
             max_hp: 11,
             is_dead: true,
         });
 
-        combat_sys.second_wind(explorer_id);
+        combat_sys.second_wind(adventurer_id);
     }
 
     // ═══════════════════════════════════════════════════════════════════════
@@ -531,16 +531,16 @@ mod tests {
         starknet::testing::set_contract_address(caller);
 
         let (mut world, token, combat_sys) = setup_world();
-        let explorer_id = mint_fighter(token);
+        let adventurer_id = mint_fighter(token);
 
         world.write_model_test(@ExplorerHealth {
-            explorer_id,
+            adventurer_id,
             current_hp: 3,
             max_hp: 11,
             is_dead: false,
         });
         world.write_model_test(@ExplorerInventory {
-            explorer_id,
+            adventurer_id,
             primary_weapon: WeaponType::Longsword,
             secondary_weapon: WeaponType::None,
             armor: ArmorType::ChainMail,
@@ -549,13 +549,13 @@ mod tests {
             potions: 2,
         });
 
-        combat_sys.use_item(explorer_id, ItemType::HealthPotion);
+        combat_sys.use_item(adventurer_id, ItemType::HealthPotion);
 
-        let after: ExplorerHealth = world.read_model(explorer_id);
+        let after: ExplorerHealth = world.read_model(adventurer_id);
         assert(after.current_hp > 3, 'potion should heal');
         assert(after.current_hp <= 11, 'cannot exceed max hp');
 
-        let after_inv: ExplorerInventory = world.read_model(explorer_id);
+        let after_inv: ExplorerInventory = world.read_model(adventurer_id);
         assert(after_inv.potions == 1, 'potion count decremented');
     }
 
@@ -566,10 +566,10 @@ mod tests {
         starknet::testing::set_contract_address(caller);
 
         let (_world, token, combat_sys) = setup_world();
-        let explorer_id = mint_fighter(token);
+        let adventurer_id = mint_fighter(token);
 
         // Fighter starts with 0 potions from mint
-        combat_sys.use_item(explorer_id, ItemType::HealthPotion);
+        combat_sys.use_item(adventurer_id, ItemType::HealthPotion);
     }
 
     // ═══════════════════════════════════════════════════════════════════════
@@ -582,7 +582,7 @@ mod tests {
         starknet::testing::set_contract_address(caller);
 
         let (mut world, token, combat_sys) = setup_world();
-        let explorer_id = mint_fighter(token);
+        let adventurer_id = mint_fighter(token);
 
         world.write_model_test(@MonsterInstance {
             temple_id: 1,
@@ -595,7 +595,7 @@ mod tests {
         });
 
         world.write_model_test(@ExplorerPosition {
-            explorer_id,
+            adventurer_id,
             temple_id: 1,
             chamber_id: 1,
             in_combat: true,
@@ -604,13 +604,13 @@ mod tests {
 
         // Give high HP so explorer survives counter-attack
         world.write_model_test(@ExplorerHealth {
-            explorer_id,
+            adventurer_id,
             current_hp: 50,
             max_hp: 50,
             is_dead: false,
         });
 
-        combat_sys.attack(explorer_id);
+        combat_sys.attack(adventurer_id);
 
         // Monster HP should have changed
         let after_monster: MonsterInstance = world.read_model((1_u128, 1_u32, 1_u32));
@@ -625,7 +625,7 @@ mod tests {
         starknet::testing::set_contract_address(caller);
 
         let (mut world, token, combat_sys) = setup_world();
-        let explorer_id = mint_fighter(token);
+        let adventurer_id = mint_fighter(token);
 
         world.write_model_test(@MonsterInstance {
             temple_id: 10,
@@ -638,7 +638,7 @@ mod tests {
         });
 
         world.write_model_test(@ExplorerPosition {
-            explorer_id,
+            adventurer_id,
             temple_id: 10,
             chamber_id: 5,
             in_combat: true,
@@ -647,14 +647,14 @@ mod tests {
 
         // 1 HP — any monster hit kills the explorer
         world.write_model_test(@ExplorerHealth {
-            explorer_id,
+            adventurer_id,
             current_hp: 1,
             max_hp: 11,
             is_dead: false,
         });
 
         world.write_model_test(@ExplorerInventory {
-            explorer_id,
+            adventurer_id,
             primary_weapon: WeaponType::Longsword,
             secondary_weapon: WeaponType::None,
             armor: ArmorType::ChainMail,
@@ -663,12 +663,12 @@ mod tests {
             potions: 2,
         });
 
-        combat_sys.attack(explorer_id);
+        combat_sys.attack(adventurer_id);
 
-        let after: ExplorerHealth = world.read_model(explorer_id);
+        let after: ExplorerHealth = world.read_model(adventurer_id);
 
         if after.is_dead {
-            assert_explorer_dead(ref world, explorer_id, 10_u128, 5_u32);
+            assert_explorer_dead(ref world, adventurer_id, 10_u128, 5_u32);
 
             // Verify loot values recorded in the FallenExplorer record
             let fallen_count: ChamberFallenCount = world.read_model((10_u128, 5_u32));
@@ -713,7 +713,7 @@ mod tests {
             temple_id: 99,
             chamber_id: 1,
             fallen_index: 3,
-            explorer_id: 999,
+            adventurer_id: 999,
             dropped_weapon: WeaponType::Dagger,
             dropped_armor: ArmorType::Leather,
             dropped_gold: 100,
@@ -725,7 +725,7 @@ mod tests {
         assert(count.count == 3, 'count should be 3');
 
         let fallen: FallenExplorer = world.read_model((99_u128, 1_u32, 3_u32));
-        assert(fallen.explorer_id == 999, 'fallen id should be 999');
+        assert(fallen.adventurer_id == 999, 'fallen id should be 999');
         assert(fallen.dropped_gold == 100, 'fallen gold = 100');
         assert(!fallen.is_looted, 'not yet looted');
     }
@@ -740,7 +740,7 @@ mod tests {
         starknet::testing::set_contract_address(caller);
 
         let (mut world, token, combat_sys) = setup_world();
-        let explorer_id = mint_wizard(token);
+        let adventurer_id = mint_wizard(token);
 
         world.write_model_test(@MonsterInstance {
             temple_id: 1,
@@ -752,30 +752,30 @@ mod tests {
             is_alive: true,
         });
         world.write_model_test(@ExplorerPosition {
-            explorer_id,
+            adventurer_id,
             temple_id: 1,
             chamber_id: 1,
             in_combat: true,
             combat_monster_id: 1,
         });
         world.write_model_test(@ExplorerHealth {
-            explorer_id,
+            adventurer_id,
             current_hp: 50,
             max_hp: 50,
             is_dead: false,
         });
 
-        let combat_before: ExplorerCombat = world.read_model(explorer_id);
+        let combat_before: ExplorerCombat = world.read_model(adventurer_id);
         let slots_before = combat_before.spell_slots_1;
 
-        combat_sys.cast_spell(explorer_id, d20::types::spells::SpellId::MagicMissile);
+        combat_sys.cast_spell(adventurer_id, d20::types::spells::SpellId::MagicMissile);
 
         // Magic Missile auto-hits: monster must have taken damage
         let monster_after: MonsterInstance = world.read_model((1_u128, 1_u32, 1_u32));
         assert(monster_after.current_hp < 100, 'MM must deal damage');
 
         // Should consume one 1st-level slot
-        let combat_after: ExplorerCombat = world.read_model(explorer_id);
+        let combat_after: ExplorerCombat = world.read_model(adventurer_id);
         assert(combat_after.spell_slots_1 == slots_before - 1, 'slot consumed');
     }
 
@@ -789,14 +789,14 @@ mod tests {
         starknet::testing::set_contract_address(caller);
 
         let (mut world, token, combat_sys) = setup_world();
-        let explorer_id = mint_wizard(token);
+        let adventurer_id = mint_wizard(token);
 
-        let combat_before: ExplorerCombat = world.read_model(explorer_id);
+        let combat_before: ExplorerCombat = world.read_model(adventurer_id);
         let ac_before = combat_before.armor_class;
 
-        combat_sys.cast_spell(explorer_id, d20::types::spells::SpellId::ShieldSpell);
+        combat_sys.cast_spell(adventurer_id, d20::types::spells::SpellId::ShieldSpell);
 
-        let combat_after: ExplorerCombat = world.read_model(explorer_id);
+        let combat_after: ExplorerCombat = world.read_model(adventurer_id);
         assert(combat_after.armor_class == ac_before + 5, 'shield adds +5 AC');
 
         // Should consume one 1st-level slot
@@ -813,20 +813,20 @@ mod tests {
         starknet::testing::set_contract_address(caller);
 
         let (mut world, token, combat_sys) = setup_world();
-        let explorer_id = mint_wizard(token);
+        let adventurer_id = mint_wizard(token);
 
         // Give wizard 2nd level spell slots (requires level 3+)
-        let stats: ExplorerStats = world.read_model(explorer_id);
+        let stats: ExplorerStats = world.read_model(adventurer_id);
         world.write_model_test(@ExplorerStats {
-            explorer_id,
+            adventurer_id,
             abilities: stats.abilities,
             level: 3,
             xp: stats.xp,
-            explorer_class: stats.explorer_class,
+            adventurer_class: stats.adventurer_class,
             temples_conquered: stats.temples_conquered,
         });
         world.write_model_test(@ExplorerCombat {
-            explorer_id,
+            adventurer_id,
             armor_class: 10,
             spell_slots_1: 4,
             spell_slots_2: 2,
@@ -845,22 +845,22 @@ mod tests {
             is_alive: true,
         });
         world.write_model_test(@ExplorerPosition {
-            explorer_id,
+            adventurer_id,
             temple_id: 1,
             chamber_id: 1,
             in_combat: true,
             combat_monster_id: 1,
         });
 
-        combat_sys.cast_spell(explorer_id, d20::types::spells::SpellId::MistyStep);
+        combat_sys.cast_spell(adventurer_id, d20::types::spells::SpellId::MistyStep);
 
-        let pos_after: ExplorerPosition = world.read_model(explorer_id);
+        let pos_after: ExplorerPosition = world.read_model(adventurer_id);
         assert(!pos_after.in_combat, 'misty step disengages');
         assert(pos_after.combat_monster_id == 0, 'monster id cleared');
         assert(pos_after.chamber_id == 1, 'still in same chamber');
 
         // Should consume one 2nd-level slot
-        let combat_after: ExplorerCombat = world.read_model(explorer_id);
+        let combat_after: ExplorerCombat = world.read_model(adventurer_id);
         assert(combat_after.spell_slots_2 == 1, '2nd level slot consumed');
     }
 
@@ -874,7 +874,7 @@ mod tests {
         starknet::testing::set_contract_address(caller);
 
         let (mut world, token, combat_sys) = setup_world();
-        let explorer_id = mint_wizard(token);
+        let adventurer_id = mint_wizard(token);
 
         // 1 HP snake: 5d8 (min 5) always beats 1 HP
         world.write_model_test(@MonsterInstance {
@@ -887,25 +887,25 @@ mod tests {
             is_alive: true,
         });
         world.write_model_test(@ExplorerPosition {
-            explorer_id,
+            adventurer_id,
             temple_id: 1,
             chamber_id: 1,
             in_combat: true,
             combat_monster_id: 1,
         });
         world.write_model_test(@ExplorerHealth {
-            explorer_id,
+            adventurer_id,
             current_hp: 50,
             max_hp: 50,
             is_dead: false,
         });
 
-        combat_sys.cast_spell(explorer_id, d20::types::spells::SpellId::Sleep);
+        combat_sys.cast_spell(adventurer_id, d20::types::spells::SpellId::Sleep);
 
         let monster_after: MonsterInstance = world.read_model((1_u128, 1_u32, 1_u32));
         assert(!monster_after.is_alive, 'sleep incapacitates weak foe');
 
-        let pos_after: ExplorerPosition = world.read_model(explorer_id);
+        let pos_after: ExplorerPosition = world.read_model(adventurer_id);
         assert(!pos_after.in_combat, 'combat ended after sleep');
     }
 
@@ -920,10 +920,10 @@ mod tests {
         starknet::testing::set_contract_address(caller);
 
         let (mut world, token, combat_sys) = setup_world();
-        let explorer_id = mint_fighter(token);
+        let adventurer_id = mint_fighter(token);
 
         world.write_model_test(@ExplorerPosition {
-            explorer_id,
+            adventurer_id,
             temple_id: 1,
             chamber_id: 1,
             in_combat: true,
@@ -939,7 +939,7 @@ mod tests {
             is_alive: true,
         });
 
-        combat_sys.cast_spell(explorer_id, d20::types::spells::SpellId::FireBolt);
+        combat_sys.cast_spell(adventurer_id, d20::types::spells::SpellId::FireBolt);
     }
 
     #[test]
@@ -949,16 +949,16 @@ mod tests {
         starknet::testing::set_contract_address(caller);
 
         let (mut world, token, combat_sys) = setup_world();
-        let explorer_id = mint_wizard(token);
+        let adventurer_id = mint_wizard(token);
 
         world.write_model_test(@ExplorerHealth {
-            explorer_id,
+            adventurer_id,
             current_hp: 0,
             max_hp: 6,
             is_dead: true,
         });
 
-        combat_sys.cast_spell(explorer_id, d20::types::spells::SpellId::FireBolt);
+        combat_sys.cast_spell(adventurer_id, d20::types::spells::SpellId::FireBolt);
     }
 
     #[test]
@@ -968,11 +968,11 @@ mod tests {
         starknet::testing::set_contract_address(caller);
 
         let (mut world, token, combat_sys) = setup_world();
-        let explorer_id = mint_wizard(token);
+        let adventurer_id = mint_wizard(token);
 
         // Drain all level 1 slots
         world.write_model_test(@ExplorerCombat {
-            explorer_id,
+            adventurer_id,
             armor_class: 10,
             spell_slots_1: 0,
             spell_slots_2: 0,
@@ -981,7 +981,7 @@ mod tests {
             action_surge_used: false,
         });
         world.write_model_test(@ExplorerPosition {
-            explorer_id,
+            adventurer_id,
             temple_id: 1,
             chamber_id: 1,
             in_combat: true,
@@ -998,7 +998,7 @@ mod tests {
         });
 
         // Magic Missile needs a 1st level slot → should panic
-        combat_sys.cast_spell(explorer_id, d20::types::spells::SpellId::MagicMissile);
+        combat_sys.cast_spell(adventurer_id, d20::types::spells::SpellId::MagicMissile);
     }
 
     // ═══════════════════════════════════════════════════════════════════════
@@ -1011,12 +1011,12 @@ mod tests {
         starknet::testing::set_contract_address(caller);
 
         let (mut world, token, combat_sys) = setup_world();
-        let explorer_id = mint_fighter(token);
+        let adventurer_id = mint_fighter(token);
 
-        let _health: ExplorerHealth = world.read_model(explorer_id);
+        let _health: ExplorerHealth = world.read_model(adventurer_id);
         // At full HP, potion shouldn't exceed max
         world.write_model_test(@ExplorerInventory {
-            explorer_id,
+            adventurer_id,
             primary_weapon: WeaponType::Longsword,
             secondary_weapon: WeaponType::None,
             armor: ArmorType::ChainMail,
@@ -1025,9 +1025,9 @@ mod tests {
             potions: 1,
         });
 
-        combat_sys.use_item(explorer_id, ItemType::HealthPotion);
+        combat_sys.use_item(adventurer_id, ItemType::HealthPotion);
 
-        let after: ExplorerHealth = world.read_model(explorer_id);
+        let after: ExplorerHealth = world.read_model(adventurer_id);
         assert(after.current_hp <= after.max_hp.try_into().unwrap(), 'hp capped at max');
     }
 
@@ -1042,16 +1042,16 @@ mod tests {
         starknet::testing::set_contract_address(caller);
 
         let (mut world, token, combat_sys) = setup_world();
-        let explorer_id = mint_fighter(token);
+        let adventurer_id = mint_fighter(token);
 
         world.write_model_test(@ExplorerPosition {
-            explorer_id,
+            adventurer_id,
             temple_id: 1,
             chamber_id: 1,
             in_combat: false,
             combat_monster_id: 0,
         });
 
-        combat_sys.attack(explorer_id);
+        combat_sys.attack(adventurer_id);
     }
 }

@@ -7,9 +7,9 @@ use dojo::meta::interface::{
 };
 
 // Dispatchers
-use crate::systems::explorer_token::{IExplorerTokenDispatcher};
-use crate::systems::temple_token::{ITempleTokenDispatcher};
-use crate::systems::combat_system::{ICombatSystemDispatcher};
+use d20::systems::explorer_token::{IExplorerTokenDispatcher};
+use d20::systems::temple_token::{ITempleTokenDispatcher};
+use d20::systems::combat_system::{ICombatSystemDispatcher};
 
 pub mod SELECTORS {
     pub const EXPLORER_TOKEN: felt252 = selector_from_tag!("d20-explorer_token");

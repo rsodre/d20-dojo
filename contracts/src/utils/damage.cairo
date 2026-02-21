@@ -1,7 +1,7 @@
 use dojo::model::ModelStorage;
 use dojo::event::EventStorage;
 use dojo::world::WorldStorage;
-use d20::models::explorer::{ExplorerHealth, ExplorerPosition, ExplorerInventory};
+use d20::d20::models::adventurer::{ExplorerHealth, ExplorerPosition, ExplorerInventory};
 use d20::models::temple::{FallenExplorer, ChamberFallenCount};
 use d20::events::ExplorerDied;
 use d20::types::monster::MonsterType;
@@ -9,7 +9,7 @@ use d20::types::monster::MonsterType;
 pub trait DamageTrait {
     fn apply_explorer_damage(
         ref world: WorldStorage,
-        explorer_id: u128,
+        adventurer_id: u128,
         health: ExplorerHealth,
         position: ExplorerPosition,
         monster_type: MonsterType,
@@ -18,7 +18,7 @@ pub trait DamageTrait {
 
     fn handle_death(
         ref world: WorldStorage,
-        explorer_id: u128,
+        adventurer_id: u128,
         health: ExplorerHealth,
         position: ExplorerPosition,
         monster_type: MonsterType,
@@ -30,7 +30,7 @@ pub impl DamageImpl of DamageTrait {
     /// If HP drops to ≤0, calls handle_death.
     fn apply_explorer_damage(
         ref world: WorldStorage,
-        explorer_id: u128,
+        adventurer_id: u128,
         health: ExplorerHealth,
         position: ExplorerPosition,
         monster_type: MonsterType,
@@ -40,12 +40,12 @@ pub impl DamageImpl of DamageTrait {
         let new_hp: i16 = health.current_hp - damage_i16;
 
         if new_hp <= 0 {
-            Self::handle_death(ref world, explorer_id, health, position, monster_type);
+            Self::handle_death(ref world, adventurer_id, health, position, monster_type);
             // Return actual HP lost (capped at what the explorer had)
             health.current_hp.try_into().unwrap()
         } else {
             world.write_model(@ExplorerHealth {
-                explorer_id,
+                adventurer_id,
                 current_hp: new_hp,
                 max_hp: health.max_hp,
                 is_dead: false,
@@ -63,14 +63,14 @@ pub impl DamageImpl of DamageTrait {
     ///   6. Emit ExplorerDied event.
     fn handle_death(
         ref world: WorldStorage,
-        explorer_id: u128,
+        adventurer_id: u128,
         health: ExplorerHealth,
         position: ExplorerPosition,
         monster_type: MonsterType,
     ) {
         // 1. Mark explorer dead
         world.write_model(@ExplorerHealth {
-            explorer_id,
+            adventurer_id,
             current_hp: 0,
             max_hp: health.max_hp,
             is_dead: true,
@@ -78,7 +78,7 @@ pub impl DamageImpl of DamageTrait {
 
         // 2. Clear combat state
         world.write_model(@ExplorerPosition {
-            explorer_id,
+            adventurer_id,
             temple_id: position.temple_id,
             chamber_id: position.chamber_id,
             in_combat: false,
@@ -86,7 +86,7 @@ pub impl DamageImpl of DamageTrait {
         });
 
         // 3. Read inventory for loot drop
-        let inventory: ExplorerInventory = world.read_model(explorer_id);
+        let inventory: ExplorerInventory = world.read_model(adventurer_id);
 
         // 4. Determine fallen_index from ChamberFallenCount (read-then-increment)
         let fallen_count: ChamberFallenCount = world.read_model(
@@ -99,7 +99,7 @@ pub impl DamageImpl of DamageTrait {
             temple_id: position.temple_id,
             chamber_id: position.chamber_id,
             fallen_index,
-            explorer_id,
+            adventurer_id,
             dropped_weapon: inventory.primary_weapon,
             dropped_armor: inventory.armor,
             dropped_gold: inventory.gold,
@@ -116,7 +116,7 @@ pub impl DamageImpl of DamageTrait {
 
         // 7. Zero out explorer inventory (loot is now on the ground)
         world.write_model(@ExplorerInventory {
-            explorer_id,
+            adventurer_id,
             primary_weapon: inventory.primary_weapon,
             secondary_weapon: inventory.secondary_weapon,
             armor: inventory.armor,
@@ -127,7 +127,7 @@ pub impl DamageImpl of DamageTrait {
 
         // 8. Emit ExplorerDied event
         world.emit_event(@ExplorerDied {
-            explorer_id,
+            adventurer_id,
             temple_id: position.temple_id,
             chamber_id: position.chamber_id,
             killed_by: monster_type,

@@ -157,7 +157,7 @@ function ExplorerInTemple({ explorerId }: { explorerId: bigint }) {
 
   if (!position || BigInt(position.temple_id) === 0n) return null;
 
-  const className = enumVariant(stats?.explorer_class);
+  const className = enumVariant(stats?.adventurer_class);
   const emoji = CLASS_EMOJI[className] ?? "⚔️";
   const level = stats ? Number(stats.level) : undefined;
   const currentHp = health ? Number(health.current_hp) : undefined;

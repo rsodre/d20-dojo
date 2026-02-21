@@ -5,7 +5,7 @@ mod tests {
     use dojo::model::{ModelStorage, ModelStorageTest};
     use dojo::world::{WorldStorageTrait};
 
-    use d20::models::explorer::{
+    use d20::d20::models::adventurer::{
         ExplorerStats, ExplorerHealth, ExplorerCombat, ExplorerInventory,
         ExplorerPosition, ExplorerSkills
     };
@@ -15,7 +15,7 @@ mod tests {
     };
     use d20::types::index::{ChamberType};
     use d20::types::items::{WeaponType, ArmorType};
-    use d20::types::explorer_class::ExplorerClass;
+    use d20::d20::types::adventurer_class::AdventurerClass;
     use d20::types::monster::MonsterType;
     use d20::tests::tester::{
         setup_world, mint_fighter, mint_rogue, mint_wizard, assert_explorer_dead,
@@ -32,7 +32,7 @@ mod tests {
 
         let (mut world, token, _combat, temple) = setup_world();
 
-        let explorer_id = mint_fighter(token);
+        let adventurer_id = mint_fighter(token);
         let temple_id = temple.mint_temple(1_u8);
 
         world.write_model_test(@Chamber {
@@ -74,10 +74,10 @@ mod tests {
             is_alive: true,
         });
 
-        temple.enter_temple(explorer_id, temple_id);
-        temple.move_to_chamber(explorer_id, 0);
+        temple.enter_temple(adventurer_id, temple_id);
+        temple.move_to_chamber(adventurer_id, 0);
 
-        let pos: ExplorerPosition = world.read_model(explorer_id);
+        let pos: ExplorerPosition = world.read_model(adventurer_id);
         assert(pos.chamber_id == 2, 'moved to chamber 2');
         assert(pos.in_combat, 'should be in combat');
         assert(pos.combat_monster_id == 1, 'fighting monster 1');
@@ -91,12 +91,12 @@ mod tests {
 
         let (mut world, token, combat, temple) = setup_world();
 
-        let explorer_id = mint_fighter(token);
+        let adventurer_id = mint_fighter(token);
         let temple_id = temple.mint_temple(1_u8);
 
         // Give explorer high HP so they survive the counter-attack
         world.write_model_test(@ExplorerHealth {
-            explorer_id,
+            adventurer_id,
             current_hp: 50,
             max_hp: 50,
             is_dead: false,
@@ -113,14 +113,14 @@ mod tests {
             is_alive: true,
         });
         world.write_model_test(@ExplorerPosition {
-            explorer_id,
+            adventurer_id,
             temple_id,
             chamber_id: 2,
             in_combat: true,
             combat_monster_id: 1,
         });
 
-        combat.attack(explorer_id);
+        combat.attack(adventurer_id);
 
         // Monster should have taken some damage (or attack missed — hp ≤ 100)
         let monster: MonsterInstance = world.read_model((temple_id, 2_u32, 1_u32));
@@ -135,10 +135,10 @@ mod tests {
 
         let (mut world, token, combat, temple) = setup_world();
 
-        let explorer_id = mint_fighter(token);
+        let adventurer_id = mint_fighter(token);
         let temple_id = temple.mint_temple(1_u8);
 
-        let stats_before: ExplorerStats = world.read_model(explorer_id);
+        let stats_before: ExplorerStats = world.read_model(adventurer_id);
 
         // Place in combat vs a 1 HP monster (guaranteed kill this turn)
         world.write_model_test(@MonsterInstance {
@@ -151,14 +151,14 @@ mod tests {
             is_alive: true,
         });
         world.write_model_test(@ExplorerPosition {
-            explorer_id,
+            adventurer_id,
             temple_id,
             chamber_id: 2,
             in_combat: true,
             combat_monster_id: 1,
         });
         world.write_model_test(@ExplorerHealth {
-            explorer_id,
+            adventurer_id,
             current_hp: 50,
             max_hp: 50,
             is_dead: false,
@@ -166,22 +166,22 @@ mod tests {
 
         // Initialize progress so gain_xp can update it
         world.write_model_test(@ExplorerTempleProgress {
-            explorer_id,
+            adventurer_id,
             temple_id,
             chambers_explored: 0,
             xp_earned: 0,
         });
 
-        combat.attack(explorer_id);
+        combat.attack(adventurer_id);
 
-        let stats_after: ExplorerStats = world.read_model(explorer_id);
+        let stats_after: ExplorerStats = world.read_model(adventurer_id);
         let monster_after: MonsterInstance = world.read_model((temple_id, 2_u32, 1_u32));
 
         if !monster_after.is_alive {
             // Monster was killed — XP must have been awarded
             assert(stats_after.xp > stats_before.xp, 'xp should increase on kill');
 
-            let progress: ExplorerTempleProgress = world.read_model((explorer_id, temple_id));
+            let progress: ExplorerTempleProgress = world.read_model((adventurer_id, temple_id));
             assert(progress.xp_earned > 0, 'temple xp_earned should grow');
         }
         // If monster survived (attack missed), test passes silently
@@ -195,7 +195,7 @@ mod tests {
 
         let (mut world, token, combat, temple) = setup_world();
 
-        let explorer_id = mint_fighter(token);
+        let adventurer_id = mint_fighter(token);
         let temple_id = temple.mint_temple(1_u8);
 
         world.write_model_test(@MonsterInstance {
@@ -208,30 +208,30 @@ mod tests {
             is_alive: true,
         });
         world.write_model_test(@ExplorerPosition {
-            explorer_id,
+            adventurer_id,
             temple_id,
             chamber_id: 3,
             in_combat: true,
             combat_monster_id: 1,
         });
         world.write_model_test(@ExplorerHealth {
-            explorer_id,
+            adventurer_id,
             current_hp: 50,
             max_hp: 50,
             is_dead: false,
         });
         world.write_model_test(@ExplorerTempleProgress {
-            explorer_id,
+            adventurer_id,
             temple_id,
             chambers_explored: 2,
             xp_earned: 100,
         });
 
-        combat.attack(explorer_id);
+        combat.attack(adventurer_id);
 
         let monster_after: MonsterInstance = world.read_model((temple_id, 3_u32, 1_u32));
         if !monster_after.is_alive {
-            let progress: ExplorerTempleProgress = world.read_model((explorer_id, temple_id));
+            let progress: ExplorerTempleProgress = world.read_model((adventurer_id, temple_id));
             assert(progress.xp_earned > 100, 'xp_earned should increase');
             assert(progress.chambers_explored == 2, 'chambers_explored unchanged');
         }
@@ -245,21 +245,21 @@ mod tests {
 
         let (mut world, token, combat, temple) = setup_world();
 
-        let explorer_id = mint_fighter(token);
+        let adventurer_id = mint_fighter(token);
         let temple_id = temple.mint_temple(1_u8);
 
         // Set XP just below level 2 threshold (300 XP)
-        let stats: ExplorerStats = world.read_model(explorer_id);
+        let stats: ExplorerStats = world.read_model(adventurer_id);
         world.write_model_test(@ExplorerStats {
-            explorer_id,
+            adventurer_id,
             abilities: stats.abilities,
             level: 1,
             xp: 250, // skeleton = 50 XP → total 300 = level 2
-            explorer_class: stats.explorer_class,
+            adventurer_class: stats.adventurer_class,
             temples_conquered: stats.temples_conquered,
         });
 
-        let health_before: ExplorerHealth = world.read_model(explorer_id);
+        let health_before: ExplorerHealth = world.read_model(adventurer_id);
 
         // 1 HP skeleton → guaranteed kill
         world.write_model_test(@MonsterInstance {
@@ -272,33 +272,33 @@ mod tests {
             is_alive: true,
         });
         world.write_model_test(@ExplorerPosition {
-            explorer_id,
+            adventurer_id,
             temple_id,
             chamber_id: 2,
             in_combat: true,
             combat_monster_id: 1,
         });
         world.write_model_test(@ExplorerHealth {
-            explorer_id,
+            adventurer_id,
             current_hp: 50,
             max_hp: 50,
             is_dead: false,
         });
         world.write_model_test(@ExplorerTempleProgress {
-            explorer_id,
+            adventurer_id,
             temple_id,
             chambers_explored: 0,
             xp_earned: 0,
         });
 
-        combat.attack(explorer_id);
+        combat.attack(adventurer_id);
 
         let monster_after: MonsterInstance = world.read_model((temple_id, 2_u32, 1_u32));
         if !monster_after.is_alive {
-            let stats_after: ExplorerStats = world.read_model(explorer_id);
+            let stats_after: ExplorerStats = world.read_model(adventurer_id);
             if stats_after.xp >= 300 {
                 assert(stats_after.level == 2, 'should be level 2');
-                let health_after: ExplorerHealth = world.read_model(explorer_id);
+                let health_after: ExplorerHealth = world.read_model(adventurer_id);
                 assert(health_after.max_hp > health_before.max_hp, 'max_hp should increase');
             }
         }

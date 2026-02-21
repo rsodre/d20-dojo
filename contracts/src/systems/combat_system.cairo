@@ -10,25 +10,25 @@ pub trait ICombatSystem<TState> {
     /// On hit, rolls weapon damage and deducts from MonsterInstance HP.
     /// Monster counter-attacks after the explorer's action (task 2.5).
     /// Emits CombatResult event.
-    fn attack(ref self: TState, explorer_id: u128);
+    fn attack(ref self: TState, adventurer_id: u128);
 
     /// Wizard: cast a spell (task 2.8).
     /// Handles cantrips (no slot cost) and leveled spells (consume slot).
     /// Monster counter-attacks after the spell unless it is killed.
-    fn cast_spell(ref self: TState, explorer_id: u128, spell_id: SpellId);
+    fn cast_spell(ref self: TState, adventurer_id: u128, spell_id: SpellId);
 
     /// Use a consumable item (task 2.8).
     /// HealthPotion: heals 2d4+2 HP.
-    fn use_item(ref self: TState, explorer_id: u128, item_type: ItemType);
+    fn use_item(ref self: TState, adventurer_id: u128, item_type: ItemType);
 
     /// Flee from combat (task 2.10 — stub).
-    fn flee(ref self: TState, explorer_id: u128);
+    fn flee(ref self: TState, adventurer_id: u128);
 
     /// Fighter: heal 1d10 + level once per rest (task 2.6).
-    fn second_wind(ref self: TState, explorer_id: u128);
+    fn second_wind(ref self: TState, adventurer_id: u128);
 
     /// Rogue: disengage from combat without triggering monster counter-attack (task 2.7).
-    fn cunning_action(ref self: TState, explorer_id: u128);
+    fn cunning_action(ref self: TState, adventurer_id: u128);
 }
 
 // ── Contract ────────────────────────────────────────────────────────────────
@@ -44,8 +44,8 @@ pub mod combat_system {
     use d20::types::index::{CombatAction, ItemType};
     use d20::types::items::{WeaponTypeTrait};
     use d20::types::spells::{SpellId, SpellIdTrait};
-    use d20::types::explorer_class::{ExplorerClass, ExplorerClassTrait};
-    use d20::models::explorer::{
+    use d20::d20::types::adventurer_class::{AdventurerClass, AdventurerClassTrait};
+    use d20::d20::models::adventurer::{
         ExplorerStats, ExplorerHealth, ExplorerCombat, ExplorerInventory, ExplorerPosition,
     };
     use d20::models::temple::{MonsterInstance, ExplorerTempleProgress, TempleState};
@@ -102,7 +102,7 @@ pub mod combat_system {
         fn monster_turn(
             ref world: WorldStorage,
             ref seeder: Seeder,
-            explorer_id: u128,
+            adventurer_id: u128,
             stats: ExplorerStats,
             health: ExplorerHealth,
             combat: ExplorerCombat,
@@ -152,7 +152,7 @@ pub mod combat_system {
 
                     let damage_taken = DamageImpl::apply_explorer_damage(
                         ref world,
-                        explorer_id,
+                        adventurer_id,
                         current_health,
                         position,
                         monster.monster_type,
@@ -165,7 +165,7 @@ pub mod combat_system {
                         explorer_died = true;
                     } else {
                         current_health = ExplorerHealth {
-                            explorer_id,
+                            adventurer_id,
                             current_hp: new_hp,
                             max_hp: current_health.max_hp,
                             is_dead: false,
@@ -195,7 +195,7 @@ pub mod combat_system {
         fn level_up(
             ref world: WorldStorage,
             ref seeder: Seeder,
-            explorer_id: u128,
+            adventurer_id: u128,
             stats: ExplorerStats,
             health: ExplorerHealth,
         ) {
@@ -203,16 +203,16 @@ pub mod combat_system {
 
             // Update level in ExplorerStats
             world.write_model(@ExplorerStats {
-                explorer_id,
+                adventurer_id,
                 abilities: stats.abilities,
                 level: new_level,
                 xp: stats.xp,
-                explorer_class: stats.explorer_class,
+                adventurer_class: stats.adventurer_class,
                 temples_conquered: stats.temples_conquered,
             });
 
             // Roll hit die + CON modifier, minimum 1, add to max HP
-            let hit_sides: u8 = stats.explorer_class.hit_die_max();
+            let hit_sides: u8 = stats.adventurer_class.hit_die_max();
             let raw_roll: u16 = roll_dice(ref seeder, hit_sides, 1);
             let con_mod: i8 = ability_modifier(stats.abilities.constitution);
             let raw_roll_i32: i32 = raw_roll.into();
@@ -222,18 +222,18 @@ pub mod combat_system {
             let new_max_hp: u16 = health.max_hp + hp_gain;
 
             world.write_model(@ExplorerHealth {
-                explorer_id,
+                adventurer_id,
                 current_hp: health.current_hp,
                 max_hp: new_max_hp,
                 is_dead: false,
             });
 
             // Update spell slots for Wizards
-            if stats.explorer_class == ExplorerClass::Wizard {
-                let combat: ExplorerCombat = world.read_model(explorer_id);
-                let (slots_1, slots_2, slots_3) = stats.explorer_class.spell_slots_for(new_level);
+            if stats.adventurer_class == AdventurerClass::Wizard {
+                let combat: ExplorerCombat = world.read_model(adventurer_id);
+                let (slots_1, slots_2, slots_3) = stats.adventurer_class.spell_slots_for(new_level);
                 world.write_model(@ExplorerCombat {
-                    explorer_id,
+                    adventurer_id,
                     armor_class: combat.armor_class,
                     spell_slots_1: slots_1,
                     spell_slots_2: slots_2,
@@ -243,7 +243,7 @@ pub mod combat_system {
                 });
             }
 
-            world.emit_event(@LevelUp { explorer_id, new_level });
+            world.emit_event(@LevelUp { adventurer_id, new_level });
         }
 
         /// Award XP to the explorer for killing a monster.
@@ -252,11 +252,11 @@ pub mod combat_system {
         fn gain_xp(
             ref world: WorldStorage,
             ref seeder: Seeder,
-            explorer_id: u128,
+            adventurer_id: u128,
             temple_id: u128,
             xp_reward: u32,
         ) {
-            let mut stats: ExplorerStats = world.read_model(explorer_id);
+            let mut stats: ExplorerStats = world.read_model(adventurer_id);
 
             // Don't grant XP beyond level 5
             if stats.level >= 5 {
@@ -269,9 +269,9 @@ pub mod combat_system {
 
             // Update temple progress XP
             if temple_id != 0 {
-                let mut progress: ExplorerTempleProgress = world.read_model((explorer_id, temple_id));
+                let mut progress: ExplorerTempleProgress = world.read_model((adventurer_id, temple_id));
                 world.write_model(@ExplorerTempleProgress {
-                    explorer_id,
+                    adventurer_id,
                     temple_id,
                     chambers_explored: progress.chambers_explored,
                     xp_earned: progress.xp_earned + xp_reward,
@@ -284,9 +284,9 @@ pub mod combat_system {
                 let next_threshold: u32 = Self::xp_threshold(current_level + 1);
                 if new_xp >= next_threshold {
                     // Re-read stats in case level already updated
-                    let current_stats: ExplorerStats = world.read_model(explorer_id);
-                    let current_health: ExplorerHealth = world.read_model(explorer_id);
-                    Self::level_up(ref world, ref seeder, explorer_id, current_stats, current_health);
+                    let current_stats: ExplorerStats = world.read_model(adventurer_id);
+                    let current_health: ExplorerHealth = world.read_model(adventurer_id);
+                    Self::level_up(ref world, ref seeder, adventurer_id, current_stats, current_health);
                     current_level += 1;
                 } else {
                     break;
@@ -302,7 +302,7 @@ pub mod combat_system {
         ///   3. Emit BossDefeated event.
         fn check_boss_defeat(
             ref world: WorldStorage,
-            explorer_id: u128,
+            adventurer_id: u128,
             temple_id: u128,
             chamber_id: u32,
             monster_type: MonsterType,
@@ -322,17 +322,17 @@ pub mod combat_system {
             world.write_model(@temple);
 
             // Increment temples_conquered on the explorer
-            let mut stats: ExplorerStats = world.read_model(explorer_id);
+            let mut stats: ExplorerStats = world.read_model(adventurer_id);
             stats.temples_conquered += 1;
             world.write_model(@stats);
 
             // Emit BossDefeated event
-            world.emit_event(@BossDefeated { temple_id, explorer_id, monster_type });
+            world.emit_event(@BossDefeated { temple_id, adventurer_id, monster_type });
         }
 
         /// Consume a spell slot of the given level. Panics if none available.
-        fn consume_spell_slot(ref world: WorldStorage, explorer_id: u128, level: u8) {
-            let mut combat: ExplorerCombat = world.read_model(explorer_id);
+        fn consume_spell_slot(ref world: WorldStorage, adventurer_id: u128, level: u8) {
+            let mut combat: ExplorerCombat = world.read_model(adventurer_id);
             if level == 1 {
                 assert(combat.spell_slots_1 > 0, 'no 1st level slots');
                 combat.spell_slots_1 -= 1;
@@ -352,26 +352,26 @@ pub mod combat_system {
 
     #[abi(embed_v0)]
     impl CombatSystemImpl of ICombatSystem<ContractState> {
-        fn attack(ref self: ContractState, explorer_id: u128) {
+        fn attack(ref self: ContractState, adventurer_id: u128) {
             let mut world = self.world_default();
             let caller = get_caller_address();
             let mut seeder = SeederTrait::from_consume_vrf(world, caller);
 
             // Verify ownership
             let explorer_token = world.explorer_token_dispatcher();
-            assert(explorer_token.owner_of(explorer_id.into()) == caller, 'not owner');
+            assert(explorer_token.owner_of(adventurer_id.into()) == caller, 'not owner');
 
-            let stats: ExplorerStats = world.read_model(explorer_id);
-            assert(stats.explorer_class != ExplorerClass::None, 'explorer does not exist');
+            let stats: ExplorerStats = world.read_model(adventurer_id);
+            assert(stats.adventurer_class != AdventurerClass::None, 'explorer does not exist');
 
-            let health: ExplorerHealth = world.read_model(explorer_id);
+            let health: ExplorerHealth = world.read_model(adventurer_id);
             assert(!health.is_dead, 'dead explorer cannot act');
 
-            let position: ExplorerPosition = world.read_model(explorer_id);
+            let position: ExplorerPosition = world.read_model(adventurer_id);
             assert(position.in_combat, 'not in combat');
 
-            let inventory: ExplorerInventory = world.read_model(explorer_id);
-            let combat: ExplorerCombat = world.read_model(explorer_id);
+            let inventory: ExplorerInventory = world.read_model(adventurer_id);
+            let combat: ExplorerCombat = world.read_model(adventurer_id);
 
             let monster: MonsterInstance = world.read_model(
                 (position.temple_id, position.chamber_id, position.combat_monster_id)
@@ -381,7 +381,7 @@ pub mod combat_system {
             let monster_stats = monster.monster_type.get_stats();
 
             // Fighter level 5+: Extra Attack
-            let num_attacks: u8 = if stats.explorer_class == ExplorerClass::Fighter && stats.level >= 5 {
+            let num_attacks: u8 = if stats.adventurer_class == AdventurerClass::Fighter && stats.level >= 5 {
                 2
             } else {
                 1
@@ -394,7 +394,7 @@ pub mod combat_system {
             let prof_bonus: u8 = proficiency_bonus(stats.level);
 
             // Fighter Champion: crit on 19-20 at level 3+
-            let crit_threshold: u8 = if stats.explorer_class == ExplorerClass::Fighter && stats.level >= 3 {
+            let crit_threshold: u8 = if stats.adventurer_class == AdventurerClass::Fighter && stats.level >= 3 {
                 19
             } else {
                 20
@@ -424,8 +424,8 @@ pub mod combat_system {
                     let raw_damage: u16 = roll_dice(ref seeder, dice_sides, dice_count);
 
                     // Rogue: Sneak Attack
-                    let sneak_bonus: u16 = if stats.explorer_class == ExplorerClass::Rogue {
-                        let sneak_dice: u8 = stats.explorer_class.sneak_attack_dice(stats.level);
+                    let sneak_bonus: u16 = if stats.adventurer_class == AdventurerClass::Rogue {
+                        let sneak_dice: u8 = stats.adventurer_class.sneak_attack_dice(stats.level);
                         let sneak_count: u8 = if is_crit { sneak_dice * 2 } else { sneak_dice };
                         roll_dice(ref seeder, 6, sneak_count)
                     } else {
@@ -465,7 +465,7 @@ pub mod combat_system {
                     is_alive: false,
                 });
                 world.write_model(@ExplorerPosition {
-                    explorer_id,
+                    adventurer_id,
                     temple_id: position.temple_id,
                     chamber_id: position.chamber_id,
                     in_combat: false,
@@ -473,12 +473,12 @@ pub mod combat_system {
                 });
                 // Award XP for the kill
                 InternalImpl::gain_xp(
-                    ref world, ref seeder, explorer_id,
+                    ref world, ref seeder, adventurer_id,
                     position.temple_id, monster_stats.xp_reward,
                 );
                 // Check for boss defeat
                 InternalImpl::check_boss_defeat(
-                    ref world, explorer_id, position.temple_id,
+                    ref world, adventurer_id, position.temple_id,
                     position.chamber_id, monster.monster_type,
                 );
             } else {
@@ -496,7 +496,7 @@ pub mod combat_system {
             // Monster counter-attack
             let mut damage_taken: u16 = 0;
             if !monster_killed {
-                let updated_health: ExplorerHealth = world.read_model(explorer_id);
+                let updated_health: ExplorerHealth = world.read_model(adventurer_id);
                 if !updated_health.is_dead {
                     let updated_monster = MonsterInstance {
                         temple_id: position.temple_id,
@@ -508,7 +508,7 @@ pub mod combat_system {
                         is_alive: true,
                     };
                     let (dmg, _died) = InternalImpl::monster_turn(
-                        ref world, ref seeder, explorer_id, stats, updated_health,
+                        ref world, ref seeder, adventurer_id, stats, updated_health,
                         combat, position, updated_monster,
                     );
                     damage_taken = dmg;
@@ -516,7 +516,7 @@ pub mod combat_system {
             }
 
             world.emit_event(@CombatResult {
-                explorer_id,
+                adventurer_id,
                 action: CombatAction::Attack,
                 roll: first_attack_roll,
                 damage_dealt: total_damage_dealt,
@@ -527,29 +527,29 @@ pub mod combat_system {
 
         // ── Task 2.8: Wizard spell casting ───────────────────────────────────
 
-        fn cast_spell(ref self: ContractState, explorer_id: u128, spell_id: SpellId) {
+        fn cast_spell(ref self: ContractState, adventurer_id: u128, spell_id: SpellId) {
             let mut world = self.world_default();
             let caller = get_caller_address();
             let mut seeder = SeederTrait::from_consume_vrf(world, caller);
 
             // Verify ownership
             let explorer_token = world.explorer_token_dispatcher();
-            assert(explorer_token.owner_of(explorer_id.into()) == caller, 'not owner');
+            assert(explorer_token.owner_of(adventurer_id.into()) == caller, 'not owner');
 
-            let stats: ExplorerStats = world.read_model(explorer_id);
-            assert(stats.explorer_class == ExplorerClass::Wizard, 'only wizards cast spells');
-            assert(stats.explorer_class != ExplorerClass::None, 'explorer does not exist');
+            let stats: ExplorerStats = world.read_model(adventurer_id);
+            assert(stats.adventurer_class == AdventurerClass::Wizard, 'only wizards cast spells');
+            assert(stats.adventurer_class != AdventurerClass::None, 'explorer does not exist');
 
-            let health: ExplorerHealth = world.read_model(explorer_id);
+            let health: ExplorerHealth = world.read_model(adventurer_id);
             assert(!health.is_dead, 'dead explorer cannot act');
 
-            let position: ExplorerPosition = world.read_model(explorer_id);
+            let position: ExplorerPosition = world.read_model(adventurer_id);
 
             // Consume spell slot if leveled
             let slot_level: u8 = spell_id.level();
             if slot_level > 0 {
                 assert(position.in_combat || slot_level == 1, 'must be in combat');
-                InternalImpl::consume_spell_slot(ref world, explorer_id, slot_level);
+                InternalImpl::consume_spell_slot(ref world, adventurer_id, slot_level);
             }
 
             // INT modifier for spell attack rolls and save DCs
@@ -601,7 +601,7 @@ pub mod combat_system {
                         });
                         if monster_killed {
                             world.write_model(@ExplorerPosition {
-                                explorer_id,
+                                adventurer_id,
                                 temple_id: position.temple_id,
                                 chamber_id: position.chamber_id,
                                 in_combat: false,
@@ -643,7 +643,7 @@ pub mod combat_system {
                     });
                     if monster_killed {
                         world.write_model(@ExplorerPosition {
-                            explorer_id,
+                            adventurer_id,
                             temple_id: position.temple_id,
                             chamber_id: position.chamber_id,
                             in_combat: false,
@@ -655,7 +655,7 @@ pub mod combat_system {
                 // Shield: +5 AC reaction — applies until start of next turn.
                 // Modeled as a permanent AC bump (reset on rest via task 2.3).
                 SpellId::ShieldSpell => {
-                    let mut combat_state: ExplorerCombat = world.read_model(explorer_id);
+                    let mut combat_state: ExplorerCombat = world.read_model(adventurer_id);
                     combat_state.armor_class += 5;
                     world.write_model(@combat_state);
                 },
@@ -688,7 +688,7 @@ pub mod combat_system {
                             is_alive: false,
                         });
                         world.write_model(@ExplorerPosition {
-                            explorer_id,
+                            adventurer_id,
                             temple_id: position.temple_id,
                             chamber_id: position.chamber_id,
                             in_combat: false,
@@ -748,7 +748,7 @@ pub mod combat_system {
                     });
                     if monster_killed {
                         world.write_model(@ExplorerPosition {
-                            explorer_id,
+                            adventurer_id,
                             temple_id: position.temple_id,
                             chamber_id: position.chamber_id,
                             in_combat: false,
@@ -762,7 +762,7 @@ pub mod combat_system {
                 SpellId::MistyStep => {
                     if position.in_combat {
                         world.write_model(@ExplorerPosition {
-                            explorer_id,
+                            adventurer_id,
                             temple_id: position.temple_id,
                             chamber_id: position.chamber_id,
                             in_combat: false,
@@ -812,7 +812,7 @@ pub mod combat_system {
                     });
                     if monster_killed {
                         world.write_model(@ExplorerPosition {
-                            explorer_id,
+                            adventurer_id,
                             temple_id: position.temple_id,
                             chamber_id: position.chamber_id,
                             in_combat: false,
@@ -825,7 +825,7 @@ pub mod combat_system {
             // Award XP and check for boss defeat on kill (cast_spell)
             if monster_killed && xp_to_award > 0 {
                 InternalImpl::gain_xp(
-                    ref world, ref seeder, explorer_id,
+                    ref world, ref seeder, adventurer_id,
                     position.temple_id, xp_to_award,
                 );
             }
@@ -836,7 +836,7 @@ pub mod combat_system {
                     (position.temple_id, position.chamber_id, position.combat_monster_id)
                 );
                 InternalImpl::check_boss_defeat(
-                    ref world, explorer_id, position.temple_id,
+                    ref world, adventurer_id, position.temple_id,
                     position.chamber_id, killed_monster.monster_type,
                 );
             }
@@ -847,16 +847,16 @@ pub mod combat_system {
             let mut damage_taken: u16 = 0;
             if !monster_killed {
                 // Re-read position — MistyStep may have cleared in_combat
-                let updated_position: ExplorerPosition = world.read_model(explorer_id);
+                let updated_position: ExplorerPosition = world.read_model(adventurer_id);
                 if updated_position.in_combat {
-                    let updated_health: ExplorerHealth = world.read_model(explorer_id);
+                    let updated_health: ExplorerHealth = world.read_model(adventurer_id);
                     if !updated_health.is_dead {
-                        let updated_combat: ExplorerCombat = world.read_model(explorer_id);
+                        let updated_combat: ExplorerCombat = world.read_model(adventurer_id);
                         let live_monster: MonsterInstance = world.read_model(
                             (position.temple_id, position.chamber_id, position.combat_monster_id)
                         );
                         let (dmg, _died) = InternalImpl::monster_turn(
-                            ref world, ref seeder, explorer_id, stats, updated_health,
+                            ref world, ref seeder, adventurer_id, stats, updated_health,
                             updated_combat, updated_position, live_monster,
                         );
                         damage_taken = dmg;
@@ -865,7 +865,7 @@ pub mod combat_system {
             }
 
             world.emit_event(@CombatResult {
-                explorer_id,
+                adventurer_id,
                 action: CombatAction::CastSpell,
                 roll: spell_roll,
                 damage_dealt,
@@ -877,25 +877,25 @@ pub mod combat_system {
         // ── Task 2.8: Use item ────────────────────────────────────────────────
 
         /// Use a consumable item. Currently: HealthPotion (2d4+2 heal).
-        fn use_item(ref self: ContractState, explorer_id: u128, item_type: ItemType) {
+        fn use_item(ref self: ContractState, adventurer_id: u128, item_type: ItemType) {
             let mut world = self.world_default();
             let caller = get_caller_address();
             let mut seeder = SeederTrait::from_consume_vrf(world, caller);
 
             // Verify ownership
             let explorer_token = world.explorer_token_dispatcher();
-            assert(explorer_token.owner_of(explorer_id.into()) == caller, 'not owner');
+            assert(explorer_token.owner_of(adventurer_id.into()) == caller, 'not owner');
 
-            let stats: ExplorerStats = world.read_model(explorer_id);
-            assert(stats.explorer_class != ExplorerClass::None, 'explorer does not exist');
+            let stats: ExplorerStats = world.read_model(adventurer_id);
+            assert(stats.adventurer_class != AdventurerClass::None, 'explorer does not exist');
 
-            let health: ExplorerHealth = world.read_model(explorer_id);
+            let health: ExplorerHealth = world.read_model(adventurer_id);
             assert(!health.is_dead, 'dead explorer cannot act');
 
             match item_type {
                 ItemType::None => { assert(false, 'no item specified'); },
                 ItemType::HealthPotion => {
-                    let mut inventory: ExplorerInventory = world.read_model(explorer_id);
+                    let mut inventory: ExplorerInventory = world.read_model(adventurer_id);
                     assert(inventory.potions > 0, 'no potions remaining');
                     inventory.potions -= 1;
                     world.write_model(@inventory);
@@ -912,24 +912,24 @@ pub mod combat_system {
                     };
 
                     world.write_model(@ExplorerHealth {
-                        explorer_id,
+                        adventurer_id,
                         current_hp: new_hp,
                         max_hp: health.max_hp,
                         is_dead: false,
                     });
 
                     // Monster counter-attacks after using item (if in combat)
-                    let position: ExplorerPosition = world.read_model(explorer_id);
+                    let position: ExplorerPosition = world.read_model(adventurer_id);
                     let mut damage_taken: u16 = 0;
                     if position.in_combat {
-                        let updated_health: ExplorerHealth = world.read_model(explorer_id);
-                        let combat: ExplorerCombat = world.read_model(explorer_id);
+                        let updated_health: ExplorerHealth = world.read_model(adventurer_id);
+                        let combat: ExplorerCombat = world.read_model(adventurer_id);
                         let monster: MonsterInstance = world.read_model(
                             (position.temple_id, position.chamber_id, position.combat_monster_id)
                         );
                         if monster.is_alive {
                             let (dmg, _died) = InternalImpl::monster_turn(
-                                ref world, ref seeder, explorer_id, stats, updated_health,
+                                ref world, ref seeder, adventurer_id, stats, updated_health,
                                 combat, position, monster,
                             );
                             damage_taken = dmg;
@@ -937,7 +937,7 @@ pub mod combat_system {
                     }
 
                     world.emit_event(@CombatResult {
-                        explorer_id,
+                        adventurer_id,
                         action: CombatAction::UseItem,
                         roll: raw_heal.try_into().unwrap(),
                         damage_dealt: 0,
@@ -950,22 +950,22 @@ pub mod combat_system {
 
         // ── Task 2.6: Fighter features ───────────────────────────────────────
 
-        fn second_wind(ref self: ContractState, explorer_id: u128) {
+        fn second_wind(ref self: ContractState, adventurer_id: u128) {
             let mut world = self.world_default();
             let caller = get_caller_address();
             let mut seeder = SeederTrait::from_consume_vrf(world, caller);
 
             // Verify ownership
             let explorer_token = world.explorer_token_dispatcher();
-            assert(explorer_token.owner_of(explorer_id.into()) == caller, 'not owner');
+            assert(explorer_token.owner_of(adventurer_id.into()) == caller, 'not owner');
 
-            let stats: ExplorerStats = world.read_model(explorer_id);
-            assert(stats.explorer_class == ExplorerClass::Fighter, 'only fighters can second wind');
+            let stats: ExplorerStats = world.read_model(adventurer_id);
+            assert(stats.adventurer_class == AdventurerClass::Fighter, 'only fighters can second wind');
 
-            let health: ExplorerHealth = world.read_model(explorer_id);
+            let health: ExplorerHealth = world.read_model(adventurer_id);
             assert(!health.is_dead, 'dead explorer cannot act');
 
-            let mut combat: ExplorerCombat = world.read_model(explorer_id);
+            let mut combat: ExplorerCombat = world.read_model(adventurer_id);
             assert(!combat.second_wind_used, 'second wind already used');
 
             let heal_roll: u16 = roll_dice(ref seeder, 10, 1);
@@ -979,7 +979,7 @@ pub mod combat_system {
             };
 
             world.write_model(@ExplorerHealth {
-                explorer_id,
+                adventurer_id,
                 current_hp: new_hp,
                 max_hp: health.max_hp,
                 is_dead: false,
@@ -989,7 +989,7 @@ pub mod combat_system {
             world.write_model(@combat);
 
             world.emit_event(@CombatResult {
-                explorer_id,
+                adventurer_id,
                 action: CombatAction::SecondWind,
                 roll: heal_roll.try_into().unwrap(),
                 damage_dealt: 0,
@@ -1000,24 +1000,24 @@ pub mod combat_system {
 
         // ── Task 2.7: Rogue features ─────────────────────────────────────────
 
-        fn cunning_action(ref self: ContractState, explorer_id: u128) {
+        fn cunning_action(ref self: ContractState, adventurer_id: u128) {
             let mut world = self.world_default();
             // Verify ownership
             let explorer_token = world.explorer_token_dispatcher();
-            assert(explorer_token.owner_of(explorer_id.into()) == get_caller_address(), 'not owner');
+            assert(explorer_token.owner_of(adventurer_id.into()) == get_caller_address(), 'not owner');
 
-            let stats: ExplorerStats = world.read_model(explorer_id);
-            assert(stats.explorer_class == ExplorerClass::Rogue, 'only rogues can cunning action');
+            let stats: ExplorerStats = world.read_model(adventurer_id);
+            assert(stats.adventurer_class == AdventurerClass::Rogue, 'only rogues can cunning action');
             assert(stats.level >= 2, 'cunning action needs level 2');
 
-            let health: ExplorerHealth = world.read_model(explorer_id);
+            let health: ExplorerHealth = world.read_model(adventurer_id);
             assert(!health.is_dead, 'dead explorer cannot act');
 
-            let position: ExplorerPosition = world.read_model(explorer_id);
+            let position: ExplorerPosition = world.read_model(adventurer_id);
             assert(position.in_combat, 'not in combat');
 
             world.write_model(@ExplorerPosition {
-                explorer_id,
+                adventurer_id,
                 temple_id: position.temple_id,
                 chamber_id: position.chamber_id,
                 in_combat: false,
@@ -1025,7 +1025,7 @@ pub mod combat_system {
             });
 
             world.emit_event(@CombatResult {
-                explorer_id,
+                adventurer_id,
                 action: CombatAction::CunningAction,
                 roll: 0,
                 damage_dealt: 0,
@@ -1041,22 +1041,22 @@ pub mod combat_system {
         /// On failure: monster gets a free counter-attack.
         /// Note: ExplorerPosition has no previous_chamber_id field, so successful flee
         /// clears combat state (disengage) rather than physically moving to a prior chamber.
-        fn flee(ref self: ContractState, explorer_id: u128) {
+        fn flee(ref self: ContractState, adventurer_id: u128) {
             let mut world = self.world_default();
             let caller = get_caller_address();
             let mut seeder = SeederTrait::from_consume_vrf(world, caller);
 
             // Verify ownership
             let explorer_token = world.explorer_token_dispatcher();
-            assert(explorer_token.owner_of(explorer_id.into()) == caller, 'not owner');
+            assert(explorer_token.owner_of(adventurer_id.into()) == caller, 'not owner');
 
-            let stats: ExplorerStats = world.read_model(explorer_id);
-            assert(stats.explorer_class != ExplorerClass::None, 'explorer does not exist');
+            let stats: ExplorerStats = world.read_model(adventurer_id);
+            assert(stats.adventurer_class != AdventurerClass::None, 'explorer does not exist');
 
-            let health: ExplorerHealth = world.read_model(explorer_id);
+            let health: ExplorerHealth = world.read_model(adventurer_id);
             assert(!health.is_dead, 'dead explorer cannot act');
 
-            let mut position: ExplorerPosition = world.read_model(explorer_id);
+            let mut position: ExplorerPosition = world.read_model(adventurer_id);
             assert(position.in_combat, 'not in combat');
 
             let monster: MonsterInstance = world.read_model(
@@ -1087,7 +1087,7 @@ pub mod combat_system {
             if flee_success {
                 // Clear combat — explorer disengages
                 world.write_model(@ExplorerPosition {
-                    explorer_id,
+                    adventurer_id,
                     temple_id: position.temple_id,
                     chamber_id: position.chamber_id,
                     in_combat: false,
@@ -1095,15 +1095,15 @@ pub mod combat_system {
                 });
             } else {
                 // Monster gets a free counter-attack on failed flee
-                let combat: ExplorerCombat = world.read_model(explorer_id);
+                let combat: ExplorerCombat = world.read_model(adventurer_id);
                 let (dmg, _died) = InternalImpl::monster_turn(
-                    ref world, ref seeder, explorer_id, stats, health, combat, position, monster,
+                    ref world, ref seeder, adventurer_id, stats, health, combat, position, monster,
                 );
                 damage_taken = dmg;
             }
 
             world.emit_event(@CombatResult {
-                explorer_id,
+                adventurer_id,
                 action: CombatAction::Flee,
                 roll: explorer_roll,
                 damage_dealt: 0,

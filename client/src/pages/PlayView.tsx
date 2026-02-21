@@ -90,7 +90,7 @@ function useExecuteAction() {
 function ExplorerSheet({ explorerId }: { explorerId: bigint }) {
   const { stats, health, combat, inventory, skills } = useExplorerModels(explorerId);
 
-  const explorerClass = enumVariant(stats?.explorer_class);
+  const explorerClass = enumVariant(stats?.adventurer_class);
   const emoji = CLASS_EMOJI[explorerClass] ?? "⚔️";
   const level = stats ? Number(stats.level) : "—";
   const xp = stats ? Number(stats.xp) : "—";
@@ -373,7 +373,7 @@ export function PlayView() {
     );
   }
 
-  const explorerClass = enumVariant(stats?.explorer_class);
+  const explorerClass = enumVariant(stats?.adventurer_class);
   const isDead = health?.is_dead ?? false;
   const inCombat = position?.in_combat ?? false;
   const chamberId = position ? BigInt(position.chamber_id) : 0n;

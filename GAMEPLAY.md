@@ -35,7 +35,7 @@ The game logic is divided into three main contracts. Each contract exposes a pub
 >     contractAddress: GAME_SYSTEM_ADDRESS,
 >     entrypoint: 'attack', // or any other VRF action
 >     calldata: CallData.compile({
->       explorer_id: '1',
+>       adventurer_id: '1',
 >     }),
 >   }
 > ]

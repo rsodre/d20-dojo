@@ -5,7 +5,7 @@ mod tests {
     use dojo::model::{ModelStorage, ModelStorageTest};
     use dojo::world::{WorldStorageTrait};
 
-    use d20::models::explorer::{
+    use d20::d20::models::adventurer::{
         ExplorerStats, ExplorerHealth, ExplorerCombat, ExplorerInventory,
         ExplorerPosition, ExplorerSkills
     };
@@ -15,7 +15,7 @@ mod tests {
     };
     use d20::types::index::{ChamberType};
     use d20::types::items::{WeaponType, ArmorType};
-    use d20::types::explorer_class::ExplorerClass;
+    use d20::d20::types::adventurer_class::AdventurerClass;
     use d20::types::monster::MonsterType;
     use d20::tests::tester::{
         setup_world, mint_fighter, mint_rogue, mint_wizard, assert_explorer_dead,
@@ -33,10 +33,10 @@ mod tests {
         let (mut world, token, combat, temple) = setup_world();
 
         // 1. Mint explorer
-        let explorer_id = mint_fighter(token);
-        let stats: ExplorerStats = world.read_model(explorer_id);
+        let adventurer_id = mint_fighter(token);
+        let stats: ExplorerStats = world.read_model(adventurer_id);
         assert(stats.level == 1, 'starts at level 1');
-        assert(stats.explorer_class == ExplorerClass::Fighter, 'is a fighter');
+        assert(stats.adventurer_class == AdventurerClass::Fighter, 'is a fighter');
 
         // 2. Mint temple
         let temple_id = temple.mint_temple(1_u8);
@@ -44,8 +44,8 @@ mod tests {
         assert(temple_state.boss_alive, 'boss starts alive');
 
         // 3. Enter temple
-        temple.enter_temple(explorer_id, temple_id);
-        let pos: ExplorerPosition = world.read_model(explorer_id);
+        temple.enter_temple(adventurer_id, temple_id);
+        let pos: ExplorerPosition = world.read_model(adventurer_id);
         assert(pos.temple_id == temple_id, 'in the right temple');
         assert(pos.chamber_id == 1, 'at entrance');
 
@@ -69,9 +69,9 @@ mod tests {
             is_discovered: false,
         });
 
-        temple.open_exit(explorer_id, 0);
+        temple.open_exit(adventurer_id, 0);
 
-        let progress: ExplorerTempleProgress = world.read_model((explorer_id, temple_id));
+        let progress: ExplorerTempleProgress = world.read_model((adventurer_id, temple_id));
         assert(progress.chambers_explored == 1, 'explored 1 chamber');
 
         // 5. Move to the newly generated chamber 2 if it's not a monster chamber,
@@ -80,13 +80,13 @@ mod tests {
 
         if chamber2.chamber_type == ChamberType::Monster || chamber2.chamber_type == ChamberType::Boss {
             // Move triggers combat
-            temple.move_to_chamber(explorer_id, 0);
-            let pos2: ExplorerPosition = world.read_model(explorer_id);
+            temple.move_to_chamber(adventurer_id, 0);
+            let pos2: ExplorerPosition = world.read_model(adventurer_id);
             assert(pos2.in_combat, 'in combat after move');
         } else {
             // Move to empty/treasure/trap chamber — no combat
-            temple.move_to_chamber(explorer_id, 0);
-            let pos2: ExplorerPosition = world.read_model(explorer_id);
+            temple.move_to_chamber(adventurer_id, 0);
+            let pos2: ExplorerPosition = world.read_model(adventurer_id);
             assert(!pos2.in_combat, 'not in combat in safe chamber');
         }
 
@@ -101,40 +101,40 @@ mod tests {
             is_alive: true,
         });
         world.write_model_test(@ExplorerPosition {
-            explorer_id,
+            adventurer_id,
             temple_id,
             chamber_id: 5,
             in_combat: true,
             combat_monster_id: 1,
         });
         world.write_model_test(@ExplorerHealth {
-            explorer_id,
+            adventurer_id,
             current_hp: 50,
             max_hp: 50,
             is_dead: false,
         });
 
-        let stats_pre: ExplorerStats = world.read_model(explorer_id);
+        let stats_pre: ExplorerStats = world.read_model(adventurer_id);
         let xp_before: u32 = stats_pre.xp;
-        combat.attack(explorer_id);
+        combat.attack(adventurer_id);
 
         let monster_final: MonsterInstance = world.read_model((temple_id, 5_u32, 1_u32));
         if !monster_final.is_alive {
-            let stats_final: ExplorerStats = world.read_model(explorer_id);
+            let stats_final: ExplorerStats = world.read_model(adventurer_id);
             assert(stats_final.xp > xp_before, 'xp increased on kill');
         }
 
         // 7. Exit temple
         world.write_model_test(@ExplorerPosition {
-            explorer_id,
+            adventurer_id,
             temple_id,
             chamber_id: 1,
             in_combat: false,
             combat_monster_id: 0,
         });
 
-        temple.exit_temple(explorer_id);
-        let final_pos: ExplorerPosition = world.read_model(explorer_id);
+        temple.exit_temple(adventurer_id);
+        let final_pos: ExplorerPosition = world.read_model(adventurer_id);
         assert(final_pos.temple_id == 0, 'exited temple');
         assert(final_pos.chamber_id == 0, 'chamber cleared');
     }
@@ -147,12 +147,12 @@ mod tests {
 
         let (mut world, token, _combat, temple) = setup_world();
 
-        let explorer_id = mint_rogue(token);
+        let adventurer_id = mint_rogue(token);
         let temple_id = temple.mint_temple(2_u8);
 
         // Enter
-        temple.enter_temple(explorer_id, temple_id);
-        let pos: ExplorerPosition = world.read_model(explorer_id);
+        temple.enter_temple(adventurer_id, temple_id);
+        let pos: ExplorerPosition = world.read_model(adventurer_id);
         assert(pos.temple_id == temple_id, 'rogue in temple');
 
         // Place rogue in a Treasure chamber
@@ -168,7 +168,7 @@ mod tests {
             trap_dc: 0,
         });
         world.write_model_test(@ExplorerPosition {
-            explorer_id,
+            adventurer_id,
             temple_id,
             chamber_id: 3,
             in_combat: false,
@@ -176,23 +176,23 @@ mod tests {
         });
 
         // Boost WIS to ensure loot check passes
-        let stats: ExplorerStats = world.read_model(explorer_id);
+        let stats: ExplorerStats = world.read_model(adventurer_id);
         let mut abilities = stats.abilities;
         abilities.wisdom = 20;
         world.write_model_test(@ExplorerStats {
-            explorer_id,
+            adventurer_id,
             abilities,
             level: stats.level,
             xp: stats.xp,
-            explorer_class: stats.explorer_class,
+            adventurer_class: stats.adventurer_class,
             temples_conquered: stats.temples_conquered,
         });
 
-        let inv_before: ExplorerInventory = world.read_model(explorer_id);
-        temple.loot_treasure(explorer_id);
+        let inv_before: ExplorerInventory = world.read_model(adventurer_id);
+        temple.loot_treasure(adventurer_id);
 
         let chamber_after: Chamber = world.read_model((temple_id, 3_u32));
-        let inv_after: ExplorerInventory = world.read_model(explorer_id);
+        let inv_after: ExplorerInventory = world.read_model(adventurer_id);
 
         assert(chamber_after.treasure_looted, 'treasure looted');
         // difficulty=2, yonder=2: gold = d6 * 3 * 2 = at least 6
@@ -200,15 +200,15 @@ mod tests {
 
         // Exit
         world.write_model_test(@ExplorerPosition {
-            explorer_id,
+            adventurer_id,
             temple_id,
             chamber_id: 1,
             in_combat: false,
             combat_monster_id: 0,
         });
-        temple.exit_temple(explorer_id);
+        temple.exit_temple(adventurer_id);
 
-        let final_pos: ExplorerPosition = world.read_model(explorer_id);
+        let final_pos: ExplorerPosition = world.read_model(adventurer_id);
         assert(final_pos.temple_id == 0, 'rogue exited');
     }
 
@@ -220,10 +220,10 @@ mod tests {
 
         let (mut world, token, combat, temple) = setup_world();
 
-        let explorer_id = mint_wizard(token);
+        let adventurer_id = mint_wizard(token);
         let temple_id = temple.mint_temple(1_u8);
 
-        temple.enter_temple(explorer_id, temple_id);
+        temple.enter_temple(adventurer_id, temple_id);
 
         // Place wizard in combat vs 1 HP PoisonousSnake
         world.write_model_test(@MonsterInstance {
@@ -236,34 +236,34 @@ mod tests {
             is_alive: true,
         });
         world.write_model_test(@ExplorerPosition {
-            explorer_id,
+            adventurer_id,
             temple_id,
             chamber_id: 2,
             in_combat: true,
             combat_monster_id: 1,
         });
         world.write_model_test(@ExplorerHealth {
-            explorer_id,
+            adventurer_id,
             current_hp: 50,
             max_hp: 50,
             is_dead: false,
         });
         world.write_model_test(@ExplorerTempleProgress {
-            explorer_id,
+            adventurer_id,
             temple_id,
             chambers_explored: 0,
             xp_earned: 0,
         });
 
-        let stats_wiz_pre: ExplorerStats = world.read_model(explorer_id);
+        let stats_wiz_pre: ExplorerStats = world.read_model(adventurer_id);
         let xp_before: u32 = stats_wiz_pre.xp;
 
         // Cast Fire Bolt (cantrip)
-        combat.cast_spell(explorer_id, d20::types::spells::SpellId::FireBolt);
+        combat.cast_spell(adventurer_id, d20::types::spells::SpellId::FireBolt);
 
         let monster_after: MonsterInstance = world.read_model((temple_id, 2_u32, 1_u32));
         if !monster_after.is_alive {
-            let stats_after: ExplorerStats = world.read_model(explorer_id);
+            let stats_after: ExplorerStats = world.read_model(adventurer_id);
             assert(stats_after.xp > xp_before, 'wizard xp should increase');
         }
         // If Fire Bolt missed, monster may still be alive — test passes silently
