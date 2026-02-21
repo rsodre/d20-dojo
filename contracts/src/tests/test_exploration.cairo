@@ -7,9 +7,9 @@ mod tests {
     use d20::d20::models::adventurer::{
         AdventurerHealth, AdventurerPosition,
     };
-    use d20::models::temple::{
-        TempleState, Chamber, ChamberExit,
-        AdventurerTempleProgress
+    use d20::d20::models::dungeon::{
+        DungeonState, Chamber, ChamberExit,
+        AdventurerDungeonProgress
     };
     use d20::d20::types::index::{ChamberType};
     use d20::tests::tester::{
@@ -26,11 +26,11 @@ mod tests {
         let (mut world, token, _combat, temple) = setup_world();
 
         let adventurer_id = mint_fighter(token);
-        let temple_id = temple.mint_temple(1_u8);
+        let dungeon_id = temple.mint_temple(1_u8);
 
         // Set up entrance chamber with 2 exits
         world.write_model_test(@Chamber {
-            temple_id,
+            dungeon_id,
             chamber_id: 1,
             chamber_type: ChamberType::Entrance,
             yonder: 1,
@@ -41,28 +41,28 @@ mod tests {
             trap_dc: 0,
         });
         world.write_model_test(@ChamberExit {
-            temple_id,
+            dungeon_id,
             from_chamber_id: 1,
             exit_index: 0,
             to_chamber_id: 0,
             is_discovered: false,
         });
 
-        temple.enter_temple(adventurer_id, temple_id);
+        temple.enter_temple(adventurer_id, dungeon_id);
         temple.open_exit(adventurer_id, 0);
 
         // A new chamber (id=2) should now exist
-        let new_chamber: Chamber = world.read_model((temple_id, 2_u32));
+        let new_chamber: Chamber = world.read_model((dungeon_id, 2_u32));
         assert(new_chamber.is_revealed, 'new chamber should be revealed');
         assert(new_chamber.yonder == 2, 'yonder should be 2');
 
         // Exit should be marked discovered
-        let exit: ChamberExit = world.read_model((temple_id, 1_u32, 0_u8));
+        let exit: ChamberExit = world.read_model((dungeon_id, 1_u32, 0_u8));
         assert(exit.is_discovered, 'exit should be discovered');
         assert(exit.to_chamber_id == 2, 'exit points to new chamber');
 
-        // TempleState.max_yonder should be updated to the new chamber's yonder
-        let state: TempleState = world.read_model(temple_id);
+        // DungeonState.max_yonder should be updated to the new chamber's yonder
+        let state: DungeonState = world.read_model(dungeon_id);
         assert(state.max_yonder == 2, 'max_yonder should be 2');
     }
 
@@ -75,10 +75,10 @@ mod tests {
         let (mut world, token, _combat, temple) = setup_world();
 
         let adventurer_id = mint_fighter(token);
-        let temple_id = temple.mint_temple(1_u8);
+        let dungeon_id = temple.mint_temple(1_u8);
 
         world.write_model_test(@Chamber {
-            temple_id,
+            dungeon_id,
             chamber_id: 1,
             chamber_type: ChamberType::Entrance,
             yonder: 1,
@@ -89,17 +89,17 @@ mod tests {
             trap_dc: 0,
         });
         world.write_model_test(@ChamberExit {
-            temple_id,
+            dungeon_id,
             from_chamber_id: 1,
             exit_index: 0,
             to_chamber_id: 0,
             is_discovered: false,
         });
 
-        temple.enter_temple(adventurer_id, temple_id);
+        temple.enter_temple(adventurer_id, dungeon_id);
         temple.open_exit(adventurer_id, 0);
 
-        let progress: AdventurerTempleProgress = world.read_model((adventurer_id, temple_id));
+        let progress: AdventurerDungeonProgress = world.read_model((adventurer_id, dungeon_id));
         assert(progress.chambers_explored == 1, 'should have explored 1 chamber');
     }
 
@@ -112,10 +112,10 @@ mod tests {
         let (mut world, token, _combat, temple) = setup_world();
 
         let adventurer_id = mint_fighter(token);
-        let temple_id = temple.mint_temple(1_u8);
+        let dungeon_id = temple.mint_temple(1_u8);
 
         world.write_model_test(@Chamber {
-            temple_id,
+            dungeon_id,
             chamber_id: 1,
             chamber_type: ChamberType::Entrance,
             yonder: 1,
@@ -126,18 +126,18 @@ mod tests {
             trap_dc: 0,
         });
         world.write_model_test(@ChamberExit {
-            temple_id,
+            dungeon_id,
             from_chamber_id: 1,
             exit_index: 0,
             to_chamber_id: 0,
             is_discovered: false,
         });
 
-        temple.enter_temple(adventurer_id, temple_id);
+        temple.enter_temple(adventurer_id, dungeon_id);
         temple.open_exit(adventurer_id, 0);
 
         // Back exit from chamber 2 to chamber 1 should be discovered
-        let back_exit: ChamberExit = world.read_model((temple_id, 2_u32, 0_u8));
+        let back_exit: ChamberExit = world.read_model((dungeon_id, 2_u32, 0_u8));
         assert(back_exit.is_discovered, 'back exit should be discovered');
         assert(back_exit.to_chamber_id == 1, 'back exit points to entrance');
     }
@@ -152,10 +152,10 @@ mod tests {
         let (mut world, token, _combat, temple) = setup_world();
 
         let adventurer_id = mint_fighter(token);
-        let temple_id = temple.mint_temple(1_u8);
+        let dungeon_id = temple.mint_temple(1_u8);
 
         world.write_model_test(@Chamber {
-            temple_id,
+            dungeon_id,
             chamber_id: 1,
             chamber_type: ChamberType::Entrance,
             yonder: 1,
@@ -166,14 +166,14 @@ mod tests {
             trap_dc: 0,
         });
         world.write_model_test(@ChamberExit {
-            temple_id,
+            dungeon_id,
             from_chamber_id: 1,
             exit_index: 0,
             to_chamber_id: 0,
             is_discovered: false,
         });
 
-        temple.enter_temple(adventurer_id, temple_id);
+        temple.enter_temple(adventurer_id, dungeon_id);
         temple.open_exit(adventurer_id, 0); // first time: ok
         temple.open_exit(adventurer_id, 0); // second time: should panic
     }
@@ -187,11 +187,11 @@ mod tests {
 
         let (mut world, token, _combat, temple) = setup_world();
         let adventurer_id = mint_fighter(token);
-        let temple_id = temple.mint_temple(1_u8);
+        let dungeon_id = temple.mint_temple(1_u8);
 
-        world.write_model_test(@Chamber { temple_id, chamber_id: 1, chamber_type: ChamberType::Entrance, yonder: 0, exit_count: 1, is_revealed: true, treasure_looted: false, trap_disarmed: false, trap_dc: 0 });
+        world.write_model_test(@Chamber { dungeon_id, chamber_id: 1, chamber_type: ChamberType::Entrance, yonder: 0, exit_count: 1, is_revealed: true, treasure_looted: false, trap_disarmed: false, trap_dc: 0 });
 
-        temple.enter_temple(adventurer_id, temple_id);
+        temple.enter_temple(adventurer_id, dungeon_id);
         temple.open_exit(adventurer_id, 5);
     }
 
@@ -204,12 +204,12 @@ mod tests {
 
         let (mut world, token, _combat, temple) = setup_world();
         let adventurer_id = mint_fighter(token);
-        let temple_id = temple.mint_temple(1_u8);
+        let dungeon_id = temple.mint_temple(1_u8);
 
         world.write_model_test(@AdventurerHealth { adventurer_id, current_hp: 0, max_hp: 11, is_dead: true });
-        world.write_model_test(@Chamber { temple_id, chamber_id: 1, chamber_type: ChamberType::Entrance, yonder: 0, exit_count: 1, is_revealed: true, treasure_looted: false, trap_disarmed: false, trap_dc: 0 });
-        world.write_model_test(@ChamberExit { temple_id, from_chamber_id: 1, exit_index: 0, to_chamber_id: 0, is_discovered: false });
-        world.write_model_test(@AdventurerPosition { adventurer_id, temple_id, chamber_id: 1, in_combat: false, combat_monster_id: 0 });
+        world.write_model_test(@Chamber { dungeon_id, chamber_id: 1, chamber_type: ChamberType::Entrance, yonder: 0, exit_count: 1, is_revealed: true, treasure_looted: false, trap_disarmed: false, trap_dc: 0 });
+        world.write_model_test(@ChamberExit { dungeon_id, from_chamber_id: 1, exit_index: 0, to_chamber_id: 0, is_discovered: false });
+        world.write_model_test(@AdventurerPosition { adventurer_id, dungeon_id, chamber_id: 1, in_combat: false, combat_monster_id: 0 });
 
         temple.open_exit(adventurer_id, 0);
     }
@@ -223,11 +223,11 @@ mod tests {
 
         let (mut world, token, _combat, temple) = setup_world();
         let adventurer_id = mint_fighter(token);
-        let temple_id = temple.mint_temple(1_u8);
+        let dungeon_id = temple.mint_temple(1_u8);
 
-        world.write_model_test(@Chamber { temple_id, chamber_id: 1, chamber_type: ChamberType::Entrance, yonder: 0, exit_count: 1, is_revealed: true, treasure_looted: false, trap_disarmed: false, trap_dc: 0 });
-        world.write_model_test(@ChamberExit { temple_id, from_chamber_id: 1, exit_index: 0, to_chamber_id: 0, is_discovered: false });
-        world.write_model_test(@AdventurerPosition { adventurer_id, temple_id, chamber_id: 1, in_combat: true, combat_monster_id: 1 });
+        world.write_model_test(@Chamber { dungeon_id, chamber_id: 1, chamber_type: ChamberType::Entrance, yonder: 0, exit_count: 1, is_revealed: true, treasure_looted: false, trap_disarmed: false, trap_dc: 0 });
+        world.write_model_test(@ChamberExit { dungeon_id, from_chamber_id: 1, exit_index: 0, to_chamber_id: 0, is_discovered: false });
+        world.write_model_test(@AdventurerPosition { adventurer_id, dungeon_id, chamber_id: 1, in_combat: true, combat_monster_id: 1 });
 
         temple.open_exit(adventurer_id, 0);
     }
@@ -241,11 +241,11 @@ mod tests {
         let (mut world, token, _combat, temple) = setup_world();
 
         let adventurer_id = mint_fighter(token);
-        let temple_id = temple.mint_temple(1_u8);
+        let dungeon_id = temple.mint_temple(1_u8);
 
         // Set up entrance with one discovered exit to an empty chamber
         world.write_model_test(@Chamber {
-            temple_id,
+            dungeon_id,
             chamber_id: 1,
             chamber_type: ChamberType::Entrance,
             yonder: 1,
@@ -256,14 +256,14 @@ mod tests {
             trap_dc: 0,
         });
         world.write_model_test(@ChamberExit {
-            temple_id,
+            dungeon_id,
             from_chamber_id: 1,
             exit_index: 0,
             to_chamber_id: 2,
             is_discovered: true,
         });
         world.write_model_test(@Chamber {
-            temple_id,
+            dungeon_id,
             chamber_id: 2,
             chamber_type: ChamberType::Empty,
             yonder: 2,
@@ -274,7 +274,7 @@ mod tests {
             trap_dc: 0,
         });
 
-        temple.enter_temple(adventurer_id, temple_id);
+        temple.enter_temple(adventurer_id, dungeon_id);
         temple.move_to_chamber(adventurer_id, 0);
 
         let pos: AdventurerPosition = world.read_model(adventurer_id);
@@ -292,10 +292,10 @@ mod tests {
         let (mut world, token, _combat, temple) = setup_world();
 
         let adventurer_id = mint_fighter(token);
-        let temple_id = temple.mint_temple(1_u8);
+        let dungeon_id = temple.mint_temple(1_u8);
 
         world.write_model_test(@Chamber {
-            temple_id,
+            dungeon_id,
             chamber_id: 1,
             chamber_type: ChamberType::Entrance,
             yonder: 1,
@@ -306,14 +306,14 @@ mod tests {
             trap_dc: 0,
         });
         world.write_model_test(@ChamberExit {
-            temple_id,
+            dungeon_id,
             from_chamber_id: 1,
             exit_index: 0,
             to_chamber_id: 0,
             is_discovered: false, // not yet discovered
         });
 
-        temple.enter_temple(adventurer_id, temple_id);
+        temple.enter_temple(adventurer_id, dungeon_id);
         temple.move_to_chamber(adventurer_id, 0); // should panic
     }
 
@@ -326,13 +326,13 @@ mod tests {
 
         let (mut world, token, _combat, temple) = setup_world();
         let adventurer_id = mint_fighter(token);
-        let temple_id = temple.mint_temple(1_u8);
+        let dungeon_id = temple.mint_temple(1_u8);
 
         world.write_model_test(@AdventurerHealth { adventurer_id, current_hp: 0, max_hp: 11, is_dead: true });
-        world.write_model_test(@Chamber { temple_id, chamber_id: 1, chamber_type: ChamberType::Entrance, yonder: 0, exit_count: 1, is_revealed: true, treasure_looted: false, trap_disarmed: false, trap_dc: 0 });
-        world.write_model_test(@ChamberExit { temple_id, from_chamber_id: 1, exit_index: 0, to_chamber_id: 2, is_discovered: true });
-        world.write_model_test(@Chamber { temple_id, chamber_id: 2, chamber_type: ChamberType::Empty, yonder: 1, exit_count: 0, is_revealed: true, treasure_looted: false, trap_disarmed: false, trap_dc: 0 });
-        world.write_model_test(@AdventurerPosition { adventurer_id, temple_id, chamber_id: 1, in_combat: false, combat_monster_id: 0 });
+        world.write_model_test(@Chamber { dungeon_id, chamber_id: 1, chamber_type: ChamberType::Entrance, yonder: 0, exit_count: 1, is_revealed: true, treasure_looted: false, trap_disarmed: false, trap_dc: 0 });
+        world.write_model_test(@ChamberExit { dungeon_id, from_chamber_id: 1, exit_index: 0, to_chamber_id: 2, is_discovered: true });
+        world.write_model_test(@Chamber { dungeon_id, chamber_id: 2, chamber_type: ChamberType::Empty, yonder: 1, exit_count: 0, is_revealed: true, treasure_looted: false, trap_disarmed: false, trap_dc: 0 });
+        world.write_model_test(@AdventurerPosition { adventurer_id, dungeon_id, chamber_id: 1, in_combat: false, combat_monster_id: 0 });
 
         temple.move_to_chamber(adventurer_id, 0);
     }
@@ -346,11 +346,11 @@ mod tests {
 
         let (mut world, token, _combat, temple) = setup_world();
         let adventurer_id = mint_fighter(token);
-        let temple_id = temple.mint_temple(1_u8);
+        let dungeon_id = temple.mint_temple(1_u8);
 
-        world.write_model_test(@Chamber { temple_id, chamber_id: 1, chamber_type: ChamberType::Entrance, yonder: 0, exit_count: 1, is_revealed: true, treasure_looted: false, trap_disarmed: false, trap_dc: 0 });
-        world.write_model_test(@ChamberExit { temple_id, from_chamber_id: 1, exit_index: 0, to_chamber_id: 2, is_discovered: true });
-        world.write_model_test(@AdventurerPosition { adventurer_id, temple_id, chamber_id: 1, in_combat: true, combat_monster_id: 1 });
+        world.write_model_test(@Chamber { dungeon_id, chamber_id: 1, chamber_type: ChamberType::Entrance, yonder: 0, exit_count: 1, is_revealed: true, treasure_looted: false, trap_disarmed: false, trap_dc: 0 });
+        world.write_model_test(@ChamberExit { dungeon_id, from_chamber_id: 1, exit_index: 0, to_chamber_id: 2, is_discovered: true });
+        world.write_model_test(@AdventurerPosition { adventurer_id, dungeon_id, chamber_id: 1, in_combat: true, combat_monster_id: 1 });
 
         temple.move_to_chamber(adventurer_id, 0);
     }

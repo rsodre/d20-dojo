@@ -8,9 +8,9 @@ mod tests {
         AdventurerStats, AdventurerHealth, AdventurerCombat, AdventurerInventory,
         AdventurerPosition
     };
-    use d20::models::temple::{
+    use d20::d20::models::dungeon::{
         MonsterInstance,
-        AdventurerTempleProgress
+        AdventurerDungeonProgress
     };
     use d20::d20::types::items::{WeaponType, ArmorType};
     use d20::d20::models::monster::MonsterType;
@@ -43,7 +43,7 @@ mod tests {
             level: 1,
             xp: 150,
             adventurer_class: stats.adventurer_class,
-            temples_conquered: stats.temples_conquered,
+            dungeons_conquered: stats.dungeons_conquered,
         });
         temple.exit_temple(adventurer_id);
 
@@ -56,7 +56,7 @@ mod tests {
         assert(stats_in_b.level == 1, 'level carries to temple B');
 
         let pos: AdventurerPosition = world.read_model(adventurer_id);
-        assert(pos.temple_id == temple_b, 'in temple B');
+        assert(pos.dungeon_id == temple_b, 'in temple B');
         assert(pos.chamber_id == 1, 'at entrance of B');
     }
 
@@ -74,12 +74,12 @@ mod tests {
 
         temple.enter_temple(adventurer_id, temple_a);
 
-        world.write_model_test(@MonsterInstance { temple_id: temple_a, chamber_id: 1, monster_id: 1, monster_type: MonsterType::Skeleton, current_hp: 1, max_hp: 13, is_alive: true });
-        world.write_model_test(@AdventurerPosition { adventurer_id, temple_id: temple_a, chamber_id: 1, in_combat: true, combat_monster_id: 1 });
+        world.write_model_test(@MonsterInstance { dungeon_id: temple_a, chamber_id: 1, monster_id: 1, monster_type: MonsterType::Skeleton, current_hp: 1, max_hp: 13, is_alive: true });
+        world.write_model_test(@AdventurerPosition { adventurer_id, dungeon_id: temple_a, chamber_id: 1, in_combat: true, combat_monster_id: 1 });
         world.write_model_test(@AdventurerHealth { adventurer_id, current_hp: 50, max_hp: 50, is_dead: false });
 
         let stats: AdventurerStats = world.read_model(adventurer_id);
-        world.write_model_test(@AdventurerStats { adventurer_id, abilities: stats.abilities, level: 1, xp: 250, adventurer_class: stats.adventurer_class, temples_conquered: 0 });
+        world.write_model_test(@AdventurerStats { adventurer_id, abilities: stats.abilities, level: 1, xp: 250, adventurer_class: stats.adventurer_class, dungeons_conquered: 0 });
 
         combat.attack(adventurer_id);
 
@@ -91,7 +91,7 @@ mod tests {
 
         let pos: AdventurerPosition = world.read_model(adventurer_id);
         if pos.in_combat {
-            world.write_model_test(@AdventurerPosition { adventurer_id, temple_id: temple_a, chamber_id: 1, in_combat: false, combat_monster_id: 0 });
+            world.write_model_test(@AdventurerPosition { adventurer_id, dungeon_id: temple_a, chamber_id: 1, in_combat: false, combat_monster_id: 0 });
         }
         temple.exit_temple(adventurer_id);
         temple.enter_temple(adventurer_id, temple_b);
@@ -164,16 +164,16 @@ mod tests {
         let temple_b = temple.mint_temple(2_u8);
 
         temple.enter_temple(adventurer_id, temple_a);
-        world.write_model_test(@AdventurerTempleProgress { adventurer_id, temple_id: temple_a, chambers_explored: 7, xp_earned: 500 });
+        world.write_model_test(@AdventurerDungeonProgress { adventurer_id, dungeon_id: temple_a, chambers_explored: 7, xp_earned: 500 });
 
         temple.exit_temple(adventurer_id);
         temple.enter_temple(adventurer_id, temple_b);
 
-        let progress_b: AdventurerTempleProgress = world.read_model((adventurer_id, temple_b));
+        let progress_b: AdventurerDungeonProgress = world.read_model((adventurer_id, temple_b));
         assert(progress_b.chambers_explored == 0, 'B starts at 0 chambers');
         assert(progress_b.xp_earned == 0, 'B starts at 0 xp');
 
-        let progress_a: AdventurerTempleProgress = world.read_model((adventurer_id, temple_a));
+        let progress_a: AdventurerDungeonProgress = world.read_model((adventurer_id, temple_a));
         assert(progress_a.chambers_explored == 7, 'A progress preserved');
         assert(progress_a.xp_earned == 500, 'A xp preserved');
     }
@@ -215,8 +215,8 @@ mod tests {
 
         temple.enter_temple(adventurer_id, temple_a);
 
-        world.write_model_test(@MonsterInstance { temple_id: temple_a, chamber_id: 1, monster_id: 1, monster_type: MonsterType::PoisonousSnake, current_hp: 1, max_hp: 1, is_alive: true });
-        world.write_model_test(@AdventurerPosition { adventurer_id, temple_id: temple_a, chamber_id: 1, in_combat: true, combat_monster_id: 1 });
+        world.write_model_test(@MonsterInstance { dungeon_id: temple_a, chamber_id: 1, monster_id: 1, monster_type: MonsterType::PoisonousSnake, current_hp: 1, max_hp: 1, is_alive: true });
+        world.write_model_test(@AdventurerPosition { adventurer_id, dungeon_id: temple_a, chamber_id: 1, in_combat: true, combat_monster_id: 1 });
         world.write_model_test(@AdventurerHealth { adventurer_id, current_hp: 50, max_hp: 50, is_dead: false });
 
         let inv_before: AdventurerInventory = world.read_model(adventurer_id);
@@ -229,7 +229,7 @@ mod tests {
 
         let pos_after: AdventurerPosition = world.read_model(adventurer_id);
         if pos_after.in_combat {
-            world.write_model_test(@AdventurerPosition { adventurer_id, temple_id: temple_a, chamber_id: 1, in_combat: false, combat_monster_id: 0 });
+            world.write_model_test(@AdventurerPosition { adventurer_id, dungeon_id: temple_a, chamber_id: 1, in_combat: false, combat_monster_id: 0 });
         }
         temple.exit_temple(adventurer_id);
 
@@ -245,7 +245,7 @@ mod tests {
         temple.enter_temple(adventurer_id, temple_b);
 
         let pos_b: AdventurerPosition = world.read_model(adventurer_id);
-        assert(pos_b.temple_id == temple_b, 'in temple B');
+        assert(pos_b.dungeon_id == temple_b, 'in temple B');
 
         let inv_b: AdventurerInventory = world.read_model(adventurer_id);
         assert(inv_b.gold == 25, 'gold preserved');

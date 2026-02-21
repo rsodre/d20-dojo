@@ -9,7 +9,7 @@
 - [x] **1.1** Replace starter code: update namespace from `dojo_starter` to `d20_0_1` in `Scarb.toml` and `dojo_dev.toml`, update world name/seed, remove starter models/systems
 - [x] **1.2** Define all enums in `src/types.cairo` with correct derives (`Serde, Copy, Drop, Introspect, PartialEq, Debug, DojoStore, Default`)
 - [x] **1.3** Implement explorer models in `src/models/` (AdventurerStats, AdventurerHealth, AdventurerCombat, AdventurerInventory, AdventurerPosition, AdventurerSkills) with `#[dojo::model]` and `#[derive(Copy, Drop, Serde)]`
-- [x] **1.4** Implement temple/chamber models (TempleState, Chamber, MonsterInstance, ChamberExit, FallenAdventurer, ChamberFallenCount, AdventurerTempleProgress)
+- [x] **1.4** Implement temple/chamber models (DungeonState, Chamber, MonsterInstance, ChamberExit, FallenAdventurer, ChamberFallenCount, AdventurerDungeonProgress)
 - [x] **1.5** Implement D20 utility module (`src/utils/d20.cairo`): `roll_d20`, `roll_dice`, `ability_modifier`, `proficiency_bonus`, `calculate_ac`
 - [x] **1.6** Implement monster stat lookup (`src/utils/monsters.cairo`): pure function returning stats for each MonsterType
 - [x] **1.7** Define all events (`src/events.cairo`): ExplorerMinted, CombatResult, ExplorerDied, ChamberRevealed, LevelUp, BossDefeated
@@ -34,17 +34,17 @@
 ## Day 3: Temple & Exploration
 
 - [x] **3.1** Implement `temple_token` contract (`src/systems/temple_token.cairo`)
-- [ ] **3.2** Implement `mint_temple`: mint Temple NFT via cairo-nft-combo `_mint_next()`, create TempleState, create entrance chamber (chamber_id=1, yonder=0, type=Entrance), generate entrance exits from seed
-- [x] **3.3** Implement `enter_temple`: validate explorer is alive and not in another temple, place at entrance chamber, initialize `AdventurerTempleProgress`
-- [x] **3.4** Implement `exit_temple`: remove explorer from temple (set temple_id=0, chamber_id=0), retain stats/inventory/XP
+- [ ] **3.2** Implement `mint_temple`: mint Temple NFT via cairo-nft-combo `_mint_next()`, create DungeonState, create entrance chamber (chamber_id=1, yonder=0, type=Entrance), generate entrance exits from seed
+- [x] **3.3** Implement `enter_temple`: validate explorer is alive and not in another temple, place at entrance chamber, initialize `AdventurerDungeonProgress`
+- [x] **3.4** Implement `exit_temple`: remove explorer from temple (set dungeon_id=0, chamber_id=0), retain stats/inventory/XP
 - [x] **3.5** Implement `generate_chamber` (internal fn): derive chamber properties from temple seed + chamber position, calculate boss probability via Yonder Formula, determine chamber type / monster type / exit count / trap DC, create `MonsterInstance` model for monster chambers, emit ChamberRevealed event
-- [x] **3.6** Implement `open_exit`: call `generate_chamber` for undiscovered exits, create bidirectional `ChamberExit` links, increment `chambers_explored` on `AdventurerTempleProgress`
+- [x] **3.6** Implement `open_exit`: call `generate_chamber` for undiscovered exits, create bidirectional `ChamberExit` links, increment `chambers_explored` on `AdventurerDungeonProgress`
 - [x] **3.7** Implement `move_to_chamber`: validate exit is discovered, move explorer, trigger chamber events (monster encounter / trap)
 - [x] **3.8** Implement `loot_treasure`: Perception skill check (d20 + WIS mod + proficiency), DC 10 Treasure / DC 12 Empty; success awards gold (1d6 × (yonder+1) × difficulty) + potion on roll ≥15; marks `treasure_looted=true`. Note: `search_chamber` was removed — traps fire immediately on `move_to_chamber` entry; loot pickup and treasure detection are merged into `loot_treasure`.
 - [x] **3.9** Implement trap mechanics: saving throw to avoid, damage on failure, `disarm_trap` skill check
 - [x] **3.10** Implement `loot_fallen`: pick up a fallen explorer's items, update inventory, mark `is_looted=true`
 - [x] **3.11** Implement XP gain and level-up: check thresholds, increase max HP (roll hit die + CON), update proficiency bonus, unlock class features, add spell slots for Wizard
-- [x] **3.12** Implement boss defeat: on boss kill, increment `temples_conquered`, mark `boss_alive = false`, emit BossDefeated event
+- [x] **3.12** Implement boss defeat: on boss kill, increment `dungeons_conquered`, mark `boss_alive = false`, emit BossDefeated event
 - [x] **3.13** Implement `calculate_boss_probability` with the Yonder Formula (quadratic yonder + XP component)
 - [x] **3.14** Write integration tests: full explorer-mints -> enters-temple -> opens-exits -> explores -> fights -> loots -> levels-up -> finds-boss flow
 

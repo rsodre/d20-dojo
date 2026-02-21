@@ -8,9 +8,9 @@ mod tests {
         AdventurerStats, AdventurerHealth,
         AdventurerPosition,
     };
-    use d20::models::temple::{
-        TempleState, MonsterInstance,
-        AdventurerTempleProgress
+    use d20::d20::models::dungeon::{
+        DungeonState, MonsterInstance,
+        AdventurerDungeonProgress
     };
     use d20::d20::models::monster::MonsterType;
     use d20::tests::tester::{
@@ -28,11 +28,11 @@ mod tests {
         let (mut world, token, combat, temple) = setup_world();
 
         let adventurer_id = mint_fighter(token);
-        let temple_id = temple.mint_temple(1_u8);
+        let dungeon_id = temple.mint_temple(1_u8);
 
         // Set up temple with a known boss chamber
-        world.write_model_test(@TempleState {
-            temple_id,
+        world.write_model_test(@DungeonState {
+            dungeon_id,
             difficulty_tier: 1,
             next_chamber_id: 3,
             boss_chamber_id: 2,
@@ -42,7 +42,7 @@ mod tests {
 
         // Boss = Wraith with 1 HP (guaranteed kill)
         world.write_model_test(@MonsterInstance {
-            temple_id,
+            dungeon_id,
             chamber_id: 2,
             monster_id: 1,
             monster_type: MonsterType::Wraith,
@@ -52,7 +52,7 @@ mod tests {
         });
         world.write_model_test(@AdventurerPosition {
             adventurer_id,
-            temple_id,
+            dungeon_id,
             chamber_id: 2,
             in_combat: true,
             combat_monster_id: 1,
@@ -63,35 +63,35 @@ mod tests {
             max_hp: 50,
             is_dead: false,
         });
-        world.write_model_test(@AdventurerTempleProgress {
+        world.write_model_test(@AdventurerDungeonProgress {
             adventurer_id,
-            temple_id,
+            dungeon_id,
             chambers_explored: 5,
             xp_earned: 500,
         });
 
         combat.attack(adventurer_id);
 
-        let monster_after: MonsterInstance = world.read_model((temple_id, 2_u32, 1_u32));
+        let monster_after: MonsterInstance = world.read_model((dungeon_id, 2_u32, 1_u32));
         if !monster_after.is_alive {
-            let temple_after: TempleState = world.read_model(temple_id);
+            let temple_after: DungeonState = world.read_model(dungeon_id);
             assert(!temple_after.boss_alive, 'boss should be marked dead');
 
             let stats_after: AdventurerStats = world.read_model(adventurer_id);
-            assert(stats_after.temples_conquered == 1, 'temples_conquered should be 1');
+            assert(stats_after.dungeons_conquered == 1, 'dungeons_conquered should be 1');
         }
     }
 
     // ═══════════════════════════════════════════════════════════════════════
     #[test]
-    fn test_boss_defeat_increments_temples_conquered() {
+    fn test_boss_defeat_increments_dungeons_conquered() {
         let caller: ContractAddress = 'bosstest2'.try_into().unwrap();
         starknet::testing::set_contract_address(caller);
 
         let (mut world, token, combat, temple) = setup_world();
 
         let adventurer_id = mint_fighter(token);
-        let temple_id = temple.mint_temple(1_u8);
+        let dungeon_id = temple.mint_temple(1_u8);
 
         // Explorer with 1 prior conquest
         let stats: AdventurerStats = world.read_model(adventurer_id);
@@ -101,11 +101,11 @@ mod tests {
             level: stats.level,
             xp: stats.xp,
             adventurer_class: stats.adventurer_class,
-            temples_conquered: 1, // previously conquered 1 temple
+            dungeons_conquered: 1, // previously conquered 1 temple
         });
 
-        world.write_model_test(@TempleState {
-            temple_id,
+        world.write_model_test(@DungeonState {
+            dungeon_id,
             difficulty_tier: 1,
             next_chamber_id: 3,
             boss_chamber_id: 2,
@@ -113,7 +113,7 @@ mod tests {
             max_yonder: 1,
         });
         world.write_model_test(@MonsterInstance {
-            temple_id,
+            dungeon_id,
             chamber_id: 2,
             monster_id: 1,
             monster_type: MonsterType::Wraith,
@@ -123,7 +123,7 @@ mod tests {
         });
         world.write_model_test(@AdventurerPosition {
             adventurer_id,
-            temple_id,
+            dungeon_id,
             chamber_id: 2,
             in_combat: true,
             combat_monster_id: 1,
@@ -134,19 +134,19 @@ mod tests {
             max_hp: 50,
             is_dead: false,
         });
-        world.write_model_test(@AdventurerTempleProgress {
+        world.write_model_test(@AdventurerDungeonProgress {
             adventurer_id,
-            temple_id,
+            dungeon_id,
             chambers_explored: 3,
             xp_earned: 300,
         });
 
         combat.attack(adventurer_id);
 
-        let monster_after: MonsterInstance = world.read_model((temple_id, 2_u32, 1_u32));
+        let monster_after: MonsterInstance = world.read_model((dungeon_id, 2_u32, 1_u32));
         if !monster_after.is_alive {
             let stats_after: AdventurerStats = world.read_model(adventurer_id);
-            assert(stats_after.temples_conquered == 2, 'should have 2 conquests now');
+            assert(stats_after.dungeons_conquered == 2, 'should have 2 conquests now');
         }
     }
 

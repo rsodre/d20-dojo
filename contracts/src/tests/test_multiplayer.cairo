@@ -8,9 +8,9 @@ mod tests {
         AdventurerStats, AdventurerHealth, AdventurerInventory,
         AdventurerPosition
     };
-    use d20::models::temple::{
-        TempleState, Chamber, ChamberExit, MonsterInstance,
-        FallenAdventurer, ChamberFallenCount, AdventurerTempleProgress
+    use d20::d20::models::dungeon::{
+        DungeonState, Chamber, ChamberExit, MonsterInstance,
+        FallenAdventurer, ChamberFallenCount, AdventurerDungeonProgress
     };
     use d20::d20::types::index::{ChamberType};
     use d20::d20::types::items::{WeaponType, ArmorType};
@@ -31,12 +31,12 @@ mod tests {
         let (mut world, token, _combat, temple) = setup_world();
 
         let explorer_a = mint_fighter(token);
-        let temple_id = temple.mint_temple(1_u8);
-        temple.enter_temple(explorer_a, temple_id);
+        let dungeon_id = temple.mint_temple(1_u8);
+        temple.enter_temple(explorer_a, dungeon_id);
 
         // Entrance chamber with 2 exits
         world.write_model_test(@Chamber {
-            temple_id,
+            dungeon_id,
             chamber_id: 1,
             chamber_type: ChamberType::Entrance,
             yonder: 1,
@@ -47,14 +47,14 @@ mod tests {
             trap_dc: 0,
         });
         world.write_model_test(@ChamberExit {
-            temple_id,
+            dungeon_id,
             from_chamber_id: 1,
             exit_index: 0,
             to_chamber_id: 0,
             is_discovered: false,
         });
         world.write_model_test(@ChamberExit {
-            temple_id,
+            dungeon_id,
             from_chamber_id: 1,
             exit_index: 1,
             to_chamber_id: 0,
@@ -64,7 +64,7 @@ mod tests {
         // Player A opens exit 0
         temple.open_exit(explorer_a, 0);
 
-        let exit_after: ChamberExit = world.read_model((temple_id, 1_u32, 0_u8));
+        let exit_after: ChamberExit = world.read_model((dungeon_id, 1_u32, 0_u8));
         assert(exit_after.is_discovered, 'exit 0 discovered by A');
         let dest_chamber_id = exit_after.to_chamber_id;
         assert(dest_chamber_id > 1, 'new chamber allocated');
@@ -72,10 +72,10 @@ mod tests {
         // Player B: mint, enter same temple, positioned at entrance
         starknet::testing::set_contract_address(player_b);
         let explorer_b = mint_fighter(token);
-        temple.enter_temple(explorer_b, temple_id);
+        temple.enter_temple(explorer_b, dungeon_id);
 
         // Player B reads exit 0 — should be discovered by A
-        let exit_b: ChamberExit = world.read_model((temple_id, 1_u32, 0_u8));
+        let exit_b: ChamberExit = world.read_model((dungeon_id, 1_u32, 0_u8));
         assert(exit_b.is_discovered, 'B sees A discovered exit');
         assert(exit_b.to_chamber_id == dest_chamber_id, 'B sees same dest');
 
@@ -96,12 +96,12 @@ mod tests {
         let (mut world, token, _combat, temple) = setup_world();
 
         let explorer_a = mint_fighter(token);
-        let temple_id = temple.mint_temple(1_u8);
-        temple.enter_temple(explorer_a, temple_id);
+        let dungeon_id = temple.mint_temple(1_u8);
+        temple.enter_temple(explorer_a, dungeon_id);
 
         // Entrance with a discovered exit to a monster chamber
         world.write_model_test(@Chamber {
-            temple_id,
+            dungeon_id,
             chamber_id: 1,
             chamber_type: ChamberType::Entrance,
             yonder: 1,
@@ -112,7 +112,7 @@ mod tests {
             trap_dc: 0,
         });
         world.write_model_test(@ChamberExit {
-            temple_id,
+            dungeon_id,
             from_chamber_id: 1,
             exit_index: 0,
             to_chamber_id: 2,
@@ -120,7 +120,7 @@ mod tests {
         });
         // Monster chamber
         world.write_model_test(@Chamber {
-            temple_id,
+            dungeon_id,
             chamber_id: 2,
             chamber_type: ChamberType::Monster,
             yonder: 2,
@@ -131,7 +131,7 @@ mod tests {
             trap_dc: 0,
         });
         world.write_model_test(@ChamberExit {
-            temple_id,
+            dungeon_id,
             from_chamber_id: 2,
             exit_index: 0,
             to_chamber_id: 1,
@@ -139,7 +139,7 @@ mod tests {
         });
         // Simulate: A already killed the monster (shared state)
         world.write_model_test(@MonsterInstance {
-            temple_id,
+            dungeon_id,
             chamber_id: 2,
             monster_id: 1,
             monster_type: MonsterType::PoisonousSnake,
@@ -151,7 +151,7 @@ mod tests {
         // Player B enters same temple, moves to the cleared chamber
         starknet::testing::set_contract_address(player_b);
         let explorer_b = mint_fighter(token);
-        temple.enter_temple(explorer_b, temple_id);
+        temple.enter_temple(explorer_b, dungeon_id);
         temple.move_to_chamber(explorer_b, 0);
 
         // Player B should NOT be in combat — monster is dead
@@ -160,7 +160,7 @@ mod tests {
         assert(!pos_b.in_combat, 'B not in combat');
 
         // B reads the same shared monster — confirms it's dead
-        let monster: MonsterInstance = world.read_model((temple_id, 2_u32, 1_u32));
+        let monster: MonsterInstance = world.read_model((dungeon_id, 2_u32, 1_u32));
         assert(!monster.is_alive, 'monster still dead');
     }
 
@@ -175,12 +175,12 @@ mod tests {
         let (mut world, token, _combat, temple) = setup_world();
 
         let explorer_a = mint_fighter(token);
-        let temple_id = temple.mint_temple(1_u8);
-        temple.enter_temple(explorer_a, temple_id);
+        let dungeon_id = temple.mint_temple(1_u8);
+        temple.enter_temple(explorer_a, dungeon_id);
 
         // Treasure chamber with DC 1 (guaranteed success)
         world.write_model_test(@Chamber {
-            temple_id,
+            dungeon_id,
             chamber_id: 1,
             chamber_type: ChamberType::Treasure,
             yonder: 1,
@@ -200,13 +200,13 @@ mod tests {
             level: stats_a.level,
             xp: stats_a.xp,
             adventurer_class: stats_a.adventurer_class,
-            temples_conquered: stats_a.temples_conquered,
+            dungeons_conquered: stats_a.dungeons_conquered,
         });
 
         // Player A loots treasure
         temple.loot_treasure(explorer_a);
 
-        let chamber_after: Chamber = world.read_model((temple_id, 1_u32));
+        let chamber_after: Chamber = world.read_model((dungeon_id, 1_u32));
         assert(chamber_after.treasure_looted, 'A looted treasure');
 
         // Player B enters same temple
@@ -214,7 +214,7 @@ mod tests {
         let explorer_b = mint_fighter(token);
         world.write_model_test(@AdventurerPosition {
             adventurer_id: explorer_b,
-            temple_id,
+            dungeon_id,
             chamber_id: 1,
             in_combat: false,
             combat_monster_id: 0,
@@ -240,11 +240,11 @@ mod tests {
         let (mut world, token, _combat, temple) = setup_world();
 
         let explorer_a = mint_rogue(token);
-        let temple_id = temple.mint_temple(1_u8);
+        let dungeon_id = temple.mint_temple(1_u8);
 
         // Entrance with exit to trap chamber
         world.write_model_test(@Chamber {
-            temple_id,
+            dungeon_id,
             chamber_id: 1,
             chamber_type: ChamberType::Entrance,
             yonder: 1,
@@ -255,7 +255,7 @@ mod tests {
             trap_dc: 0,
         });
         world.write_model_test(@ChamberExit {
-            temple_id,
+            dungeon_id,
             from_chamber_id: 1,
             exit_index: 0,
             to_chamber_id: 2,
@@ -263,7 +263,7 @@ mod tests {
         });
         // Trap chamber with DC 1 (easy to disarm)
         world.write_model_test(@Chamber {
-            temple_id,
+            dungeon_id,
             chamber_id: 2,
             chamber_type: ChamberType::Trap,
             yonder: 2,
@@ -274,7 +274,7 @@ mod tests {
             trap_dc: 1,
         });
         world.write_model_test(@ChamberExit {
-            temple_id,
+            dungeon_id,
             from_chamber_id: 2,
             exit_index: 0,
             to_chamber_id: 1,
@@ -282,18 +282,18 @@ mod tests {
         });
 
         // Player A: enter temple, move to trap (takes damage or not), then disarm
-        temple.enter_temple(explorer_a, temple_id);
+        temple.enter_temple(explorer_a, dungeon_id);
         temple.move_to_chamber(explorer_a, 0);
         temple.disarm_trap(explorer_a);
 
         // Verify trap is disarmed (shared state)
-        let chamber: Chamber = world.read_model((temple_id, 2_u32));
+        let chamber: Chamber = world.read_model((dungeon_id, 2_u32));
         assert(chamber.trap_disarmed, 'A disarmed trap');
 
         // Player B: enter same temple, move to entrance first
         starknet::testing::set_contract_address(player_b);
         let explorer_b = mint_fighter(token);
-        temple.enter_temple(explorer_b, temple_id);
+        temple.enter_temple(explorer_b, dungeon_id);
 
         // Record B's HP before moving to trap chamber
         let health_before: AdventurerHealth = world.read_model(explorer_b);
@@ -319,12 +319,12 @@ mod tests {
         let (mut world, token, _combat, temple) = setup_world();
 
         let explorer_a = mint_fighter(token);
-        let temple_id = temple.mint_temple(1_u8);
-        temple.enter_temple(explorer_a, temple_id);
+        let dungeon_id = temple.mint_temple(1_u8);
+        temple.enter_temple(explorer_a, dungeon_id);
 
         // Monster at full HP
         world.write_model_test(@MonsterInstance {
-            temple_id,
+            dungeon_id,
             chamber_id: 1,
             monster_id: 1,
             monster_type: MonsterType::Skeleton,
@@ -335,7 +335,7 @@ mod tests {
 
         // Simulate: A deals 30 damage → monster at 20 HP
         world.write_model_test(@MonsterInstance {
-            temple_id,
+            dungeon_id,
             chamber_id: 1,
             monster_id: 1,
             monster_type: MonsterType::Skeleton,
@@ -347,16 +347,16 @@ mod tests {
         // Player B enters same temple — reads the same monster state
         starknet::testing::set_contract_address(player_b);
         let explorer_b = mint_fighter(token);
-        temple.enter_temple(explorer_b, temple_id);
+        temple.enter_temple(explorer_b, dungeon_id);
 
-        let monster_b_view: MonsterInstance = world.read_model((temple_id, 1_u32, 1_u32));
+        let monster_b_view: MonsterInstance = world.read_model((dungeon_id, 1_u32, 1_u32));
         assert(monster_b_view.current_hp == 20, 'B sees 20 HP');
         assert(monster_b_view.max_hp == 50, 'B sees 50 max');
         assert(monster_b_view.is_alive, 'monster still alive');
 
         // Simulate: B finishes the monster → 0 HP, dead
         world.write_model_test(@MonsterInstance {
-            temple_id,
+            dungeon_id,
             chamber_id: 1,
             monster_id: 1,
             monster_type: MonsterType::Skeleton,
@@ -367,7 +367,7 @@ mod tests {
 
         // A reads the same model — sees B's kill
         starknet::testing::set_contract_address(player_a);
-        let monster_a_view: MonsterInstance = world.read_model((temple_id, 1_u32, 1_u32));
+        let monster_a_view: MonsterInstance = world.read_model((dungeon_id, 1_u32, 1_u32));
         assert(!monster_a_view.is_alive, 'A sees monster dead');
         assert(monster_a_view.current_hp == 0, 'A sees 0 HP');
     }
@@ -382,12 +382,12 @@ mod tests {
         let (mut world, token, _combat, temple) = setup_world();
 
         let explorer_a = mint_fighter(token);
-        let temple_id = temple.mint_temple(1_u8);
-        temple.enter_temple(explorer_a, temple_id);
+        let dungeon_id = temple.mint_temple(1_u8);
+        temple.enter_temple(explorer_a, dungeon_id);
 
         // Entrance with 2 undiscovered exits
         world.write_model_test(@Chamber {
-            temple_id,
+            dungeon_id,
             chamber_id: 1,
             chamber_type: ChamberType::Entrance,
             yonder: 1,
@@ -398,14 +398,14 @@ mod tests {
             trap_dc: 0,
         });
         world.write_model_test(@ChamberExit {
-            temple_id,
+            dungeon_id,
             from_chamber_id: 1,
             exit_index: 0,
             to_chamber_id: 0,
             is_discovered: false,
         });
         world.write_model_test(@ChamberExit {
-            temple_id,
+            dungeon_id,
             from_chamber_id: 1,
             exit_index: 1,
             to_chamber_id: 0,
@@ -415,19 +415,19 @@ mod tests {
         // Player A opens exit 0 → generates chamber 2
         temple.open_exit(explorer_a, 0);
 
-        let exit_0: ChamberExit = world.read_model((temple_id, 1_u32, 0_u8));
+        let exit_0: ChamberExit = world.read_model((dungeon_id, 1_u32, 0_u8));
         let chamber_a_id = exit_0.to_chamber_id;
         assert(chamber_a_id >= 2, 'A chamber allocated');
 
         // Player B: mint, enter same temple
         starknet::testing::set_contract_address(player_b);
         let explorer_b = mint_fighter(token);
-        temple.enter_temple(explorer_b, temple_id);
+        temple.enter_temple(explorer_b, dungeon_id);
 
         // Player B opens exit 1 → generates another chamber
         temple.open_exit(explorer_b, 1);
 
-        let exit_1: ChamberExit = world.read_model((temple_id, 1_u32, 1_u8));
+        let exit_1: ChamberExit = world.read_model((dungeon_id, 1_u32, 1_u8));
         let chamber_b_id = exit_1.to_chamber_id;
 
         // Distinct chamber IDs allocated by shared next_chamber_id counter
@@ -435,14 +435,14 @@ mod tests {
         assert(chamber_b_id > chamber_a_id, 'B ID after A ID');
 
         // Both chambers exist and are revealed
-        let ch_a: Chamber = world.read_model((temple_id, chamber_a_id));
+        let ch_a: Chamber = world.read_model((dungeon_id, chamber_a_id));
         assert(ch_a.is_revealed, 'A chamber exists');
 
-        let ch_b: Chamber = world.read_model((temple_id, chamber_b_id));
+        let ch_b: Chamber = world.read_model((dungeon_id, chamber_b_id));
         assert(ch_b.is_revealed, 'B chamber exists');
 
         // Temple state next_chamber_id incremented twice
-        let temple_state: TempleState = world.read_model(temple_id);
+        let temple_state: DungeonState = world.read_model(dungeon_id);
         assert(temple_state.next_chamber_id > chamber_b_id, 'next_id advanced');
     }
 
@@ -456,12 +456,12 @@ mod tests {
         let (mut world, token, combat, temple) = setup_world();
 
         let explorer_a = mint_fighter(token);
-        let temple_id = temple.mint_temple(1_u8);
-        temple.enter_temple(explorer_a, temple_id);
+        let dungeon_id = temple.mint_temple(1_u8);
+        temple.enter_temple(explorer_a, dungeon_id);
 
         // Setup combat scenario — A will die
         world.write_model_test(@MonsterInstance {
-            temple_id,
+            dungeon_id,
             chamber_id: 1,
             monster_id: 1,
             monster_type: MonsterType::Skeleton,
@@ -471,7 +471,7 @@ mod tests {
         });
         world.write_model_test(@AdventurerPosition {
             adventurer_id: explorer_a,
-            temple_id,
+            dungeon_id,
             chamber_id: 1,
             in_combat: true,
             combat_monster_id: 1,
@@ -503,13 +503,13 @@ mod tests {
         // Player B enters same temple
         starknet::testing::set_contract_address(player_b);
         let explorer_b = mint_fighter(token);
-        temple.enter_temple(explorer_b, temple_id);
+        temple.enter_temple(explorer_b, dungeon_id);
 
         // B reads shared ChamberFallenCount — should see A's body
-        let fallen_count: ChamberFallenCount = world.read_model((temple_id, 1_u32));
+        let fallen_count: ChamberFallenCount = world.read_model((dungeon_id, 1_u32));
         assert(fallen_count.count >= 1, 'B sees fallen count');
 
-        let fallen: FallenAdventurer = world.read_model((temple_id, 1_u32, 0_u32));
+        let fallen: FallenAdventurer = world.read_model((dungeon_id, 1_u32, 0_u32));
         assert(fallen.adventurer_id == explorer_a, 'body is A');
         assert(!fallen.is_looted, 'not yet looted');
         assert(fallen.dropped_gold == 50, 'gold on body');
@@ -517,7 +517,7 @@ mod tests {
         // B loots A's body
         temple.loot_fallen(explorer_b, 0);
 
-        let fallen_after: FallenAdventurer = world.read_model((temple_id, 1_u32, 0_u32));
+        let fallen_after: FallenAdventurer = world.read_model((dungeon_id, 1_u32, 0_u32));
         assert(fallen_after.is_looted, 'B looted body');
 
         let inv_b: AdventurerInventory = world.read_model(explorer_b);
@@ -534,12 +534,12 @@ mod tests {
         let (mut world, token, _combat, temple) = setup_world();
 
         let explorer_a = mint_fighter(token);
-        let temple_id = temple.mint_temple(1_u8);
-        temple.enter_temple(explorer_a, temple_id);
+        let dungeon_id = temple.mint_temple(1_u8);
+        temple.enter_temple(explorer_a, dungeon_id);
 
         // Entrance with 2 exits
         world.write_model_test(@Chamber {
-            temple_id,
+            dungeon_id,
             chamber_id: 1,
             chamber_type: ChamberType::Entrance,
             yonder: 1,
@@ -550,14 +550,14 @@ mod tests {
             trap_dc: 0,
         });
         world.write_model_test(@ChamberExit {
-            temple_id,
+            dungeon_id,
             from_chamber_id: 1,
             exit_index: 0,
             to_chamber_id: 0,
             is_discovered: false,
         });
         world.write_model_test(@ChamberExit {
-            temple_id,
+            dungeon_id,
             from_chamber_id: 1,
             exit_index: 1,
             to_chamber_id: 0,
@@ -566,25 +566,25 @@ mod tests {
 
         // Player A opens exit 0 — A's chambers_explored = 1
         temple.open_exit(explorer_a, 0);
-        let prog_a: AdventurerTempleProgress = world.read_model((explorer_a, temple_id));
+        let prog_a: AdventurerDungeonProgress = world.read_model((explorer_a, dungeon_id));
         assert(prog_a.chambers_explored == 1, 'A explored 1');
 
         // Player B enters same temple
         starknet::testing::set_contract_address(player_b);
         let explorer_b = mint_fighter(token);
-        temple.enter_temple(explorer_b, temple_id);
+        temple.enter_temple(explorer_b, dungeon_id);
 
         // B's progress starts at 0 even though A already explored
-        let prog_b: AdventurerTempleProgress = world.read_model((explorer_b, temple_id));
+        let prog_b: AdventurerDungeonProgress = world.read_model((explorer_b, dungeon_id));
         assert(prog_b.chambers_explored == 0, 'B explored 0');
 
         // B opens exit 1 — B's chambers_explored = 1
         temple.open_exit(explorer_b, 1);
-        let prog_b2: AdventurerTempleProgress = world.read_model((explorer_b, temple_id));
+        let prog_b2: AdventurerDungeonProgress = world.read_model((explorer_b, dungeon_id));
         assert(prog_b2.chambers_explored == 1, 'B explored 1');
 
         // A's progress unchanged by B's actions
-        let prog_a2: AdventurerTempleProgress = world.read_model((explorer_a, temple_id));
+        let prog_a2: AdventurerDungeonProgress = world.read_model((explorer_a, dungeon_id));
         assert(prog_a2.chambers_explored == 1, 'A still 1');
     }
 

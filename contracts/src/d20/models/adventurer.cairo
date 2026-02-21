@@ -12,7 +12,7 @@ pub struct AdventurerStats {
     pub xp: u32,
     pub adventurer_class: AdventurerClass,
     // Achievements
-    pub temples_conquered: u16,
+    pub dungeons_conquered: u16,
 }
 
 #[derive(Copy, Drop, Serde, IntrospectPacked, DojoStore, Default)]
@@ -80,7 +80,7 @@ pub struct AdventurerInventory {
 pub struct AdventurerPosition {
     #[key]
     pub adventurer_id: u128,
-    pub temple_id: u128,
+    pub dungeon_id: u128,
     pub chamber_id: u32,
     pub in_combat: bool,
     pub combat_monster_id: u32,

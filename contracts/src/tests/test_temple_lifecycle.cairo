@@ -7,9 +7,9 @@ mod tests {
     use d20::d20::models::adventurer::{
         AdventurerStats, AdventurerHealth, AdventurerPosition,
     };
-    use d20::models::temple::{
-        TempleState, Chamber, ChamberExit,
-        AdventurerTempleProgress
+    use d20::d20::models::dungeon::{
+        DungeonState, Chamber, ChamberExit,
+        AdventurerDungeonProgress
     };
     use d20::d20::types::index::{ChamberType};
     use d20::tests::tester::{
@@ -25,10 +25,10 @@ mod tests {
 
         let (world, _token, _combat, temple) = setup_world();
 
-        let temple_id = temple.mint_temple(1_u8);
-        assert(temple_id != 0, 'temple_id must be non-zero');
+        let dungeon_id = temple.mint_temple(1_u8);
+        assert(dungeon_id != 0, 'dungeon_id must be non-zero');
 
-        let state: TempleState = world.read_model(temple_id);
+        let state: DungeonState = world.read_model(dungeon_id);
         assert(state.difficulty_tier == 1, 'difficulty should be 1');
         assert(state.boss_alive, 'boss should start alive');
         assert(state.next_chamber_id == 2, 'next chamber starts at 2');
@@ -36,7 +36,7 @@ mod tests {
         assert(state.max_yonder == 1, 'max_yonder should be 1');
 
         // Verify entrance Chamber was created by mint_temple
-        let entrance: Chamber = world.read_model((temple_id, 1_u32));
+        let entrance: Chamber = world.read_model((dungeon_id, 1_u32));
         assert(entrance.chamber_type == ChamberType::Entrance, 'entrance type');
         assert(entrance.yonder == 1, 'entrance yonder == 1');
         assert(entrance.exit_count == 3, 'entrance has 3 exits');
@@ -44,22 +44,22 @@ mod tests {
         assert(!entrance.treasure_looted, 'entrance not looted');
 
         // Verify 3 undiscovered exit stubs
-        let exit0: ChamberExit = world.read_model((temple_id, 1_u32, 0_u8));
+        let exit0: ChamberExit = world.read_model((dungeon_id, 1_u32, 0_u8));
         assert(!exit0.is_discovered, 'exit 0 undiscovered');
         assert(exit0.to_chamber_id == 0, 'exit 0 points nowhere');
 
-        let exit1: ChamberExit = world.read_model((temple_id, 1_u32, 1_u8));
+        let exit1: ChamberExit = world.read_model((dungeon_id, 1_u32, 1_u8));
         assert(!exit1.is_discovered, 'exit 1 undiscovered');
         assert(exit1.to_chamber_id == 0, 'exit 1 points nowhere');
 
-        let exit2: ChamberExit = world.read_model((temple_id, 1_u32, 2_u8));
+        let exit2: ChamberExit = world.read_model((dungeon_id, 1_u32, 2_u8));
         assert(!exit2.is_discovered, 'exit 2 undiscovered');
         assert(exit2.to_chamber_id == 0, 'exit 2 points nowhere');
 
         // Verify ERC721 state
         assert(temple.total_supply() == 1_u256, 'supply should be 1');
         assert(temple.balance_of(caller) == 1_u256, 'balance should be 1');
-        assert(temple.owner_of(temple_id.into()) == caller, 'wrong owner');
+        assert(temple.owner_of(dungeon_id.into()) == caller, 'wrong owner');
     }
 
     // ═══════════════════════════════════════════════════════════════════════
@@ -98,12 +98,12 @@ mod tests {
         let (world, token, _combat, temple) = setup_world();
 
         let adventurer_id = mint_fighter(token);
-        let temple_id = temple.mint_temple(1_u8);
+        let dungeon_id = temple.mint_temple(1_u8);
 
-        temple.enter_temple(adventurer_id, temple_id);
+        temple.enter_temple(adventurer_id, dungeon_id);
 
         let pos: AdventurerPosition = world.read_model(adventurer_id);
-        assert(pos.temple_id == temple_id, 'in correct temple');
+        assert(pos.dungeon_id == dungeon_id, 'in correct temple');
         assert(pos.chamber_id == 1, 'at entrance chamber');
         assert(!pos.in_combat, 'not in combat on entry');
     }
@@ -117,11 +117,11 @@ mod tests {
         let (world, token, _combat, temple) = setup_world();
 
         let adventurer_id = mint_fighter(token);
-        let temple_id = temple.mint_temple(1_u8);
+        let dungeon_id = temple.mint_temple(1_u8);
 
-        temple.enter_temple(adventurer_id, temple_id);
+        temple.enter_temple(adventurer_id, dungeon_id);
 
-        let progress: AdventurerTempleProgress = world.read_model((adventurer_id, temple_id));
+        let progress: AdventurerDungeonProgress = world.read_model((adventurer_id, dungeon_id));
         assert(progress.chambers_explored == 0, 'fresh progress');
         assert(progress.xp_earned == 0, 'no xp yet');
     }
@@ -136,7 +136,7 @@ mod tests {
         let (mut world, token, _combat, temple) = setup_world();
 
         let adventurer_id = mint_fighter(token);
-        let temple_id = temple.mint_temple(1_u8);
+        let dungeon_id = temple.mint_temple(1_u8);
 
         world.write_model_test(@AdventurerHealth {
             adventurer_id,
@@ -145,7 +145,7 @@ mod tests {
             is_dead: true,
         });
 
-        temple.enter_temple(adventurer_id, temple_id);
+        temple.enter_temple(adventurer_id, dungeon_id);
     }
 
     // ═══════════════════════════════════════════════════════════════════════
@@ -157,13 +157,13 @@ mod tests {
         let (world, token, _combat, temple) = setup_world();
 
         let adventurer_id = mint_fighter(token);
-        let temple_id = temple.mint_temple(1_u8);
+        let dungeon_id = temple.mint_temple(1_u8);
 
-        temple.enter_temple(adventurer_id, temple_id);
+        temple.enter_temple(adventurer_id, dungeon_id);
         temple.exit_temple(adventurer_id);
 
         let pos: AdventurerPosition = world.read_model(adventurer_id);
-        assert(pos.temple_id == 0, 'temple_id cleared');
+        assert(pos.dungeon_id == 0, 'dungeon_id cleared');
         assert(pos.chamber_id == 0, 'chamber_id cleared');
     }
 
@@ -176,11 +176,11 @@ mod tests {
         let (world, token, _combat, temple) = setup_world();
 
         let adventurer_id = mint_fighter(token);
-        let temple_id = temple.mint_temple(1_u8);
+        let dungeon_id = temple.mint_temple(1_u8);
 
         let stats_before: AdventurerStats = world.read_model(adventurer_id);
 
-        temple.enter_temple(adventurer_id, temple_id);
+        temple.enter_temple(adventurer_id, dungeon_id);
         temple.exit_temple(adventurer_id);
 
         let stats_after: AdventurerStats = world.read_model(adventurer_id);
@@ -210,9 +210,9 @@ mod tests {
 
         let (mut world, token, _combat, temple) = setup_world();
         let adventurer_id = mint_fighter(token);
-        let temple_id = temple.mint_temple(1_u8);
-        temple.enter_temple(adventurer_id, temple_id);
-        world.write_model_test(@AdventurerPosition { adventurer_id, temple_id, chamber_id: 2, in_combat: true, combat_monster_id: 1 });
+        let dungeon_id = temple.mint_temple(1_u8);
+        temple.enter_temple(adventurer_id, dungeon_id);
+        world.write_model_test(@AdventurerPosition { adventurer_id, dungeon_id, chamber_id: 2, in_combat: true, combat_monster_id: 1 });
         temple.exit_temple(adventurer_id);
     }
 
@@ -228,7 +228,7 @@ mod tests {
         let temple_a = temple.mint_temple(1_u8);
         let temple_b = temple.mint_temple(2_u8);
 
-        world.write_model_test(@AdventurerPosition { adventurer_id, temple_id: temple_a, chamber_id: 2, in_combat: true, combat_monster_id: 1 });
+        world.write_model_test(@AdventurerPosition { adventurer_id, dungeon_id: temple_a, chamber_id: 2, in_combat: true, combat_monster_id: 1 });
 
         temple.enter_temple(adventurer_id, temple_b);
     }
@@ -241,14 +241,14 @@ mod tests {
 
         let (mut world, token, _combat, temple) = setup_world();
         let adventurer_id = mint_fighter(token);
-        let temple_id = temple.mint_temple(1_u8);
+        let dungeon_id = temple.mint_temple(1_u8);
 
-        temple.enter_temple(adventurer_id, temple_id);
-        world.write_model_test(@AdventurerTempleProgress { adventurer_id, temple_id, chambers_explored: 5, xp_earned: 200 });
+        temple.enter_temple(adventurer_id, dungeon_id);
+        world.write_model_test(@AdventurerDungeonProgress { adventurer_id, dungeon_id, chambers_explored: 5, xp_earned: 200 });
         temple.exit_temple(adventurer_id);
-        temple.enter_temple(adventurer_id, temple_id);
+        temple.enter_temple(adventurer_id, dungeon_id);
 
-        let progress: AdventurerTempleProgress = world.read_model((adventurer_id, temple_id));
+        let progress: AdventurerDungeonProgress = world.read_model((adventurer_id, dungeon_id));
         assert(progress.chambers_explored == 5, 'chambers preserved');
         assert(progress.xp_earned == 200, 'xp preserved');
 

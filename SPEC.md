@@ -109,7 +109,7 @@ Everything else is randomized by VRF in a single `mint_explorer(class)` transact
   - **Rogue:** Stealth + Acrobatics (auto) + 2 random from [Perception, Persuasion, Athletics, Arcana] + 2 random Expertise picks from all proficient skills
   - **Wizard:** Arcana (auto) + 1 random from [Perception, Persuasion]
 
-- **Initialization:** Starting HP (hit die max + CON modifier), starting equipment and AC (determined by class), and spell slots (Wizard only) are all set by the contract. The explorer starts in "no temple" state (temple_id = 0, chamber_id = 0), ready to enter a temple.
+- **Initialization:** Starting HP (hit die max + CON modifier), starting equipment and AC (determined by class), and spell slots (Wizard only) are all set by the contract. The explorer starts in "no temple" state (dungeon_id = 0, chamber_id = 0), ready to enter a temple.
 
 ---
 
@@ -372,7 +372,7 @@ pub struct AdventurerStats {
     pub xp: u32,
     pub adventurer_class: AdventurerClass,
     // Achievements
-    pub temples_conquered: u16,   // how many temple bosses killed
+    pub dungeons_conquered: u16,   // how many temple bosses killed
 }
 
 #[derive(Copy, Drop, Serde)]
@@ -417,7 +417,7 @@ pub struct AdventurerInventory {
 pub struct AdventurerPosition {
     #[key]
     pub adventurer_id: u128,
-    pub temple_id: u128,      // 0 if not in any temple
+    pub dungeon_id: u128,      // 0 if not in any temple
     pub chamber_id: u32,      // 0 if not in any temple
     pub in_combat: bool,
     pub combat_monster_id: u32,   // MonsterInstance key within chamber (0 if not in combat)
@@ -448,11 +448,11 @@ pub struct AdventurerSkills {
 // Tracks an explorer's progress within a specific temple (composite key)
 #[derive(Copy, Drop, Serde)]
 #[dojo::model]
-pub struct AdventurerTempleProgress {
+pub struct AdventurerDungeonProgress {
     #[key]
     pub adventurer_id: u128,
     #[key]
-    pub temple_id: u128,
+    pub dungeon_id: u128,
     pub chambers_explored: u16,   // how many chambers this explorer has opened
     pub xp_earned: u32,           // XP earned in this temple (used for boss probability)
 }
@@ -463,7 +463,7 @@ pub struct AdventurerTempleProgress {
 #[dojo::model]
 pub struct Chamber {
     #[key]
-    pub temple_id: u128,
+    pub dungeon_id: u128,
     #[key]
     pub chamber_id: u32,
     pub chamber_type: ChamberType,
@@ -481,7 +481,7 @@ pub struct Chamber {
 #[dojo::model]
 pub struct MonsterInstance {
     #[key]
-    pub temple_id: u128,
+    pub dungeon_id: u128,
     #[key]
     pub chamber_id: u32,
     #[key]
@@ -498,7 +498,7 @@ pub struct MonsterInstance {
 #[dojo::model]
 pub struct ChamberExit {
     #[key]
-    pub temple_id: u128,
+    pub dungeon_id: u128,
     #[key]
     pub from_chamber_id: u32,
     #[key]
@@ -513,7 +513,7 @@ pub struct ChamberExit {
 #[dojo::model]
 pub struct FallenAdventurer {
     #[key]
-    pub temple_id: u128,
+    pub dungeon_id: u128,
     #[key]
     pub chamber_id: u32,
     #[key]
@@ -532,7 +532,7 @@ pub struct FallenAdventurer {
 #[dojo::model]
 pub struct ChamberFallenCount {
     #[key]
-    pub temple_id: u128,
+    pub dungeon_id: u128,
     #[key]
     pub chamber_id: u32,
     pub count: u32,
@@ -540,9 +540,9 @@ pub struct ChamberFallenCount {
 
 #[derive(Copy, Drop, Serde)]
 #[dojo::model]
-pub struct TempleState {
+pub struct DungeonState {
     #[key]
-    pub temple_id: u128,          // Temple NFT token ID (from cairo-nft-combo _mint_next())
+    pub dungeon_id: u128,          // Temple NFT token ID (from cairo-nft-combo _mint_next())
     pub difficulty_tier: u8,
     pub next_chamber_id: u32,     // auto-incrementing ID for new chambers
     pub boss_chamber_id: u32,     // 0 until boss chamber is generated
@@ -700,7 +700,7 @@ Systems are `#[dojo::contract]` modules, not free functions. Each contract has a
 |----------|-----|-----------|
 | `explorer_token` | `d20_0_1-explorer_token` | AdventurerStats, AdventurerHealth, AdventurerCombat, AdventurerInventory, AdventurerSkills |
 | `combat_system` | `d20_0_1-combat_system` | AdventurerHealth, AdventurerCombat, AdventurerInventory, AdventurerPosition, MonsterInstance, FallenAdventurer, ChamberFallenCount |
-| `temple_token` | `d20_0_1-temple_token` | AdventurerPosition, AdventurerTempleProgress, AdventurerStats, AdventurerHealth, AdventurerInventory, TempleState, Chamber, MonsterInstance, ChamberExit, FallenAdventurer, ChamberFallenCount |
+| `temple_token` | `d20_0_1-temple_token` | AdventurerPosition, AdventurerDungeonProgress, AdventurerStats, AdventurerHealth, AdventurerInventory, DungeonState, Chamber, MonsterInstance, ChamberExit, FallenAdventurer, ChamberFallenCount |
 
 ```cairo
 // ──────────────────────────────────────────────
@@ -759,7 +759,7 @@ trait ICombatSystem<T> {
 #[starknet::interface]
 trait ITempleTokenPublic<T> {
     fn mint_temple(ref self: T, difficulty: u8) -> u128;
-    fn enter_temple(ref self: T, adventurer_id: u128, temple_id: u128);
+    fn enter_temple(ref self: T, adventurer_id: u128, dungeon_id: u128);
     fn exit_temple(ref self: T, adventurer_id: u128);
     fn open_exit(ref self: T, adventurer_id: u128, exit_index: u8);
     fn move_to_chamber(ref self: T, adventurer_id: u128, exit_index: u8);
@@ -803,7 +803,7 @@ pub struct CombatResult {
 pub struct ExplorerDied {
     #[key]
     pub adventurer_id: u128,
-    pub temple_id: u128,
+    pub dungeon_id: u128,
     pub chamber_id: u32,
     pub killed_by: MonsterType,
 }
@@ -812,7 +812,7 @@ pub struct ExplorerDied {
 #[dojo::event]
 pub struct ChamberRevealed {
     #[key]
-    pub temple_id: u128,
+    pub dungeon_id: u128,
     pub chamber_id: u32,
     pub chamber_type: ChamberType,
     pub yonder: u8,
@@ -831,7 +831,7 @@ pub struct LevelUp {
 #[dojo::event]
 pub struct BossDefeated {
     #[key]
-    pub temple_id: u128,
+    pub dungeon_id: u128,
     pub adventurer_id: u128,
     pub monster_type: MonsterType,
 }
@@ -929,7 +929,7 @@ The quadratic yonder curve means early exploration feels safe and rewarding, whi
 ### On-chain Resolution (Cairo-safe)
 The boss probability is compared against a VRF roll:
 ```cairo
-let prob_bps: u32 = calculate_boss_probability(temple_id, adventurer_id, yonder);
+let prob_bps: u32 = calculate_boss_probability(dungeon_id, adventurer_id, yonder);
 let roll: u32 = (vrf.consume_random(source) % 10000).try_into().unwrap();  // 0-9999
 let is_boss: bool = roll < prob_bps;
 ```
@@ -956,12 +956,12 @@ The player must mint a new Explorer NFT. They start fresh — level 1, new class
 
 Explorers are not locked into a single temple. The flow is:
 
-1. **Mint explorer** → explorer is in "no temple" state (temple_id = 0, chamber_id = 0)
+1. **Mint explorer** → explorer is in "no temple" state (dungeon_id = 0, chamber_id = 0)
 2. **Enter temple** → explorer is placed at the entrance chamber (yonder = 0)
 3. **Explore** → open exits, fight monsters, find loot, go deeper
 4. **Exit temple** → explorer returns to "no temple" state. Progress in the temple (opened chambers, killed monsters) persists for everyone. The explorer's personal stats, inventory, and XP are retained.
 5. **Enter another temple** → same explorer, different temple. Can be easier or harder.
-6. **Conquer a temple** → kill the boss. The explorer's `temples_conquered` counter increments. Explorer can exit and enter new temples.
+6. **Conquer a temple** → kill the boss. The explorer's `dungeons_conquered` counter increments. Explorer can exit and enter new temples.
 
 This creates strategic depth: a player might mint an explorer, grind XP in an easy temple, exit, then enter a hard temple at level 5 with good gear. Or they might rush a hard temple at level 1 for the challenge.
 

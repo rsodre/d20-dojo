@@ -109,7 +109,7 @@ mod tests {
         assert(stats.adventurer_class == AdventurerClass::Fighter, 'wrong class');
         assert(stats.level == 1, 'wrong level');
         assert(stats.xp == 0, 'wrong xp');
-        assert(stats.temples_conquered == 0, 'wrong temples');
+        assert(stats.dungeons_conquered == 0, 'wrong temples');
 
         // Stats must be valid standard array values (sum = 72)
         assert_standard_array(@stats);
@@ -187,7 +187,7 @@ mod tests {
         let adventurer_id = token.mint_explorer(AdventurerClass::Fighter);
 
         let pos: AdventurerPosition = world.read_model(adventurer_id);
-        assert(pos.temple_id == 0, 'not in a temple');
+        assert(pos.dungeon_id == 0, 'not in a temple');
         assert(pos.chamber_id == 0, 'not in a chamber');
         assert(!pos.in_combat, 'not in combat');
         assert(pos.combat_monster_id == 0, 'no combat monster');

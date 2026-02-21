@@ -19,13 +19,13 @@ export function useGameModels() {
     model("AdventurerInventory"),
     model("AdventurerPosition"),
     model("AdventurerSkills"),
-    model("TempleState"),
+    model("DungeonState"),
     model("Chamber"),
     model("ChamberFallenCount"),
     model("MonsterInstance"),
     model("ChamberExit"),
     model("FallenAdventurer"),
-    model("AdventurerTempleProgress"),
+    model("AdventurerDungeonProgress"),
 
   ]), [model])
 

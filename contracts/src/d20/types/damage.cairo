@@ -2,7 +2,7 @@ use dojo::model::ModelStorage;
 use dojo::event::EventStorage;
 use dojo::world::WorldStorage;
 use d20::d20::models::adventurer::{AdventurerHealth, AdventurerPosition, AdventurerInventory};
-use d20::models::temple::{FallenAdventurer, ChamberFallenCount};
+use d20::d20::models::dungeon::{FallenAdventurer, ChamberFallenCount};
 use d20::events::ExplorerDied;
 use d20::d20::models::monster::MonsterType;
 
@@ -21,7 +21,7 @@ pub enum DamageType {
 }
 
 pub trait DamageTrait {
-    fn apply_explorer_damage(
+    fn apply_adventurer_damage(
         ref world: WorldStorage,
         adventurer_id: u128,
         health: AdventurerHealth,
@@ -42,7 +42,7 @@ pub trait DamageTrait {
 pub impl DamageImpl of DamageTrait {
     /// Apply damage to the adventurer. Returns actual damage taken.
     /// If HP drops to ≤0, calls handle_death.
-    fn apply_explorer_damage(
+    fn apply_adventurer_damage(
         ref world: WorldStorage,
         adventurer_id: u128,
         health: AdventurerHealth,
@@ -93,7 +93,7 @@ pub impl DamageImpl of DamageTrait {
         // 2. Clear combat state
         world.write_model(@AdventurerPosition {
             adventurer_id,
-            temple_id: position.temple_id,
+            dungeon_id: position.dungeon_id,
             chamber_id: position.chamber_id,
             in_combat: false,
             combat_monster_id: 0,
@@ -104,13 +104,13 @@ pub impl DamageImpl of DamageTrait {
 
         // 4. Determine fallen_index from ChamberFallenCount (read-then-increment)
         let fallen_count: ChamberFallenCount = world.read_model(
-            (position.temple_id, position.chamber_id)
+            (position.dungeon_id, position.chamber_id)
         );
         let fallen_index: u32 = fallen_count.count;
 
         // 5. Create FallenAdventurer loot record
         world.write_model(@FallenAdventurer {
-            temple_id: position.temple_id,
+            dungeon_id: position.dungeon_id,
             chamber_id: position.chamber_id,
             fallen_index,
             adventurer_id,
@@ -123,7 +123,7 @@ pub impl DamageImpl of DamageTrait {
 
         // 6. Increment ChamberFallenCount
         world.write_model(@ChamberFallenCount {
-            temple_id: position.temple_id,
+            dungeon_id: position.dungeon_id,
             chamber_id: position.chamber_id,
             count: fallen_count.count + 1,
         });
@@ -142,7 +142,7 @@ pub impl DamageImpl of DamageTrait {
         // 8. Emit ExplorerDied event
         world.emit_event(@ExplorerDied {
             adventurer_id,
-            temple_id: position.temple_id,
+            dungeon_id: position.dungeon_id,
             chamber_id: position.chamber_id,
             killed_by: monster_type,
         });

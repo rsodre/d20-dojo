@@ -3,7 +3,7 @@
 #[dojo::model]
 pub struct MonsterInstance {
     #[key]
-    pub temple_id: u128,
+    pub dungeon_id: u128,
     #[key]
     pub chamber_id: u32,
     #[key]

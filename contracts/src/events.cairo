@@ -29,7 +29,7 @@ pub struct CombatResult {
 pub struct ExplorerDied {
     #[key]
     pub adventurer_id: u128,
-    pub temple_id: u128,
+    pub dungeon_id: u128,
     pub chamber_id: u32,
     pub killed_by: MonsterType,
 }
@@ -38,7 +38,7 @@ pub struct ExplorerDied {
 #[dojo::event]
 pub struct ChamberRevealed {
     #[key]
-    pub temple_id: u128,
+    pub dungeon_id: u128,
     pub chamber_id: u32,
     pub chamber_type: ChamberType,
     pub yonder: u8,
@@ -57,7 +57,7 @@ pub struct LevelUp {
 #[dojo::event]
 pub struct BossDefeated {
     #[key]
-    pub temple_id: u128,
+    pub dungeon_id: u128,
     pub adventurer_id: u128,
     pub monster_type: MonsterType,
 }

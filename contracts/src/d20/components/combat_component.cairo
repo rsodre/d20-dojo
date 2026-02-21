@@ -12,7 +12,7 @@ pub mod CombatComponent {
     use d20::d20::models::adventurer::{
         AdventurerStats, AdventurerHealth, AdventurerCombat, AdventurerInventory, AdventurerPosition,
     };
-    use d20::models::temple::{MonsterInstance, AdventurerTempleProgress, TempleState};
+    use d20::d20::models::dungeon::{MonsterInstance, AdventurerDungeonProgress, DungeonState};
     use d20::events::{CombatResult, LevelUp, BossDefeated};
     use d20::utils::dice::{roll_d20, roll_dice, ability_modifier, proficiency_bonus};
     use d20::utils::seeder::Seeder;
@@ -49,7 +49,7 @@ pub mod CombatComponent {
             let combat: AdventurerCombat = world.read_model(adventurer_id);
 
             let monster: MonsterInstance = world.read_model(
-                (position.temple_id, position.chamber_id, position.combat_monster_id)
+                (position.dungeon_id, position.chamber_id, position.combat_monster_id)
             );
             assert(monster.is_alive, 'monster is already dead');
 
@@ -137,7 +137,7 @@ pub mod CombatComponent {
             // Write final monster state
             if monster_killed {
                 world.write_model(@MonsterInstance {
-                    temple_id: position.temple_id,
+                    dungeon_id: position.dungeon_id,
                     chamber_id: position.chamber_id,
                     monster_id: position.combat_monster_id,
                     monster_type: monster.monster_type,
@@ -147,21 +147,21 @@ pub mod CombatComponent {
                 });
                 world.write_model(@AdventurerPosition {
                     adventurer_id,
-                    temple_id: position.temple_id,
+                    dungeon_id: position.dungeon_id,
                     chamber_id: position.chamber_id,
                     in_combat: false,
                     combat_monster_id: 0,
                 });
                 // Award XP for the kill
-                gain_xp(ref world, ref seeder, adventurer_id, position.temple_id, monster_stats.xp_reward);
+                gain_xp(ref world, ref seeder, adventurer_id, position.dungeon_id, monster_stats.xp_reward);
                 // Check for boss defeat
                 check_boss_defeat(
-                    ref world, adventurer_id, position.temple_id,
+                    ref world, adventurer_id, position.dungeon_id,
                     position.chamber_id, monster.monster_type,
                 );
             } else {
                 world.write_model(@MonsterInstance {
-                    temple_id: position.temple_id,
+                    dungeon_id: position.dungeon_id,
                     chamber_id: position.chamber_id,
                     monster_id: position.combat_monster_id,
                     monster_type: monster.monster_type,
@@ -177,7 +177,7 @@ pub mod CombatComponent {
                 let updated_health: AdventurerHealth = world.read_model(adventurer_id);
                 if !updated_health.is_dead {
                     let updated_monster = MonsterInstance {
-                        temple_id: position.temple_id,
+                        dungeon_id: position.dungeon_id,
                         chamber_id: position.chamber_id,
                         monster_id: position.combat_monster_id,
                         monster_type: monster.monster_type,
@@ -244,7 +244,7 @@ pub mod CombatComponent {
                 SpellId::FireBolt => {
                     assert(position.in_combat, 'no target');
                     let monster: MonsterInstance = world.read_model(
-                        (position.temple_id, position.chamber_id, position.combat_monster_id)
+                        (position.dungeon_id, position.chamber_id, position.combat_monster_id)
                     );
                     assert(monster.is_alive, 'monster is already dead');
                     let monster_stats = monster.monster_type.get_stats();
@@ -264,7 +264,7 @@ pub mod CombatComponent {
                         let new_hp: i16 = monster.current_hp - damage_dealt.try_into().unwrap();
                         monster_killed = new_hp <= 0;
                         world.write_model(@MonsterInstance {
-                            temple_id: position.temple_id,
+                            dungeon_id: position.dungeon_id,
                             chamber_id: position.chamber_id,
                             monster_id: position.combat_monster_id,
                             monster_type: monster.monster_type,
@@ -275,7 +275,7 @@ pub mod CombatComponent {
                         if monster_killed {
                             world.write_model(@AdventurerPosition {
                                 adventurer_id,
-                                temple_id: position.temple_id,
+                                dungeon_id: position.dungeon_id,
                                 chamber_id: position.chamber_id,
                                 in_combat: false,
                                 combat_monster_id: 0,
@@ -293,7 +293,7 @@ pub mod CombatComponent {
                 SpellId::MagicMissile => {
                     assert(position.in_combat, 'no target');
                     let monster: MonsterInstance = world.read_model(
-                        (position.temple_id, position.chamber_id, position.combat_monster_id)
+                        (position.dungeon_id, position.chamber_id, position.combat_monster_id)
                     );
                     assert(monster.is_alive, 'monster is already dead');
                     xp_to_award = monster.monster_type.get_stats().xp_reward;
@@ -306,7 +306,7 @@ pub mod CombatComponent {
                     let new_hp: i16 = monster.current_hp - damage_dealt.try_into().unwrap();
                     monster_killed = new_hp <= 0;
                     world.write_model(@MonsterInstance {
-                        temple_id: position.temple_id,
+                        dungeon_id: position.dungeon_id,
                         chamber_id: position.chamber_id,
                         monster_id: position.combat_monster_id,
                         monster_type: monster.monster_type,
@@ -317,7 +317,7 @@ pub mod CombatComponent {
                     if monster_killed {
                         world.write_model(@AdventurerPosition {
                             adventurer_id,
-                            temple_id: position.temple_id,
+                            dungeon_id: position.dungeon_id,
                             chamber_id: position.chamber_id,
                             in_combat: false,
                             combat_monster_id: 0,
@@ -340,7 +340,7 @@ pub mod CombatComponent {
                 SpellId::Sleep => {
                     assert(position.in_combat, 'no target');
                     let monster: MonsterInstance = world.read_model(
-                        (position.temple_id, position.chamber_id, position.combat_monster_id)
+                        (position.dungeon_id, position.chamber_id, position.combat_monster_id)
                     );
                     assert(monster.is_alive, 'monster is already dead');
                     xp_to_award = monster.monster_type.get_stats().xp_reward;
@@ -352,7 +352,7 @@ pub mod CombatComponent {
                     if monster.current_hp <= sleep_pool.try_into().unwrap() {
                         monster_killed = true; // "incapacitated" — treated as removed from combat
                         world.write_model(@MonsterInstance {
-                            temple_id: position.temple_id,
+                            dungeon_id: position.dungeon_id,
                             chamber_id: position.chamber_id,
                             monster_id: position.combat_monster_id,
                             monster_type: monster.monster_type,
@@ -362,7 +362,7 @@ pub mod CombatComponent {
                         });
                         world.write_model(@AdventurerPosition {
                             adventurer_id,
-                            temple_id: position.temple_id,
+                            dungeon_id: position.dungeon_id,
                             chamber_id: position.chamber_id,
                             in_combat: false,
                             combat_monster_id: 0,
@@ -376,7 +376,7 @@ pub mod CombatComponent {
                 SpellId::ScorchingRay => {
                     assert(position.in_combat, 'no target');
                     let mut monster: MonsterInstance = world.read_model(
-                        (position.temple_id, position.chamber_id, position.combat_monster_id)
+                        (position.dungeon_id, position.chamber_id, position.combat_monster_id)
                     );
                     assert(monster.is_alive, 'monster is already dead');
                     let monster_stats = monster.monster_type.get_stats();
@@ -408,7 +408,7 @@ pub mod CombatComponent {
                     };
 
                     world.write_model(@MonsterInstance {
-                        temple_id: position.temple_id,
+                        dungeon_id: position.dungeon_id,
                         chamber_id: position.chamber_id,
                         monster_id: position.combat_monster_id,
                         monster_type: monster.monster_type,
@@ -419,7 +419,7 @@ pub mod CombatComponent {
                     if monster_killed {
                         world.write_model(@AdventurerPosition {
                             adventurer_id,
-                            temple_id: position.temple_id,
+                            dungeon_id: position.dungeon_id,
                             chamber_id: position.chamber_id,
                             in_combat: false,
                             combat_monster_id: 0,
@@ -433,7 +433,7 @@ pub mod CombatComponent {
                     if position.in_combat {
                         world.write_model(@AdventurerPosition {
                             adventurer_id,
-                            temple_id: position.temple_id,
+                            dungeon_id: position.dungeon_id,
                             chamber_id: position.chamber_id,
                             in_combat: false,
                             combat_monster_id: 0,
@@ -448,7 +448,7 @@ pub mod CombatComponent {
                 SpellId::Fireball => {
                     assert(position.in_combat, 'no target');
                     let monster: MonsterInstance = world.read_model(
-                        (position.temple_id, position.chamber_id, position.combat_monster_id)
+                        (position.dungeon_id, position.chamber_id, position.combat_monster_id)
                     );
                     assert(monster.is_alive, 'monster is already dead');
                     let monster_stats = monster.monster_type.get_stats();
@@ -472,7 +472,7 @@ pub mod CombatComponent {
                     let new_hp: i16 = monster.current_hp - damage_dealt.try_into().unwrap();
                     monster_killed = new_hp <= 0;
                     world.write_model(@MonsterInstance {
-                        temple_id: position.temple_id,
+                        dungeon_id: position.dungeon_id,
                         chamber_id: position.chamber_id,
                         monster_id: position.combat_monster_id,
                         monster_type: monster.monster_type,
@@ -483,7 +483,7 @@ pub mod CombatComponent {
                     if monster_killed {
                         world.write_model(@AdventurerPosition {
                             adventurer_id,
-                            temple_id: position.temple_id,
+                            dungeon_id: position.dungeon_id,
                             chamber_id: position.chamber_id,
                             in_combat: false,
                             combat_monster_id: 0,
@@ -494,16 +494,16 @@ pub mod CombatComponent {
 
             // Award XP and check for boss defeat on kill
             if monster_killed && xp_to_award > 0 {
-                gain_xp(ref world, ref seeder, adventurer_id, position.temple_id, xp_to_award);
+                gain_xp(ref world, ref seeder, adventurer_id, position.dungeon_id, xp_to_award);
             }
             if monster_killed {
                 // Re-read the monster type from the MonsterInstance (xp_to_award==0 for
                 // MistyStep/Shield which never kill, so this only fires on real kills)
                 let killed_monster: MonsterInstance = world.read_model(
-                    (position.temple_id, position.chamber_id, position.combat_monster_id)
+                    (position.dungeon_id, position.chamber_id, position.combat_monster_id)
                 );
                 check_boss_defeat(
-                    ref world, adventurer_id, position.temple_id,
+                    ref world, adventurer_id, position.dungeon_id,
                     position.chamber_id, killed_monster.monster_type,
                 );
             }
@@ -520,7 +520,7 @@ pub mod CombatComponent {
                     if !updated_health.is_dead {
                         let updated_combat: AdventurerCombat = world.read_model(adventurer_id);
                         let live_monster: MonsterInstance = world.read_model(
-                            (position.temple_id, position.chamber_id, position.combat_monster_id)
+                            (position.dungeon_id, position.chamber_id, position.combat_monster_id)
                         );
                         let (dmg, _died) = monster_turn(
                             ref world, ref seeder, adventurer_id, stats, updated_health,
@@ -588,7 +588,7 @@ pub mod CombatComponent {
                         let updated_health: AdventurerHealth = world.read_model(adventurer_id);
                         let combat: AdventurerCombat = world.read_model(adventurer_id);
                         let monster: MonsterInstance = world.read_model(
-                            (position.temple_id, position.chamber_id, position.combat_monster_id)
+                            (position.dungeon_id, position.chamber_id, position.combat_monster_id)
                         );
                         if monster.is_alive {
                             let (dmg, _died) = monster_turn(
@@ -675,7 +675,7 @@ pub mod CombatComponent {
 
             world.write_model(@AdventurerPosition {
                 adventurer_id,
-                temple_id: position.temple_id,
+                dungeon_id: position.dungeon_id,
                 chamber_id: position.chamber_id,
                 in_combat: false,
                 combat_monster_id: 0,
@@ -710,16 +710,16 @@ pub mod CombatComponent {
             assert(position.in_combat, 'not in combat');
 
             let monster: MonsterInstance = world.read_model(
-                (position.temple_id, position.chamber_id, position.combat_monster_id)
+                (position.dungeon_id, position.chamber_id, position.combat_monster_id)
             );
             assert(monster.is_alive, 'monster already dead');
 
-            // Explorer DEX roll: d20 + DEX modifier
-            let explorer_roll: u8 = roll_d20(ref seeder);
-            let explorer_dex_mod: i8 = ability_modifier(stats.abilities.dexterity);
-            let explorer_dex_mod_i32: i32 = explorer_dex_mod.into();
-            let explorer_roll_i32: i32 = explorer_roll.into();
-            let explorer_total: i32 = explorer_roll_i32 + explorer_dex_mod_i32;
+            // Adventurer DEX roll: d20 + DEX modifier
+            let adventurer_roll: u8 = roll_d20(ref seeder);
+            let adventurer_dex_mod: i8 = ability_modifier(stats.abilities.dexterity);
+            let adventurer_dex_mod_i32: i32 = adventurer_dex_mod.into();
+            let adventurer_roll_i32: i32 = adventurer_roll.into();
+            let adventurer_total: i32 = adventurer_roll_i32 + adventurer_dex_mod_i32;
 
             // Monster DEX roll: d20 + monster DEX modifier
             let monster_stats = monster.monster_type.get_stats();
@@ -729,16 +729,16 @@ pub mod CombatComponent {
             let monster_roll_i32: i32 = monster_roll.into();
             let monster_total: i32 = monster_roll_i32 + monster_dex_mod_i32;
 
-            // Explorer wins ties (they initiated the flee)
-            let flee_success = explorer_total >= monster_total;
+            // adventurer wins ties (they initiated the flee)
+            let flee_success = adventurer_total >= monster_total;
 
             let mut damage_taken: u16 = 0;
 
             if flee_success {
-                // Clear combat — explorer disengages
+                // Clear combat — adventurer disengages
                 world.write_model(@AdventurerPosition {
                     adventurer_id,
-                    temple_id: position.temple_id,
+                    dungeon_id: position.dungeon_id,
                     chamber_id: position.chamber_id,
                     in_combat: false,
                     combat_monster_id: 0,
@@ -755,7 +755,7 @@ pub mod CombatComponent {
             world.emit_event(@CombatResult {
                 adventurer_id,
                 action: CombatAction::Flee,
-                roll: explorer_roll,
+                roll: adventurer_roll,
                 damage_dealt: 0,
                 damage_taken,
                 monster_killed: false,
@@ -766,7 +766,7 @@ pub mod CombatComponent {
     // ── Internal helpers ──────────────────────────────────────────────────────
 
     /// Execute the monster's counter-attack against the adventurer.
-    /// Returns (damage_taken, explorer_died).
+    /// Returns (damage_taken, adventurer_died).
     fn monster_turn(
         ref world: WorldStorage,
         ref seeder: Seeder,
@@ -780,11 +780,11 @@ pub mod CombatComponent {
         let monster_stats = monster.monster_type.get_stats();
 
         let mut total_damage: u16 = 0;
-        let mut explorer_died: bool = false;
+        let mut adventurer_died: bool = false;
         let mut current_health = health;
 
         let mut attack_num: u8 = 0;
-        while attack_num < monster_stats.num_attacks && !explorer_died {
+        while attack_num < monster_stats.num_attacks && !adventurer_died {
             let monster_roll: u8 = roll_d20(ref seeder);
             let is_nat_1: bool = monster_roll == 1;
             let is_nat_20: bool = monster_roll == 20;
@@ -815,7 +815,7 @@ pub mod CombatComponent {
                 let damage_i16: i16 = monster_damage.try_into().unwrap();
                 let new_hp: i16 = current_health.current_hp - damage_i16;
 
-                let damage_taken = DamageTrait::apply_explorer_damage(
+                let damage_taken = DamageTrait::apply_adventurer_damage(
                     ref world,
                     adventurer_id,
                     current_health,
@@ -827,7 +827,7 @@ pub mod CombatComponent {
                 total_damage += damage_taken;
 
                 if new_hp <= 0 {
-                    explorer_died = true;
+                    adventurer_died = true;
                 } else {
                     current_health = AdventurerHealth {
                         adventurer_id,
@@ -841,7 +841,7 @@ pub mod CombatComponent {
             attack_num += 1;
         };
 
-        (total_damage, explorer_died)
+        (total_damage, adventurer_died)
     }
 
     /// Returns the XP required for the given level (1-5).
@@ -871,7 +871,7 @@ pub mod CombatComponent {
             level: new_level,
             xp: stats.xp,
             adventurer_class: stats.adventurer_class,
-            temples_conquered: stats.temples_conquered,
+            dungeons_conquered: stats.dungeons_conquered,
         });
 
         // Roll hit die + CON modifier, minimum 1, add to max HP
@@ -910,13 +910,13 @@ pub mod CombatComponent {
     }
 
     /// Award XP to the adventurer for killing a monster.
-    /// Updates AdventurerStats.xp and AdventurerTempleProgress.xp_earned.
+    /// Updates AdventurerStats.xp and AdventurerDungeonProgress.xp_earned.
     /// Triggers level_up if an XP threshold is crossed (max level 5).
     fn gain_xp(
         ref world: WorldStorage,
         ref seeder: Seeder,
         adventurer_id: u128,
-        temple_id: u128,
+        dungeon_id: u128,
         xp_reward: u32,
     ) {
         let mut stats: AdventurerStats = world.read_model(adventurer_id);
@@ -930,12 +930,12 @@ pub mod CombatComponent {
         stats.xp = new_xp;
         world.write_model(@stats);
 
-        // Update temple progress XP
-        if temple_id != 0 {
-            let mut progress: AdventurerTempleProgress = world.read_model((adventurer_id, temple_id));
-            world.write_model(@AdventurerTempleProgress {
+        // Update dungeon progress XP
+        if dungeon_id != 0 {
+            let mut progress: AdventurerDungeonProgress = world.read_model((adventurer_id, dungeon_id));
+            world.write_model(@AdventurerDungeonProgress {
                 adventurer_id,
-                temple_id,
+                dungeon_id,
                 chambers_explored: progress.chambers_explored,
                 xp_earned: progress.xp_earned + xp_reward,
             });
@@ -958,37 +958,37 @@ pub mod CombatComponent {
     }
 
     /// Check if the just-killed monster was the boss. If so:
-    ///   1. Mark TempleState.boss_alive = false.
-    ///   2. Increment AdventurerStats.temples_conquered.
+    ///   1. Mark DungeonState.boss_alive = false.
+    ///   2. Increment AdventurerStats.dungeons_conquered.
     ///   3. Emit BossDefeated event.
     fn check_boss_defeat(
         ref world: WorldStorage,
         adventurer_id: u128,
-        temple_id: u128,
+        dungeon_id: u128,
         chamber_id: u32,
         monster_type: MonsterType,
     ) {
-        if temple_id == 0 {
+        if dungeon_id == 0 {
             return;
         }
-        let mut temple: TempleState = world.read_model(temple_id);
-        if !temple.boss_alive {
+        let mut dungeon: DungeonState = world.read_model(dungeon_id);
+        if !dungeon.boss_alive {
             return; // already defeated
         }
-        if chamber_id != temple.boss_chamber_id {
+        if chamber_id != dungeon.boss_chamber_id {
             return; // not the boss chamber
         }
-        // Mark temple boss as defeated
-        temple.boss_alive = false;
-        world.write_model(@temple);
+        // Mark dungeon boss as defeated
+        dungeon.boss_alive = false;
+        world.write_model(@dungeon);
 
-        // Increment temples_conquered on the adventurer
+        // Increment dungeons_conquered on the adventurer
         let mut stats: AdventurerStats = world.read_model(adventurer_id);
-        stats.temples_conquered += 1;
+        stats.dungeons_conquered += 1;
         world.write_model(@stats);
 
         // Emit BossDefeated event
-        world.emit_event(@BossDefeated { temple_id, adventurer_id, monster_type });
+        world.emit_event(@BossDefeated { dungeon_id, adventurer_id, monster_type });
     }
 
     /// Consume a spell slot of the given level. Panics if none available.

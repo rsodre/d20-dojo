@@ -4,9 +4,9 @@ use d20::d20::models::monster::MonsterType;
 
 #[derive(Copy, Drop, Serde)]
 #[dojo::model]
-pub struct TempleState {
+pub struct DungeonState {
     #[key]
-    pub temple_id: u128,
+    pub dungeon_id: u128,
     pub difficulty_tier: u8,
     pub next_chamber_id: u32,
     pub boss_chamber_id: u32,
@@ -18,7 +18,7 @@ pub struct TempleState {
 #[dojo::model]
 pub struct Chamber {
     #[key]
-    pub temple_id: u128,
+    pub dungeon_id: u128,
     #[key]
     pub chamber_id: u32,
     pub chamber_type: ChamberType,
@@ -34,7 +34,7 @@ pub struct Chamber {
 #[dojo::model]
 pub struct MonsterInstance {
     #[key]
-    pub temple_id: u128,
+    pub dungeon_id: u128,
     #[key]
     pub chamber_id: u32,
     #[key]
@@ -49,7 +49,7 @@ pub struct MonsterInstance {
 #[dojo::model]
 pub struct ChamberExit {
     #[key]
-    pub temple_id: u128,
+    pub dungeon_id: u128,
     #[key]
     pub from_chamber_id: u32,
     #[key]
@@ -62,7 +62,7 @@ pub struct ChamberExit {
 #[dojo::model]
 pub struct FallenAdventurer {
     #[key]
-    pub temple_id: u128,
+    pub dungeon_id: u128,
     #[key]
     pub chamber_id: u32,
     #[key]
@@ -80,7 +80,7 @@ pub struct FallenAdventurer {
 #[dojo::model]
 pub struct ChamberFallenCount {
     #[key]
-    pub temple_id: u128,
+    pub dungeon_id: u128,
     #[key]
     pub chamber_id: u32,
     pub count: u32,
@@ -88,11 +88,11 @@ pub struct ChamberFallenCount {
 
 #[derive(Copy, Drop, Serde)]
 #[dojo::model]
-pub struct AdventurerTempleProgress {
+pub struct AdventurerDungeonProgress {
     #[key]
     pub adventurer_id: u128,
     #[key]
-    pub temple_id: u128,
+    pub dungeon_id: u128,
     pub chambers_explored: u16,
     pub xp_earned: u32,
 }

@@ -6,6 +6,7 @@ pub mod d20 {
     }
     pub mod models {
         pub mod adventurer;
+        pub mod dungeon;
         pub mod monster;
     }
     pub mod types {
@@ -26,7 +27,6 @@ pub mod systems {
 
 pub mod models {
     pub mod config;
-    pub mod temple;
 }
 
 pub mod events;

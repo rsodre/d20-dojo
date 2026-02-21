@@ -63,7 +63,7 @@ pub mod CharacterComponent {
                 level: 1,
                 xp: 0,
                 adventurer_class,
-                temples_conquered: 0,
+                dungeons_conquered: 0,
             });
 
             world.write_model(@AdventurerHealth {
@@ -95,7 +95,7 @@ pub mod CharacterComponent {
 
             world.write_model(@AdventurerPosition {
                 adventurer_id,
-                temple_id: 0,
+                dungeon_id: 0,
                 chamber_id: 0,
                 in_combat: false,
                 combat_monster_id: 0,

@@ -73,7 +73,7 @@ groups = {
     ],
     "test_boss_mechanics": [
         "test_boss_defeat_marks_boss_dead",
-        "test_boss_defeat_increments_temples_conquered",
+        "test_boss_defeat_increments_dungeons_conquered",
         "test_boss_prob_zero_below_min_yonder",
         "test_boss_prob_at_min_yonder",
         "test_boss_prob_yonder_quadratic_growth",
@@ -153,9 +153,9 @@ mod tests {
         AdventurerStats, AdventurerHealth, AdventurerCombat, AdventurerInventory,
         AdventurerPosition, AdventurerSkills
     };
-    use d20::models::temple::{
-        TempleState, Chamber, ChamberExit, MonsterInstance,
-        FallenAdventurer, ChamberFallenCount, AdventurerTempleProgress
+    use d20::d20::models::dungeon::{
+        DungeonState, Chamber, ChamberExit, MonsterInstance,
+        FallenAdventurer, ChamberFallenCount, AdventurerDungeonProgress
     };
     use d20::d20::types::index::{ChamberType};
     use d20::d20::types::items::{WeaponType, ArmorType};

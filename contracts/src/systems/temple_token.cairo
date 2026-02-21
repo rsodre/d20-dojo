@@ -59,9 +59,9 @@ pub trait ITempleToken<TState> {
     fn mint_temple(ref self: TState, difficulty: u8) -> u128;
 
     /// Place an explorer at the temple's entrance chamber.
-    fn enter_temple(ref self: TState, adventurer_id: u128, temple_id: u128);
+    fn enter_temple(ref self: TState, adventurer_id: u128, dungeon_id: u128);
 
-    /// Remove an explorer from the temple (set temple_id=0, chamber_id=0).
+    /// Remove an explorer from the temple (set dungeon_id=0, chamber_id=0).
     fn exit_temple(ref self: TState, adventurer_id: u128);
 
     /// Open an unexplored exit from the adventurer's current chamber,
@@ -93,9 +93,9 @@ pub trait ITempleTokenPublic<TState> {
     fn mint_temple(ref self: TState, difficulty: u8) -> u128;
 
     /// Place an explorer at the temple's entrance chamber.
-    fn enter_temple(ref self: TState, adventurer_id: u128, temple_id: u128);
+    fn enter_temple(ref self: TState, adventurer_id: u128, dungeon_id: u128);
 
-    /// Remove an explorer from the temple (set temple_id=0, chamber_id=0).
+    /// Remove an explorer from the temple (set dungeon_id=0, chamber_id=0).
     fn exit_temple(ref self: TState, adventurer_id: u128);
 
     /// Open an unexplored exit from the adventurer's current chamber,
@@ -122,7 +122,6 @@ pub trait ITempleTokenPublic<TState> {
 pub mod temple_token {
     use starknet::get_caller_address;
     use dojo::model::ModelStorage;
-    use dojo::event::EventStorage;
     use dojo::world::WorldStorage;
 
     // ERC-721 components (OpenZeppelin + cairo-nft-combo)
@@ -141,36 +140,17 @@ pub mod temple_token {
     // Dungeon component
     use d20::d20::components::dungeon_component::DungeonComponent;
     component!(path: DungeonComponent, storage: dungeon, event: DungeonEvent);
-    #[abi(embed_v0)]
-    impl DungeonImpl = DungeonComponent::DungeonImpl<ContractState>;
+    impl DungeonInternalImpl = DungeonComponent::InternalImpl<ContractState>;
 
     // Game types and models
-    use d20::d20::types::index::ChamberType;
-    use d20::d20::types::adventurer_class::AdventurerClass;
-    use d20::d20::models::monster::{MonsterType, MonsterTypeTrait};
-    use d20::models::temple::{
-        TempleState, Chamber, MonsterInstance, ChamberExit, AdventurerTempleProgress,
-        FallenAdventurer, ChamberFallenCount,
-    };
-    use d20::d20::models::adventurer::{AdventurerHealth, AdventurerPosition};
-    use d20::d20::models::adventurer::{AdventurerStats, AdventurerInventory, AdventurerSkills, Skill};
-    use d20::d20::types::damage::DamageTrait;
-    use d20::events::ChamberRevealed;
-    use d20::utils::dice::{roll_d20, roll_dice, ability_modifier, proficiency_bonus};
-    use d20::utils::seeder::{Seeder, SeederTrait};
-    use d20::utils::dns::{DnsTrait};
+    use d20::d20::models::dungeon::DungeonState;
+    use d20::utils::seeder::SeederTrait;
+    use d20::utils::dns::DnsTrait;
     use d20::constants::{TEMPLE_TOKEN_DESCRIPTION, TEMPLE_TOKEN_EXTERNAL_LINK};
-    use d20::systems::explorer_token::{IExplorerTokenDispatcherTrait};
+    use d20::systems::explorer_token::IExplorerTokenDispatcherTrait;
 
     // Metadata types
     use nft_combo::utils::renderer::{ContractMetadata, TokenMetadata, Attribute};
-
-    // ── Boss probability constants (Yonder Formula) ──────────────────────────
-    // See SPEC.md §"Boss Chamber Probability"
-    const MIN_YONDER: u8 = 5;
-    const YONDER_WEIGHT: u32 = 50;   // bps per effective_yonder²
-    const XP_WEIGHT: u32 = 2;        // bps per xp_earned
-    const MAX_PROB: u32 = 9500;      // cap at 95%
 
     // ── Storage ─────────────────────────────────────────────────────────────
 
@@ -224,186 +204,6 @@ pub mod temple_token {
         fn world_default(self: @ContractState) -> WorldStorage {
             self.world(@"d20_0_1")
         }
-
-        // ── Boss probability: Yonder Formula (integer-only, bps) ─────────────
-
-        fn calculate_boss_probability(yonder: u8, xp_earned: u32) -> u32 {
-            if yonder < MIN_YONDER {
-                return 0;
-            }
-            let effective_yonder: u32 = (yonder - MIN_YONDER).into();
-            let yonder_component: u32 = effective_yonder * effective_yonder * YONDER_WEIGHT;
-            let xp_component: u32 = xp_earned * XP_WEIGHT;
-            let total: u32 = yonder_component + xp_component;
-            if total > MAX_PROB { MAX_PROB } else { total }
-        }
-
-        // ── Monster type by yonder and difficulty ────────────────────────────
-        // Derives from the temple seed + chamber_id hash (pseudo-random, deterministic).
-        // Uses a single hash felt to pick both chamber type and monster type.
-
-        fn monster_for_yonder(yonder: u8, difficulty: u8, hash: u256) -> MonsterType {
-            // Thematic progression per SPEC:
-            //   yonder 0-2:  Snakes, Skeletons
-            //   yonder 3-5:  Shadows, Animated Armor
-            //   yonder 6-9:  Gargoyles, Mummies
-            //   yonder 10+:  Mummies, (Wraith reserved for boss)
-            let tier: u8 = if yonder <= 2 { 0 }
-                else if yonder <= 5 { 1 }
-                else { 2 };
-
-            // difficulty shifts tier up by (difficulty - 1), capped
-            let adjusted: u8 = tier + (difficulty - 1);
-            let capped: u8 = if adjusted > 2 { 2 } else { adjusted };
-
-            // Pick one of two monsters in tier using hash bit
-            let pick: u8 = (hash % 2).try_into().unwrap();
-            match capped {
-                0 => if pick == 0 { MonsterType::PoisonousSnake } else { MonsterType::Skeleton },
-                1 => if pick == 0 { MonsterType::Shadow } else { MonsterType::AnimatedArmor },
-                _ => if pick == 0 { MonsterType::Gargoyle } else { MonsterType::Mummy },
-            }
-        }
-
-
-
-        // ── generate_chamber ─────────────────────────────────────────────────
-        // Creates a new chamber model derived from the temple seed + parent chamber.
-        // Returns the new chamber_id.
-
-        fn generate_chamber(
-            ref world: WorldStorage,
-            ref seeder: Seeder,
-            temple_id: u128,
-            parent_chamber_id: u32,
-            new_chamber_id: u32,
-            yonder: u8,
-            adventurer_id: u128,
-            revealed_by: u128,
-            difficulty: u8,
-            xp_earned: u32,
-            current_max_yonder: u8,
-        ) {
-
-            // ── Is this a boss chamber? ──────────────────────────────────────
-            let boss_prob: u32 = Self::calculate_boss_probability(yonder, xp_earned);
-            let is_boss: bool = if boss_prob > 0 {
-                let roll: u32 = roll_d20(ref seeder).into() * 500_u32; // scale 1-20 → 500-10000 bps
-                roll <= boss_prob
-            } else {
-                false
-            };
-
-            // ── Generate chamber properties from seeder ──────────────────────
-            // We use the seeder (seeded with VRF) for all random decisions.
-            // No longer using deterministic hash from temple seed.
-            
-            let (chamber_type, monster_type) = if is_boss {
-                (ChamberType::Boss, MonsterType::Wraith)
-            } else {
-                // Pick chamber type using VRF
-                // 0-2 → Monster (50%), 3 → Treasure (16%), 4 → Trap (16%), 5 → Empty (16%)
-                let type_roll: u8 = seeder.random_u8() % 6;
-                
-                let ct: ChamberType =
-                    if type_roll <= 2 { ChamberType::Monster }
-                    else if type_roll == 3 { ChamberType::Treasure }
-                    else if type_roll == 4 { ChamberType::Trap }
-                    else { ChamberType::Empty };
-                
-                let mt: MonsterType = if ct == ChamberType::Monster {
-                    // Pass a random value for the "hash" argument if still needed by helper, 
-                    // or better yet, refactor helper.
-                    // Checking monster_for_yonder signature: fn monster_for_yonder(yonder: u8, difficulty: u8, hash: u256)
-                    // We can just pass a random u256 from seeder.
-                    let random_val = seeder.random_u256();
-                    Self::monster_for_yonder(yonder, difficulty, random_val)
-                } else {
-                    MonsterType::None
-                };
-                (ct, mt)
-            };
-
-            // ── Exit count: 0-3 new exits (dead end = 0) ────────────────────
-            // At the frontier (yonder >= current max), enforce at least 1 exit
-            // so the dungeon always has a path forward.
-            let raw_exit_count: u8 = seeder.random_u8() % 4;
-            let exit_count: u8 = if raw_exit_count == 0 && yonder >= current_max_yonder {
-                1
-            } else {
-                raw_exit_count
-            };
-
-            // ── Trap DC: 10 + yonder/2 + (difficulty - 1)*2 ─────────────────
-            let trap_dc: u8 = if chamber_type == ChamberType::Trap {
-                10_u8 + yonder / 2 + (difficulty - 1) * 2
-            } else {
-                0
-            };
-
-            // ── Write Chamber model ──────────────────────────────────────────
-            world.write_model(@Chamber {
-                temple_id,
-                chamber_id: new_chamber_id,
-                chamber_type,
-                yonder,
-                exit_count,
-                is_revealed: true,
-                treasure_looted: false,
-                trap_disarmed: false,
-                trap_dc,
-            });
-
-            // ── Write MonsterInstance if needed ──────────────────────────────
-            if monster_type != MonsterType::None {
-                let stats = monster_type.get_stats();
-                world.write_model(@MonsterInstance {
-                    temple_id,
-                    chamber_id: new_chamber_id,
-                    monster_id: 1,
-                    monster_type,
-                    current_hp: stats.hp.try_into().unwrap(),
-                    max_hp: stats.hp,
-                    is_alive: true,
-                });
-            }
-
-            // ── Initialize exit stubs (undiscovered) ─────────────────────────
-            // These placeholders exist so open_exit can validate exit_index bounds.
-            let mut i: u8 = 0;
-            while i < exit_count {
-                world.write_model(@ChamberExit {
-                    temple_id,
-                    from_chamber_id: new_chamber_id,
-                    exit_index: i,
-                    to_chamber_id: 0, // unknown until explorer opens it
-                    is_discovered: false,
-                });
-                i += 1;
-            };
-
-            // ── Update TempleState: record boss chamber and max_yonder ───────
-            // (next_chamber_id already incremented by caller before this call)
-            if is_boss || yonder > current_max_yonder {
-                let mut temple: TempleState = world.read_model(temple_id);
-                if is_boss {
-                    temple.boss_chamber_id = new_chamber_id;
-                }
-                if yonder > current_max_yonder {
-                    temple.max_yonder = yonder;
-                }
-                world.write_model(@temple);
-            }
-
-            // ── Emit ChamberRevealed event ───────────────────────────────────
-            world.emit_event(@ChamberRevealed {
-                temple_id,
-                chamber_id: new_chamber_id,
-                chamber_type,
-                yonder,
-                revealed_by,
-            });
-        }
     }
 
     // ── Public interface implementation ──────────────────────────────────────
@@ -418,527 +218,83 @@ pub mod temple_token {
 
             // Mint the ERC-721 token via cairo-nft-combo sequential minter
             let token_id: u256 = self.erc721_combo._mint_next(caller);
+            let dungeon_id: u128 = token_id.low;
 
-            // Dojo models use u128 keys — high part is always 0 for counter-minted IDs
-            let temple_id: u128 = token_id.low;
+            // Initialize dungeon state for this temple
+            self.dungeon.init_temple(ref world, dungeon_id, difficulty);
 
-            // Initialize TempleState (max_yonder=1 because entrance is at yonder 1)
-            world.write_model(@TempleState {
-                temple_id,
-                difficulty_tier: difficulty,
-                next_chamber_id: 2, // chamber 1 is the entrance; next new chamber gets id 2
-                boss_chamber_id: 0,
-                boss_alive: true,
-                max_yonder: 1,
-            });
-
-            // Create entrance Chamber (id=1, yonder=1, always 3 exits)
-            let entrance_exit_count: u8 = 3;
-            world.write_model(@Chamber {
-                temple_id,
-                chamber_id: 1,
-                chamber_type: ChamberType::Entrance,
-                yonder: 1,
-                exit_count: entrance_exit_count,
-                is_revealed: true,
-                treasure_looted: false,
-                trap_disarmed: false,
-                trap_dc: 0,
-            });
-
-            // Write undiscovered exit stubs so open_exit can validate bounds
-            let mut i: u8 = 0;
-            while i < entrance_exit_count {
-                world.write_model(@ChamberExit {
-                    temple_id,
-                    from_chamber_id: 1,
-                    exit_index: i,
-                    to_chamber_id: 0,
-                    is_discovered: false,
-                });
-                i += 1;
-            };
-
-            temple_id
+            dungeon_id
         }
 
-        fn enter_temple(ref self: ContractState, adventurer_id: u128, temple_id: u128) {
+        fn enter_temple(ref self: ContractState, adventurer_id: u128, dungeon_id: u128) {
             let mut world = self.world_default();
-
             // Verify ownership
             let explorer_token = world.explorer_token_dispatcher();
             assert(explorer_token.owner_of(adventurer_id.into()) == get_caller_address(), 'not owner');
-
-            // Validate temple exists
-            let temple: TempleState = world.read_model(temple_id);
-            assert(temple.difficulty_tier >= 1, 'temple does not exist');
-
-            // Validate explorer is alive
-            let health: AdventurerHealth = world.read_model(adventurer_id);
-            assert(!health.is_dead, 'dead explorers cannot enter');
-
-            // Validate explorer is not in combat; auto-exit current temple if in one
-            let position: AdventurerPosition = world.read_model(adventurer_id);
-            assert(!position.in_combat, 'explorer is in combat');
-
-            // Place explorer at entrance chamber (overwrites any previous temple position)
-            world.write_model(@AdventurerPosition {
-                adventurer_id,
-                temple_id,
-                chamber_id: 1, // entrance chamber is always id 1
-                in_combat: false,
-                combat_monster_id: 0,
-            });
-
-            // Initialize AdventurerTempleProgress for this temple visit
-            // (only write if not previously set — existing chambers_explored/xp_earned carry over
-            //  from prior visits, so we only initialize on a fresh record)
-            let progress: AdventurerTempleProgress = world.read_model((adventurer_id, temple_id));
-            if progress.chambers_explored == 0 && progress.xp_earned == 0 {
-                world.write_model(@AdventurerTempleProgress {
-                    adventurer_id,
-                    temple_id,
-                    chambers_explored: 0,
-                    xp_earned: 0,
-                });
-            }
+            // Execute action
+            self.dungeon.enter_temple(ref world, adventurer_id, dungeon_id);
         }
 
         fn exit_temple(ref self: ContractState, adventurer_id: u128) {
             let mut world = self.world_default();
-
             // Verify ownership
             let explorer_token = world.explorer_token_dispatcher();
             assert(explorer_token.owner_of(adventurer_id.into()) == get_caller_address(), 'not owner');
-
-            // Validate explorer is in a temple
-            let position: AdventurerPosition = world.read_model(adventurer_id);
-            assert(position.temple_id != 0, 'not inside any temple');
-            assert(!position.in_combat, 'cannot exit during combat');
-
-            // Clear temple/chamber position — stats, inventory, XP, and
-            // AdventurerTempleProgress are all untouched (persisted on-chain).
-            world.write_model(@AdventurerPosition {
-                adventurer_id,
-                temple_id: 0,
-                chamber_id: 0,
-                in_combat: false,
-                combat_monster_id: 0,
-            });
+            // Execute action
+            self.dungeon.exit_temple(ref world, adventurer_id);
         }
 
         fn open_exit(ref self: ContractState, adventurer_id: u128, exit_index: u8) {
             let mut world = self.world_default();
             let caller = get_caller_address();
-
+            let mut seeder = SeederTrait::from_consume_vrf(world, caller);
             // Verify ownership
             let explorer_token = world.explorer_token_dispatcher();
             assert(explorer_token.owner_of(adventurer_id.into()) == caller, 'not owner');
-
-            // ── Validate explorer state ──────────────────────────────────────
-            let health: AdventurerHealth = world.read_model(adventurer_id);
-            assert(!health.is_dead, 'dead explorers cannot explore');
-
-            let position: AdventurerPosition = world.read_model(adventurer_id);
-            assert(position.temple_id != 0, 'not inside any temple');
-            assert(!position.in_combat, 'cannot open exit in combat');
-
-            let temple_id = position.temple_id;
-            let current_chamber_id = position.chamber_id;
-
-            // ── Validate the exit exists on the current chamber ──────────────
-            let current_chamber: Chamber = world.read_model((temple_id, current_chamber_id));
-            assert(exit_index < current_chamber.exit_count, 'invalid exit index');
-
-            // ── Check if exit is already discovered ──────────────────────────
-            let exit: ChamberExit = world.read_model((temple_id, current_chamber_id, exit_index));
-            assert(!exit.is_discovered, 'exit already discovered');
-
-            // ── Allocate new chamber ID ──────────────────────────────────────
-            let mut temple: TempleState = world.read_model(temple_id);
-            let new_chamber_id: u32 = temple.next_chamber_id;
-            temple.next_chamber_id = new_chamber_id + 1;
-            world.write_model(@temple);
-
-            // ── Read progress for boss probability ───────────────────────────
-            let progress: AdventurerTempleProgress = world.read_model((adventurer_id, temple_id));
-
-            // ── Generate the new chamber ─────────────────────────────────────
-            let new_yonder: u8 = current_chamber.yonder + 1;
-            let mut seeder = SeederTrait::from_consume_vrf(world, caller);
-            InternalTrait::generate_chamber(
-                ref world,
-                ref seeder,
-                temple_id,
-                current_chamber_id,
-                new_chamber_id,
-                new_yonder,
-                adventurer_id,
-                adventurer_id, // revealed_by
-                temple.difficulty_tier,
-                progress.xp_earned,
-                temple.max_yonder,
-            );
-
-            // ── Create bidirectional ChamberExit links ───────────────────────
-            // Forward: current → new (mark discovered)
-            world.write_model(@ChamberExit {
-                temple_id,
-                from_chamber_id: current_chamber_id,
-                exit_index,
-                to_chamber_id: new_chamber_id,
-                is_discovered: true,
-            });
-
-            // Back: new → current (exit_index = 0 reserved for return path)
-            world.write_model(@ChamberExit {
-                temple_id,
-                from_chamber_id: new_chamber_id,
-                exit_index: 0,
-                to_chamber_id: current_chamber_id,
-                is_discovered: true,
-            });
-
-            // ── Increment chambers_explored on AdventurerTempleProgress ────────
-            world.write_model(@AdventurerTempleProgress {
-                adventurer_id,
-                temple_id,
-                chambers_explored: progress.chambers_explored + 1,
-                xp_earned: progress.xp_earned,
-            });
+            // Execute action
+            self.dungeon.open_exit(ref world, adventurer_id, exit_index, ref seeder);
         }
 
         fn move_to_chamber(ref self: ContractState, adventurer_id: u128, exit_index: u8) {
             let mut world = self.world_default();
             let caller = get_caller_address();
-
+            let mut seeder = SeederTrait::from_consume_vrf(world, caller);
             // Verify ownership
             let explorer_token = world.explorer_token_dispatcher();
             assert(explorer_token.owner_of(adventurer_id.into()) == caller, 'not owner');
-
-            // ── Validate explorer state ──────────────────────────────────────
-            let health: AdventurerHealth = world.read_model(adventurer_id);
-            assert(!health.is_dead, 'dead explorers cannot move');
-
-            let position: AdventurerPosition = world.read_model(adventurer_id);
-            assert(position.temple_id != 0, 'not inside any temple');
-            assert(!position.in_combat, 'cannot move during combat');
-
-            let temple_id = position.temple_id;
-            let current_chamber_id = position.chamber_id;
-
-            // ── Validate exit is discovered ──────────────────────────────────
-            let current_chamber: Chamber = world.read_model((temple_id, current_chamber_id));
-            assert(exit_index < current_chamber.exit_count, 'invalid exit index');
-
-            let exit: ChamberExit = world.read_model((temple_id, current_chamber_id, exit_index));
-            assert(exit.is_discovered, 'exit not yet discovered');
-
-            let dest_chamber_id = exit.to_chamber_id;
-
-            // ── Move explorer to destination chamber ─────────────────────────
-            let dest_chamber: Chamber = world.read_model((temple_id, dest_chamber_id));
-
-            // Check for live monster in destination chamber
-            let monster: MonsterInstance = world.read_model((temple_id, dest_chamber_id, 1_u32));
-            let enters_combat: bool = monster.is_alive && dest_chamber.chamber_type == ChamberType::Monster
-                || (monster.is_alive && dest_chamber.chamber_type == ChamberType::Boss);
-
-            world.write_model(@AdventurerPosition {
-                adventurer_id,
-                temple_id,
-                chamber_id: dest_chamber_id,
-                in_combat: enters_combat,
-                combat_monster_id: if enters_combat { 1 } else { 0 },
-            });
-
-            // ── Trigger trap on entry if not disarmed ───────────────────────
-            // Trap damage dealt on entry: DEX save vs trap_dc.
-            // On failed save, explorer takes 1d6 + yonder/2 damage.
-            // (Full save resolution reuses VRF; simplified to automatic partial damage here
-            //  until task 3.9 disarm_trap is implemented)
-            let mut seeder = SeederTrait::from_consume_vrf(world, caller);
-            if dest_chamber.chamber_type == ChamberType::Trap && !dest_chamber.trap_disarmed
-                && dest_chamber.trap_dc > 0 {
-                let stats: AdventurerStats = world.read_model(adventurer_id);
-                let dex_mod: i8 = ability_modifier(stats.abilities.dexterity);
-                // DEX saving throw
-                let save_roll: i16 = roll_d20(ref seeder).into() + dex_mod.into();
-                let dc_i16: i16 = dest_chamber.trap_dc.into();
-                if save_roll < dc_i16 {
-                    // Failed save: take 1d6 + yonder/2 piercing damage
-                    let base_dmg: u16 = roll_dice(ref seeder, 6, 1);
-                    let bonus: u16 = (dest_chamber.yonder / 2).into();
-                    let damage: u16 = base_dmg + bonus;
-                    // Use the destination position so handle_death records the right chamber
-                    let dest_position = AdventurerPosition {
-                        adventurer_id,
-                        temple_id,
-                        chamber_id: dest_chamber_id,
-                        in_combat: enters_combat,
-                        combat_monster_id: if enters_combat { 1 } else { 0 },
-                    };
-                    DamageTrait::apply_explorer_damage(
-                        ref world, adventurer_id, health, dest_position, MonsterType::None, damage,
-                    );
-                }
-            }
+            // Execute action
+            self.dungeon.move_to_chamber(ref world, adventurer_id, exit_index, ref seeder);
         }
 
         fn disarm_trap(ref self: ContractState, adventurer_id: u128) {
             let mut world = self.world_default();
             let caller = get_caller_address();
-
+            let mut seeder = SeederTrait::from_consume_vrf(world, caller);
             // Verify ownership
             let explorer_token = world.explorer_token_dispatcher();
             assert(explorer_token.owner_of(adventurer_id.into()) == caller, 'not owner');
-
-            // ── Validate explorer state ──────────────────────────────────────
-            let health: AdventurerHealth = world.read_model(adventurer_id);
-            assert(!health.is_dead, 'dead explorers cannot disarm');
-
-            let position: AdventurerPosition = world.read_model(adventurer_id);
-            assert(position.temple_id != 0, 'not inside any temple');
-            assert(!position.in_combat, 'cannot disarm during combat');
-
-            let temple_id = position.temple_id;
-            let chamber_id = position.chamber_id;
-
-            // ── Must be a Trap chamber with an active trap ───────────────────
-            let chamber: Chamber = world.read_model((temple_id, chamber_id));
-            assert(chamber.chamber_type == ChamberType::Trap, 'no trap in this chamber');
-            assert(!chamber.trap_disarmed, 'trap already disarmed');
-            assert(chamber.trap_dc > 0, 'no trap in this chamber');
-
-            // ── Disarm check: DEX (Rogue) or INT (others) + proficiency ──────
-            // Rogues use DEX + proficiency (with expertise on Stealth/Acrobatics if selected).
-            // All other classes use INT + proficiency only if proficient in Arcana.
-            // Expertise on the relevant skill doubles the proficiency bonus.
-            // Others: INT-based, proficient only if Arcana trained.
-            // Expertise on the relevant skill doubles the proficiency bonus.
-            let mut seeder = SeederTrait::from_consume_vrf(world, caller);
-            let stats: AdventurerStats = world.read_model(adventurer_id);
-            let skills: AdventurerSkills = world.read_model(adventurer_id);
-            let prof: u8 = proficiency_bonus(stats.level);
-
-            // Determine ability score and proficiency multiplier by class
-            // Rogue: DEX-based, always proficient (Thieves' Tools), expertise doubles if
-            //        acrobatics expertise chosen (acrobatics is a dex skill, close enough).
-            // Others: INT-based, proficient only if Arcana trained.
-            let (ability_score, prof_mult): (u8, u8) = match stats.adventurer_class {
-                AdventurerClass::Rogue => {
-                    // Check for expertise on Acrobatics (DEX skill → applies to fine motor work)
-                    let expertise_mult: u8 = if skills.expertise_1 == Skill::Acrobatics
-                        || skills.expertise_2 == Skill::Acrobatics { 2 } else { 1 };
-                    (stats.abilities.dexterity, expertise_mult)
-                },
-                _ => {
-                    // INT check; proficient only if Arcana trained
-                    let arcana_mult: u8 = if skills.skills.arcana { 1 } else { 0 };
-                    (stats.abilities.intelligence, arcana_mult)
-                },
-            };
-
-            let ability_mod: i8 = ability_modifier(ability_score);
-            let prof_bonus: i8 = (prof * prof_mult).try_into().unwrap();
-            let roll: u8 = roll_d20(ref seeder);
-            let total: i16 = roll.into() + ability_mod.into() + prof_bonus.into();
-            let dc: i16 = chamber.trap_dc.into();
-
-            if total >= dc {
-                // ── Success: mark trap disarmed ──────────────────────────────
-                world.write_model(@Chamber {
-                    temple_id,
-                    chamber_id,
-                    chamber_type: chamber.chamber_type,
-                    yonder: chamber.yonder,
-                    exit_count: chamber.exit_count,
-                    is_revealed: chamber.is_revealed,
-                    treasure_looted: chamber.treasure_looted,
-                    trap_disarmed: true,
-                    trap_dc: chamber.trap_dc,
-                });
-            } else {
-                // ── Failure: trap fires — DEX save or take damage ────────────
-                // Failed disarm attempt triggers the trap:
-                // DEX saving throw vs trap_dc; fail → 1d6 + yonder/2 damage.
-                let dex_mod: i8 = ability_modifier(stats.abilities.dexterity);
-                let save_roll: i16 = roll_d20(ref seeder).into() + dex_mod.into();
-                if save_roll < dc {
-                    let base_dmg: u16 = roll_dice(ref seeder, 6, 1);
-                    let bonus: u16 = (chamber.yonder / 2).into();
-                    let damage: u16 = base_dmg + bonus;
-                    DamageTrait::apply_explorer_damage(
-                        ref world, adventurer_id, health, position, MonsterType::None, damage,
-                    );
-                }
-                // On success of the DEX save: no damage, but trap still armed (can retry)
-            }
+            // Execute action
+            self.dungeon.disarm_trap(ref world, adventurer_id, ref seeder);
         }
 
         fn loot_treasure(ref self: ContractState, adventurer_id: u128) {
             let mut world = self.world_default();
             let caller = get_caller_address();
-
+            let mut seeder = SeederTrait::from_consume_vrf(world, caller);
             // Verify ownership
             let explorer_token = world.explorer_token_dispatcher();
             assert(explorer_token.owner_of(adventurer_id.into()) == caller, 'not owner');
-
-            // ── Validate explorer state ──────────────────────────────────────
-            let health: AdventurerHealth = world.read_model(adventurer_id);
-            assert(!health.is_dead, 'dead explorers cannot loot');
-
-            let position: AdventurerPosition = world.read_model(adventurer_id);
-            assert(position.temple_id != 0, 'not inside any temple');
-            assert(!position.in_combat, 'cannot loot during combat');
-
-            let temple_id = position.temple_id;
-            let chamber_id = position.chamber_id;
-
-            // ── Only lootable in Empty or Treasure chambers ──────────────────
-            let chamber: Chamber = world.read_model((temple_id, chamber_id));
-            assert(
-                chamber.chamber_type == ChamberType::Empty
-                    || chamber.chamber_type == ChamberType::Treasure,
-                'nothing to loot here'
-            );
-            assert(!chamber.treasure_looted, 'already looted');
-
-            // ── Perception check: d20 + WIS mod [+ proficiency if trained] ───
-            // DC 12 for Empty chambers, DC 10 for Treasure chambers
-            let mut seeder = SeederTrait::from_consume_vrf(world, caller);
-            let stats: AdventurerStats = world.read_model(adventurer_id);
-            let skills: AdventurerSkills = world.read_model(adventurer_id);
-
-            let wis_mod: i8 = ability_modifier(stats.abilities.wisdom);
-            let prof: u8 = proficiency_bonus(stats.level);
-            let prof_bonus: i8 = if skills.skills.perception { prof.try_into().unwrap() } else { 0 };
-
-            let roll: i16 = roll_d20(ref seeder).into()
-                + wis_mod.into()
-                + prof_bonus.into();
-
-            let dc: i16 = if chamber.chamber_type == ChamberType::Empty { 12 } else { 10 };
-
-            if roll >= dc {
-                // ── Success: award gold and possibly a potion ─────────────────
-                // Gold: 1d6 × (yonder + 1) × difficulty
-                let gold_roll: u32 = roll_dice(ref seeder, 6, 1).into();
-                let temple: TempleState = world.read_model(temple_id);
-                let gold_found: u32 = gold_roll
-                    * (chamber.yonder.into() + 1)
-                    * temple.difficulty_tier.into();
-
-                // Potion found on total roll >= 15
-                let potion_found: u8 = if roll >= 15 { 1 } else { 0 };
-
-                let inventory: AdventurerInventory = world.read_model(adventurer_id);
-                world.write_model(@AdventurerInventory {
-                    adventurer_id,
-                    primary_weapon: inventory.primary_weapon,
-                    secondary_weapon: inventory.secondary_weapon,
-                    armor: inventory.armor,
-                    has_shield: inventory.has_shield,
-                    gold: inventory.gold + gold_found,
-                    potions: inventory.potions + potion_found,
-                });
-
-                // Mark as looted — cannot loot again
-                world.write_model(@Chamber {
-                    temple_id,
-                    chamber_id,
-                    chamber_type: chamber.chamber_type,
-                    yonder: chamber.yonder,
-                    exit_count: chamber.exit_count,
-                    is_revealed: chamber.is_revealed,
-                    treasure_looted: true,
-                    trap_disarmed: chamber.trap_disarmed,
-                    trap_dc: chamber.trap_dc,
-                });
-            }
-            // On failed check: nothing found, can retry next turn
+            // Execute action
+            self.dungeon.loot_treasure(ref world, adventurer_id, ref seeder);
         }
 
         fn loot_fallen(ref self: ContractState, adventurer_id: u128, fallen_index: u32) {
             let mut world = self.world_default();
-
             // Verify ownership
             let explorer_token = world.explorer_token_dispatcher();
             assert(explorer_token.owner_of(adventurer_id.into()) == get_caller_address(), 'not owner');
-
-            // ── Validate explorer state ──────────────────────────────────────
-            let health: AdventurerHealth = world.read_model(adventurer_id);
-            assert(!health.is_dead, 'dead explorers cannot loot');
-
-            let position: AdventurerPosition = world.read_model(adventurer_id);
-            assert(position.temple_id != 0, 'not inside any temple');
-            assert(!position.in_combat, 'cannot loot during combat');
-
-            let temple_id = position.temple_id;
-            let chamber_id = position.chamber_id;
-
-            // ── Validate fallen_index is in range ────────────────────────────
-            let fallen_count: ChamberFallenCount = world.read_model((temple_id, chamber_id));
-            assert(fallen_index < fallen_count.count, 'no body at that index');
-
-            // ── Read the FallenAdventurer record ───────────────────────────────
-            let fallen: FallenAdventurer = world.read_model((temple_id, chamber_id, fallen_index));
-            assert(!fallen.is_looted, 'already looted');
-
-            // ── Cannot loot yourself (edge case: somehow same adventurer_id) ───
-            assert(fallen.adventurer_id != adventurer_id, 'cannot loot yourself');
-
-            // ── Merge dropped loot into explorer's inventory ─────────────────
-            // Weapons: only take if explorer has None in that slot
-            // Armor:   only upgrade if dropped armor > current (or current is None)
-            // Gold + potions: always add
-            let inventory: AdventurerInventory = world.read_model(adventurer_id);
-
-            use d20::d20::types::items::{WeaponType, ArmorType};
-
-            let new_primary: WeaponType = if inventory.primary_weapon == WeaponType::None {
-                fallen.dropped_weapon
-            } else {
-                inventory.primary_weapon
-            };
-
-            // Secondary slot: take dropped weapon if secondary is empty and primary already used it
-            let new_secondary: WeaponType = if inventory.secondary_weapon == WeaponType::None
-                && new_primary != fallen.dropped_weapon {
-                fallen.dropped_weapon
-            } else {
-                inventory.secondary_weapon
-            };
-
-            // Armor: upgrade if currently wearing nothing and fallen had armor
-            let new_armor: ArmorType = if inventory.armor == ArmorType::None {
-                fallen.dropped_armor
-            } else {
-                inventory.armor
-            };
-
-            world.write_model(@AdventurerInventory {
-                adventurer_id,
-                primary_weapon: new_primary,
-                secondary_weapon: new_secondary,
-                armor: new_armor,
-                has_shield: inventory.has_shield,
-                gold: inventory.gold + fallen.dropped_gold,
-                potions: inventory.potions + fallen.dropped_potions,
-            });
-
-            // ── Mark fallen explorer as looted ───────────────────────────────
-            world.write_model(@FallenAdventurer {
-                temple_id,
-                chamber_id,
-                fallen_index,
-                adventurer_id: fallen.adventurer_id,
-                dropped_weapon: fallen.dropped_weapon,
-                dropped_armor: fallen.dropped_armor,
-                dropped_gold: fallen.dropped_gold,
-                dropped_potions: fallen.dropped_potions,
-                is_looted: true,
-            });
+            // Execute action
+            self.dungeon.loot_fallen(ref world, adventurer_id, fallen_index);
         }
     }
 
@@ -969,9 +325,9 @@ pub mod temple_token {
         ) -> Option<TokenMetadata> {
             let s = self.get_contract();
             let mut world = s.world_default();
-            let temple_id: u128 = token_id.low;
+            let dungeon_id: u128 = token_id.low;
 
-            let temple: TempleState = world.read_model(temple_id);
+            let temple: DungeonState = world.read_model(dungeon_id);
 
             let status: ByteArray = if temple.boss_alive { "Active" } else { "Conquered" };
 

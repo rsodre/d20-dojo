@@ -29,7 +29,7 @@ function ExplorerCard({ token, selectedTempleId }: ExplorerCardProps) {
   const ac = combat ? Number(combat.armor_class) : undefined;
   const isDead = health?.is_dead ?? false;
 
-  const templeId = position ? BigInt(position.temple_id) : 0n;
+  const templeId = position ? BigInt(position.dungeon_id) : 0n;
   const isInTemple = templeId > 0n;
 
   const isPending = enter_temple.isPending || exit_temple.isPending;

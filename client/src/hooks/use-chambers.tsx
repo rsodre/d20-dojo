@@ -15,7 +15,7 @@ export function useChambers(templeId: bigint): Chamber[] {
     const entities = state.getEntitiesByModel(namespace, "Chamber");
     return entities
       .map((e: any) => e.models?.[namespace]?.["Chamber"] as Chamber | undefined)
-      .filter((c): c is Chamber => c != null && BigInt(c.temple_id) === templeId)
+      .filter((c): c is Chamber => c != null && BigInt(c.dungeon_id) === templeId)
       .sort((a, b) => Number(BigInt(a.chamber_id) - BigInt(b.chamber_id)));
   });
 }
@@ -32,7 +32,7 @@ export function useMonsterInstances(templeId: bigint): MonsterInstance[] {
     const entities = state.getEntitiesByModel(namespace, "MonsterInstance");
     return entities
       .map((e: any) => e.models?.[namespace]?.["MonsterInstance"] as MonsterInstance | undefined)
-      .filter((m): m is MonsterInstance => m != null && BigInt(m.temple_id) === templeId);
+      .filter((m): m is MonsterInstance => m != null && BigInt(m.dungeon_id) === templeId);
   });
 }
 
@@ -51,7 +51,7 @@ export function useChamberExits(templeId: bigint, chamberId: bigint): ChamberExi
       .filter(
         (c): c is ChamberExit =>
           c != null &&
-          BigInt(c.temple_id) === templeId &&
+          BigInt(c.dungeon_id) === templeId &&
           BigInt(c.from_chamber_id) === chamberId,
       )
       .sort((a, b) => Number(BigInt(a.exit_index) - BigInt(b.exit_index)));
@@ -73,7 +73,7 @@ export function useFallenAdventurers(templeId: bigint, chamberId: bigint): Falle
       .filter(
         (f): f is FallenAdventurer =>
           f != null &&
-          BigInt(f.temple_id) === templeId &&
+          BigInt(f.dungeon_id) === templeId &&
           BigInt(f.chamber_id) === chamberId,
       )
       .sort((a, b) => Number(BigInt(a.fallen_index) - BigInt(b.fallen_index)));

@@ -51,7 +51,7 @@ export interface AdventurerInventory {
 // Type definition for `d20::d20::models::adventurer::AdventurerPosition` struct
 export interface AdventurerPosition {
 	adventurer_id: BigNumberish;
-	temple_id: BigNumberish;
+	dungeon_id: BigNumberish;
 	chamber_id: BigNumberish;
 	in_combat: boolean;
 	combat_monster_id: BigNumberish;
@@ -72,7 +72,7 @@ export interface AdventurerStats {
 	level: BigNumberish;
 	xp: BigNumberish;
 	adventurer_class: AdventurerClassEnum;
-	temples_conquered: BigNumberish;
+	dungeons_conquered: BigNumberish;
 }
 
 // Type definition for `d20::d20::models::adventurer::SkillsSet` struct
@@ -85,9 +85,9 @@ export interface SkillsSet {
 	acrobatics: boolean;
 }
 
-// Type definition for `d20::models::temple::Chamber` struct
+// Type definition for `d20::d20::models::dungeon::Chamber` struct
 export interface Chamber {
-	temple_id: BigNumberish;
+	dungeon_id: BigNumberish;
 	chamber_id: BigNumberish;
 	chamber_type: ChamberTypeEnum;
 	yonder: BigNumberish;
@@ -98,33 +98,33 @@ export interface Chamber {
 	trap_dc: BigNumberish;
 }
 
-// Type definition for `d20::models::temple::ChamberExit` struct
+// Type definition for `d20::d20::models::dungeon::ChamberExit` struct
 export interface ChamberExit {
-	temple_id: BigNumberish;
+	dungeon_id: BigNumberish;
 	from_chamber_id: BigNumberish;
 	exit_index: BigNumberish;
 	to_chamber_id: BigNumberish;
 	is_discovered: boolean;
 }
 
-// Type definition for `d20::models::temple::ChamberFallenCount` struct
+// Type definition for `d20::d20::models::dungeon::ChamberFallenCount` struct
 export interface ChamberFallenCount {
-	temple_id: BigNumberish;
+	dungeon_id: BigNumberish;
 	chamber_id: BigNumberish;
 	count: BigNumberish;
 }
 
-// Type definition for `d20::models::temple::AdventurerTempleProgress` struct
-export interface AdventurerTempleProgress {
+// Type definition for `d20::d20::models::dungeon::AdventurerDungeonProgress` struct
+export interface AdventurerDungeonProgress {
 	adventurer_id: BigNumberish;
-	temple_id: BigNumberish;
+	dungeon_id: BigNumberish;
 	chambers_explored: BigNumberish;
 	xp_earned: BigNumberish;
 }
 
-// Type definition for `d20::models::temple::FallenAdventurer` struct
+// Type definition for `d20::d20::models::dungeon::FallenAdventurer` struct
 export interface FallenAdventurer {
-	temple_id: BigNumberish;
+	dungeon_id: BigNumberish;
 	chamber_id: BigNumberish;
 	fallen_index: BigNumberish;
 	adventurer_id: BigNumberish;
@@ -135,9 +135,9 @@ export interface FallenAdventurer {
 	is_looted: boolean;
 }
 
-// Type definition for `d20::models::temple::MonsterInstance` struct
+// Type definition for `d20::d20::models::dungeon::MonsterInstance` struct
 export interface MonsterInstance {
-	temple_id: BigNumberish;
+	dungeon_id: BigNumberish;
 	chamber_id: BigNumberish;
 	monster_id: BigNumberish;
 	monster_type: MonsterTypeEnum;
@@ -146,9 +146,9 @@ export interface MonsterInstance {
 	is_alive: boolean;
 }
 
-// Type definition for `d20::models::temple::TempleState` struct
-export interface TempleState {
-	temple_id: BigNumberish;
+// Type definition for `d20::d20::models::dungeon::DungeonState` struct
+export interface DungeonState {
+	dungeon_id: BigNumberish;
 	difficulty_tier: BigNumberish;
 	next_chamber_id: BigNumberish;
 	boss_chamber_id: BigNumberish;
@@ -158,14 +158,14 @@ export interface TempleState {
 
 // Type definition for `d20::events::BossDefeated` struct
 export interface BossDefeated {
-	temple_id: BigNumberish;
+	dungeon_id: BigNumberish;
 	adventurer_id: BigNumberish;
 	monster_type: MonsterTypeEnum;
 }
 
 // Type definition for `d20::events::ChamberRevealed` struct
 export interface ChamberRevealed {
-	temple_id: BigNumberish;
+	dungeon_id: BigNumberish;
 	chamber_id: BigNumberish;
 	chamber_type: ChamberTypeEnum;
 	yonder: BigNumberish;
@@ -185,7 +185,7 @@ export interface CombatResult {
 // Type definition for `d20::events::ExplorerDied` struct
 export interface ExplorerDied {
 	adventurer_id: BigNumberish;
-	temple_id: BigNumberish;
+	dungeon_id: BigNumberish;
 	chamber_id: BigNumberish;
 	killed_by: MonsterTypeEnum;
 }
@@ -358,10 +358,10 @@ export interface SchemaType extends ISchemaType {
 		Chamber: Chamber,
 		ChamberExit: ChamberExit,
 		ChamberFallenCount: ChamberFallenCount,
-		AdventurerTempleProgress: AdventurerTempleProgress,
+		AdventurerDungeonProgress: AdventurerDungeonProgress,
 		FallenAdventurer: FallenAdventurer,
 		MonsterInstance: MonsterInstance,
-		TempleState: TempleState,
+		DungeonState: DungeonState,
 		BossDefeated: BossDefeated,
 		ChamberRevealed: ChamberRevealed,
 		CombatResult: CombatResult,
@@ -430,7 +430,7 @@ export const schema: SchemaType = {
 		},
 		AdventurerPosition: {
 			adventurer_id: 0,
-			temple_id: 0,
+			dungeon_id: 0,
 			chamber_id: 0,
 			in_combat: false,
 			combat_monster_id: 0,
@@ -465,7 +465,7 @@ export const schema: SchemaType = {
 				Fighter: undefined,
 				Rogue: undefined,
 				Wizard: undefined, }),
-			temples_conquered: 0,
+			dungeons_conquered: 0,
 		},
 		SkillsSet: {
 			athletics: false,
@@ -476,7 +476,7 @@ export const schema: SchemaType = {
 			acrobatics: false,
 		},
 		Chamber: {
-			temple_id: 0,
+			dungeon_id: 0,
 			chamber_id: 0,
 		chamber_type: new CairoCustomEnum({ 
 					None: "",
@@ -494,25 +494,25 @@ export const schema: SchemaType = {
 			trap_dc: 0,
 		},
 		ChamberExit: {
-			temple_id: 0,
+			dungeon_id: 0,
 			from_chamber_id: 0,
 			exit_index: 0,
 			to_chamber_id: 0,
 			is_discovered: false,
 		},
 		ChamberFallenCount: {
-			temple_id: 0,
+			dungeon_id: 0,
 			chamber_id: 0,
 			count: 0,
 		},
-		AdventurerTempleProgress: {
+		AdventurerDungeonProgress: {
 			adventurer_id: 0,
-			temple_id: 0,
+			dungeon_id: 0,
 			chambers_explored: 0,
 			xp_earned: 0,
 		},
 		FallenAdventurer: {
-			temple_id: 0,
+			dungeon_id: 0,
 			chamber_id: 0,
 			fallen_index: 0,
 			adventurer_id: 0,
@@ -532,7 +532,7 @@ export const schema: SchemaType = {
 			is_looted: false,
 		},
 		MonsterInstance: {
-			temple_id: 0,
+			dungeon_id: 0,
 			chamber_id: 0,
 			monster_id: 0,
 		monster_type: new CairoCustomEnum({ 
@@ -548,8 +548,8 @@ export const schema: SchemaType = {
 			max_hp: 0,
 			is_alive: false,
 		},
-		TempleState: {
-			temple_id: 0,
+		DungeonState: {
+			dungeon_id: 0,
 			difficulty_tier: 0,
 			next_chamber_id: 0,
 			boss_chamber_id: 0,
@@ -557,7 +557,7 @@ export const schema: SchemaType = {
 			max_yonder: 0,
 		},
 		BossDefeated: {
-			temple_id: 0,
+			dungeon_id: 0,
 			adventurer_id: 0,
 		monster_type: new CairoCustomEnum({ 
 					None: "",
@@ -570,7 +570,7 @@ export const schema: SchemaType = {
 				Wraith: undefined, }),
 		},
 		ChamberRevealed: {
-			temple_id: 0,
+			dungeon_id: 0,
 			chamber_id: 0,
 		chamber_type: new CairoCustomEnum({ 
 					None: "",
@@ -601,7 +601,7 @@ export const schema: SchemaType = {
 		},
 		ExplorerDied: {
 			adventurer_id: 0,
-			temple_id: 0,
+			dungeon_id: 0,
 			chamber_id: 0,
 		killed_by: new CairoCustomEnum({ 
 					None: "",
@@ -663,10 +663,10 @@ export enum ModelsMapping {
 	Chamber = 'd20-Chamber',
 	ChamberExit = 'd20-ChamberExit',
 	ChamberFallenCount = 'd20-ChamberFallenCount',
-	AdventurerTempleProgress = 'd20-AdventurerTempleProgress',
+	AdventurerDungeonProgress = 'd20-AdventurerDungeonProgress',
 	FallenAdventurer = 'd20-FallenAdventurer',
 	MonsterInstance = 'd20-MonsterInstance',
-	TempleState = 'd20-TempleState',
+	DungeonState = 'd20-DungeonState',
 	AdventurerClass = 'd20-AdventurerClass',
 	ChamberType = 'd20-ChamberType',
 	Skill = 'd20-Skill',

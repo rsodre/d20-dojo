@@ -155,7 +155,7 @@ function TempleStats({ templeId }: { templeId: bigint }) {
 function ExplorerInTemple({ explorerId }: { explorerId: bigint }) {
   const { stats, health, combat, position } = useExplorerModels(explorerId);
 
-  if (!position || BigInt(position.temple_id) === 0n) return null;
+  if (!position || BigInt(position.dungeon_id) === 0n) return null;
 
   const className = enumVariant(stats?.adventurer_class);
   const emoji = CLASS_EMOJI[className] ?? "⚔️";
@@ -206,7 +206,7 @@ function ExplorerInTempleGate({
   templeId: bigint;
 }) {
   const { position } = useExplorerModels(explorerId);
-  if (!position || BigInt(position.temple_id) !== templeId) return null;
+  if (!position || BigInt(position.dungeon_id) !== templeId) return null;
   return <ExplorerInTemple explorerId={explorerId} />;
 }
 

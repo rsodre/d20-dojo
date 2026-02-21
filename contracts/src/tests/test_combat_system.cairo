@@ -23,7 +23,7 @@ mod tests {
         AdventurerInventory,
         AdventurerPosition,
     };
-    use d20::models::temple::{
+    use d20::d20::models::dungeon::{
         MonsterInstance,
         FallenAdventurer,
         ChamberFallenCount,
@@ -48,11 +48,11 @@ mod tests {
                 TestResource::Model(d20::d20::models::adventurer::m_AdventurerInventory::TEST_CLASS_HASH),
                 TestResource::Model(d20::d20::models::adventurer::m_AdventurerPosition::TEST_CLASS_HASH),
                 TestResource::Model(d20::d20::models::adventurer::m_AdventurerSkills::TEST_CLASS_HASH),
-                TestResource::Model(d20::models::temple::m_MonsterInstance::TEST_CLASS_HASH),
-                TestResource::Model(d20::models::temple::m_FallenAdventurer::TEST_CLASS_HASH),
-                TestResource::Model(d20::models::temple::m_ChamberFallenCount::TEST_CLASS_HASH),
-                TestResource::Model(d20::models::temple::m_TempleState::TEST_CLASS_HASH),
-                TestResource::Model(d20::models::temple::m_AdventurerTempleProgress::TEST_CLASS_HASH),
+                TestResource::Model(d20::d20::models::dungeon::m_MonsterInstance::TEST_CLASS_HASH),
+                TestResource::Model(d20::d20::models::dungeon::m_FallenAdventurer::TEST_CLASS_HASH),
+                TestResource::Model(d20::d20::models::dungeon::m_ChamberFallenCount::TEST_CLASS_HASH),
+                TestResource::Model(d20::d20::models::dungeon::m_DungeonState::TEST_CLASS_HASH),
+                TestResource::Model(d20::d20::models::dungeon::m_AdventurerDungeonProgress::TEST_CLASS_HASH),
                 TestResource::Event(d20::events::e_ExplorerMinted::TEST_CLASS_HASH),
                 TestResource::Event(d20::events::e_CombatResult::TEST_CLASS_HASH),
                 TestResource::Event(d20::events::e_ExplorerDied::TEST_CLASS_HASH),
@@ -124,7 +124,7 @@ mod tests {
     fn assert_explorer_dead(
         ref world: dojo::world::WorldStorage,
         adventurer_id: u128,
-        temple_id: u128,
+        dungeon_id: u128,
         chamber_id: u32,
     ) {
         let health: AdventurerHealth = world.read_model(adventurer_id);
@@ -134,11 +134,11 @@ mod tests {
         let pos: AdventurerPosition = world.read_model(adventurer_id);
         assert(!pos.in_combat, 'dead explorer not in combat');
 
-        let fallen_count: ChamberFallenCount = world.read_model((temple_id, chamber_id));
+        let fallen_count: ChamberFallenCount = world.read_model((dungeon_id, chamber_id));
         assert(fallen_count.count >= 1, 'fallen count should be >= 1');
 
         let fallen: FallenAdventurer = world.read_model(
-            (temple_id, chamber_id, fallen_count.count - 1)
+            (dungeon_id, chamber_id, fallen_count.count - 1)
         );
         assert(fallen.adventurer_id == adventurer_id, 'fallen explorer id mismatch');
         assert(!fallen.is_looted, 'fallen should not be looted');
@@ -295,12 +295,12 @@ mod tests {
             level: 2,
             xp: stats.xp,
             adventurer_class: stats.adventurer_class,
-            temples_conquered: stats.temples_conquered,
+            dungeons_conquered: stats.dungeons_conquered,
         });
 
         world.write_model_test(@AdventurerPosition {
             adventurer_id,
-            temple_id: 1,
+            dungeon_id: 1,
             chamber_id: 1,
             in_combat: true,
             combat_monster_id: 1,
@@ -325,7 +325,7 @@ mod tests {
 
         world.write_model_test(@AdventurerPosition {
             adventurer_id,
-            temple_id: 1,
+            dungeon_id: 1,
             chamber_id: 1,
             in_combat: true,
             combat_monster_id: 1,
@@ -351,12 +351,12 @@ mod tests {
             level: 2,
             xp: stats.xp,
             adventurer_class: stats.adventurer_class,
-            temples_conquered: stats.temples_conquered,
+            dungeons_conquered: stats.dungeons_conquered,
         });
 
         world.write_model_test(@AdventurerPosition {
             adventurer_id,
-            temple_id: 1,
+            dungeon_id: 1,
             chamber_id: 1,
             in_combat: false,
             combat_monster_id: 0,
@@ -378,7 +378,7 @@ mod tests {
         let adventurer_id = mint_fighter(token);
 
         world.write_model_test(@MonsterInstance {
-            temple_id: 1,
+            dungeon_id: 1,
             chamber_id: 1,
             monster_id: 1,
             monster_type: MonsterType::Skeleton,
@@ -389,7 +389,7 @@ mod tests {
 
         world.write_model_test(@AdventurerPosition {
             adventurer_id,
-            temple_id: 1,
+            dungeon_id: 1,
             chamber_id: 1,
             in_combat: true,
             combat_monster_id: 1,
@@ -421,7 +421,7 @@ mod tests {
 
         world.write_model_test(@AdventurerPosition {
             adventurer_id,
-            temple_id: 1,
+            dungeon_id: 1,
             chamber_id: 1,
             in_combat: false,
             combat_monster_id: 0,
@@ -448,7 +448,7 @@ mod tests {
 
         world.write_model_test(@AdventurerPosition {
             adventurer_id,
-            temple_id: 1,
+            dungeon_id: 1,
             chamber_id: 1,
             in_combat: true,
             combat_monster_id: 1,
@@ -478,7 +478,7 @@ mod tests {
         });
 
         world.write_model_test(@MonsterInstance {
-            temple_id: 1,
+            dungeon_id: 1,
             chamber_id: 1,
             monster_id: 1,
             monster_type: MonsterType::Skeleton,
@@ -489,7 +489,7 @@ mod tests {
 
         world.write_model_test(@AdventurerPosition {
             adventurer_id,
-            temple_id: 1,
+            dungeon_id: 1,
             chamber_id: 1,
             in_combat: true,
             combat_monster_id: 1,
@@ -581,7 +581,7 @@ mod tests {
         let adventurer_id = mint_fighter(token);
 
         world.write_model_test(@MonsterInstance {
-            temple_id: 1,
+            dungeon_id: 1,
             chamber_id: 1,
             monster_id: 1,
             monster_type: MonsterType::Skeleton,
@@ -592,7 +592,7 @@ mod tests {
 
         world.write_model_test(@AdventurerPosition {
             adventurer_id,
-            temple_id: 1,
+            dungeon_id: 1,
             chamber_id: 1,
             in_combat: true,
             combat_monster_id: 1,
@@ -624,7 +624,7 @@ mod tests {
         let adventurer_id = mint_fighter(token);
 
         world.write_model_test(@MonsterInstance {
-            temple_id: 10,
+            dungeon_id: 10,
             chamber_id: 5,
             monster_id: 2,
             monster_type: MonsterType::Skeleton,
@@ -635,7 +635,7 @@ mod tests {
 
         world.write_model_test(@AdventurerPosition {
             adventurer_id,
-            temple_id: 10,
+            dungeon_id: 10,
             chamber_id: 5,
             in_combat: true,
             combat_monster_id: 2,
@@ -700,13 +700,13 @@ mod tests {
         let (mut world, _token, _combat) = setup_world();
 
         world.write_model_test(@ChamberFallenCount {
-            temple_id: 99,
+            dungeon_id: 99,
             chamber_id: 1,
             count: 3,
         });
 
         world.write_model_test(@FallenAdventurer {
-            temple_id: 99,
+            dungeon_id: 99,
             chamber_id: 1,
             fallen_index: 3,
             adventurer_id: 999,
@@ -739,7 +739,7 @@ mod tests {
         let adventurer_id = mint_wizard(token);
 
         world.write_model_test(@MonsterInstance {
-            temple_id: 1,
+            dungeon_id: 1,
             chamber_id: 1,
             monster_id: 1,
             monster_type: MonsterType::Skeleton,
@@ -749,7 +749,7 @@ mod tests {
         });
         world.write_model_test(@AdventurerPosition {
             adventurer_id,
-            temple_id: 1,
+            dungeon_id: 1,
             chamber_id: 1,
             in_combat: true,
             combat_monster_id: 1,
@@ -819,7 +819,7 @@ mod tests {
             level: 3,
             xp: stats.xp,
             adventurer_class: stats.adventurer_class,
-            temples_conquered: stats.temples_conquered,
+            dungeons_conquered: stats.dungeons_conquered,
         });
         world.write_model_test(@AdventurerCombat {
             adventurer_id,
@@ -832,7 +832,7 @@ mod tests {
         });
 
         world.write_model_test(@MonsterInstance {
-            temple_id: 1,
+            dungeon_id: 1,
             chamber_id: 1,
             monster_id: 1,
             monster_type: MonsterType::Skeleton,
@@ -842,7 +842,7 @@ mod tests {
         });
         world.write_model_test(@AdventurerPosition {
             adventurer_id,
-            temple_id: 1,
+            dungeon_id: 1,
             chamber_id: 1,
             in_combat: true,
             combat_monster_id: 1,
@@ -874,7 +874,7 @@ mod tests {
 
         // 1 HP snake: 5d8 (min 5) always beats 1 HP
         world.write_model_test(@MonsterInstance {
-            temple_id: 1,
+            dungeon_id: 1,
             chamber_id: 1,
             monster_id: 1,
             monster_type: MonsterType::PoisonousSnake,
@@ -884,7 +884,7 @@ mod tests {
         });
         world.write_model_test(@AdventurerPosition {
             adventurer_id,
-            temple_id: 1,
+            dungeon_id: 1,
             chamber_id: 1,
             in_combat: true,
             combat_monster_id: 1,
@@ -920,13 +920,13 @@ mod tests {
 
         world.write_model_test(@AdventurerPosition {
             adventurer_id,
-            temple_id: 1,
+            dungeon_id: 1,
             chamber_id: 1,
             in_combat: true,
             combat_monster_id: 1,
         });
         world.write_model_test(@MonsterInstance {
-            temple_id: 1,
+            dungeon_id: 1,
             chamber_id: 1,
             monster_id: 1,
             monster_type: MonsterType::Skeleton,
@@ -978,13 +978,13 @@ mod tests {
         });
         world.write_model_test(@AdventurerPosition {
             adventurer_id,
-            temple_id: 1,
+            dungeon_id: 1,
             chamber_id: 1,
             in_combat: true,
             combat_monster_id: 1,
         });
         world.write_model_test(@MonsterInstance {
-            temple_id: 1,
+            dungeon_id: 1,
             chamber_id: 1,
             monster_id: 1,
             monster_type: MonsterType::Skeleton,
@@ -1042,7 +1042,7 @@ mod tests {
 
         world.write_model_test(@AdventurerPosition {
             adventurer_id,
-            temple_id: 1,
+            dungeon_id: 1,
             chamber_id: 1,
             in_combat: false,
             combat_monster_id: 0,
