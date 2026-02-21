@@ -138,6 +138,12 @@ pub mod temple_token {
     #[abi(embed_v0)]
     impl ERC721ComboMixinImpl = ERC721ComboComponent::ERC721ComboMixinImpl<ContractState>;
 
+    // Dungeon component
+    use d20::d20::components::dungeon_component::DungeonComponent;
+    component!(path: DungeonComponent, storage: dungeon, event: DungeonEvent);
+    #[abi(embed_v0)]
+    impl DungeonImpl = DungeonComponent::DungeonImpl<ContractState>;
+
     // Game types and models
     use d20::types::index::ChamberType;
     use d20::types::explorer_class::ExplorerClass;
@@ -177,6 +183,8 @@ pub mod temple_token {
         erc721: ERC721Component::Storage,
         #[substorage(v0)]
         erc721_combo: ERC721ComboComponent::Storage,
+        #[substorage(v0)]
+        dungeon: DungeonComponent::Storage,
     }
 
     // ── Events ───────────────────────────────────────────────────────────────
@@ -190,6 +198,7 @@ pub mod temple_token {
         ERC721Event: ERC721Component::Event,
         #[flat]
         ERC721ComboEvent: ERC721ComboComponent::Event,
+        DungeonEvent: DungeonComponent::Event,
     }
 
     // ── Token defaults ───────────────────────────────────────────────────────

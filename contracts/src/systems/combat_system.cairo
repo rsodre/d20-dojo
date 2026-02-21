@@ -59,16 +59,26 @@ pub mod combat_system {
     use d20::utils::damage::DamageImpl;
     use d20::systems::explorer_token::{IExplorerTokenDispatcherTrait};
 
+    use d20::d20::components::combat_component::CombatComponent;
+    component!(path: CombatComponent, storage: combat, event: CombatEvent);
+    #[abi(embed_v0)]
+    impl CombatImpl = CombatComponent::CombatImpl<ContractState>;
+
     // ── Storage ──────────────────────────────────────────────────────────────
 
     #[storage]
-    struct Storage {}
+    struct Storage {
+        #[substorage(v0)]
+        combat: CombatComponent::Storage,
+    }
 
     // ── Events ───────────────────────────────────────────────────────────────
 
     #[event]
     #[derive(Drop, starknet::Event)]
-    enum Event {}
+    enum Event {
+        CombatEvent: CombatComponent::Event,
+    }
 
     // ── Initializer ──────────────────────────────────────────────────────────
 

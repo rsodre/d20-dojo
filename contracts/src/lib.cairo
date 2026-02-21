@@ -1,3 +1,11 @@
+pub mod d20 {
+    pub mod components {
+        pub mod character_component;
+        pub mod combat_component;
+        pub mod dungeon_component;
+    }
+}
+
 pub mod systems {
     pub mod explorer_token;
     pub mod combat_system;
