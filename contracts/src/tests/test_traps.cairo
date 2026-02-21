@@ -11,7 +11,8 @@ mod tests {
     use d20::models::temple::{
         Chamber, ChamberExit,
     };
-    use d20::types::index::{ChamberType};
+    use d20::d20::types::items::{WeaponType, ArmorType};
+    use d20::d20::types::index::{ChamberType};
     use d20::tests::tester::{
         setup_world, mint_fighter, mint_rogue, assert_explorer_dead,
     };
@@ -70,9 +71,9 @@ mod tests {
         // Give some gold/potions so we can verify they get dropped
         world.write_model_test(@AdventurerInventory {
             adventurer_id,
-            primary_weapon: d20::types::items::WeaponType::Longsword,
-            secondary_weapon: d20::types::items::WeaponType::None,
-            armor: d20::types::items::ArmorType::ChainMail,
+            primary_weapon: WeaponType::Longsword,
+            secondary_weapon: WeaponType::None,
+            armor: ArmorType::ChainMail,
             has_shield: false,
             gold: 30,
             potions: 1,
@@ -123,9 +124,9 @@ mod tests {
         });
         world.write_model_test(@AdventurerInventory {
             adventurer_id,
-            primary_weapon: d20::types::items::WeaponType::Longsword,
-            secondary_weapon: d20::types::items::WeaponType::None,
-            armor: d20::types::items::ArmorType::ChainMail,
+            primary_weapon: WeaponType::Longsword,
+            secondary_weapon: WeaponType::None,
+            armor: ArmorType::ChainMail,
             has_shield: false,
             gold: 20,
             potions: 2,

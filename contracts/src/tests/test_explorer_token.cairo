@@ -11,20 +11,18 @@ mod tests {
     };
 
     use d20::systems::explorer_token::{
-        explorer_token, IExplorerTokenDispatcher, IExplorerTokenDispatcherTrait,
+        IExplorerTokenDispatcher, IExplorerTokenDispatcherTrait,
     };
-    use d20::models::config::m_Config;
     use d20::d20::models::adventurer::{
-        AdventurerStats, m_AdventurerStats,
-        AdventurerHealth, m_AdventurerHealth,
-        AdventurerCombat, m_AdventurerCombat,
-        AdventurerInventory, m_AdventurerInventory,
-        AdventurerPosition, m_AdventurerPosition,
-        AdventurerSkills, m_AdventurerSkills,
+        AdventurerStats,
+        AdventurerHealth,
+        AdventurerCombat,
+        AdventurerInventory,
+        AdventurerPosition,
+        AdventurerSkills,
+        Skill,
     };
-    use d20::events::{e_ExplorerMinted};
-    use d20::types::index::Skill;
-    use d20::types::items::{WeaponType, ArmorType};
+    use d20::d20::types::items::{WeaponType, ArmorType};
     use d20::d20::types::adventurer_class::AdventurerClass;
     use d20::tests::mock_vrf::MockVrf;
 
@@ -34,15 +32,15 @@ mod tests {
         NamespaceDef {
             namespace: "d20_0_1",
             resources: [
-                TestResource::Model(m_Config::TEST_CLASS_HASH),
-                TestResource::Model(m_AdventurerStats::TEST_CLASS_HASH),
-                TestResource::Model(m_AdventurerHealth::TEST_CLASS_HASH),
-                TestResource::Model(m_AdventurerCombat::TEST_CLASS_HASH),
-                TestResource::Model(m_AdventurerInventory::TEST_CLASS_HASH),
-                TestResource::Model(m_AdventurerPosition::TEST_CLASS_HASH),
-                TestResource::Model(m_AdventurerSkills::TEST_CLASS_HASH),
-                TestResource::Event(e_ExplorerMinted::TEST_CLASS_HASH),
-                TestResource::Contract(explorer_token::TEST_CLASS_HASH),
+                TestResource::Model(d20::models::config::m_Config::TEST_CLASS_HASH),
+                TestResource::Model(d20::d20::models::adventurer::m_AdventurerStats::TEST_CLASS_HASH),
+                TestResource::Model(d20::d20::models::adventurer::m_AdventurerHealth::TEST_CLASS_HASH),
+                TestResource::Model(d20::d20::models::adventurer::m_AdventurerCombat::TEST_CLASS_HASH),
+                TestResource::Model(d20::d20::models::adventurer::m_AdventurerInventory::TEST_CLASS_HASH),
+                TestResource::Model(d20::d20::models::adventurer::m_AdventurerPosition::TEST_CLASS_HASH),
+                TestResource::Model(d20::d20::models::adventurer::m_AdventurerSkills::TEST_CLASS_HASH),
+                TestResource::Event(d20::events::e_ExplorerMinted::TEST_CLASS_HASH),
+                TestResource::Contract(d20::systems::explorer_token::explorer_token::TEST_CLASS_HASH),
             ].span(),
         }
     }
@@ -429,7 +427,7 @@ mod tests {
         let (mut world, token) = setup_world();
         let adventurer_id = token.mint_explorer(AdventurerClass::Fighter);
 
-        // Kill the explorer via write_model_test
+        // Kill the adventurer via write_model_test
         let mut health: AdventurerHealth = world.read_model(adventurer_id);
         health.is_dead = true;
         health.current_hp = 0;

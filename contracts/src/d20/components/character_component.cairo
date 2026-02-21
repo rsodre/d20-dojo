@@ -6,11 +6,10 @@ pub mod CharacterComponent {
     use dojo::event::EventStorage;
 
     use d20::d20::models::adventurer::{
-        AbilityScore, SkillsSet,
+        AbilityScore, Skill, SkillsSet,
         AdventurerStats, AdventurerHealth, AdventurerCombat, AdventurerInventory,
         AdventurerPosition, AdventurerSkills,
     };
-    use d20::types::index::Skill;
     use d20::d20::types::adventurer_class::{AdventurerClass, AdventurerClassTrait};
     use d20::d20::types::attributes::CharacterAttributes;
     use d20::utils::seeder::{Seeder, SeederTrait};

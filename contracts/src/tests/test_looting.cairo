@@ -11,7 +11,7 @@ mod tests {
     use d20::models::temple::{
         Chamber,
     };
-    use d20::types::index::{ChamberType};
+    use d20::d20::types::index::{ChamberType};
     use d20::tests::tester::{
         setup_world, mint_fighter,
     };

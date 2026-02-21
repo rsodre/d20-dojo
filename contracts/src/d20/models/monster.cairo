@@ -1,4 +1,19 @@
 
+#[derive(Copy, Drop, Serde)]
+#[dojo::model]
+pub struct MonsterInstance {
+    #[key]
+    pub temple_id: u128,
+    #[key]
+    pub chamber_id: u32,
+    #[key]
+    pub monster_id: u32,
+    pub monster_type: MonsterType,
+    pub current_hp: i16,
+    pub max_hp: u16,
+    pub is_alive: bool,
+}
+
 #[derive(Serde, Copy, Drop, Introspect, PartialEq, Debug, DojoStore, Default)]
 pub enum MonsterType {
     #[default]

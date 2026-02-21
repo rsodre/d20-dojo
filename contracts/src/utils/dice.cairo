@@ -1,5 +1,5 @@
 use d20::utils::seeder::{Seeder, SeederTrait};
-use d20::types::items::{ArmorType, ArmorTrait};
+use d20::d20::types::items::{ArmorType, ArmorTrait};
 
 // ---------------------------------------------------------------------------
 // VRF-based dice rolling
@@ -92,7 +92,7 @@ pub fn calculate_ac(armor: ArmorType, has_shield: bool, dex_mod: i8) -> u8 {
 #[cfg(test)]
 mod tests {
     use super::{ability_modifier, proficiency_bonus, calculate_ac};
-    use d20::types::items::ArmorType;
+    use d20::d20::types::items::ArmorType;
 
     // ── ability_modifier tests ──
 

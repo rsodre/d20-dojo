@@ -9,11 +9,10 @@ mod tests {
     };
     use d20::models::temple::{
         MonsterInstance,
-        FallenExplorer, ChamberFallenCount
+        FallenAdventurer, ChamberFallenCount
     };
-    use d20::types::index::{ItemType};
-    use d20::types::items::{WeaponType, ArmorType};
-    use d20::types::monster::MonsterType;
+    use d20::d20::types::items::{WeaponType, ArmorType, ItemType};
+    use d20::d20::models::monster::MonsterType;
     use d20::tests::tester::{
         setup_world, mint_fighter,
     };
@@ -40,7 +39,7 @@ mod tests {
             chamber_id: 2,
             count: 1,
         });
-        world.write_model_test(@FallenExplorer {
+        world.write_model_test(@FallenAdventurer {
             temple_id,
             chamber_id: 2,
             fallen_index: 0,
@@ -77,7 +76,7 @@ mod tests {
         assert(inv.gold == 85, 'gold: 10 + 75 = 85');
         assert(inv.potions == 3, 'potions transferred');
 
-        let fallen: FallenExplorer = world.read_model((temple_id, 2_u32, 0_u32));
+        let fallen: FallenAdventurer = world.read_model((temple_id, 2_u32, 0_u32));
         assert(fallen.is_looted, 'body should be marked looted');
     }
 
@@ -98,7 +97,7 @@ mod tests {
             chamber_id: 2,
             count: 1,
         });
-        world.write_model_test(@FallenExplorer {
+        world.write_model_test(@FallenAdventurer {
             temple_id,
             chamber_id: 2,
             fallen_index: 0,
@@ -132,7 +131,7 @@ mod tests {
         let temple_id = temple.mint_temple(1_u8);
 
         world.write_model_test(@ChamberFallenCount { temple_id, chamber_id: 2, count: 1 });
-        world.write_model_test(@FallenExplorer { temple_id, chamber_id: 2, fallen_index: 0, adventurer_id: 9999, dropped_weapon: WeaponType::Dagger, dropped_armor: ArmorType::Leather, dropped_gold: 50, dropped_potions: 1, is_looted: true });
+        world.write_model_test(@FallenAdventurer { temple_id, chamber_id: 2, fallen_index: 0, adventurer_id: 9999, dropped_weapon: WeaponType::Dagger, dropped_armor: ArmorType::Leather, dropped_gold: 50, dropped_potions: 1, is_looted: true });
         world.write_model_test(@AdventurerPosition { adventurer_id, temple_id, chamber_id: 2, in_combat: false, combat_monster_id: 0 });
 
         temple.loot_fallen(adventurer_id, 0);
@@ -167,7 +166,7 @@ mod tests {
         let temple_id = temple.mint_temple(1_u8);
 
         world.write_model_test(@ChamberFallenCount { temple_id, chamber_id: 2, count: 1 });
-        world.write_model_test(@FallenExplorer { temple_id, chamber_id: 2, fallen_index: 0, adventurer_id: 9999, dropped_weapon: WeaponType::Dagger, dropped_armor: ArmorType::Leather, dropped_gold: 50, dropped_potions: 1, is_looted: false });
+        world.write_model_test(@FallenAdventurer { temple_id, chamber_id: 2, fallen_index: 0, adventurer_id: 9999, dropped_weapon: WeaponType::Dagger, dropped_armor: ArmorType::Leather, dropped_gold: 50, dropped_potions: 1, is_looted: false });
         world.write_model_test(@AdventurerPosition { adventurer_id, temple_id, chamber_id: 2, in_combat: true, combat_monster_id: 1 });
 
         temple.loot_fallen(adventurer_id, 0);
@@ -199,7 +198,7 @@ mod tests {
         let fallen_count: ChamberFallenCount = world.read_model((temple_id, 1_u32));
         assert(fallen_count.count >= 1, 'should have at least 1 body');
 
-        let fallen: FallenExplorer = world.read_model((temple_id, 1_u32, 0_u32));
+        let fallen: FallenAdventurer = world.read_model((temple_id, 1_u32, 0_u32));
         assert(fallen.adventurer_id == explorer_a, 'body is explorer A');
         assert(fallen.dropped_gold == 42, 'body has 42 gold');
 
@@ -218,7 +217,7 @@ mod tests {
         assert(inv_b.gold == 47, 'B gets 5 + 42 = 47 gold');
         assert(inv_b.primary_weapon == WeaponType::Longsword, 'B gets longsword');
 
-        let fallen_after: FallenExplorer = world.read_model((temple_id, 1_u32, 0_u32));
+        let fallen_after: FallenAdventurer = world.read_model((temple_id, 1_u32, 0_u32));
         assert(fallen_after.is_looted, 'body marked looted');
     }
 
@@ -234,16 +233,16 @@ mod tests {
         let chamber_id: u32 = 3;
 
         world.write_model_test(@ChamberFallenCount { temple_id, chamber_id, count: 2 });
-        world.write_model_test(@FallenExplorer { temple_id, chamber_id, fallen_index: 0, adventurer_id: 100, dropped_weapon: WeaponType::Longsword, dropped_armor: ArmorType::ChainMail, dropped_gold: 30, dropped_potions: 1, is_looted: false });
-        world.write_model_test(@FallenExplorer { temple_id, chamber_id, fallen_index: 1, adventurer_id: 200, dropped_weapon: WeaponType::Dagger, dropped_armor: ArmorType::Leather, dropped_gold: 15, dropped_potions: 0, is_looted: false });
+        world.write_model_test(@FallenAdventurer { temple_id, chamber_id, fallen_index: 0, adventurer_id: 100, dropped_weapon: WeaponType::Longsword, dropped_armor: ArmorType::ChainMail, dropped_gold: 30, dropped_potions: 1, is_looted: false });
+        world.write_model_test(@FallenAdventurer { temple_id, chamber_id, fallen_index: 1, adventurer_id: 200, dropped_weapon: WeaponType::Dagger, dropped_armor: ArmorType::Leather, dropped_gold: 15, dropped_potions: 0, is_looted: false });
 
         let count: ChamberFallenCount = world.read_model((temple_id, chamber_id));
         assert(count.count == 2, 'two bodies in chamber');
 
-        let body0: FallenExplorer = world.read_model((temple_id, chamber_id, 0_u32));
+        let body0: FallenAdventurer = world.read_model((temple_id, chamber_id, 0_u32));
         assert(body0.adventurer_id == 100, 'body 0 is explorer 100');
 
-        let body1: FallenExplorer = world.read_model((temple_id, chamber_id, 1_u32));
+        let body1: FallenAdventurer = world.read_model((temple_id, chamber_id, 1_u32));
         assert(body1.adventurer_id == 200, 'body 1 is explorer 200');
     }
 
@@ -276,7 +275,7 @@ mod tests {
         temple.enter_temple(adventurer_id, temple_id);
 
         world.write_model_test(@ChamberFallenCount { temple_id, chamber_id: 1, count: 1 });
-        world.write_model_test(@FallenExplorer { temple_id, chamber_id: 1, fallen_index: 0, adventurer_id: 9999, dropped_weapon: WeaponType::Dagger, dropped_armor: ArmorType::None, dropped_gold: 10, dropped_potions: 0, is_looted: false });
+        world.write_model_test(@FallenAdventurer { temple_id, chamber_id: 1, fallen_index: 0, adventurer_id: 9999, dropped_weapon: WeaponType::Dagger, dropped_armor: ArmorType::None, dropped_gold: 10, dropped_potions: 0, is_looted: false });
         world.write_model_test(@AdventurerHealth { adventurer_id, current_hp: 0, max_hp: 11, is_dead: true });
 
         temple.loot_fallen(adventurer_id, 0);
@@ -332,16 +331,16 @@ mod tests {
 
         world.write_model_test(@AdventurerPosition { adventurer_id, temple_id, chamber_id: 2, in_combat: false, combat_monster_id: 0 });
         world.write_model_test(@ChamberFallenCount { temple_id, chamber_id: 2, count: 2 });
-        world.write_model_test(@FallenExplorer { temple_id, chamber_id: 2, fallen_index: 0, adventurer_id: 8888, dropped_weapon: WeaponType::Longsword, dropped_armor: ArmorType::ChainMail, dropped_gold: 100, dropped_potions: 5, is_looted: true });
-        world.write_model_test(@FallenExplorer { temple_id, chamber_id: 2, fallen_index: 1, adventurer_id: 7777, dropped_weapon: WeaponType::Dagger, dropped_armor: ArmorType::Leather, dropped_gold: 20, dropped_potions: 1, is_looted: false });
+        world.write_model_test(@FallenAdventurer { temple_id, chamber_id: 2, fallen_index: 0, adventurer_id: 8888, dropped_weapon: WeaponType::Longsword, dropped_armor: ArmorType::ChainMail, dropped_gold: 100, dropped_potions: 5, is_looted: true });
+        world.write_model_test(@FallenAdventurer { temple_id, chamber_id: 2, fallen_index: 1, adventurer_id: 7777, dropped_weapon: WeaponType::Dagger, dropped_armor: ArmorType::Leather, dropped_gold: 20, dropped_potions: 1, is_looted: false });
         world.write_model_test(@AdventurerInventory { adventurer_id, primary_weapon: WeaponType::None, secondary_weapon: WeaponType::None, armor: ArmorType::None, has_shield: false, gold: 0, potions: 0 });
 
         temple.loot_fallen(adventurer_id, 1);
 
-        let body1: FallenExplorer = world.read_model((temple_id, 2_u32, 1_u32));
+        let body1: FallenAdventurer = world.read_model((temple_id, 2_u32, 1_u32));
         assert(body1.is_looted, 'body 1 should be looted');
 
-        let body0: FallenExplorer = world.read_model((temple_id, 2_u32, 0_u32));
+        let body0: FallenAdventurer = world.read_model((temple_id, 2_u32, 0_u32));
         assert(body0.is_looted, 'body 0 still looted');
         assert(body0.dropped_gold == 100, 'body 0 gold unchanged');
 

@@ -9,9 +9,9 @@ mod tests {
     };
     use d20::models::temple::{
         TempleState, Chamber, ChamberExit,
-        ExplorerTempleProgress
+        AdventurerTempleProgress
     };
-    use d20::types::index::{ChamberType};
+    use d20::d20::types::index::{ChamberType};
     use d20::tests::tester::{
         setup_world, mint_fighter,
     };
@@ -99,7 +99,7 @@ mod tests {
         temple.enter_temple(adventurer_id, temple_id);
         temple.open_exit(adventurer_id, 0);
 
-        let progress: ExplorerTempleProgress = world.read_model((adventurer_id, temple_id));
+        let progress: AdventurerTempleProgress = world.read_model((adventurer_id, temple_id));
         assert(progress.chambers_explored == 1, 'should have explored 1 chamber');
     }
 

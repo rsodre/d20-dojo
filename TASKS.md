@@ -9,7 +9,7 @@
 - [x] **1.1** Replace starter code: update namespace from `dojo_starter` to `d20_0_1` in `Scarb.toml` and `dojo_dev.toml`, update world name/seed, remove starter models/systems
 - [x] **1.2** Define all enums in `src/types.cairo` with correct derives (`Serde, Copy, Drop, Introspect, PartialEq, Debug, DojoStore, Default`)
 - [x] **1.3** Implement explorer models in `src/models/` (AdventurerStats, AdventurerHealth, AdventurerCombat, AdventurerInventory, AdventurerPosition, AdventurerSkills) with `#[dojo::model]` and `#[derive(Copy, Drop, Serde)]`
-- [x] **1.4** Implement temple/chamber models (TempleState, Chamber, MonsterInstance, ChamberExit, FallenExplorer, ChamberFallenCount, ExplorerTempleProgress)
+- [x] **1.4** Implement temple/chamber models (TempleState, Chamber, MonsterInstance, ChamberExit, FallenAdventurer, ChamberFallenCount, AdventurerTempleProgress)
 - [x] **1.5** Implement D20 utility module (`src/utils/d20.cairo`): `roll_d20`, `roll_dice`, `ability_modifier`, `proficiency_bonus`, `calculate_ac`
 - [x] **1.6** Implement monster stat lookup (`src/utils/monsters.cairo`): pure function returning stats for each MonsterType
 - [x] **1.7** Define all events (`src/events.cairo`): ExplorerMinted, CombatResult, ExplorerDied, ChamberRevealed, LevelUp, BossDefeated
@@ -27,7 +27,7 @@
 - [x] **2.6** Implement Fighter features (second_wind heal 1d10+level, Action Surge extra action, Champion crit on 19-20 at level 3, Extra Attack at level 5)
 - [x] **2.7** Implement Rogue features (Sneak Attack bonus dice 1d6/2d6/3d6 by level, Expertise double proficiency, cunning_action disengage/hide, Uncanny Dodge halve damage at level 5)
 - [x] **2.8** Implement Wizard spell casting: spell slot tracking per level, cantrip resolution (Fire Bolt attack roll + 1d10), leveled spell resolution (Magic Missile auto-hit 3x1d4+1, Shield +5 AC reaction, Sleep 5d8 HP, Scorching Ray 3x2d6, Misty Step, Fireball 8d6 DEX save using monster ability scores)
-- [x] **2.9** Implement death (internal fn): set `is_dead`, create `FallenExplorer` with dropped loot, increment `ChamberFallenCount`, emit ExplorerDied event
+- [x] **2.9** Implement death (internal fn): set `is_dead`, create `FallenAdventurer` with dropped loot, increment `ChamberFallenCount`, emit ExplorerDied event
 - [x] **2.10** Implement `flee` mechanic: contested DEX check (explorer DEX vs monster DEX), on success move back to previous chamber
 - [x] **2.11** Write unit tests for combat math, each class feature, and death flow using `spawn_test_world` and `write_model_test`
 
@@ -35,10 +35,10 @@
 
 - [x] **3.1** Implement `temple_token` contract (`src/systems/temple_token.cairo`)
 - [ ] **3.2** Implement `mint_temple`: mint Temple NFT via cairo-nft-combo `_mint_next()`, create TempleState, create entrance chamber (chamber_id=1, yonder=0, type=Entrance), generate entrance exits from seed
-- [x] **3.3** Implement `enter_temple`: validate explorer is alive and not in another temple, place at entrance chamber, initialize `ExplorerTempleProgress`
+- [x] **3.3** Implement `enter_temple`: validate explorer is alive and not in another temple, place at entrance chamber, initialize `AdventurerTempleProgress`
 - [x] **3.4** Implement `exit_temple`: remove explorer from temple (set temple_id=0, chamber_id=0), retain stats/inventory/XP
 - [x] **3.5** Implement `generate_chamber` (internal fn): derive chamber properties from temple seed + chamber position, calculate boss probability via Yonder Formula, determine chamber type / monster type / exit count / trap DC, create `MonsterInstance` model for monster chambers, emit ChamberRevealed event
-- [x] **3.6** Implement `open_exit`: call `generate_chamber` for undiscovered exits, create bidirectional `ChamberExit` links, increment `chambers_explored` on `ExplorerTempleProgress`
+- [x] **3.6** Implement `open_exit`: call `generate_chamber` for undiscovered exits, create bidirectional `ChamberExit` links, increment `chambers_explored` on `AdventurerTempleProgress`
 - [x] **3.7** Implement `move_to_chamber`: validate exit is discovered, move explorer, trigger chamber events (monster encounter / trap)
 - [x] **3.8** Implement `loot_treasure`: Perception skill check (d20 + WIS mod + proficiency), DC 10 Treasure / DC 12 Empty; success awards gold (1d6 × (yonder+1) × difficulty) + potion on roll ≥15; marks `treasure_looted=true`. Note: `search_chamber` was removed — traps fire immediately on `move_to_chamber` entry; loot pickup and treasure detection are merged into `loot_treasure`.
 - [x] **3.9** Implement trap mechanics: saving throw to avoid, damage on failure, `disarm_trap` skill check
@@ -74,8 +74,8 @@
 - [x] **4.7** Implement Torii GRPC subscription for: player's explorers and temples.
 - [x] **4.8** Implement Torii GRPC client: query explorer state (stats, HP, inventory, position, skills), chamber state (type, yonder, monster, exits, fallen explorers), temple state (difficulty, boss status). Create hooks to get all relevant state with tanstack-query. use a DojoStore to store all models. Load all models related to the player's explorers and temples, and a subscription that catches everything. Using the fetched models, display class and stats of each  explorer listed in the home screen.
 - [x] **4.9** Install a Vite router, and a new route: /temple/:templeId displaying the temple state, with a list of chambers and explorers in it.
-- [x] **4.10** Make the explorers and temples selectable in the lobby, add buttons to each Explorer: "Enter Temple" (selected temple), "Exit Temple" (if in any temple). link the buttons to each contract call.
-- [x] **4.11** Add a PLAY button to the lobby explorer cards, when the explorer is in a temple. Create a route /play/:templeId/:explorerId and a page where the player can see the temple state, with a description of the current chamber and possible acitons.
+- [x] **4.10** Make the adventurers and temples selectable in the lobby, add buttons to each Explorer: "Enter Temple" (selected temple), "Exit Temple" (if in any temple). link the buttons to each contract call.
+- [x] **4.11** Add a PLAY button to the lobby explorer cards, when the adventurer is in a temple. Create a route /play/:templeId/:explorerId and a page where the player can see the temple state, with a description of the current chamber and possible acitons.
 - [x] **4.12** Implement action list generator: pure function `getAvailableActions(state) → Action[]` — context-aware (lobby / exploring / in-combat); each action carries label, contract, entrypoint, and calldata; VRF actions are flagged so the caller auto-prepends `request_random`.
 - [x] **4.13** Implement state display component: explorer character sheet (class, level, HP/max, AC, inventory, spell slots, class features remaining), chamber info (type, yonder, monster type + HP, trap, exits, fallen explorers).
 - [x] **4.14** Implement action panel: render `getAvailableActions` output as clickable buttons; disable all buttons while a tx is pending; show tx status (pending / confirmed / error).

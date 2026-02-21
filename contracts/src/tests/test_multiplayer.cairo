@@ -10,11 +10,11 @@ mod tests {
     };
     use d20::models::temple::{
         TempleState, Chamber, ChamberExit, MonsterInstance,
-        FallenExplorer, ChamberFallenCount, ExplorerTempleProgress
+        FallenAdventurer, ChamberFallenCount, AdventurerTempleProgress
     };
-    use d20::types::index::{ChamberType};
-    use d20::types::items::{WeaponType, ArmorType};
-    use d20::types::monster::MonsterType;
+    use d20::d20::types::index::{ChamberType};
+    use d20::d20::types::items::{WeaponType, ArmorType};
+    use d20::d20::models::monster::MonsterType;
     use d20::tests::tester::{
         setup_world, mint_fighter, mint_rogue,
     };
@@ -509,7 +509,7 @@ mod tests {
         let fallen_count: ChamberFallenCount = world.read_model((temple_id, 1_u32));
         assert(fallen_count.count >= 1, 'B sees fallen count');
 
-        let fallen: FallenExplorer = world.read_model((temple_id, 1_u32, 0_u32));
+        let fallen: FallenAdventurer = world.read_model((temple_id, 1_u32, 0_u32));
         assert(fallen.adventurer_id == explorer_a, 'body is A');
         assert(!fallen.is_looted, 'not yet looted');
         assert(fallen.dropped_gold == 50, 'gold on body');
@@ -517,7 +517,7 @@ mod tests {
         // B loots A's body
         temple.loot_fallen(explorer_b, 0);
 
-        let fallen_after: FallenExplorer = world.read_model((temple_id, 1_u32, 0_u32));
+        let fallen_after: FallenAdventurer = world.read_model((temple_id, 1_u32, 0_u32));
         assert(fallen_after.is_looted, 'B looted body');
 
         let inv_b: AdventurerInventory = world.read_model(explorer_b);
@@ -566,7 +566,7 @@ mod tests {
 
         // Player A opens exit 0 — A's chambers_explored = 1
         temple.open_exit(explorer_a, 0);
-        let prog_a: ExplorerTempleProgress = world.read_model((explorer_a, temple_id));
+        let prog_a: AdventurerTempleProgress = world.read_model((explorer_a, temple_id));
         assert(prog_a.chambers_explored == 1, 'A explored 1');
 
         // Player B enters same temple
@@ -575,16 +575,16 @@ mod tests {
         temple.enter_temple(explorer_b, temple_id);
 
         // B's progress starts at 0 even though A already explored
-        let prog_b: ExplorerTempleProgress = world.read_model((explorer_b, temple_id));
+        let prog_b: AdventurerTempleProgress = world.read_model((explorer_b, temple_id));
         assert(prog_b.chambers_explored == 0, 'B explored 0');
 
         // B opens exit 1 — B's chambers_explored = 1
         temple.open_exit(explorer_b, 1);
-        let prog_b2: ExplorerTempleProgress = world.read_model((explorer_b, temple_id));
+        let prog_b2: AdventurerTempleProgress = world.read_model((explorer_b, temple_id));
         assert(prog_b2.chambers_explored == 1, 'B explored 1');
 
         // A's progress unchanged by B's actions
-        let prog_a2: ExplorerTempleProgress = world.read_model((explorer_a, temple_id));
+        let prog_a2: AdventurerTempleProgress = world.read_model((explorer_a, temple_id));
         assert(prog_a2.chambers_explored == 1, 'A still 1');
     }
 

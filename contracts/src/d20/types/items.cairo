@@ -17,6 +17,13 @@ pub enum ArmorType {
     ChainMail,    // AC 16 (no DEX bonus)
 }
 
+#[derive(Serde, Copy, Drop, Introspect, PartialEq, Debug, DojoStore, Default)]
+pub enum ItemType {
+    #[default]
+    None,
+    HealthPotion,
+}
+
 #[generate_trait]
 pub impl WeaponTypeImpl of WeaponTypeTrait {
     fn damage_sides(self: WeaponType) -> u8 {

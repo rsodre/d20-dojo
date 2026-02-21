@@ -10,32 +10,28 @@ mod tests {
     };
 
     use d20::systems::explorer_token::{
-        explorer_token, IExplorerTokenDispatcher, IExplorerTokenDispatcherTrait,
+        IExplorerTokenDispatcher, IExplorerTokenDispatcherTrait,
     };
     use d20::systems::combat_system::{
-        combat_system, ICombatSystemDispatcher, ICombatSystemDispatcherTrait,
+        ICombatSystemDispatcher, ICombatSystemDispatcherTrait,
     };
-    use d20::models::config::{Config, m_Config};
+    use d20::models::config::{Config};
     use d20::d20::models::adventurer::{
-        AdventurerStats, m_AdventurerStats,
-        AdventurerHealth, m_AdventurerHealth,
-        AdventurerCombat, m_AdventurerCombat,
-        AdventurerInventory, m_AdventurerInventory,
-        AdventurerPosition, m_AdventurerPosition,
-        m_AdventurerSkills,
+        AdventurerStats,
+        AdventurerHealth,
+        AdventurerCombat,
+        AdventurerInventory,
+        AdventurerPosition,
     };
     use d20::models::temple::{
-        MonsterInstance, m_MonsterInstance,
-        FallenExplorer, m_FallenExplorer,
-        ChamberFallenCount, m_ChamberFallenCount,
-        m_TempleState,
-        m_ExplorerTempleProgress,
+        MonsterInstance,
+        FallenAdventurer,
+        ChamberFallenCount,
     };
-    use d20::events::{e_ExplorerMinted, e_CombatResult, e_ExplorerDied, e_LevelUp, e_BossDefeated};
-    use d20::types::index::ItemType;
-    use d20::types::items::{WeaponType, ArmorType};
+    use d20::d20::types::items::{WeaponType, ArmorType, ItemType};
     use d20::d20::types::adventurer_class::AdventurerClass;
-    use d20::types::monster::MonsterType;
+    use d20::d20::types::spells::SpellId;
+    use d20::d20::models::monster::MonsterType;
     use d20::utils::dice::{ability_modifier, proficiency_bonus};
     use d20::tests::mock_vrf::MockVrf;
 
@@ -45,25 +41,25 @@ mod tests {
         NamespaceDef {
             namespace: "d20_0_1",
             resources: [
-                TestResource::Model(m_Config::TEST_CLASS_HASH),
-                TestResource::Model(m_AdventurerStats::TEST_CLASS_HASH),
-                TestResource::Model(m_AdventurerHealth::TEST_CLASS_HASH),
-                TestResource::Model(m_AdventurerCombat::TEST_CLASS_HASH),
-                TestResource::Model(m_AdventurerInventory::TEST_CLASS_HASH),
-                TestResource::Model(m_AdventurerPosition::TEST_CLASS_HASH),
-                TestResource::Model(m_AdventurerSkills::TEST_CLASS_HASH),
-                TestResource::Model(m_MonsterInstance::TEST_CLASS_HASH),
-                TestResource::Model(m_FallenExplorer::TEST_CLASS_HASH),
-                TestResource::Model(m_ChamberFallenCount::TEST_CLASS_HASH),
-                TestResource::Model(m_TempleState::TEST_CLASS_HASH),
-                TestResource::Model(m_ExplorerTempleProgress::TEST_CLASS_HASH),
-                TestResource::Event(e_ExplorerMinted::TEST_CLASS_HASH),
-                TestResource::Event(e_CombatResult::TEST_CLASS_HASH),
-                TestResource::Event(e_ExplorerDied::TEST_CLASS_HASH),
-                TestResource::Event(e_LevelUp::TEST_CLASS_HASH),
-                TestResource::Event(e_BossDefeated::TEST_CLASS_HASH),
-                TestResource::Contract(explorer_token::TEST_CLASS_HASH),
-                TestResource::Contract(combat_system::TEST_CLASS_HASH),
+                TestResource::Model(d20::models::config::m_Config::TEST_CLASS_HASH),
+                TestResource::Model(d20::d20::models::adventurer::m_AdventurerStats::TEST_CLASS_HASH),
+                TestResource::Model(d20::d20::models::adventurer::m_AdventurerHealth::TEST_CLASS_HASH),
+                TestResource::Model(d20::d20::models::adventurer::m_AdventurerCombat::TEST_CLASS_HASH),
+                TestResource::Model(d20::d20::models::adventurer::m_AdventurerInventory::TEST_CLASS_HASH),
+                TestResource::Model(d20::d20::models::adventurer::m_AdventurerPosition::TEST_CLASS_HASH),
+                TestResource::Model(d20::d20::models::adventurer::m_AdventurerSkills::TEST_CLASS_HASH),
+                TestResource::Model(d20::models::temple::m_MonsterInstance::TEST_CLASS_HASH),
+                TestResource::Model(d20::models::temple::m_FallenAdventurer::TEST_CLASS_HASH),
+                TestResource::Model(d20::models::temple::m_ChamberFallenCount::TEST_CLASS_HASH),
+                TestResource::Model(d20::models::temple::m_TempleState::TEST_CLASS_HASH),
+                TestResource::Model(d20::models::temple::m_AdventurerTempleProgress::TEST_CLASS_HASH),
+                TestResource::Event(d20::events::e_ExplorerMinted::TEST_CLASS_HASH),
+                TestResource::Event(d20::events::e_CombatResult::TEST_CLASS_HASH),
+                TestResource::Event(d20::events::e_ExplorerDied::TEST_CLASS_HASH),
+                TestResource::Event(d20::events::e_LevelUp::TEST_CLASS_HASH),
+                TestResource::Event(d20::events::e_BossDefeated::TEST_CLASS_HASH),
+                TestResource::Contract(d20::systems::explorer_token::explorer_token::TEST_CLASS_HASH),
+                TestResource::Contract(d20::systems::combat_system::combat_system::TEST_CLASS_HASH),
             ].span(),
         }
     }
@@ -122,7 +118,7 @@ mod tests {
 
     /// Validates all invariants that must hold after an explorer dies:
     /// - is_dead flag set, HP at 0, not in combat
-    /// - FallenExplorer record created in the correct chamber
+    /// - FallenAdventurer record created in the correct chamber
     /// - ChamberFallenCount incremented
     /// - Inventory gold and potions zeroed (dropped as loot)
     fn assert_explorer_dead(
@@ -141,7 +137,7 @@ mod tests {
         let fallen_count: ChamberFallenCount = world.read_model((temple_id, chamber_id));
         assert(fallen_count.count >= 1, 'fallen count should be >= 1');
 
-        let fallen: FallenExplorer = world.read_model(
+        let fallen: FallenAdventurer = world.read_model(
             (temple_id, chamber_id, fallen_count.count - 1)
         );
         assert(fallen.adventurer_id == adventurer_id, 'fallen explorer id mismatch');
@@ -645,7 +641,7 @@ mod tests {
             combat_monster_id: 2,
         });
 
-        // 1 HP — any monster hit kills the explorer
+        // 1 HP — any monster hit kills the adventurer
         world.write_model_test(@AdventurerHealth {
             adventurer_id,
             current_hp: 1,
@@ -670,9 +666,9 @@ mod tests {
         if after.is_dead {
             assert_explorer_dead(ref world, adventurer_id, 10_u128, 5_u32);
 
-            // Verify loot values recorded in the FallenExplorer record
+            // Verify loot values recorded in the FallenAdventurer record
             let fallen_count: ChamberFallenCount = world.read_model((10_u128, 5_u32));
-            let fallen: FallenExplorer = world.read_model(
+            let fallen: FallenAdventurer = world.read_model(
                 (10_u128, 5_u32, fallen_count.count - 1)
             );
             assert(fallen.dropped_gold == 50, 'dropped gold = 50');
@@ -709,7 +705,7 @@ mod tests {
             count: 3,
         });
 
-        world.write_model_test(@FallenExplorer {
+        world.write_model_test(@FallenAdventurer {
             temple_id: 99,
             chamber_id: 1,
             fallen_index: 3,
@@ -724,7 +720,7 @@ mod tests {
         let count: ChamberFallenCount = world.read_model((99_u128, 1_u32));
         assert(count.count == 3, 'count should be 3');
 
-        let fallen: FallenExplorer = world.read_model((99_u128, 1_u32, 3_u32));
+        let fallen: FallenAdventurer = world.read_model((99_u128, 1_u32, 3_u32));
         assert(fallen.adventurer_id == 999, 'fallen id should be 999');
         assert(fallen.dropped_gold == 100, 'fallen gold = 100');
         assert(!fallen.is_looted, 'not yet looted');
@@ -768,7 +764,7 @@ mod tests {
         let combat_before: AdventurerCombat = world.read_model(adventurer_id);
         let slots_before = combat_before.spell_slots_1;
 
-        combat_sys.cast_spell(adventurer_id, d20::types::spells::SpellId::MagicMissile);
+        combat_sys.cast_spell(adventurer_id, SpellId::MagicMissile);
 
         // Magic Missile auto-hits: monster must have taken damage
         let monster_after: MonsterInstance = world.read_model((1_u128, 1_u32, 1_u32));
@@ -794,7 +790,7 @@ mod tests {
         let combat_before: AdventurerCombat = world.read_model(adventurer_id);
         let ac_before = combat_before.armor_class;
 
-        combat_sys.cast_spell(adventurer_id, d20::types::spells::SpellId::ShieldSpell);
+        combat_sys.cast_spell(adventurer_id, SpellId::ShieldSpell);
 
         let combat_after: AdventurerCombat = world.read_model(adventurer_id);
         assert(combat_after.armor_class == ac_before + 5, 'shield adds +5 AC');
@@ -852,7 +848,7 @@ mod tests {
             combat_monster_id: 1,
         });
 
-        combat_sys.cast_spell(adventurer_id, d20::types::spells::SpellId::MistyStep);
+        combat_sys.cast_spell(adventurer_id, SpellId::MistyStep);
 
         let pos_after: AdventurerPosition = world.read_model(adventurer_id);
         assert(!pos_after.in_combat, 'misty step disengages');
@@ -900,7 +896,7 @@ mod tests {
             is_dead: false,
         });
 
-        combat_sys.cast_spell(adventurer_id, d20::types::spells::SpellId::Sleep);
+        combat_sys.cast_spell(adventurer_id, SpellId::Sleep);
 
         let monster_after: MonsterInstance = world.read_model((1_u128, 1_u32, 1_u32));
         assert(!monster_after.is_alive, 'sleep incapacitates weak foe');
@@ -939,7 +935,7 @@ mod tests {
             is_alive: true,
         });
 
-        combat_sys.cast_spell(adventurer_id, d20::types::spells::SpellId::FireBolt);
+        combat_sys.cast_spell(adventurer_id, SpellId::FireBolt);
     }
 
     #[test]
@@ -958,7 +954,7 @@ mod tests {
             is_dead: true,
         });
 
-        combat_sys.cast_spell(adventurer_id, d20::types::spells::SpellId::FireBolt);
+        combat_sys.cast_spell(adventurer_id, SpellId::FireBolt);
     }
 
     #[test]
@@ -998,7 +994,7 @@ mod tests {
         });
 
         // Magic Missile needs a 1st level slot → should panic
-        combat_sys.cast_spell(adventurer_id, d20::types::spells::SpellId::MagicMissile);
+        combat_sys.cast_spell(adventurer_id, SpellId::MagicMissile);
     }
 
     // ═══════════════════════════════════════════════════════════════════════

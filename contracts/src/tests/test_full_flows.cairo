@@ -10,11 +10,11 @@ mod tests {
     };
     use d20::models::temple::{
         TempleState, Chamber, ChamberExit, MonsterInstance,
-        ExplorerTempleProgress
+        AdventurerTempleProgress
     };
-    use d20::types::index::{ChamberType};
+    use d20::d20::types::index::{ChamberType};
     use d20::d20::types::adventurer_class::AdventurerClass;
-    use d20::types::monster::MonsterType;
+    use d20::d20::models::monster::MonsterType;
     use d20::tests::tester::{
         setup_world, mint_fighter, mint_rogue, mint_wizard,
     };
@@ -68,7 +68,7 @@ mod tests {
 
         temple.open_exit(adventurer_id, 0);
 
-        let progress: ExplorerTempleProgress = world.read_model((adventurer_id, temple_id));
+        let progress: AdventurerTempleProgress = world.read_model((adventurer_id, temple_id));
         assert(progress.chambers_explored == 1, 'explored 1 chamber');
 
         // 5. Move to the newly generated chamber 2 if it's not a monster chamber,
@@ -245,7 +245,7 @@ mod tests {
             max_hp: 50,
             is_dead: false,
         });
-        world.write_model_test(@ExplorerTempleProgress {
+        world.write_model_test(@AdventurerTempleProgress {
             adventurer_id,
             temple_id,
             chambers_explored: 0,
@@ -256,7 +256,7 @@ mod tests {
         let xp_before: u32 = stats_wiz_pre.xp;
 
         // Cast Fire Bolt (cantrip)
-        combat.cast_spell(adventurer_id, d20::types::spells::SpellId::FireBolt);
+        combat.cast_spell(adventurer_id, d20::d20::types::spells::SpellId::FireBolt);
 
         let monster_after: MonsterInstance = world.read_model((temple_id, 2_u32, 1_u32));
         if !monster_after.is_alive {

@@ -2,9 +2,23 @@ use dojo::model::ModelStorage;
 use dojo::event::EventStorage;
 use dojo::world::WorldStorage;
 use d20::d20::models::adventurer::{AdventurerHealth, AdventurerPosition, AdventurerInventory};
-use d20::models::temple::{FallenExplorer, ChamberFallenCount};
+use d20::models::temple::{FallenAdventurer, ChamberFallenCount};
 use d20::events::ExplorerDied;
-use d20::types::monster::MonsterType;
+use d20::d20::models::monster::MonsterType;
+
+#[derive(Serde, Copy, Drop, Introspect, PartialEq, Debug, DojoStore, Default)]
+pub enum DamageType {
+    #[default]
+    None,
+    Slashing,
+    Piercing,
+    Bludgeoning,
+    Fire,
+    Cold,
+    Lightning,
+    Force,
+    Necrotic,
+}
 
 pub trait DamageTrait {
     fn apply_explorer_damage(
@@ -26,7 +40,7 @@ pub trait DamageTrait {
 }
 
 pub impl DamageImpl of DamageTrait {
-    /// Apply damage to the explorer. Returns actual damage taken.
+    /// Apply damage to the adventurer. Returns actual damage taken.
     /// If HP drops to ≤0, calls handle_death.
     fn apply_explorer_damage(
         ref world: WorldStorage,
@@ -41,7 +55,7 @@ pub impl DamageImpl of DamageTrait {
 
         if new_hp <= 0 {
             Self::handle_death(ref world, adventurer_id, health, position, monster_type);
-            // Return actual HP lost (capped at what the explorer had)
+            // Return actual HP lost (capped at what the adventurer had)
             health.current_hp.try_into().unwrap()
         } else {
             world.write_model(@AdventurerHealth {
@@ -57,7 +71,7 @@ pub impl DamageImpl of DamageTrait {
     /// Handle explorer death:
     ///   1. Set is_dead on AdventurerHealth, clear HP to 0.
     ///   2. Clear combat state on AdventurerPosition.
-    ///   3. Read inventory and create FallenExplorer with dropped loot.
+    ///   3. Read inventory and create FallenAdventurer with dropped loot.
     ///   4. Increment ChamberFallenCount.
     ///   5. Zero out inventory (items are now on the ground).
     ///   6. Emit ExplorerDied event.
@@ -94,8 +108,8 @@ pub impl DamageImpl of DamageTrait {
         );
         let fallen_index: u32 = fallen_count.count;
 
-        // 5. Create FallenExplorer loot record
-        world.write_model(@FallenExplorer {
+        // 5. Create FallenAdventurer loot record
+        world.write_model(@FallenAdventurer {
             temple_id: position.temple_id,
             chamber_id: position.chamber_id,
             fallen_index,

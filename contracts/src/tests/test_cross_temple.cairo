@@ -10,10 +10,10 @@ mod tests {
     };
     use d20::models::temple::{
         MonsterInstance,
-        ExplorerTempleProgress
+        AdventurerTempleProgress
     };
-    use d20::types::items::{WeaponType, ArmorType};
-    use d20::types::monster::MonsterType;
+    use d20::d20::types::items::{WeaponType, ArmorType};
+    use d20::d20::models::monster::MonsterType;
     use d20::tests::tester::{
         setup_world, mint_fighter,
     };
@@ -164,16 +164,16 @@ mod tests {
         let temple_b = temple.mint_temple(2_u8);
 
         temple.enter_temple(adventurer_id, temple_a);
-        world.write_model_test(@ExplorerTempleProgress { adventurer_id, temple_id: temple_a, chambers_explored: 7, xp_earned: 500 });
+        world.write_model_test(@AdventurerTempleProgress { adventurer_id, temple_id: temple_a, chambers_explored: 7, xp_earned: 500 });
 
         temple.exit_temple(adventurer_id);
         temple.enter_temple(adventurer_id, temple_b);
 
-        let progress_b: ExplorerTempleProgress = world.read_model((adventurer_id, temple_b));
+        let progress_b: AdventurerTempleProgress = world.read_model((adventurer_id, temple_b));
         assert(progress_b.chambers_explored == 0, 'B starts at 0 chambers');
         assert(progress_b.xp_earned == 0, 'B starts at 0 xp');
 
-        let progress_a: ExplorerTempleProgress = world.read_model((adventurer_id, temple_a));
+        let progress_a: AdventurerTempleProgress = world.read_model((adventurer_id, temple_a));
         assert(progress_a.chambers_explored == 7, 'A progress preserved');
         assert(progress_a.xp_earned == 500, 'A xp preserved');
     }

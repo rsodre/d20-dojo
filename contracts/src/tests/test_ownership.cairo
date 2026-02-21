@@ -8,14 +8,8 @@ mod tests {
         WorldStorageTestTrait
     };
 
-    use d20::systems::explorer_token::{explorer_token, IExplorerTokenDispatcher, IExplorerTokenDispatcherTrait};
-    use d20::systems::temple_token::{temple_token, ITempleTokenDispatcher, ITempleTokenDispatcherTrait};
-    use d20::models::config::m_Config;
-    use d20::d20::models::adventurer::{
-        m_AdventurerStats, m_AdventurerHealth, m_AdventurerCombat,
-        m_AdventurerInventory, m_AdventurerPosition, m_AdventurerSkills,
-    };
-    use d20::events::e_ExplorerMinted;
+    use d20::systems::explorer_token::{IExplorerTokenDispatcher, IExplorerTokenDispatcherTrait};
+    use d20::systems::temple_token::{ITempleTokenDispatcher, ITempleTokenDispatcherTrait};
     use d20::d20::types::adventurer_class::AdventurerClass;
     use d20::tests::mock_vrf::MockVrf;
 
@@ -23,16 +17,16 @@ mod tests {
         NamespaceDef {
             namespace: "d20_0_1",
             resources: array![
-                TestResource::Model(m_Config::TEST_CLASS_HASH),
-                TestResource::Model(m_AdventurerStats::TEST_CLASS_HASH),
-                TestResource::Model(m_AdventurerHealth::TEST_CLASS_HASH),
-                TestResource::Model(m_AdventurerCombat::TEST_CLASS_HASH),
-                TestResource::Model(m_AdventurerInventory::TEST_CLASS_HASH),
-                TestResource::Model(m_AdventurerPosition::TEST_CLASS_HASH),
-                TestResource::Model(m_AdventurerSkills::TEST_CLASS_HASH),
-                TestResource::Event(e_ExplorerMinted::TEST_CLASS_HASH),
-                TestResource::Contract(explorer_token::TEST_CLASS_HASH),
-                TestResource::Contract(temple_token::TEST_CLASS_HASH),
+                TestResource::Model(d20::models::config::m_Config::TEST_CLASS_HASH),
+                TestResource::Model(d20::d20::models::adventurer::m_AdventurerStats::TEST_CLASS_HASH),
+                TestResource::Model(d20::d20::models::adventurer::m_AdventurerHealth::TEST_CLASS_HASH),
+                TestResource::Model(d20::d20::models::adventurer::m_AdventurerCombat::TEST_CLASS_HASH),
+                TestResource::Model(d20::d20::models::adventurer::m_AdventurerInventory::TEST_CLASS_HASH),
+                TestResource::Model(d20::d20::models::adventurer::m_AdventurerPosition::TEST_CLASS_HASH),
+                TestResource::Model(d20::d20::models::adventurer::m_AdventurerSkills::TEST_CLASS_HASH),
+                TestResource::Event(d20::events::e_ExplorerMinted::TEST_CLASS_HASH),
+                TestResource::Contract(d20::systems::explorer_token::explorer_token::TEST_CLASS_HASH),
+                TestResource::Contract(d20::systems::temple_token::temple_token::TEST_CLASS_HASH),
             ].span(),
         }
     }

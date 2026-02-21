@@ -91,7 +91,7 @@ Discover a new chamber from an unexplored exit in the current chamber.
 - **VRF**: Consumes VRF to generate the new chamber's layout, type, and contents.
 
 ### `move_to_chamber`
-Move the explorer through a previously discovered exit.
+Move the adventurer through a previously discovered exit.
 - **Mechanic**: May trigger combat (if a monster is present) or fire a trap.
 
 ### `disarm_trap`

@@ -1,6 +1,6 @@
-use d20::types::index::ChamberType;
-use d20::types::items::{WeaponType, ArmorType};
-use d20::types::monster::MonsterType;
+use d20::d20::types::index::ChamberType;
+use d20::d20::types::items::{WeaponType, ArmorType};
+use d20::d20::models::monster::MonsterType;
 
 #[derive(Copy, Drop, Serde)]
 #[dojo::model]
@@ -60,7 +60,7 @@ pub struct ChamberExit {
 
 #[derive(Copy, Drop, Serde)]
 #[dojo::model]
-pub struct FallenExplorer {
+pub struct FallenAdventurer {
     #[key]
     pub temple_id: u128,
     #[key]
@@ -88,7 +88,7 @@ pub struct ChamberFallenCount {
 
 #[derive(Copy, Drop, Serde)]
 #[dojo::model]
-pub struct ExplorerTempleProgress {
+pub struct AdventurerTempleProgress {
     #[key]
     pub adventurer_id: u128,
     #[key]

@@ -1,6 +1,5 @@
-use d20::types::index::Skill;
-use d20::types::items::{ArmorType, WeaponType};
-use d20::d20::models::adventurer::SkillsSet;
+use d20::d20::types::items::{ArmorType, WeaponType};
+use d20::d20::models::adventurer::{Skill, SkillsSet};
 
 #[derive(Serde, Copy, Drop, Introspect, PartialEq, Debug, DojoStore, Default)]
 pub enum AdventurerClass {

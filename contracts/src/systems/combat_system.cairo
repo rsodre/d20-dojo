@@ -1,14 +1,14 @@
-use d20::types::index::ItemType;
-use d20::types::spells::SpellId;
+use d20::d20::types::items::ItemType;
+use d20::d20::types::spells::SpellId;
 
 // ── Public interface ────────────────────────────────────────────────────────
 
 #[starknet::interface]
 pub trait ICombatSystem<TState> {
-    /// Attack the monster the explorer is currently in combat with.
+    /// Attack the monster the adventurer is currently in combat with.
     /// Rolls attack (d20 + STR/DEX mod + proficiency) vs monster AC.
     /// On hit, rolls weapon damage and deducts from MonsterInstance HP.
-    /// Monster counter-attacks after the explorer's action (task 2.5).
+    /// Monster counter-attacks after the adventurer's action (task 2.5).
     /// Emits CombatResult event.
     fn attack(ref self: TState, adventurer_id: u128);
 
@@ -41,22 +41,22 @@ pub mod combat_system {
     use dojo::event::EventStorage;
     use dojo::world::WorldStorage;
 
-    use d20::types::index::{CombatAction, ItemType};
-    use d20::types::items::{WeaponTypeTrait};
-    use d20::types::spells::{SpellId, SpellIdTrait};
+    use d20::d20::types::index::{CombatAction};
+    use d20::d20::types::items::{WeaponTypeTrait, ItemType};
+    use d20::d20::types::spells::{SpellId, SpellIdTrait};
     use d20::d20::types::adventurer_class::{AdventurerClass, AdventurerClassTrait};
     use d20::d20::models::adventurer::{
         AdventurerStats, AdventurerHealth, AdventurerCombat, AdventurerInventory, AdventurerPosition,
     };
-    use d20::models::temple::{MonsterInstance, ExplorerTempleProgress, TempleState};
+    use d20::models::temple::{MonsterInstance, AdventurerTempleProgress, TempleState};
     use d20::models::config::Config;
     use d20::events::{CombatResult, LevelUp, BossDefeated};
     use d20::utils::dice::{roll_d20, roll_dice, ability_modifier, proficiency_bonus};
     use d20::utils::seeder::{Seeder, SeederTrait};
-    use d20::types::monster::{MonsterType, MonsterTypeTrait};
+    use d20::d20::models::monster::{MonsterType, MonsterTypeTrait};
     use starknet::ContractAddress;
     use d20::utils::dns::{DnsTrait};
-    use d20::utils::damage::DamageImpl;
+    use d20::d20::types::damage::DamageTrait;
     use d20::systems::explorer_token::{IExplorerTokenDispatcherTrait};
 
     use d20::d20::components::combat_component::CombatComponent;
@@ -97,7 +97,7 @@ pub mod combat_system {
 
         // ── Monster turn (task 2.5) ──────────────────────────────────────────
 
-        /// Execute the monster's counter-attack against the explorer.
+        /// Execute the monster's counter-attack against the adventurer.
         /// Returns (damage_taken, explorer_died).
         fn monster_turn(
             ref world: WorldStorage,
@@ -150,7 +150,7 @@ pub mod combat_system {
                     let damage_i16: i16 = monster_damage.try_into().unwrap();
                     let new_hp: i16 = current_health.current_hp - damage_i16;
 
-                    let damage_taken = DamageImpl::apply_explorer_damage(
+                    let damage_taken = DamageTrait::apply_explorer_damage(
                         ref world,
                         adventurer_id,
                         current_health,
@@ -246,8 +246,8 @@ pub mod combat_system {
             world.emit_event(@LevelUp { adventurer_id, new_level });
         }
 
-        /// Award XP to the explorer for killing a monster.
-        /// Updates AdventurerStats.xp and ExplorerTempleProgress.xp_earned.
+        /// Award XP to the adventurer for killing a monster.
+        /// Updates AdventurerStats.xp and AdventurerTempleProgress.xp_earned.
         /// Triggers level_up if an XP threshold is crossed (max level 5).
         fn gain_xp(
             ref world: WorldStorage,
@@ -269,8 +269,8 @@ pub mod combat_system {
 
             // Update temple progress XP
             if temple_id != 0 {
-                let mut progress: ExplorerTempleProgress = world.read_model((adventurer_id, temple_id));
-                world.write_model(@ExplorerTempleProgress {
+                let mut progress: AdventurerTempleProgress = world.read_model((adventurer_id, temple_id));
+                world.write_model(@AdventurerTempleProgress {
                     adventurer_id,
                     temple_id,
                     chambers_explored: progress.chambers_explored,
@@ -321,7 +321,7 @@ pub mod combat_system {
             temple.boss_alive = false;
             world.write_model(@temple);
 
-            // Increment temples_conquered on the explorer
+            // Increment temples_conquered on the adventurer
             let mut stats: AdventurerStats = world.read_model(adventurer_id);
             stats.temples_conquered += 1;
             world.write_model(@stats);

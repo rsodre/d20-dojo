@@ -5,7 +5,7 @@ import { useMutation } from "@tanstack/react-query";
 import { CallData } from "starknet";
 import { useAccount } from "@starknet-react/core";
 import { useExplorerModels } from "@/hooks/use-explorer-state";
-import { useChambers, useChamberExits, useFallenExplorers, useMonsterInstances } from "@/hooks/use-chambers";
+import { useChambers, useChamberExits, useFallenAdventurers, useMonsterInstances } from "@/hooks/use-chambers";
 import { useTempleModels } from "@/hooks/use-temple-state";
 import { useDojoConfig } from "@/contexts/dojo-config-provider";
 import { useVrfCall } from "@/hooks/use-vrf";
@@ -197,7 +197,7 @@ function ChamberInfo({
   const chambers = useChambers(templeId);
   const monsters = useMonsterInstances(templeId);
   const exits = useChamberExits(templeId, chamberId);
-  const fallen = useFallenExplorers(templeId, chamberId);
+  const fallen = useFallenAdventurers(templeId, chamberId);
 
   const chamber = chambers.find((c) => BigInt(c.chamber_id) === chamberId);
   const monster = monsters.find((m) => BigInt(m.chamber_id) === chamberId);
@@ -361,7 +361,7 @@ export function PlayView() {
   const { stats, health, combat, inventory, position } = useExplorerModels(explorerIdNum ?? 0n);
   const temple = useTempleModels(templeIdNum ?? 0n);
   const exits = useChamberExits(templeIdNum ?? 0n, position ? BigInt(position.chamber_id) : 0n);
-  const fallen = useFallenExplorers(templeIdNum ?? 0n, position ? BigInt(position.chamber_id) : 0n);
+  const fallen = useFallenAdventurers(templeIdNum ?? 0n, position ? BigInt(position.chamber_id) : 0n);
   const chambers = useChambers(templeIdNum ?? 0n);
 
   if (!templeIdNum || !explorerIdNum) {

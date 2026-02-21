@@ -1,5 +1,5 @@
 import { CairoCustomEnum } from "starknet";
-import type { ChamberExit, FallenExplorer } from "@/generated/models.gen";
+import type { ChamberExit, FallenAdventurer } from "@/generated/models.gen";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -35,7 +35,7 @@ export interface GameActionContext {
   trapDisarmed: boolean;
   // Relations
   exits: ChamberExit[];
-  fallenExplorers: FallenExplorer[];
+  fallenExplorers: FallenAdventurer[];
   // Contract addresses
   contracts: {
     temple: string;

@@ -6,10 +6,15 @@ pub mod d20 {
     }
     pub mod models {
         pub mod adventurer;
+        pub mod monster;
     }
     pub mod types {
         pub mod adventurer_class;
         pub mod attributes;
+        pub mod damage;
+        pub mod index;
+        pub mod items;
+        pub mod spells;
     }
 }
 
@@ -24,13 +29,6 @@ pub mod models {
     pub mod temple;
 }
 
-pub mod types {
-    pub mod index;
-    pub mod items;
-    pub mod spells;
-    pub mod monster;
-}
-
 pub mod events;
 
 pub mod constants;
@@ -40,7 +38,6 @@ pub mod utils {
     pub mod vrf;
     pub mod seeder;
     pub mod dns;
-    pub mod damage;
 }
 
 #[cfg(test)]

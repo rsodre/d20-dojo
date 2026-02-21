@@ -1,6 +1,6 @@
 import { useDojoSDK } from "@dojoengine/sdk/react";
 import { useDojoConfig } from "@/contexts/dojo-config-provider";
-import type { Chamber, ChamberExit, FallenExplorer, MonsterInstance } from "@/generated/models.gen";
+import type { Chamber, ChamberExit, FallenAdventurer, MonsterInstance } from "@/generated/models.gen";
 
 /**
  * Returns all Chamber models for the given temple from the DojoStore.
@@ -59,19 +59,19 @@ export function useChamberExits(templeId: bigint, chamberId: bigint): ChamberExi
 }
 
 /**
- * Returns FallenExplorer models for a specific chamber, sorted by fallen_index.
+ * Returns FallenAdventurer models for a specific chamber, sorted by fallen_index.
  * Requires useGameModels() to be running.
  */
-export function useFallenExplorers(templeId: bigint, chamberId: bigint): FallenExplorer[] {
+export function useFallenAdventurers(templeId: bigint, chamberId: bigint): FallenAdventurer[] {
   const { useDojoStore } = useDojoSDK();
   const { namespace } = useDojoConfig();
 
   return useDojoStore((state) => {
-    const entities = state.getEntitiesByModel(namespace, "FallenExplorer");
+    const entities = state.getEntitiesByModel(namespace, "FallenAdventurer");
     return entities
-      .map((e: any) => e.models?.[namespace]?.["FallenExplorer"] as FallenExplorer | undefined)
+      .map((e: any) => e.models?.[namespace]?.["FallenAdventurer"] as FallenAdventurer | undefined)
       .filter(
-        (f): f is FallenExplorer =>
+        (f): f is FallenAdventurer =>
           f != null &&
           BigInt(f.temple_id) === templeId &&
           BigInt(f.chamber_id) === chamberId,

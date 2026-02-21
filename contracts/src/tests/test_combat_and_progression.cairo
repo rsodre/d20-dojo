@@ -10,10 +10,10 @@ mod tests {
     };
     use d20::models::temple::{
         Chamber, ChamberExit, MonsterInstance,
-        ExplorerTempleProgress
+        AdventurerTempleProgress
     };
-    use d20::types::index::{ChamberType};
-    use d20::types::monster::MonsterType;
+    use d20::d20::types::index::{ChamberType};
+    use d20::d20::models::monster::MonsterType;
     use d20::tests::tester::{
         setup_world, mint_fighter,
     };
@@ -161,7 +161,7 @@ mod tests {
         });
 
         // Initialize progress so gain_xp can update it
-        world.write_model_test(@ExplorerTempleProgress {
+        world.write_model_test(@AdventurerTempleProgress {
             adventurer_id,
             temple_id,
             chambers_explored: 0,
@@ -177,7 +177,7 @@ mod tests {
             // Monster was killed — XP must have been awarded
             assert(stats_after.xp > stats_before.xp, 'xp should increase on kill');
 
-            let progress: ExplorerTempleProgress = world.read_model((adventurer_id, temple_id));
+            let progress: AdventurerTempleProgress = world.read_model((adventurer_id, temple_id));
             assert(progress.xp_earned > 0, 'temple xp_earned should grow');
         }
         // If monster survived (attack missed), test passes silently
@@ -216,7 +216,7 @@ mod tests {
             max_hp: 50,
             is_dead: false,
         });
-        world.write_model_test(@ExplorerTempleProgress {
+        world.write_model_test(@AdventurerTempleProgress {
             adventurer_id,
             temple_id,
             chambers_explored: 2,
@@ -227,7 +227,7 @@ mod tests {
 
         let monster_after: MonsterInstance = world.read_model((temple_id, 3_u32, 1_u32));
         if !monster_after.is_alive {
-            let progress: ExplorerTempleProgress = world.read_model((adventurer_id, temple_id));
+            let progress: AdventurerTempleProgress = world.read_model((adventurer_id, temple_id));
             assert(progress.xp_earned > 100, 'xp_earned should increase');
             assert(progress.chambers_explored == 2, 'chambers_explored unchanged');
         }
@@ -280,7 +280,7 @@ mod tests {
             max_hp: 50,
             is_dead: false,
         });
-        world.write_model_test(@ExplorerTempleProgress {
+        world.write_model_test(@AdventurerTempleProgress {
             adventurer_id,
             temple_id,
             chambers_explored: 0,

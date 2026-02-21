@@ -24,8 +24,8 @@ export function useGameModels() {
     model("ChamberFallenCount"),
     model("MonsterInstance"),
     model("ChamberExit"),
-    model("FallenExplorer"),
-    model("ExplorerTempleProgress"),
+    model("FallenAdventurer"),
+    model("AdventurerTempleProgress"),
 
   ]), [model])
 

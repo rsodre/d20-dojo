@@ -64,11 +64,11 @@ pub trait ITempleToken<TState> {
     /// Remove an explorer from the temple (set temple_id=0, chamber_id=0).
     fn exit_temple(ref self: TState, adventurer_id: u128);
 
-    /// Open an unexplored exit from the explorer's current chamber,
+    /// Open an unexplored exit from the adventurer's current chamber,
     /// generating the destination chamber if it hasn't been discovered yet.
     fn open_exit(ref self: TState, adventurer_id: u128, exit_index: u8);
 
-    /// Move the explorer through a previously discovered exit.
+    /// Move the adventurer through a previously discovered exit.
     fn move_to_chamber(ref self: TState, adventurer_id: u128, exit_index: u8);
 
     /// DEX/skill check to disarm a trap in the current chamber.
@@ -98,11 +98,11 @@ pub trait ITempleTokenPublic<TState> {
     /// Remove an explorer from the temple (set temple_id=0, chamber_id=0).
     fn exit_temple(ref self: TState, adventurer_id: u128);
 
-    /// Open an unexplored exit from the explorer's current chamber,
+    /// Open an unexplored exit from the adventurer's current chamber,
     /// generating the destination chamber if it hasn't been discovered yet.
     fn open_exit(ref self: TState, adventurer_id: u128, exit_index: u8);
 
-    /// Move the explorer through a previously discovered exit.
+    /// Move the adventurer through a previously discovered exit.
     fn move_to_chamber(ref self: TState, adventurer_id: u128, exit_index: u8);
 
     /// DEX/skill check to disarm a trap in the current chamber.
@@ -145,22 +145,21 @@ pub mod temple_token {
     impl DungeonImpl = DungeonComponent::DungeonImpl<ContractState>;
 
     // Game types and models
-    use d20::types::index::ChamberType;
+    use d20::d20::types::index::ChamberType;
     use d20::d20::types::adventurer_class::AdventurerClass;
-    use d20::types::monster::{MonsterType, MonsterTypeTrait};
+    use d20::d20::models::monster::{MonsterType, MonsterTypeTrait};
     use d20::models::temple::{
-        TempleState, Chamber, MonsterInstance, ChamberExit, ExplorerTempleProgress,
-        FallenExplorer, ChamberFallenCount,
+        TempleState, Chamber, MonsterInstance, ChamberExit, AdventurerTempleProgress,
+        FallenAdventurer, ChamberFallenCount,
     };
     use d20::d20::models::adventurer::{AdventurerHealth, AdventurerPosition};
+    use d20::d20::models::adventurer::{AdventurerStats, AdventurerInventory, AdventurerSkills, Skill};
+    use d20::d20::types::damage::DamageTrait;
     use d20::events::ChamberRevealed;
     use d20::utils::dice::{roll_d20, roll_dice, ability_modifier, proficiency_bonus};
     use d20::utils::seeder::{Seeder, SeederTrait};
-    // use d20::utils::monsters::MonsterTypeTrait; // Removed as it is now in types::monster
-    use d20::d20::models::adventurer::{AdventurerStats, AdventurerInventory, AdventurerSkills};
-    use d20::constants::{TEMPLE_TOKEN_DESCRIPTION, TEMPLE_TOKEN_EXTERNAL_LINK};
     use d20::utils::dns::{DnsTrait};
-    use d20::utils::damage::DamageImpl;
+    use d20::constants::{TEMPLE_TOKEN_DESCRIPTION, TEMPLE_TOKEN_EXTERNAL_LINK};
     use d20::systems::explorer_token::{IExplorerTokenDispatcherTrait};
 
     // Metadata types
@@ -491,12 +490,12 @@ pub mod temple_token {
                 combat_monster_id: 0,
             });
 
-            // Initialize ExplorerTempleProgress for this temple visit
+            // Initialize AdventurerTempleProgress for this temple visit
             // (only write if not previously set — existing chambers_explored/xp_earned carry over
             //  from prior visits, so we only initialize on a fresh record)
-            let progress: ExplorerTempleProgress = world.read_model((adventurer_id, temple_id));
+            let progress: AdventurerTempleProgress = world.read_model((adventurer_id, temple_id));
             if progress.chambers_explored == 0 && progress.xp_earned == 0 {
-                world.write_model(@ExplorerTempleProgress {
+                world.write_model(@AdventurerTempleProgress {
                     adventurer_id,
                     temple_id,
                     chambers_explored: 0,
@@ -518,7 +517,7 @@ pub mod temple_token {
             assert(!position.in_combat, 'cannot exit during combat');
 
             // Clear temple/chamber position — stats, inventory, XP, and
-            // ExplorerTempleProgress are all untouched (persisted on-chain).
+            // AdventurerTempleProgress are all untouched (persisted on-chain).
             world.write_model(@AdventurerPosition {
                 adventurer_id,
                 temple_id: 0,
@@ -562,7 +561,7 @@ pub mod temple_token {
             world.write_model(@temple);
 
             // ── Read progress for boss probability ───────────────────────────
-            let progress: ExplorerTempleProgress = world.read_model((adventurer_id, temple_id));
+            let progress: AdventurerTempleProgress = world.read_model((adventurer_id, temple_id));
 
             // ── Generate the new chamber ─────────────────────────────────────
             let new_yonder: u8 = current_chamber.yonder + 1;
@@ -600,8 +599,8 @@ pub mod temple_token {
                 is_discovered: true,
             });
 
-            // ── Increment chambers_explored on ExplorerTempleProgress ────────
-            world.write_model(@ExplorerTempleProgress {
+            // ── Increment chambers_explored on AdventurerTempleProgress ────────
+            world.write_model(@AdventurerTempleProgress {
                 adventurer_id,
                 temple_id,
                 chambers_explored: progress.chambers_explored + 1,
@@ -679,7 +678,7 @@ pub mod temple_token {
                         in_combat: enters_combat,
                         combat_monster_id: if enters_combat { 1 } else { 0 },
                     };
-                    DamageImpl::apply_explorer_damage(
+                    DamageTrait::apply_explorer_damage(
                         ref world, adventurer_id, health, dest_position, MonsterType::None, damage,
                     );
                 }
@@ -726,7 +725,6 @@ pub mod temple_token {
             // Rogue: DEX-based, always proficient (Thieves' Tools), expertise doubles if
             //        acrobatics expertise chosen (acrobatics is a dex skill, close enough).
             // Others: INT-based, proficient only if Arcana trained.
-            use d20::types::index::Skill;
             let (ability_score, prof_mult): (u8, u8) = match stats.adventurer_class {
                 AdventurerClass::Rogue => {
                     // Check for expertise on Acrobatics (DEX skill → applies to fine motor work)
@@ -770,7 +768,7 @@ pub mod temple_token {
                     let base_dmg: u16 = roll_dice(ref seeder, 6, 1);
                     let bonus: u16 = (chamber.yonder / 2).into();
                     let damage: u16 = base_dmg + bonus;
-                    DamageImpl::apply_explorer_damage(
+                    DamageTrait::apply_explorer_damage(
                         ref world, adventurer_id, health, position, MonsterType::None, damage,
                     );
                 }
@@ -883,8 +881,8 @@ pub mod temple_token {
             let fallen_count: ChamberFallenCount = world.read_model((temple_id, chamber_id));
             assert(fallen_index < fallen_count.count, 'no body at that index');
 
-            // ── Read the FallenExplorer record ───────────────────────────────
-            let fallen: FallenExplorer = world.read_model((temple_id, chamber_id, fallen_index));
+            // ── Read the FallenAdventurer record ───────────────────────────────
+            let fallen: FallenAdventurer = world.read_model((temple_id, chamber_id, fallen_index));
             assert(!fallen.is_looted, 'already looted');
 
             // ── Cannot loot yourself (edge case: somehow same adventurer_id) ───
@@ -896,7 +894,7 @@ pub mod temple_token {
             // Gold + potions: always add
             let inventory: AdventurerInventory = world.read_model(adventurer_id);
 
-            use d20::types::items::{WeaponType, ArmorType};
+            use d20::d20::types::items::{WeaponType, ArmorType};
 
             let new_primary: WeaponType = if inventory.primary_weapon == WeaponType::None {
                 fallen.dropped_weapon
@@ -930,7 +928,7 @@ pub mod temple_token {
             });
 
             // ── Mark fallen explorer as looted ───────────────────────────────
-            world.write_model(@FallenExplorer {
+            world.write_model(@FallenAdventurer {
                 temple_id,
                 chamber_id,
                 fallen_index,

@@ -8,36 +8,15 @@ use dojo_cairo_test::{
 };
 
 use d20::systems::explorer_token::{
-    explorer_token, IExplorerTokenDispatcher, IExplorerTokenDispatcherTrait,
+    IExplorerTokenDispatcher, IExplorerTokenDispatcherTrait,
 };
-use d20::systems::combat_system::{
-    combat_system, ICombatSystemDispatcher,
-};
-use d20::systems::temple_token::{
-    temple_token, ITempleTokenDispatcher,
-};
+use d20::systems::combat_system::{ICombatSystemDispatcher};
+use d20::systems::temple_token::{ITempleTokenDispatcher};
 use d20::models::config::m_Config;
 use d20::d20::models::adventurer::{
-    m_AdventurerStats,
-    m_AdventurerHealth, AdventurerHealth,
-    m_AdventurerCombat,
-    m_AdventurerInventory, AdventurerInventory,
-    m_AdventurerPosition, AdventurerPosition,
-    m_AdventurerSkills,
+    AdventurerHealth, AdventurerInventory, AdventurerPosition,
 };
-use d20::models::temple::{
-    m_TempleState,
-    m_Chamber,
-    m_MonsterInstance,
-    m_ChamberExit,
-    m_FallenExplorer, FallenExplorer,
-    m_ChamberFallenCount, ChamberFallenCount,
-    m_ExplorerTempleProgress,
-};
-use d20::events::{
-    e_ExplorerMinted, e_CombatResult, e_ExplorerDied,
-    e_ChamberRevealed, e_LevelUp, e_BossDefeated,
-};
+use d20::models::temple::{FallenAdventurer, ChamberFallenCount};
 use d20::d20::types::adventurer_class::AdventurerClass;
 use d20::tests::mock_vrf::MockVrf;
 
@@ -50,31 +29,31 @@ pub fn namespace_def() -> NamespaceDef {
             // Config
             TestResource::Model(m_Config::TEST_CLASS_HASH),
             // Explorer models
-            TestResource::Model(m_AdventurerStats::TEST_CLASS_HASH),
-            TestResource::Model(m_AdventurerHealth::TEST_CLASS_HASH),
-            TestResource::Model(m_AdventurerCombat::TEST_CLASS_HASH),
-            TestResource::Model(m_AdventurerInventory::TEST_CLASS_HASH),
-            TestResource::Model(m_AdventurerPosition::TEST_CLASS_HASH),
-            TestResource::Model(m_AdventurerSkills::TEST_CLASS_HASH),
+            TestResource::Model(d20::d20::models::adventurer::m_AdventurerStats::TEST_CLASS_HASH),
+            TestResource::Model(d20::d20::models::adventurer::m_AdventurerHealth::TEST_CLASS_HASH),
+            TestResource::Model(d20::d20::models::adventurer::m_AdventurerCombat::TEST_CLASS_HASH),
+            TestResource::Model(d20::d20::models::adventurer::m_AdventurerInventory::TEST_CLASS_HASH),
+            TestResource::Model(d20::d20::models::adventurer::m_AdventurerPosition::TEST_CLASS_HASH),
+            TestResource::Model(d20::d20::models::adventurer::m_AdventurerSkills::TEST_CLASS_HASH),
             // Temple models
-            TestResource::Model(m_TempleState::TEST_CLASS_HASH),
-            TestResource::Model(m_Chamber::TEST_CLASS_HASH),
-            TestResource::Model(m_MonsterInstance::TEST_CLASS_HASH),
-            TestResource::Model(m_ChamberExit::TEST_CLASS_HASH),
-            TestResource::Model(m_FallenExplorer::TEST_CLASS_HASH),
-            TestResource::Model(m_ChamberFallenCount::TEST_CLASS_HASH),
-            TestResource::Model(m_ExplorerTempleProgress::TEST_CLASS_HASH),
+            TestResource::Model(d20::models::temple::m_TempleState::TEST_CLASS_HASH),
+            TestResource::Model(d20::models::temple::m_Chamber::TEST_CLASS_HASH),
+            TestResource::Model(d20::models::temple::m_MonsterInstance::TEST_CLASS_HASH),
+            TestResource::Model(d20::models::temple::m_ChamberExit::TEST_CLASS_HASH),
+            TestResource::Model(d20::models::temple::m_FallenAdventurer::TEST_CLASS_HASH),
+            TestResource::Model(d20::models::temple::m_ChamberFallenCount::TEST_CLASS_HASH),
+            TestResource::Model(d20::models::temple::m_AdventurerTempleProgress::TEST_CLASS_HASH),
             // Events
-            TestResource::Event(e_ExplorerMinted::TEST_CLASS_HASH),
-            TestResource::Event(e_CombatResult::TEST_CLASS_HASH),
-            TestResource::Event(e_ExplorerDied::TEST_CLASS_HASH),
-            TestResource::Event(e_ChamberRevealed::TEST_CLASS_HASH),
-            TestResource::Event(e_LevelUp::TEST_CLASS_HASH),
-            TestResource::Event(e_BossDefeated::TEST_CLASS_HASH),
+            TestResource::Event(d20::events::e_ExplorerMinted::TEST_CLASS_HASH),
+            TestResource::Event(d20::events::e_CombatResult::TEST_CLASS_HASH),
+            TestResource::Event(d20::events::e_ExplorerDied::TEST_CLASS_HASH),
+            TestResource::Event(d20::events::e_ChamberRevealed::TEST_CLASS_HASH),
+            TestResource::Event(d20::events::e_LevelUp::TEST_CLASS_HASH),
+            TestResource::Event(d20::events::e_BossDefeated::TEST_CLASS_HASH),
             // Contracts
-            TestResource::Contract(explorer_token::TEST_CLASS_HASH),
-            TestResource::Contract(combat_system::TEST_CLASS_HASH),
-            TestResource::Contract(temple_token::TEST_CLASS_HASH),
+            TestResource::Contract(d20::systems::explorer_token::explorer_token::TEST_CLASS_HASH),
+            TestResource::Contract(d20::systems::combat_system::combat_system::TEST_CLASS_HASH),
+            TestResource::Contract(d20::systems::temple_token::temple_token::TEST_CLASS_HASH),
         ].span(),
     }
 }
@@ -140,7 +119,7 @@ pub fn mint_wizard(token: IExplorerTokenDispatcher) -> u128 {
 
 /// Validates all invariants that must hold after an explorer dies:
 /// - is_dead flag set, HP at 0, not in combat
-/// - FallenExplorer record created in the correct chamber
+/// - FallenAdventurer record created in the correct chamber
 /// - ChamberFallenCount incremented
 /// - Inventory gold and potions zeroed (dropped as loot)
 pub fn assert_explorer_dead(
@@ -159,7 +138,7 @@ pub fn assert_explorer_dead(
     let fallen_count: ChamberFallenCount = world.read_model((temple_id, chamber_id));
     assert(fallen_count.count >= 1, 'fallen count should be >= 1');
 
-    let fallen: FallenExplorer = world.read_model(
+    let fallen: FallenAdventurer = world.read_model(
         (temple_id, chamber_id, fallen_count.count - 1)
     );
     assert(fallen.adventurer_id == adventurer_id, 'fallen explorer id mismatch');

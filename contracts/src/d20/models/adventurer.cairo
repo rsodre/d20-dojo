@@ -1,5 +1,4 @@
-use d20::types::index::Skill;
-use d20::types::items::{WeaponType, ArmorType};
+use d20::d20::types::items::{WeaponType, ArmorType};
 use d20::d20::types::adventurer_class::AdventurerClass;
 
 #[derive(Copy, Drop, Serde)]
@@ -25,6 +24,19 @@ pub struct AbilityScore {
     pub wisdom: u8,
     pub charisma: u8,
 }
+
+
+// #[derive(Serde, Copy, Drop, Introspect, PartialEq, Debug, DojoStore, Default)]
+// pub enum AbilityScore {
+//     #[default]
+//     None,
+//     Strength,
+//     Dexterity,
+//     Constitution,
+//     Intelligence,
+//     Wisdom,
+//     Charisma,
+// }
 
 #[derive(Copy, Drop, Serde)]
 #[dojo::model]
@@ -84,6 +96,18 @@ pub struct AdventurerSkills {
     // Expertise (double proficiency, Rogue feature)
     pub expertise_1: Skill,
     pub expertise_2: Skill,
+}
+
+#[derive(Serde, Copy, Drop, Introspect, PartialEq, Debug, DojoStore, Default)]
+pub enum Skill {
+    #[default]
+    None,
+    Athletics,
+    Stealth,
+    Perception,
+    Persuasion,
+    Arcana,
+    Acrobatics,
 }
 
 #[derive(Copy, Drop, Serde, IntrospectPacked, DojoStore, Default)]

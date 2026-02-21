@@ -114,16 +114,16 @@ export interface ChamberFallenCount {
 	count: BigNumberish;
 }
 
-// Type definition for `d20::models::temple::ExplorerTempleProgress` struct
-export interface ExplorerTempleProgress {
+// Type definition for `d20::models::temple::AdventurerTempleProgress` struct
+export interface AdventurerTempleProgress {
 	adventurer_id: BigNumberish;
 	temple_id: BigNumberish;
 	chambers_explored: BigNumberish;
 	xp_earned: BigNumberish;
 }
 
-// Type definition for `d20::models::temple::FallenExplorer` struct
-export interface FallenExplorer {
+// Type definition for `d20::models::temple::FallenAdventurer` struct
+export interface FallenAdventurer {
 	temple_id: BigNumberish;
 	chamber_id: BigNumberish;
 	fallen_index: BigNumberish;
@@ -292,7 +292,7 @@ export const weaponType = [
 export type WeaponType = { [key in typeof weaponType[number]]: string };
 export type WeaponTypeEnum = CairoCustomEnum;
 
-// Type definition for `d20::types::monster::MonsterType` enum
+// Type definition for `d20::d20::models::monster::MonsterType` enum
 export const monsterType = [
 	'None',
 	'PoisonousSnake',
@@ -358,8 +358,8 @@ export interface SchemaType extends ISchemaType {
 		Chamber: Chamber,
 		ChamberExit: ChamberExit,
 		ChamberFallenCount: ChamberFallenCount,
-		ExplorerTempleProgress: ExplorerTempleProgress,
-		FallenExplorer: FallenExplorer,
+		AdventurerTempleProgress: AdventurerTempleProgress,
+		FallenAdventurer: FallenAdventurer,
 		MonsterInstance: MonsterInstance,
 		TempleState: TempleState,
 		BossDefeated: BossDefeated,
@@ -505,13 +505,13 @@ export const schema: SchemaType = {
 			chamber_id: 0,
 			count: 0,
 		},
-		ExplorerTempleProgress: {
+		AdventurerTempleProgress: {
 			adventurer_id: 0,
 			temple_id: 0,
 			chambers_explored: 0,
 			xp_earned: 0,
 		},
-		FallenExplorer: {
+		FallenAdventurer: {
 			temple_id: 0,
 			chamber_id: 0,
 			fallen_index: 0,
@@ -663,8 +663,8 @@ export enum ModelsMapping {
 	Chamber = 'd20-Chamber',
 	ChamberExit = 'd20-ChamberExit',
 	ChamberFallenCount = 'd20-ChamberFallenCount',
-	ExplorerTempleProgress = 'd20-ExplorerTempleProgress',
-	FallenExplorer = 'd20-FallenExplorer',
+	AdventurerTempleProgress = 'd20-AdventurerTempleProgress',
+	FallenAdventurer = 'd20-FallenAdventurer',
 	MonsterInstance = 'd20-MonsterInstance',
 	TempleState = 'd20-TempleState',
 	AdventurerClass = 'd20-AdventurerClass',

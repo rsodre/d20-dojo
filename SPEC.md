@@ -52,7 +52,7 @@ Every formula in this spec is written with integer math in mind. When implementi
 └─────────────────────────────────┘
 ```
 
-**No game master server.** The contracts enforce all rules. The web client on the explorer's machine does two things:
+**No game master server.** The contracts enforce all rules. The web client on the adventurer's machine does two things:
 1. Queries world state via Torii and displays it (HP, chamber type, monster info, available exits, inventory)
 2. Computes the list of valid actions from that state and shows them as clickable buttons — the player clicks one, the client submits the corresponding transaction
 
@@ -267,9 +267,9 @@ Monster ability scores are used for saving throws and contested checks (e.g., mo
 All dice rolls use the **Cartridge VRF (Verifiable Random Function)** service for on-chain randomness.
 
 ### How it works
-1. The game contract calls `request_random(caller, source)` as the first call in the explorer's multicall
+1. The game contract calls `request_random(caller, source)` as the first call in the adventurer's multicall
 2. The Cartridge VRF server generates a random value using the VRF algorithm for the provided entropy source
-3. The Cartridge Paymaster wraps the explorer's multicall with `submit_random` and `assert_consumed` calls
+3. The Cartridge Paymaster wraps the adventurer's multicall with `submit_random` and `assert_consumed` calls
 4. The game contract calls `consume_random(source)` on the VRF contract to get the verified random value
 5. The VRF Proof is verified on-chain, ensuring the integrity of the random value
 
@@ -448,7 +448,7 @@ pub struct AdventurerSkills {
 // Tracks an explorer's progress within a specific temple (composite key)
 #[derive(Copy, Drop, Serde)]
 #[dojo::model]
-pub struct ExplorerTempleProgress {
+pub struct AdventurerTempleProgress {
     #[key]
     pub adventurer_id: u128,
     #[key]
@@ -511,7 +511,7 @@ pub struct ChamberExit {
 // A single chamber can contain many fallen explorers.
 #[derive(Copy, Drop, Serde)]
 #[dojo::model]
-pub struct FallenExplorer {
+pub struct FallenAdventurer {
     #[key]
     pub temple_id: u128,
     #[key]
@@ -699,8 +699,8 @@ Systems are `#[dojo::contract]` modules, not free functions. Each contract has a
 | Contract | Tag | Writes to |
 |----------|-----|-----------|
 | `explorer_token` | `d20_0_1-explorer_token` | AdventurerStats, AdventurerHealth, AdventurerCombat, AdventurerInventory, AdventurerSkills |
-| `combat_system` | `d20_0_1-combat_system` | AdventurerHealth, AdventurerCombat, AdventurerInventory, AdventurerPosition, MonsterInstance, FallenExplorer, ChamberFallenCount |
-| `temple_token` | `d20_0_1-temple_token` | AdventurerPosition, ExplorerTempleProgress, AdventurerStats, AdventurerHealth, AdventurerInventory, TempleState, Chamber, MonsterInstance, ChamberExit, FallenExplorer, ChamberFallenCount |
+| `combat_system` | `d20_0_1-combat_system` | AdventurerHealth, AdventurerCombat, AdventurerInventory, AdventurerPosition, MonsterInstance, FallenAdventurer, ChamberFallenCount |
+| `temple_token` | `d20_0_1-temple_token` | AdventurerPosition, AdventurerTempleProgress, AdventurerStats, AdventurerHealth, AdventurerInventory, TempleState, Chamber, MonsterInstance, ChamberExit, FallenAdventurer, ChamberFallenCount |
 
 ```cairo
 // ──────────────────────────────────────────────
@@ -749,7 +749,7 @@ trait ICombatSystem<T> {
 
 // Death logic is an internal function called when HP reaches 0:
 // - sets is_dead = true on AdventurerHealth
-// - creates FallenExplorer with dropped loot in current chamber
+// - creates FallenAdventurer with dropped loot in current chamber
 // - increments ChamberFallenCount
 // - emits ExplorerDied event
 
@@ -867,8 +867,8 @@ Chambers are **not** pre-generated. They are created one at a time as explorers 
 When a new chamber is generated, the system calculates the probability that it becomes the **Boss Chamber**. This probability increases with three factors:
 
 - **Yonder (y)**: Distance from the entrance. The deeper you go, the more likely the boss appears.
-- **Chambers explored (c)**: How many chambers the explorer who opened this exit has explored in this temple.
-- **XP earned (x)**: How much XP the explorer has earned in this temple, as a proxy for "experience" (combat survived, challenges overcome).
+- **Chambers explored (c)**: How many chambers the adventurer who opened this exit has explored in this temple.
+- **XP earned (x)**: How much XP the adventurer has earned in this temple, as a proxy for "experience" (combat survived, challenges overcome).
 
 ### The Formula (Integer-Only, Cairo-Safe)
 
@@ -941,7 +941,7 @@ let is_boss: bool = roll < prob_bps;
 **Death is permanent.** When an explorer reaches 0 HP:
 
 1. **Explorer dies forever.** The `is_dead` flag is set to true. The Explorer NFT remains on-chain as a permanent record but can never take another action.
-2. **Loot drops.** A `FallenExplorer` record is created in the current chamber, containing the explorer's weapon, armor, gold, and potions. The `ChamberFallenCount` is incremented.
+2. **Loot drops.** A `FallenAdventurer` record is created in the current chamber, containing the adventurer's weapon, armor, gold, and potions. The `ChamberFallenCount` is incremented.
 3. **The body remains.** Other explorers entering the chamber can see the fallen explorer's body. The AI narrator describes them and their dropped loot.
 4. **Loot is first-come-first-served.** Any living explorer in the chamber can call `loot_fallen(adventurer_id, fallen_index)` to pick up items. Once looted, `is_looted` is set to true.
 5. **Multiple bodies can accumulate.** A particularly deadly chamber might have many fallen explorers, each with their own loot. This creates "loot graveyards" that attract other explorers.

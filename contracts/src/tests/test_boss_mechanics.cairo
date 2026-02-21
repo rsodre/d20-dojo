@@ -10,9 +10,9 @@ mod tests {
     };
     use d20::models::temple::{
         TempleState, MonsterInstance,
-        ExplorerTempleProgress
+        AdventurerTempleProgress
     };
-    use d20::types::monster::MonsterType;
+    use d20::d20::models::monster::MonsterType;
     use d20::tests::tester::{
         setup_world, mint_fighter,
     };
@@ -63,7 +63,7 @@ mod tests {
             max_hp: 50,
             is_dead: false,
         });
-        world.write_model_test(@ExplorerTempleProgress {
+        world.write_model_test(@AdventurerTempleProgress {
             adventurer_id,
             temple_id,
             chambers_explored: 5,
@@ -134,7 +134,7 @@ mod tests {
             max_hp: 50,
             is_dead: false,
         });
-        world.write_model_test(@ExplorerTempleProgress {
+        world.write_model_test(@AdventurerTempleProgress {
             adventurer_id,
             temple_id,
             chambers_explored: 3,

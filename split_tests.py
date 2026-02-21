@@ -155,12 +155,12 @@ mod tests {
     };
     use d20::models::temple::{
         TempleState, Chamber, ChamberExit, MonsterInstance,
-        FallenExplorer, ChamberFallenCount, ExplorerTempleProgress
+        FallenAdventurer, ChamberFallenCount, AdventurerTempleProgress
     };
-    use d20::types::index::{ChamberType};
-    use d20::types::items::{WeaponType, ArmorType};
+    use d20::d20::types::index::{ChamberType};
+    use d20::d20::types::items::{WeaponType, ArmorType};
     use d20::d20::types::adventurer_class::AdventurerClass;
-    use d20::types::monster::MonsterType;
+    use d20::d20::models::monster::MonsterType;
     use d20::tests::tester::{
         setup_world, mint_fighter, mint_rogue, mint_wizard, assert_explorer_dead,
     };

@@ -9,9 +9,9 @@ mod tests {
     };
     use d20::models::temple::{
         TempleState, Chamber, ChamberExit,
-        ExplorerTempleProgress
+        AdventurerTempleProgress
     };
-    use d20::types::index::{ChamberType};
+    use d20::d20::types::index::{ChamberType};
     use d20::tests::tester::{
         setup_world, mint_fighter,
     };
@@ -121,7 +121,7 @@ mod tests {
 
         temple.enter_temple(adventurer_id, temple_id);
 
-        let progress: ExplorerTempleProgress = world.read_model((adventurer_id, temple_id));
+        let progress: AdventurerTempleProgress = world.read_model((adventurer_id, temple_id));
         assert(progress.chambers_explored == 0, 'fresh progress');
         assert(progress.xp_earned == 0, 'no xp yet');
     }
@@ -244,11 +244,11 @@ mod tests {
         let temple_id = temple.mint_temple(1_u8);
 
         temple.enter_temple(adventurer_id, temple_id);
-        world.write_model_test(@ExplorerTempleProgress { adventurer_id, temple_id, chambers_explored: 5, xp_earned: 200 });
+        world.write_model_test(@AdventurerTempleProgress { adventurer_id, temple_id, chambers_explored: 5, xp_earned: 200 });
         temple.exit_temple(adventurer_id);
         temple.enter_temple(adventurer_id, temple_id);
 
-        let progress: ExplorerTempleProgress = world.read_model((adventurer_id, temple_id));
+        let progress: AdventurerTempleProgress = world.read_model((adventurer_id, temple_id));
         assert(progress.chambers_explored == 5, 'chambers preserved');
         assert(progress.xp_earned == 200, 'xp preserved');
 
