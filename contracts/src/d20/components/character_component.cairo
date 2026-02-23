@@ -5,16 +5,16 @@ pub mod CharacterComponent {
     use dojo::model::ModelStorage;
     use dojo::event::EventStorage;
 
-    use d20::d20::models::adventurer::{
+    use d20::d20::models::character::{
         AbilityScore, Skill, SkillsSet,
-        AdventurerStats, AdventurerHealth, AdventurerCombat, AdventurerInventory,
-        AdventurerPosition, AdventurerSkills,
+        CharacterStats, CharacterHealth, CharacterCombat, CharacterInventory,
+        CharacterPosition, CharacterSkills,
     };
-    use d20::d20::types::adventurer_class::{AdventurerClass, AdventurerClassTrait};
+    use d20::d20::types::character_class::{CharacterClass, CharacterClassTrait};
     use d20::d20::types::attributes::CharacterAttributes;
     use d20::utils::seeder::{Seeder, SeederTrait};
     use d20::utils::dice::{ability_modifier, calculate_ac};
-    use d20::d20::models::events::AdventurerMinted;
+    use d20::d20::models::events::CharacterMinted;
 
     #[storage]
     pub struct Storage {}
@@ -30,51 +30,51 @@ pub mod CharacterComponent {
         fn generate_character(
             ref self: ComponentState<TContractState>,
             ref world: WorldStorage,
-            adventurer_id: u128,
-            adventurer_class: AdventurerClass,
+            character_id: u128,
+            character_class: CharacterClass,
             caller: ContractAddress,
             ref seeder: Seeder,
         ) {
             // Randomly assign stats from standard array [15,14,13,12,10,8] using VRF
-            let abilities = random_stat_assignment(adventurer_class, ref seeder);
+            let abilities = random_stat_assignment(character_class, ref seeder);
 
             let con_mod: i8 = ability_modifier(abilities.constitution);
             let dex_mod: i8 = ability_modifier(abilities.dexterity);
 
             // Starting HP: hit die max + CON modifier (minimum 1)
-            let hit_die = adventurer_class.hit_die_max();
+            let hit_die = character_class.hit_die_max();
             let raw_hp: i16 = hit_die.into() + con_mod.into();
             let max_hp: u16 = if raw_hp < 1 { 1 } else { raw_hp.try_into().unwrap() };
 
             // Starting equipment and AC by class
-            let (primary_weapon, secondary_weapon, armor, has_shield) = adventurer_class.starting_equipment();
+            let (primary_weapon, secondary_weapon, armor, has_shield) = character_class.starting_equipment();
             let armor_class = calculate_ac(armor, has_shield, dex_mod);
 
             // Spell slots (level 1)
-            let (slots_1, slots_2, slots_3) = adventurer_class.spell_slots_for(1);
+            let (slots_1, slots_2, slots_3) = character_class.spell_slots_for(1);
 
             // Randomly pick skills from VRF
-            let (skills, expertise_1, expertise_2) = random_skills(adventurer_class, ref seeder);
+            let (skills, expertise_1, expertise_2) = random_skills(character_class, ref seeder);
 
             // Write all explorer Dojo models
-            world.write_model(@AdventurerStats {
-                adventurer_id,
+            world.write_model(@CharacterStats {
+                character_id,
                 abilities,
                 level: 1,
                 xp: 0,
-                adventurer_class,
+                character_class,
                 dungeons_conquered: 0,
             });
 
-            world.write_model(@AdventurerHealth {
-                adventurer_id,
+            world.write_model(@CharacterHealth {
+                character_id,
                 current_hp: max_hp.try_into().unwrap(),
                 max_hp,
                 is_dead: false,
             });
 
-            world.write_model(@AdventurerCombat {
-                adventurer_id,
+            world.write_model(@CharacterCombat {
+                character_id,
                 armor_class,
                 spell_slots_1: slots_1,
                 spell_slots_2: slots_2,
@@ -83,8 +83,8 @@ pub mod CharacterComponent {
                 action_surge_used: false,
             });
 
-            world.write_model(@AdventurerInventory {
-                adventurer_id,
+            world.write_model(@CharacterInventory {
+                character_id,
                 primary_weapon,
                 secondary_weapon,
                 armor,
@@ -93,25 +93,25 @@ pub mod CharacterComponent {
                 potions: 0,
             });
 
-            world.write_model(@AdventurerPosition {
-                adventurer_id,
+            world.write_model(@CharacterPosition {
+                character_id,
                 dungeon_id: 0,
                 chamber_id: 0,
                 in_combat: false,
                 combat_monster_id: 0,
             });
 
-            world.write_model(@AdventurerSkills {
-                adventurer_id,
+            world.write_model(@CharacterSkills {
+                character_id,
                 skills,
                 expertise_1,
                 expertise_2,
             });
 
             // Emit Dojo event
-            world.emit_event(@AdventurerMinted {
-                adventurer_id,
-                adventurer_class,
+            world.emit_event(@CharacterMinted {
+                character_id,
+                character_class,
                 player: caller,
             });
         }
@@ -119,21 +119,21 @@ pub mod CharacterComponent {
         fn get_attributes(
             self: @ComponentState<TContractState>,
             ref world: WorldStorage,
-            adventurer_id: u128,
+            character_id: u128,
         ) -> CharacterAttributes {
-            let stats: AdventurerStats = world.read_model(adventurer_id);
-            let health: AdventurerHealth = world.read_model(adventurer_id);
-            let combat: AdventurerCombat = world.read_model(adventurer_id);
+            let stats: CharacterStats = world.read_model(character_id);
+            let health: CharacterHealth = world.read_model(character_id);
+            let combat: CharacterCombat = world.read_model(character_id);
 
-            let class_name: ByteArray = match stats.adventurer_class {
-                AdventurerClass::None => "None",
-                AdventurerClass::Fighter => "Fighter",
-                AdventurerClass::Rogue => "Rogue",
-                AdventurerClass::Wizard => "Wizard",
+            let class_name: ByteArray = match stats.character_class {
+                CharacterClass::None => "None",
+                CharacterClass::Fighter => "Fighter",
+                CharacterClass::Rogue => "Rogue",
+                CharacterClass::Wizard => "Wizard",
             };
 
             CharacterAttributes {
-                adventurer_class: class_name,
+                character_class: class_name,
                 level: stats.level,
                 current_hp: health.current_hp,
                 max_hp: health.max_hp,
@@ -151,25 +151,25 @@ pub mod CharacterComponent {
         fn rest(
             ref self: ComponentState<TContractState>,
             ref world: WorldStorage,
-            adventurer_id: u128,
+            character_id: u128,
         ) {
-            let stats: AdventurerStats = world.read_model(adventurer_id);
-            assert(stats.adventurer_class != AdventurerClass::None, 'explorer does not exist');
+            let stats: CharacterStats = world.read_model(character_id);
+            assert(stats.character_class != CharacterClass::None, 'explorer does not exist');
 
-            let health: AdventurerHealth = world.read_model(adventurer_id);
+            let health: CharacterHealth = world.read_model(character_id);
             assert(!health.is_dead, 'dead explorers cannot rest');
 
-            world.write_model(@AdventurerHealth {
-                adventurer_id,
+            world.write_model(@CharacterHealth {
+                character_id,
                 current_hp: health.max_hp.try_into().unwrap(),
                 max_hp: health.max_hp,
                 is_dead: false,
             });
 
-            let (slots_1, slots_2, slots_3) = stats.adventurer_class.spell_slots_for(stats.level);
-            let combat: AdventurerCombat = world.read_model(adventurer_id);
-            world.write_model(@AdventurerCombat {
-                adventurer_id,
+            let (slots_1, slots_2, slots_3) = stats.character_class.spell_slots_for(stats.level);
+            let combat: CharacterCombat = world.read_model(character_id);
+            world.write_model(@CharacterCombat {
+                character_id,
                 armor_class: combat.armor_class,
                 spell_slots_1: slots_1,
                 spell_slots_2: slots_2,
@@ -186,7 +186,7 @@ pub mod CharacterComponent {
         array![15_u8, 14_u8, 13_u8, 12_u8, 10_u8, 8_u8].span()
     }
 
-    fn random_stat_assignment(self: AdventurerClass, ref seeder: Seeder) -> AbilityScore {
+    fn random_stat_assignment(self: CharacterClass, ref seeder: Seeder) -> AbilityScore {
         let order = self.preferred_stat_order();
         let sa = standard_array();
 
@@ -276,25 +276,25 @@ pub mod CharacterComponent {
     }
 
     fn random_skills(
-        self: AdventurerClass, ref seeder: Seeder
+        self: CharacterClass, ref seeder: Seeder
     ) -> (SkillsSet, Skill, Skill) {
         let mut skills: SkillsSet = Default::default();
         match self {
-            AdventurerClass::Fighter => {
+            CharacterClass::Fighter => {
                 let r = seeder.random_u8();
-                let chosen = AdventurerClassTrait::random_fighter_skill(r);
+                let chosen = CharacterClassTrait::random_fighter_skill(r);
                 skills.perception = chosen == Skill::Perception;
                 skills.acrobatics = chosen == Skill::Acrobatics;
                 skills.athletics = true;
                 (skills, Skill::None, Skill::None)
             },
-            AdventurerClass::Rogue => {
+            CharacterClass::Rogue => {
                 let r0 = seeder.random_u8();
                 let r1 = seeder.random_u8();
-                let (skill0, skill1) = AdventurerClassTrait::random_rogue_skills(r0, r1);
+                let (skill0, skill1) = CharacterClassTrait::random_rogue_skills(r0, r1);
                 let r2 = seeder.random_u8();
                 let r3 = seeder.random_u8();
-                let (exp0, exp1) = AdventurerClassTrait::random_rogue_expertise(r2, r3, skill0, skill1);
+                let (exp0, exp1) = CharacterClassTrait::random_rogue_expertise(r2, r3, skill0, skill1);
                 skills.athletics = skill0 == Skill::Athletics || skill1 == Skill::Athletics;
                 skills.perception = skill0 == Skill::Perception || skill1 == Skill::Perception;
                 skills.persuasion = skill0 == Skill::Persuasion || skill1 == Skill::Persuasion;
@@ -303,15 +303,15 @@ pub mod CharacterComponent {
                 skills.acrobatics = true;
                 (skills, exp0, exp1)
             },
-            AdventurerClass::Wizard => {
+            CharacterClass::Wizard => {
                 let r = seeder.random_u8();
-                let chosen = AdventurerClassTrait::random_wizard_skill(r);
+                let chosen = CharacterClassTrait::random_wizard_skill(r);
                 skills.perception = chosen == Skill::Perception;
                 skills.persuasion = chosen == Skill::Persuasion;
                 skills.arcana = true;
                 (skills, Skill::None, Skill::None)
             },
-            AdventurerClass::None => {
+            CharacterClass::None => {
                 (skills, Skill::None, Skill::None)
             },
         }

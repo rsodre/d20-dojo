@@ -1,37 +1,37 @@
 import { useModel, useEntityId } from "@dojoengine/sdk/react";
 import { useDojoConfig } from "@/contexts/dojo-config-provider";
 import type {
-  AdventurerStats,
-  AdventurerHealth,
-  AdventurerCombat,
-  AdventurerInventory,
-  AdventurerPosition,
-  AdventurerSkills,
+  CharacterStats,
+  CharacterHealth,
+  CharacterCombat,
+  CharacterInventory,
+  CharacterPosition,
+  CharacterSkills,
 } from "@/generated/models.gen";
 
 export interface ExplorerModels {
-  stats: AdventurerStats | undefined;
-  health: AdventurerHealth | undefined;
-  combat: AdventurerCombat | undefined;
-  inventory: AdventurerInventory | undefined;
-  position: AdventurerPosition | undefined;
-  skills: AdventurerSkills | undefined;
+  stats: CharacterStats | undefined;
+  health: CharacterHealth | undefined;
+  combat: CharacterCombat | undefined;
+  inventory: CharacterInventory | undefined;
+  position: CharacterPosition | undefined;
+  skills: CharacterSkills | undefined;
 }
 
 /**
  * Reads all explorer models from the DojoStore for the given explorer token ID.
  * Requires useGameModels() to be running somewhere in the component tree.
  */
-export function useExplorerModels(explorerId: bigint): ExplorerModels {
-  const entityId = useEntityId(explorerId);
+export function useExplorerModels(characterId: bigint): ExplorerModels {
+  const entityId = useEntityId(characterId);
   const { model } = useDojoConfig();
 
-  const stats = useModel(entityId, model("AdventurerStats")) as AdventurerStats | undefined;
-  const health = useModel(entityId, model("AdventurerHealth")) as AdventurerHealth | undefined;
-  const combat = useModel(entityId, model("AdventurerCombat")) as AdventurerCombat | undefined;
-  const inventory = useModel(entityId, model("AdventurerInventory")) as AdventurerInventory | undefined;
-  const position = useModel(entityId, model("AdventurerPosition")) as AdventurerPosition | undefined;
-  const skills = useModel(entityId, model("AdventurerSkills")) as AdventurerSkills | undefined;
+  const stats = useModel(entityId, model("CharacterStats")) as CharacterStats | undefined;
+  const health = useModel(entityId, model("CharacterHealth")) as CharacterHealth | undefined;
+  const combat = useModel(entityId, model("CharacterCombat")) as CharacterCombat | undefined;
+  const inventory = useModel(entityId, model("CharacterInventory")) as CharacterInventory | undefined;
+  const position = useModel(entityId, model("CharacterPosition")) as CharacterPosition | undefined;
+  const skills = useModel(entityId, model("CharacterSkills")) as CharacterSkills | undefined;
 
   return { stats, health, combat, inventory, position, skills };
 }

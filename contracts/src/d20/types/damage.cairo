@@ -1,9 +1,9 @@
 use dojo::model::ModelStorage;
 use dojo::event::EventStorage;
 use dojo::world::WorldStorage;
-use d20::d20::models::adventurer::{AdventurerHealth, AdventurerPosition, AdventurerInventory};
-use d20::d20::models::dungeon::{FallenAdventurer, ChamberFallenCount};
-use d20::d20::models::events::AdventurerDied;
+use d20::d20::models::character::{CharacterHealth, CharacterPosition, CharacterInventory};
+use d20::d20::models::dungeon::{FallenCharacter, ChamberFallenCount};
+use d20::d20::models::events::CharacterDied;
 use d20::d20::models::monster::MonsterType;
 
 #[derive(Serde, Copy, Drop, Introspect, PartialEq, Debug, DojoStore, Default)]
@@ -21,32 +21,32 @@ pub enum DamageType {
 }
 
 pub trait DamageTrait {
-    fn apply_adventurer_damage(
+    fn apply_character_damage(
         ref world: WorldStorage,
-        adventurer_id: u128,
-        health: AdventurerHealth,
-        position: AdventurerPosition,
+        character_id: u128,
+        health: CharacterHealth,
+        position: CharacterPosition,
         monster_type: MonsterType,
         damage: u16,
     ) -> u16;
 
     fn handle_death(
         ref world: WorldStorage,
-        adventurer_id: u128,
-        health: AdventurerHealth,
-        position: AdventurerPosition,
+        character_id: u128,
+        health: CharacterHealth,
+        position: CharacterPosition,
         monster_type: MonsterType,
     );
 }
 
 pub impl DamageImpl of DamageTrait {
-    /// Apply damage to the adventurer. Returns actual damage taken.
+    /// Apply damage to the character. Returns actual damage taken.
     /// If HP drops to ≤0, calls handle_death.
-    fn apply_adventurer_damage(
+    fn apply_character_damage(
         ref world: WorldStorage,
-        adventurer_id: u128,
-        health: AdventurerHealth,
-        position: AdventurerPosition,
+        character_id: u128,
+        health: CharacterHealth,
+        position: CharacterPosition,
         monster_type: MonsterType,
         damage: u16,
     ) -> u16 {
@@ -54,12 +54,12 @@ pub impl DamageImpl of DamageTrait {
         let new_hp: i16 = health.current_hp - damage_i16;
 
         if new_hp <= 0 {
-            Self::handle_death(ref world, adventurer_id, health, position, monster_type);
-            // Return actual HP lost (capped at what the adventurer had)
+            Self::handle_death(ref world, character_id, health, position, monster_type);
+            // Return actual HP lost (capped at what the character had)
             health.current_hp.try_into().unwrap()
         } else {
-            world.write_model(@AdventurerHealth {
-                adventurer_id,
+            world.write_model(@CharacterHealth {
+                character_id,
                 current_hp: new_hp,
                 max_hp: health.max_hp,
                 is_dead: false,
@@ -69,30 +69,30 @@ pub impl DamageImpl of DamageTrait {
     }
 
     /// Handle explorer death:
-    ///   1. Set is_dead on AdventurerHealth, clear HP to 0.
-    ///   2. Clear combat state on AdventurerPosition.
-    ///   3. Read inventory and create FallenAdventurer with dropped loot.
+    ///   1. Set is_dead on CharacterHealth, clear HP to 0.
+    ///   2. Clear combat state on CharacterPosition.
+    ///   3. Read inventory and create FallenCharacter with dropped loot.
     ///   4. Increment ChamberFallenCount.
     ///   5. Zero out inventory (items are now on the ground).
-    ///   6. Emit AdventurerDied event.
+    ///   6. Emit CharacterDied event.
     fn handle_death(
         ref world: WorldStorage,
-        adventurer_id: u128,
-        health: AdventurerHealth,
-        position: AdventurerPosition,
+        character_id: u128,
+        health: CharacterHealth,
+        position: CharacterPosition,
         monster_type: MonsterType,
     ) {
         // 1. Mark explorer dead
-        world.write_model(@AdventurerHealth {
-            adventurer_id,
+        world.write_model(@CharacterHealth {
+            character_id,
             current_hp: 0,
             max_hp: health.max_hp,
             is_dead: true,
         });
 
         // 2. Clear combat state
-        world.write_model(@AdventurerPosition {
-            adventurer_id,
+        world.write_model(@CharacterPosition {
+            character_id,
             dungeon_id: position.dungeon_id,
             chamber_id: position.chamber_id,
             in_combat: false,
@@ -100,7 +100,7 @@ pub impl DamageImpl of DamageTrait {
         });
 
         // 3. Read inventory for loot drop
-        let inventory: AdventurerInventory = world.read_model(adventurer_id);
+        let inventory: CharacterInventory = world.read_model(character_id);
 
         // 4. Determine fallen_index from ChamberFallenCount (read-then-increment)
         let fallen_count: ChamberFallenCount = world.read_model(
@@ -108,12 +108,12 @@ pub impl DamageImpl of DamageTrait {
         );
         let fallen_index: u32 = fallen_count.count;
 
-        // 5. Create FallenAdventurer loot record
-        world.write_model(@FallenAdventurer {
+        // 5. Create FallenCharacter loot record
+        world.write_model(@FallenCharacter {
             dungeon_id: position.dungeon_id,
             chamber_id: position.chamber_id,
             fallen_index,
-            adventurer_id,
+            character_id,
             dropped_weapon: inventory.primary_weapon,
             dropped_armor: inventory.armor,
             dropped_gold: inventory.gold,
@@ -129,8 +129,8 @@ pub impl DamageImpl of DamageTrait {
         });
 
         // 7. Zero out explorer inventory (loot is now on the ground)
-        world.write_model(@AdventurerInventory {
-            adventurer_id,
+        world.write_model(@CharacterInventory {
+            character_id,
             primary_weapon: inventory.primary_weapon,
             secondary_weapon: inventory.secondary_weapon,
             armor: inventory.armor,
@@ -139,9 +139,9 @@ pub impl DamageImpl of DamageTrait {
             potions: 0,
         });
 
-        // 8. Emit AdventurerDied event
-        world.emit_event(@AdventurerDied {
-            adventurer_id,
+        // 8. Emit CharacterDied event
+        world.emit_event(@CharacterDied {
+            character_id,
             dungeon_id: position.dungeon_id,
             chamber_id: position.chamber_id,
             killed_by: monster_type,

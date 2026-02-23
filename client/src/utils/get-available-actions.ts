@@ -1,5 +1,5 @@
 import { CairoCustomEnum } from "starknet";
-import type { ChamberExit, FallenAdventurer } from "@/generated/models.gen";
+import type { ChamberExit, FallenCharacter } from "@/generated/models.gen";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -14,16 +14,16 @@ export interface Action {
 }
 
 export interface GameActionContext {
-  explorerId: bigint;
+  characterId: bigint;
   // Explorer state
   explorerClass: string; // "Fighter" | "Rogue" | "Wizard"
   level: number;
   isDead: boolean;
   inCombat: boolean;
-  templeId: bigint;
+  dungeonId: bigint;
   chamberId: bigint;
   potions: number;
-  // AdventurerCombat
+  // CharacterCombat
   secondWindUsed: boolean;
   spellSlots1: number;
   spellSlots2: number;
@@ -35,7 +35,7 @@ export interface GameActionContext {
   trapDisarmed: boolean;
   // Relations
   exits: ChamberExit[];
-  fallenExplorers: FallenAdventurer[];
+  fallenExplorers: FallenCharacter[];
   // Contract addresses
   contracts: {
     temple: string;
@@ -56,10 +56,10 @@ function enumVariant(value: unknown): string {
 // ─── Pure action generator ────────────────────────────────────────────────────
 
 export function getAvailableActions(ctx: GameActionContext): Action[] {
-  if (ctx.isDead || ctx.templeId === 0n) return [];
+  if (ctx.isDead || ctx.dungeonId === 0n) return [];
 
   const actions: Action[] = [];
-  const { explorerId, contracts } = ctx;
+  const { characterId, contracts } = ctx;
 
   if (ctx.inCombat) {
     // ── Combat ───────────────────────────────────────────────────────────────
@@ -69,7 +69,7 @@ export function getAvailableActions(ctx: GameActionContext): Action[] {
       label: "⚔️ Attack",
       contract: contracts.combat,
       entrypoint: "attack",
-      calldata: [explorerId],
+      calldata: [characterId],
       needsVrf: true,
       color: 'green',
     });
@@ -80,7 +80,7 @@ export function getAvailableActions(ctx: GameActionContext): Action[] {
         label: "💚 Second Wind",
         contract: contracts.combat,
         entrypoint: "second_wind",
-        calldata: [explorerId],
+        calldata: [characterId],
         needsVrf: true,
         color: 'green',
       });
@@ -92,7 +92,7 @@ export function getAvailableActions(ctx: GameActionContext): Action[] {
         label: "💨 Cunning Action (Disengage)",
         contract: contracts.combat,
         entrypoint: "cunning_action",
-        calldata: [explorerId],
+        calldata: [characterId],
         needsVrf: false,
         color: 'green',
       });
@@ -105,7 +105,7 @@ export function getAvailableActions(ctx: GameActionContext): Action[] {
         label: "🔥 Fire Bolt (Cantrip)",
         contract: contracts.combat,
         entrypoint: "cast_spell",
-        calldata: [explorerId, new CairoCustomEnum({ FireBolt: {} })],
+        calldata: [characterId, new CairoCustomEnum({ FireBolt: {} })],
         needsVrf: true,
         color: 'purple',
       });
@@ -116,7 +116,7 @@ export function getAvailableActions(ctx: GameActionContext): Action[] {
           label: `🎯 Magic Missile (Lv1, ${ctx.spellSlots1} left)`,
           contract: contracts.combat,
           entrypoint: "cast_spell",
-          calldata: [explorerId, new CairoCustomEnum({ MagicMissile: {} })],
+          calldata: [characterId, new CairoCustomEnum({ MagicMissile: {} })],
           needsVrf: true,
           color: 'purple',
         });
@@ -125,7 +125,7 @@ export function getAvailableActions(ctx: GameActionContext): Action[] {
           label: `😴 Sleep (Lv1, ${ctx.spellSlots1} left)`,
           contract: contracts.combat,
           entrypoint: "cast_spell",
-          calldata: [explorerId, new CairoCustomEnum({ Sleep: {} })],
+          calldata: [characterId, new CairoCustomEnum({ Sleep: {} })],
           needsVrf: true,
           color: 'purple',
         });
@@ -134,7 +134,7 @@ export function getAvailableActions(ctx: GameActionContext): Action[] {
           label: `🛡️ Shield (Lv1 reaction, ${ctx.spellSlots1} left)`,
           contract: contracts.combat,
           entrypoint: "cast_spell",
-          calldata: [explorerId, new CairoCustomEnum({ Shield: {} })],
+          calldata: [characterId, new CairoCustomEnum({ Shield: {} })],
           needsVrf: true,
           color: 'purple',
         });
@@ -146,7 +146,7 @@ export function getAvailableActions(ctx: GameActionContext): Action[] {
           label: `☀️ Scorching Ray (Lv2, ${ctx.spellSlots2} left)`,
           contract: contracts.combat,
           entrypoint: "cast_spell",
-          calldata: [explorerId, new CairoCustomEnum({ ScorchingRay: {} })],
+          calldata: [characterId, new CairoCustomEnum({ ScorchingRay: {} })],
           needsVrf: true,
           color: 'purple',
         });
@@ -155,7 +155,7 @@ export function getAvailableActions(ctx: GameActionContext): Action[] {
           label: `🌫️ Misty Step (Lv2 disengage, ${ctx.spellSlots2} left)`,
           contract: contracts.combat,
           entrypoint: "cast_spell",
-          calldata: [explorerId, new CairoCustomEnum({ MistyStep: {} })],
+          calldata: [characterId, new CairoCustomEnum({ MistyStep: {} })],
           needsVrf: true,
           color: 'purple',
         });
@@ -167,7 +167,7 @@ export function getAvailableActions(ctx: GameActionContext): Action[] {
           label: `💥 Fireball (Lv3, ${ctx.spellSlots3} left)`,
           contract: contracts.combat,
           entrypoint: "cast_spell",
-          calldata: [explorerId, new CairoCustomEnum({ Fireball: {} })],
+          calldata: [characterId, new CairoCustomEnum({ Fireball: {} })],
           needsVrf: true,
           color: 'purple',
         });
@@ -180,7 +180,7 @@ export function getAvailableActions(ctx: GameActionContext): Action[] {
         label: `🧪 Use Health Potion (${ctx.potions})`,
         contract: contracts.combat,
         entrypoint: "use_item",
-        calldata: [explorerId, new CairoCustomEnum({ HealthPotion: {} })],
+        calldata: [characterId, new CairoCustomEnum({ HealthPotion: {} })],
         needsVrf: true,
         color: 'purple',
       });
@@ -191,7 +191,7 @@ export function getAvailableActions(ctx: GameActionContext): Action[] {
       label: "🏃 Flee",
       contract: contracts.combat,
       entrypoint: "flee",
-      calldata: [explorerId],
+      calldata: [characterId],
       needsVrf: true,
       color: 'green',
     });
@@ -209,7 +209,7 @@ export function getAvailableActions(ctx: GameActionContext): Action[] {
           label: `🚪 Exit ${i + 1}: Open`,
           contract: contracts.temple,
           entrypoint: "open_exit",
-          calldata: [explorerId, i],
+          calldata: [characterId, i],
           needsVrf: true,
           color: 'orange',
         });
@@ -220,7 +220,7 @@ export function getAvailableActions(ctx: GameActionContext): Action[] {
           label: `➡️ Exit ${i + 1}: Enter Chamber #${toChamber}`,
           contract: contracts.temple,
           entrypoint: "move_to_chamber",
-          calldata: [explorerId, i],
+          calldata: [characterId, i],
           needsVrf: true,
           color: 'yellow',
         });
@@ -236,7 +236,7 @@ export function getAvailableActions(ctx: GameActionContext): Action[] {
         label: "💰 Loot Treasure",
         contract: contracts.temple,
         entrypoint: "loot_treasure",
-        calldata: [explorerId],
+        calldata: [characterId],
         needsVrf: true,
         color: 'green',
       });
@@ -248,7 +248,7 @@ export function getAvailableActions(ctx: GameActionContext): Action[] {
         label: "⚙️ Disarm Trap",
         contract: contracts.temple,
         entrypoint: "disarm_trap",
-        calldata: [explorerId],
+        calldata: [characterId],
         needsVrf: true,
         color: 'green',
       });
@@ -262,7 +262,7 @@ export function getAvailableActions(ctx: GameActionContext): Action[] {
           label: `🩸 Loot Fallen Explorer #${idx + 1}`,
           contract: contracts.temple,
           entrypoint: "loot_fallen",
-          calldata: [explorerId, idx],
+          calldata: [characterId, idx],
           needsVrf: false,
           color: 'green',
         });
@@ -274,7 +274,7 @@ export function getAvailableActions(ctx: GameActionContext): Action[] {
       label: "🚶 Exit Temple",
       contract: contracts.temple,
       entrypoint: "exit_temple",
-      calldata: [explorerId],
+      calldata: [characterId],
       needsVrf: false,
       color: 'red',
     });

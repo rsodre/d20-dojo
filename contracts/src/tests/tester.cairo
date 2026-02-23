@@ -13,11 +13,11 @@ use d20::systems::explorer_token::{
 use d20::systems::combat_system::{ICombatSystemDispatcher};
 use d20::systems::temple_token::{ITempleTokenDispatcher};
 use d20::models::config::m_Config;
-use d20::d20::models::adventurer::{
-    AdventurerHealth, AdventurerInventory, AdventurerPosition,
+use d20::d20::models::character::{
+    CharacterHealth, CharacterInventory, CharacterPosition,
 };
-use d20::d20::models::dungeon::{FallenAdventurer, ChamberFallenCount};
-use d20::d20::types::adventurer_class::AdventurerClass;
+use d20::d20::models::dungeon::{FallenCharacter, ChamberFallenCount};
+use d20::d20::types::character_class::CharacterClass;
 use d20::tests::mock_vrf::MockVrf;
 
 // ── Test world setup ──────────────────────────────────────────────────────
@@ -29,24 +29,24 @@ pub fn namespace_def() -> NamespaceDef {
             // Config
             TestResource::Model(m_Config::TEST_CLASS_HASH),
             // Explorer models
-            TestResource::Model(d20::d20::models::adventurer::m_AdventurerStats::TEST_CLASS_HASH),
-            TestResource::Model(d20::d20::models::adventurer::m_AdventurerHealth::TEST_CLASS_HASH),
-            TestResource::Model(d20::d20::models::adventurer::m_AdventurerCombat::TEST_CLASS_HASH),
-            TestResource::Model(d20::d20::models::adventurer::m_AdventurerInventory::TEST_CLASS_HASH),
-            TestResource::Model(d20::d20::models::adventurer::m_AdventurerPosition::TEST_CLASS_HASH),
-            TestResource::Model(d20::d20::models::adventurer::m_AdventurerSkills::TEST_CLASS_HASH),
+            TestResource::Model(d20::d20::models::character::m_CharacterStats::TEST_CLASS_HASH),
+            TestResource::Model(d20::d20::models::character::m_CharacterHealth::TEST_CLASS_HASH),
+            TestResource::Model(d20::d20::models::character::m_CharacterCombat::TEST_CLASS_HASH),
+            TestResource::Model(d20::d20::models::character::m_CharacterInventory::TEST_CLASS_HASH),
+            TestResource::Model(d20::d20::models::character::m_CharacterPosition::TEST_CLASS_HASH),
+            TestResource::Model(d20::d20::models::character::m_CharacterSkills::TEST_CLASS_HASH),
             // Temple models
             TestResource::Model(d20::d20::models::dungeon::m_DungeonState::TEST_CLASS_HASH),
             TestResource::Model(d20::d20::models::dungeon::m_Chamber::TEST_CLASS_HASH),
             TestResource::Model(d20::d20::models::dungeon::m_MonsterInstance::TEST_CLASS_HASH),
             TestResource::Model(d20::d20::models::dungeon::m_ChamberExit::TEST_CLASS_HASH),
-            TestResource::Model(d20::d20::models::dungeon::m_FallenAdventurer::TEST_CLASS_HASH),
+            TestResource::Model(d20::d20::models::dungeon::m_FallenCharacter::TEST_CLASS_HASH),
             TestResource::Model(d20::d20::models::dungeon::m_ChamberFallenCount::TEST_CLASS_HASH),
-            TestResource::Model(d20::d20::models::dungeon::m_AdventurerDungeonProgress::TEST_CLASS_HASH),
+            TestResource::Model(d20::d20::models::dungeon::m_CharacterDungeonProgress::TEST_CLASS_HASH),
             // Events
-            TestResource::Event(d20::d20::models::events::e_AdventurerMinted::TEST_CLASS_HASH),
+            TestResource::Event(d20::d20::models::events::e_CharacterMinted::TEST_CLASS_HASH),
             TestResource::Event(d20::d20::models::events::e_CombatResult::TEST_CLASS_HASH),
-            TestResource::Event(d20::d20::models::events::e_AdventurerDied::TEST_CLASS_HASH),
+            TestResource::Event(d20::d20::models::events::e_CharacterDied::TEST_CLASS_HASH),
             TestResource::Event(d20::d20::models::events::e_ChamberRevealed::TEST_CLASS_HASH),
             TestResource::Event(d20::d20::models::events::e_LevelUp::TEST_CLASS_HASH),
             TestResource::Event(d20::d20::models::events::e_BossDefeated::TEST_CLASS_HASH),
@@ -104,47 +104,47 @@ pub fn setup_world() -> (
 // ── Mint helpers ──────────────────────────────────────────────────────────
 
 pub fn mint_fighter(token: IExplorerTokenDispatcher) -> u128 {
-    token.mint_explorer(AdventurerClass::Fighter)
+    token.mint_explorer(CharacterClass::Fighter)
 }
 
 pub fn mint_rogue(token: IExplorerTokenDispatcher) -> u128 {
-    token.mint_explorer(AdventurerClass::Rogue)
+    token.mint_explorer(CharacterClass::Rogue)
 }
 
 pub fn mint_wizard(token: IExplorerTokenDispatcher) -> u128 {
-    token.mint_explorer(AdventurerClass::Wizard)
+    token.mint_explorer(CharacterClass::Wizard)
 }
 
 // ── Death assertion helper ────────────────────────────────────────────────
 
 /// Validates all invariants that must hold after an explorer dies:
 /// - is_dead flag set, HP at 0, not in combat
-/// - FallenAdventurer record created in the correct chamber
+/// - FallenCharacter record created in the correct chamber
 /// - ChamberFallenCount incremented
 /// - Inventory gold and potions zeroed (dropped as loot)
 pub fn assert_explorer_dead(
     ref world: dojo::world::WorldStorage,
-    adventurer_id: u128,
+    character_id: u128,
     dungeon_id: u128,
     chamber_id: u32,
 ) {
-    let health: AdventurerHealth = world.read_model(adventurer_id);
+    let health: CharacterHealth = world.read_model(character_id);
     assert(health.is_dead, 'explorer should be dead');
     assert(health.current_hp == 0, 'hp should be 0 on death');
 
-    let pos: AdventurerPosition = world.read_model(adventurer_id);
+    let pos: CharacterPosition = world.read_model(character_id);
     assert(!pos.in_combat, 'dead explorer not in combat');
 
     let fallen_count: ChamberFallenCount = world.read_model((dungeon_id, chamber_id));
     assert(fallen_count.count >= 1, 'fallen count should be >= 1');
 
-    let fallen: FallenAdventurer = world.read_model(
+    let fallen: FallenCharacter = world.read_model(
         (dungeon_id, chamber_id, fallen_count.count - 1)
     );
-    assert(fallen.adventurer_id == adventurer_id, 'fallen explorer id mismatch');
+    assert(fallen.character_id == character_id, 'fallen explorer id mismatch');
     assert(!fallen.is_looted, 'fallen should not be looted');
 
-    let inv: AdventurerInventory = world.read_model(adventurer_id);
+    let inv: CharacterInventory = world.read_model(character_id);
     assert(inv.gold == 0, 'gold dropped on death');
     assert(inv.potions == 0, 'potions dropped on death');
 }

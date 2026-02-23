@@ -1,16 +1,16 @@
 use d20::d20::types::items::{WeaponType, ArmorType};
-use d20::d20::types::adventurer_class::AdventurerClass;
+use d20::d20::types::character_class::CharacterClass;
 
 #[derive(Copy, Drop, Serde)]
 #[dojo::model]
-pub struct AdventurerStats {
+pub struct CharacterStats {
     #[key]
-    pub adventurer_id: u128,
+    pub character_id: u128,
     pub abilities: AbilityScore,
     // Progression
     pub level: u8,
     pub xp: u32,
-    pub adventurer_class: AdventurerClass,
+    pub character_class: CharacterClass,
     // Achievements
     pub dungeons_conquered: u16,
 }
@@ -40,9 +40,9 @@ pub struct AbilityScore {
 
 #[derive(Copy, Drop, Serde)]
 #[dojo::model]
-pub struct AdventurerHealth {
+pub struct CharacterHealth {
     #[key]
-    pub adventurer_id: u128,
+    pub character_id: u128,
     pub current_hp: i16,
     pub max_hp: u16,
     pub is_dead: bool,
@@ -50,9 +50,9 @@ pub struct AdventurerHealth {
 
 #[derive(Copy, Drop, Serde)]
 #[dojo::model]
-pub struct AdventurerCombat {
+pub struct CharacterCombat {
     #[key]
-    pub adventurer_id: u128,
+    pub character_id: u128,
     pub armor_class: u8,
     // Class resources
     pub spell_slots_1: u8,
@@ -64,9 +64,9 @@ pub struct AdventurerCombat {
 
 #[derive(Copy, Drop, Serde)]
 #[dojo::model]
-pub struct AdventurerInventory {
+pub struct CharacterInventory {
     #[key]
-    pub adventurer_id: u128,
+    pub character_id: u128,
     pub primary_weapon: WeaponType,
     pub secondary_weapon: WeaponType,
     pub armor: ArmorType,
@@ -77,9 +77,9 @@ pub struct AdventurerInventory {
 
 #[derive(Copy, Drop, Serde)]
 #[dojo::model]
-pub struct AdventurerPosition {
+pub struct CharacterPosition {
     #[key]
-    pub adventurer_id: u128,
+    pub character_id: u128,
     pub dungeon_id: u128,
     pub chamber_id: u32,
     pub in_combat: bool,
@@ -88,9 +88,9 @@ pub struct AdventurerPosition {
 
 #[derive(Copy, Drop, Serde)]
 #[dojo::model]
-pub struct AdventurerSkills {
+pub struct CharacterSkills {
     #[key]
-    pub adventurer_id: u128,
+    pub character_id: u128,
     // Proficiency flags for each skill
     pub skills: SkillsSet,
     // Expertise (double proficiency, Rogue feature)

@@ -4,13 +4,13 @@ mod tests {
     use starknet::{ContractAddress};
     use dojo::model::{ModelStorage, ModelStorageTest};
 
-    use d20::d20::models::adventurer::{
-        AdventurerStats, AdventurerHealth, AdventurerInventory,
-        AdventurerPosition
+    use d20::d20::models::character::{
+        CharacterStats, CharacterHealth, CharacterInventory,
+        CharacterPosition
     };
     use d20::d20::models::dungeon::{
         DungeonState, Chamber, ChamberExit, MonsterInstance,
-        FallenAdventurer, ChamberFallenCount, AdventurerDungeonProgress
+        FallenCharacter, ChamberFallenCount, CharacterDungeonProgress
     };
     use d20::d20::types::index::{ChamberType};
     use d20::d20::types::items::{WeaponType, ArmorType};
@@ -82,7 +82,7 @@ mod tests {
         // Player B can move through exit 0 without opening it
         temple.move_to_chamber(explorer_b, 0);
 
-        let pos_b: AdventurerPosition = world.read_model(explorer_b);
+        let pos_b: CharacterPosition = world.read_model(explorer_b);
         assert(pos_b.chamber_id == dest_chamber_id, 'B moved to A chamber');
     }
 
@@ -155,7 +155,7 @@ mod tests {
         temple.move_to_chamber(explorer_b, 0);
 
         // Player B should NOT be in combat — monster is dead
-        let pos_b: AdventurerPosition = world.read_model(explorer_b);
+        let pos_b: CharacterPosition = world.read_model(explorer_b);
         assert(pos_b.chamber_id == 2, 'B in chamber 2');
         assert(!pos_b.in_combat, 'B not in combat');
 
@@ -191,15 +191,15 @@ mod tests {
             trap_dc: 0,
         });
         // Give A high WIS for guaranteed perception
-        let stats_a: AdventurerStats = world.read_model(explorer_a);
+        let stats_a: CharacterStats = world.read_model(explorer_a);
         let mut abilities_a = stats_a.abilities;
         abilities_a.wisdom = 20;
-        world.write_model_test(@AdventurerStats {
-            adventurer_id: explorer_a,
+        world.write_model_test(@CharacterStats {
+            character_id: explorer_a,
             abilities: abilities_a,
             level: stats_a.level,
             xp: stats_a.xp,
-            adventurer_class: stats_a.adventurer_class,
+            character_class: stats_a.character_class,
             dungeons_conquered: stats_a.dungeons_conquered,
         });
 
@@ -212,15 +212,15 @@ mod tests {
         // Player B enters same temple
         starknet::testing::set_contract_address(player_b);
         let explorer_b = mint_fighter(token);
-        world.write_model_test(@AdventurerPosition {
-            adventurer_id: explorer_b,
+        world.write_model_test(@CharacterPosition {
+            character_id: explorer_b,
             dungeon_id,
             chamber_id: 1,
             in_combat: false,
             combat_monster_id: 0,
         });
-        world.write_model_test(@AdventurerHealth {
-            adventurer_id: explorer_b,
+        world.write_model_test(@CharacterHealth {
+            character_id: explorer_b,
             current_hp: 10,
             max_hp: 10,
             is_dead: false,
@@ -296,16 +296,16 @@ mod tests {
         temple.enter_temple(explorer_b, dungeon_id);
 
         // Record B's HP before moving to trap chamber
-        let health_before: AdventurerHealth = world.read_model(explorer_b);
+        let health_before: CharacterHealth = world.read_model(explorer_b);
         let hp_before = health_before.current_hp;
 
         // Move B to trap chamber — trap is already disarmed, no damage
         temple.move_to_chamber(explorer_b, 0);
 
-        let pos_b: AdventurerPosition = world.read_model(explorer_b);
+        let pos_b: CharacterPosition = world.read_model(explorer_b);
         assert(pos_b.chamber_id == 2, 'B in trap chamber');
 
-        let health_after: AdventurerHealth = world.read_model(explorer_b);
+        let health_after: CharacterHealth = world.read_model(explorer_b);
         assert(health_after.current_hp == hp_before, 'B takes no trap dmg');
     }
 
@@ -469,21 +469,21 @@ mod tests {
             max_hp: 50,
             is_alive: true,
         });
-        world.write_model_test(@AdventurerPosition {
-            adventurer_id: explorer_a,
+        world.write_model_test(@CharacterPosition {
+            character_id: explorer_a,
             dungeon_id,
             chamber_id: 1,
             in_combat: true,
             combat_monster_id: 1,
         });
-        world.write_model_test(@AdventurerHealth {
-            adventurer_id: explorer_a,
+        world.write_model_test(@CharacterHealth {
+            character_id: explorer_a,
             current_hp: 1,
             max_hp: 11,
             is_dead: false,
         });
-        world.write_model_test(@AdventurerInventory {
-            adventurer_id: explorer_a,
+        world.write_model_test(@CharacterInventory {
+            character_id: explorer_a,
             primary_weapon: WeaponType::Longsword,
             secondary_weapon: WeaponType::None,
             armor: ArmorType::ChainMail,
@@ -495,7 +495,7 @@ mod tests {
         // A attacks and dies from counter-attack
         combat.attack(explorer_a);
 
-        let health_a: AdventurerHealth = world.read_model(explorer_a);
+        let health_a: CharacterHealth = world.read_model(explorer_a);
         if !health_a.is_dead {
             return; // Non-deterministic — A survived; skip rest of test
         }
@@ -509,18 +509,18 @@ mod tests {
         let fallen_count: ChamberFallenCount = world.read_model((dungeon_id, 1_u32));
         assert(fallen_count.count >= 1, 'B sees fallen count');
 
-        let fallen: FallenAdventurer = world.read_model((dungeon_id, 1_u32, 0_u32));
-        assert(fallen.adventurer_id == explorer_a, 'body is A');
+        let fallen: FallenCharacter = world.read_model((dungeon_id, 1_u32, 0_u32));
+        assert(fallen.character_id == explorer_a, 'body is A');
         assert(!fallen.is_looted, 'not yet looted');
         assert(fallen.dropped_gold == 50, 'gold on body');
 
         // B loots A's body
         temple.loot_fallen(explorer_b, 0);
 
-        let fallen_after: FallenAdventurer = world.read_model((dungeon_id, 1_u32, 0_u32));
+        let fallen_after: FallenCharacter = world.read_model((dungeon_id, 1_u32, 0_u32));
         assert(fallen_after.is_looted, 'B looted body');
 
-        let inv_b: AdventurerInventory = world.read_model(explorer_b);
+        let inv_b: CharacterInventory = world.read_model(explorer_b);
         assert(inv_b.gold >= 50, 'B got A gold');
     }
 
@@ -566,7 +566,7 @@ mod tests {
 
         // Player A opens exit 0 — A's chambers_explored = 1
         temple.open_exit(explorer_a, 0);
-        let prog_a: AdventurerDungeonProgress = world.read_model((explorer_a, dungeon_id));
+        let prog_a: CharacterDungeonProgress = world.read_model((explorer_a, dungeon_id));
         assert(prog_a.chambers_explored == 1, 'A explored 1');
 
         // Player B enters same temple
@@ -575,16 +575,16 @@ mod tests {
         temple.enter_temple(explorer_b, dungeon_id);
 
         // B's progress starts at 0 even though A already explored
-        let prog_b: AdventurerDungeonProgress = world.read_model((explorer_b, dungeon_id));
+        let prog_b: CharacterDungeonProgress = world.read_model((explorer_b, dungeon_id));
         assert(prog_b.chambers_explored == 0, 'B explored 0');
 
         // B opens exit 1 — B's chambers_explored = 1
         temple.open_exit(explorer_b, 1);
-        let prog_b2: AdventurerDungeonProgress = world.read_model((explorer_b, dungeon_id));
+        let prog_b2: CharacterDungeonProgress = world.read_model((explorer_b, dungeon_id));
         assert(prog_b2.chambers_explored == 1, 'B explored 1');
 
         // A's progress unchanged by B's actions
-        let prog_a2: AdventurerDungeonProgress = world.read_model((explorer_a, dungeon_id));
+        let prog_a2: CharacterDungeonProgress = world.read_model((explorer_a, dungeon_id));
         assert(prog_a2.chambers_explored == 1, 'A still 1');
     }
 

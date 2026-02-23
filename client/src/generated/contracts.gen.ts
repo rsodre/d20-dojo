@@ -4,7 +4,7 @@ import { Account, AccountInterface, BigNumberish, CairoCustomEnum } from "starkn
 
 export function setupWorld(provider: DojoProvider) {
 
-	const build_combat_system_attack_calldata = (explorerId: BigNumberish): DojoCall => {
+	const build_combat_system_attack_calldata = (characterId: BigNumberish): DojoCall => {
 		return {
 			contractName: "combat_system",
 			entrypoint: "attack",

@@ -4,12 +4,12 @@ mod tests {
     use starknet::{ContractAddress};
     use dojo::model::{ModelStorage, ModelStorageTest};
 
-    use d20::d20::models::adventurer::{
-        AdventurerStats, AdventurerHealth, AdventurerPosition,
+    use d20::d20::models::character::{
+        CharacterStats, CharacterHealth, CharacterPosition,
     };
     use d20::d20::models::dungeon::{
         DungeonState, Chamber, ChamberExit,
-        AdventurerDungeonProgress
+        CharacterDungeonProgress
     };
     use d20::d20::types::index::{ChamberType};
     use d20::tests::tester::{
@@ -97,12 +97,12 @@ mod tests {
 
         let (world, token, _combat, temple) = setup_world();
 
-        let adventurer_id = mint_fighter(token);
+        let character_id = mint_fighter(token);
         let dungeon_id = temple.mint_temple(1_u8);
 
-        temple.enter_temple(adventurer_id, dungeon_id);
+        temple.enter_temple(character_id, dungeon_id);
 
-        let pos: AdventurerPosition = world.read_model(adventurer_id);
+        let pos: CharacterPosition = world.read_model(character_id);
         assert(pos.dungeon_id == dungeon_id, 'in correct temple');
         assert(pos.chamber_id == 1, 'at entrance chamber');
         assert(!pos.in_combat, 'not in combat on entry');
@@ -116,12 +116,12 @@ mod tests {
 
         let (world, token, _combat, temple) = setup_world();
 
-        let adventurer_id = mint_fighter(token);
+        let character_id = mint_fighter(token);
         let dungeon_id = temple.mint_temple(1_u8);
 
-        temple.enter_temple(adventurer_id, dungeon_id);
+        temple.enter_temple(character_id, dungeon_id);
 
-        let progress: AdventurerDungeonProgress = world.read_model((adventurer_id, dungeon_id));
+        let progress: CharacterDungeonProgress = world.read_model((character_id, dungeon_id));
         assert(progress.chambers_explored == 0, 'fresh progress');
         assert(progress.xp_earned == 0, 'no xp yet');
     }
@@ -135,17 +135,17 @@ mod tests {
 
         let (mut world, token, _combat, temple) = setup_world();
 
-        let adventurer_id = mint_fighter(token);
+        let character_id = mint_fighter(token);
         let dungeon_id = temple.mint_temple(1_u8);
 
-        world.write_model_test(@AdventurerHealth {
-            adventurer_id,
+        world.write_model_test(@CharacterHealth {
+            character_id,
             current_hp: 0,
             max_hp: 11,
             is_dead: true,
         });
 
-        temple.enter_temple(adventurer_id, dungeon_id);
+        temple.enter_temple(character_id, dungeon_id);
     }
 
     // ═══════════════════════════════════════════════════════════════════════
@@ -156,13 +156,13 @@ mod tests {
 
         let (world, token, _combat, temple) = setup_world();
 
-        let adventurer_id = mint_fighter(token);
+        let character_id = mint_fighter(token);
         let dungeon_id = temple.mint_temple(1_u8);
 
-        temple.enter_temple(adventurer_id, dungeon_id);
-        temple.exit_temple(adventurer_id);
+        temple.enter_temple(character_id, dungeon_id);
+        temple.exit_temple(character_id);
 
-        let pos: AdventurerPosition = world.read_model(adventurer_id);
+        let pos: CharacterPosition = world.read_model(character_id);
         assert(pos.dungeon_id == 0, 'dungeon_id cleared');
         assert(pos.chamber_id == 0, 'chamber_id cleared');
     }
@@ -175,15 +175,15 @@ mod tests {
 
         let (world, token, _combat, temple) = setup_world();
 
-        let adventurer_id = mint_fighter(token);
+        let character_id = mint_fighter(token);
         let dungeon_id = temple.mint_temple(1_u8);
 
-        let stats_before: AdventurerStats = world.read_model(adventurer_id);
+        let stats_before: CharacterStats = world.read_model(character_id);
 
-        temple.enter_temple(adventurer_id, dungeon_id);
-        temple.exit_temple(adventurer_id);
+        temple.enter_temple(character_id, dungeon_id);
+        temple.exit_temple(character_id);
 
-        let stats_after: AdventurerStats = world.read_model(adventurer_id);
+        let stats_after: CharacterStats = world.read_model(character_id);
         assert(stats_after.level == stats_before.level, 'level preserved');
         assert(stats_after.xp == stats_before.xp, 'xp preserved');
     }
@@ -197,8 +197,8 @@ mod tests {
 
         let (_world, token, _combat, temple) = setup_world();
 
-        let adventurer_id = mint_fighter(token);
-        temple.exit_temple(adventurer_id);
+        let character_id = mint_fighter(token);
+        temple.exit_temple(character_id);
     }
 
     // ═══════════════════════════════════════════════════════════════════════
@@ -209,11 +209,11 @@ mod tests {
         starknet::testing::set_contract_address(caller);
 
         let (mut world, token, _combat, temple) = setup_world();
-        let adventurer_id = mint_fighter(token);
+        let character_id = mint_fighter(token);
         let dungeon_id = temple.mint_temple(1_u8);
-        temple.enter_temple(adventurer_id, dungeon_id);
-        world.write_model_test(@AdventurerPosition { adventurer_id, dungeon_id, chamber_id: 2, in_combat: true, combat_monster_id: 1 });
-        temple.exit_temple(adventurer_id);
+        temple.enter_temple(character_id, dungeon_id);
+        world.write_model_test(@CharacterPosition { character_id, dungeon_id, chamber_id: 2, in_combat: true, combat_monster_id: 1 });
+        temple.exit_temple(character_id);
     }
 
     // ═══════════════════════════════════════════════════════════════════════
@@ -224,13 +224,13 @@ mod tests {
         starknet::testing::set_contract_address(caller);
 
         let (mut world, token, _combat, temple) = setup_world();
-        let adventurer_id = mint_fighter(token);
+        let character_id = mint_fighter(token);
         let temple_a = temple.mint_temple(1_u8);
         let temple_b = temple.mint_temple(2_u8);
 
-        world.write_model_test(@AdventurerPosition { adventurer_id, dungeon_id: temple_a, chamber_id: 2, in_combat: true, combat_monster_id: 1 });
+        world.write_model_test(@CharacterPosition { character_id, dungeon_id: temple_a, chamber_id: 2, in_combat: true, combat_monster_id: 1 });
 
-        temple.enter_temple(adventurer_id, temple_b);
+        temple.enter_temple(character_id, temple_b);
     }
 
     // ═══════════════════════════════════════════════════════════════════════
@@ -240,19 +240,19 @@ mod tests {
         starknet::testing::set_contract_address(caller);
 
         let (mut world, token, _combat, temple) = setup_world();
-        let adventurer_id = mint_fighter(token);
+        let character_id = mint_fighter(token);
         let dungeon_id = temple.mint_temple(1_u8);
 
-        temple.enter_temple(adventurer_id, dungeon_id);
-        world.write_model_test(@AdventurerDungeonProgress { adventurer_id, dungeon_id, chambers_explored: 5, xp_earned: 200 });
-        temple.exit_temple(adventurer_id);
-        temple.enter_temple(adventurer_id, dungeon_id);
+        temple.enter_temple(character_id, dungeon_id);
+        world.write_model_test(@CharacterDungeonProgress { character_id, dungeon_id, chambers_explored: 5, xp_earned: 200 });
+        temple.exit_temple(character_id);
+        temple.enter_temple(character_id, dungeon_id);
 
-        let progress: AdventurerDungeonProgress = world.read_model((adventurer_id, dungeon_id));
+        let progress: CharacterDungeonProgress = world.read_model((character_id, dungeon_id));
         assert(progress.chambers_explored == 5, 'chambers preserved');
         assert(progress.xp_earned == 200, 'xp preserved');
 
-        let pos: AdventurerPosition = world.read_model(adventurer_id);
+        let pos: CharacterPosition = world.read_model(character_id);
         assert(pos.chamber_id == 1, 'at entrance on re-entry');
     }
 

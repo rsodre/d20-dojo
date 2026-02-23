@@ -3,7 +3,7 @@
 
 use starknet::{ContractAddress};
 use dojo::world::IWorldDispatcher;
-use d20::d20::types::adventurer_class::AdventurerClass;
+use d20::d20::types::character_class::CharacterClass;
 
 #[starknet::interface]
 pub trait IExplorerToken<TState> {
@@ -53,8 +53,8 @@ pub trait IExplorerToken<TState> {
     //-----------------------------------
 
     // IExplorerTokenPublic
-    fn mint_explorer(ref self: TState, adventurer_class: AdventurerClass) -> u128;
-    fn rest(ref self: TState, adventurer_id: u128);
+    fn mint_explorer(ref self: TState, character_class: CharacterClass) -> u128;
+    fn rest(ref self: TState, character_id: u128);
 }
 
 #[starknet::interface]
@@ -72,11 +72,11 @@ pub trait IExplorerTokenPublic<TState> {
     /// This call MUST be preceded by `request_random` on the VRF contract (multicall).
     ///
     /// Returns the new explorer's token ID (u128).
-    fn mint_explorer(ref self: TState, adventurer_class: AdventurerClass) -> u128;
+    fn mint_explorer(ref self: TState, character_class: CharacterClass) -> u128;
 
     /// Restore HP to max, reset spell slots to class/level values,
     /// and reset `second_wind_used` / `action_surge_used`.
-    fn rest(ref self: TState, adventurer_id: u128);
+    fn rest(ref self: TState, character_id: u128);
 }
 
 // ── Contract ────────────────────────────────────────────────────────────────
@@ -106,7 +106,7 @@ pub mod explorer_token {
     impl CharacterInternalImpl = CharacterComponent::InternalImpl<ContractState>;
 
     // Game types and models
-    use d20::d20::types::adventurer_class::AdventurerClass;
+    use d20::d20::types::character_class::CharacterClass;
     use d20::d20::types::attributes::CharacterAttributes;
     use d20::models::config::Config;
     use d20::utils::dns::{DnsTrait};
@@ -177,8 +177,8 @@ pub mod explorer_token {
 
     #[abi(embed_v0)]
     impl ExplorerTokenPublicImpl of super::IExplorerTokenPublic<ContractState> {
-        fn mint_explorer(ref self: ContractState, adventurer_class: AdventurerClass) -> u128 {
-            assert(adventurer_class != AdventurerClass::None, 'must choose a class');
+        fn mint_explorer(ref self: ContractState, character_class: CharacterClass) -> u128 {
+            assert(character_class != CharacterClass::None, 'must choose a class');
 
             let mut world = self.world_default();
             let caller = get_caller_address();
@@ -190,21 +190,21 @@ pub mod explorer_token {
             let token_id: u256 = self.erc721_combo._mint_next(caller);
 
             // Dojo models use u128 keys — high part is always 0 for counter-minted IDs
-            let adventurer_id: u128 = token_id.low;
+            let character_id: u128 = token_id.low;
 
-            self.character.generate_character(ref world, adventurer_id, adventurer_class, caller, ref seeder);
+            self.character.generate_character(ref world, character_id, character_class, caller, ref seeder);
 
-            adventurer_id
+            character_id
         }
 
-        fn rest(ref self: ContractState, adventurer_id: u128) {
+        fn rest(ref self: ContractState, character_id: u128) {
             let mut world = self.world_default();
 
             // Verify ownership
             let explorer_token = world.explorer_token_dispatcher();
-            assert(explorer_token.owner_of(adventurer_id.into()) == get_caller_address(), 'not owner');
+            assert(explorer_token.owner_of(character_id.into()) == get_caller_address(), 'not owner');
 
-            self.character.rest(ref world, adventurer_id);
+            self.character.rest(ref world, character_id);
         }
     }
 
@@ -235,11 +235,11 @@ pub mod explorer_token {
         ) -> Option<TokenMetadata> {
             let s = self.get_contract();
             let mut world = s.world_default();
-            let adventurer_id: u128 = token_id.low;
+            let character_id: u128 = token_id.low;
 
-            let char_attrs: CharacterAttributes = s.character.get_attributes(ref world, adventurer_id);
+            let char_attrs: CharacterAttributes = s.character.get_attributes(ref world, character_id);
             let attributes: Array<Attribute> = array![
-                Attribute { key: "Class", value: char_attrs.adventurer_class.clone() },
+                Attribute { key: "Class", value: char_attrs.character_class.clone() },
                 Attribute { key: "Level", value: format!("{}", char_attrs.level) },
                 Attribute { key: "HP", value: format!("{}/{}", char_attrs.current_hp, char_attrs.max_hp) },
                 Attribute { key: "AC", value: format!("{}", char_attrs.armor_class) },
@@ -254,7 +254,7 @@ pub mod explorer_token {
 
             let metadata = TokenMetadata {
                 token_id,
-                name: format!("{} #{}", char_attrs.adventurer_class, token_id.low),
+                name: format!("{} #{}", char_attrs.character_class, token_id.low),
                 description: EXPLORER_TOKEN_DESCRIPTION(),
                 image: Option::None,
                 image_data: Option::None,

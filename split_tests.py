@@ -149,17 +149,17 @@ mod tests {
     use dojo::model::{ModelStorage, ModelStorageTest};
     use dojo::world::{WorldStorageTrait};
 
-    use d20::d20::models::adventurer::{
-        AdventurerStats, AdventurerHealth, AdventurerCombat, AdventurerInventory,
-        AdventurerPosition, AdventurerSkills
+    use d20::d20::models::character::{
+        CharacterStats, CharacterHealth, CharacterCombat, CharacterInventory,
+        CharacterPosition, CharacterSkills
     };
     use d20::d20::models::dungeon::{
         DungeonState, Chamber, ChamberExit, MonsterInstance,
-        FallenAdventurer, ChamberFallenCount, AdventurerDungeonProgress
+        FallenCharacter, ChamberFallenCount, CharacterDungeonProgress
     };
     use d20::d20::types::index::{ChamberType};
     use d20::d20::types::items::{WeaponType, ArmorType};
-    use d20::d20::types::adventurer_class::AdventurerClass;
+    use d20::d20::types::character_class::CharacterClass;
     use d20::d20::models::monster::MonsterType;
     use d20::tests::tester::{
         setup_world, mint_fighter, mint_rogue, mint_wizard, assert_explorer_dead,

@@ -11,8 +11,8 @@ export interface TempleModels {
  * Reads DungeonState from the DojoStore for the given temple token ID.
  * Requires useGameModels() to be running somewhere in the component tree.
  */
-export function useTempleModels(templeId: bigint): TempleModels | undefined {
-  const entityId = useEntityId(templeId);
+export function useTempleModels(dungeonId: bigint): TempleModels | undefined {
+  const entityId = useEntityId(dungeonId);
   const { model } = useDojoConfig();
   
   const state = useModel(entityId, model("DungeonState")) as DungeonState | undefined;

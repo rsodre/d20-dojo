@@ -5,7 +5,7 @@ import { useMutation } from "@tanstack/react-query";
 import { CallData } from "starknet";
 import { useAccount } from "@starknet-react/core";
 import { useExplorerModels } from "@/hooks/use-explorer-state";
-import { useChambers, useChamberExits, useFallenAdventurers, useMonsterInstances } from "@/hooks/use-chambers";
+import { useChambers, useChamberExits, useFallenCharacters, useMonsterInstances } from "@/hooks/use-chambers";
 import { useTempleModels } from "@/hooks/use-temple-state";
 import { useDojoConfig } from "@/contexts/dojo-config-provider";
 import { useVrfCall } from "@/hooks/use-vrf";
@@ -87,10 +87,10 @@ function useExecuteAction() {
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
-function ExplorerSheet({ explorerId }: { explorerId: bigint }) {
-  const { stats, health, combat, inventory, skills } = useExplorerModels(explorerId);
+function ExplorerSheet({ characterId }: { characterId: bigint }) {
+  const { stats, health, combat, inventory, skills } = useExplorerModels(characterId);
 
-  const explorerClass = enumVariant(stats?.adventurer_class);
+  const explorerClass = enumVariant(stats?.character_class);
   const emoji = CLASS_EMOJI[explorerClass] ?? "⚔️";
   const level = stats ? Number(stats.level) : "—";
   const xp = stats ? Number(stats.xp) : "—";
@@ -102,7 +102,7 @@ function ExplorerSheet({ explorerId }: { explorerId: bigint }) {
     <Card>
       <Flex direction="column" gap="3">
         <Heading size="3">
-          {emoji} {explorerClass} #{explorerId.toString()}
+          {emoji} {explorerClass} #{characterId.toString()}
         </Heading>
 
         {/* Core stats */}
@@ -188,16 +188,16 @@ function ExplorerSheet({ explorerId }: { explorerId: bigint }) {
 }
 
 function ChamberInfo({
-  templeId,
+  dungeonId,
   chamberId,
 }: {
-  templeId: bigint;
+  dungeonId: bigint;
   chamberId: bigint;
 }) {
-  const chambers = useChambers(templeId);
-  const monsters = useMonsterInstances(templeId);
-  const exits = useChamberExits(templeId, chamberId);
-  const fallen = useFallenAdventurers(templeId, chamberId);
+  const chambers = useChambers(dungeonId);
+  const monsters = useMonsterInstances(dungeonId);
+  const exits = useChamberExits(dungeonId, chamberId);
+  const fallen = useFallenCharacters(dungeonId, chamberId);
 
   const chamber = chambers.find((c) => BigInt(c.chamber_id) === chamberId);
   const monster = monsters.find((m) => BigInt(m.chamber_id) === chamberId);
@@ -353,18 +353,18 @@ function ActionPanel({
 // ─── Main page ────────────────────────────────────────────────────────────────
 
 export function PlayView() {
-  const { templeId, explorerId } = useParams<{ templeId: string; explorerId: string }>();
-  const templeIdNum = templeId ? BigInt(templeId) : undefined;
-  const explorerIdNum = explorerId ? BigInt(explorerId) : undefined;
+  const { dungeonId, characterId } = useParams<{ dungeonId: string; characterId: string }>();
+  const dungeonIdNum = dungeonId ? BigInt(dungeonId) : undefined;
+  const characterIdNum = characterId ? BigInt(characterId) : undefined;
 
   const { profileConfig } = useDojoConfig();
-  const { stats, health, combat, inventory, position } = useExplorerModels(explorerIdNum ?? 0n);
-  const temple = useTempleModels(templeIdNum ?? 0n);
-  const exits = useChamberExits(templeIdNum ?? 0n, position ? BigInt(position.chamber_id) : 0n);
-  const fallen = useFallenAdventurers(templeIdNum ?? 0n, position ? BigInt(position.chamber_id) : 0n);
-  const chambers = useChambers(templeIdNum ?? 0n);
+  const { stats, health, combat, inventory, position } = useExplorerModels(characterIdNum ?? 0n);
+  const temple = useTempleModels(dungeonIdNum ?? 0n);
+  const exits = useChamberExits(dungeonIdNum ?? 0n, position ? BigInt(position.chamber_id) : 0n);
+  const fallen = useFallenCharacters(dungeonIdNum ?? 0n, position ? BigInt(position.chamber_id) : 0n);
+  const chambers = useChambers(dungeonIdNum ?? 0n);
 
-  if (!templeIdNum || !explorerIdNum) {
+  if (!dungeonIdNum || !characterIdNum) {
     return (
       <Flex direction="column" gap="4">
         <Text color="red">Invalid URL parameters.</Text>
@@ -373,19 +373,19 @@ export function PlayView() {
     );
   }
 
-  const explorerClass = enumVariant(stats?.adventurer_class);
+  const explorerClass = enumVariant(stats?.character_class);
   const isDead = health?.is_dead ?? false;
   const inCombat = position?.in_combat ?? false;
   const chamberId = position ? BigInt(position.chamber_id) : 0n;
   const chamber = chambers.find((c) => BigInt(c.chamber_id) === chamberId);
 
   const ctx: GameActionContext = {
-    explorerId: explorerIdNum,
+    characterId: characterIdNum,
     explorerClass,
     level: stats ? Number(stats.level) : 1,
     isDead,
     inCombat,
-    templeId: templeIdNum,
+    dungeonId: dungeonIdNum,
     chamberId,
     potions: inventory ? Number(inventory.potions) : 0,
     secondWindUsed: combat?.second_wind_used ?? false,
@@ -415,8 +415,8 @@ export function PlayView() {
         <Link to="/">
           <Button variant="ghost" size="2">← Lobby</Button>
         </Link>
-        <Link to={`/temple/${templeId}`}>
-          <Button variant="ghost" size="2">🏛️ Temple #{templeId}</Button>
+        <Link to={`/temple/${dungeonId}`}>
+          <Button variant="ghost" size="2">🏛️ Temple #{dungeonId}</Button>
         </Link>
         {difficultyLabel && (
           <Badge color="amber" variant="soft">{difficultyLabel}</Badge>
@@ -428,11 +428,11 @@ export function PlayView() {
       {/* Two-column layout: explorer sheet + chamber info */}
       <Flex gap="4" direction={{ initial: "column", sm: "row" }}>
         <div style={{ flex: 1 }}>
-          <ExplorerSheet explorerId={explorerIdNum} />
+          <ExplorerSheet characterId={characterIdNum} />
         </div>
         <div style={{ flex: 1 }}>
           {chamberId > 0n ? (
-            <ChamberInfo templeId={templeIdNum} chamberId={chamberId} />
+            <ChamberInfo dungeonId={dungeonIdNum} chamberId={chamberId} />
           ) : (
             <Card>
               <Text size="2" color="gray">Not in a chamber.</Text>

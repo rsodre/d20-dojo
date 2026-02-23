@@ -17,7 +17,7 @@ export const useCombatCalls = () => {
 
   const attack = useMutation({
     mutationFn: (account?.address && requestRandomCall) ?
-      (explorerId: bigint) => {
+      (characterId: bigint) => {
         const entrypoint = "attack";
         const calls: Call[] = [
           // VRF multicall: request_random must be first
@@ -25,7 +25,7 @@ export const useCombatCalls = () => {
           {
             contractAddress,
             entrypoint,
-            calldata: callData.compile(entrypoint, [explorerId]),
+            calldata: callData.compile(entrypoint, [characterId]),
           },
         ];
         return account.execute(calls);
@@ -40,7 +40,7 @@ export const useCombatCalls = () => {
 
   const cast_spell = useMutation({
     mutationFn: (account?.address && requestRandomCall) ?
-      ({ explorerId, spellId }: { explorerId: bigint; spellId: string }) => {
+      ({ characterId, spellId }: { characterId: bigint; spellId: string }) => {
         const spellIdEnum = new CairoCustomEnum({ [spellId]: {} });
         const entrypoint = "cast_spell";
         const calls: Call[] = [
@@ -49,7 +49,7 @@ export const useCombatCalls = () => {
           {
             contractAddress,
             entrypoint,
-            calldata: callData.compile(entrypoint, [explorerId, spellIdEnum]),
+            calldata: callData.compile(entrypoint, [characterId, spellIdEnum]),
           },
         ];
         return account.execute(calls);
@@ -64,7 +64,7 @@ export const useCombatCalls = () => {
 
   const use_item = useMutation({
     mutationFn: (account?.address && requestRandomCall) ?
-      ({ explorerId, itemType }: { explorerId: bigint; itemType: string }) => {
+      ({ characterId, itemType }: { characterId: bigint; itemType: string }) => {
         const itemTypeEnum = new CairoCustomEnum({ [itemType]: {} });
         const entrypoint = "use_item";
         const calls: Call[] = [
@@ -73,7 +73,7 @@ export const useCombatCalls = () => {
           {
             contractAddress,
             entrypoint,
-            calldata: callData.compile(entrypoint, [explorerId, itemTypeEnum]),
+            calldata: callData.compile(entrypoint, [characterId, itemTypeEnum]),
           },
         ];
         return account.execute(calls);
@@ -88,7 +88,7 @@ export const useCombatCalls = () => {
 
   const flee = useMutation({
     mutationFn: (account?.address && requestRandomCall) ?
-      (explorerId: bigint) => {
+      (characterId: bigint) => {
         const entrypoint = "flee";
         const calls: Call[] = [
           // VRF multicall: request_random must be first
@@ -96,7 +96,7 @@ export const useCombatCalls = () => {
           {
             contractAddress,
             entrypoint,
-            calldata: callData.compile(entrypoint, [explorerId]),
+            calldata: callData.compile(entrypoint, [characterId]),
           },
         ];
         return account.execute(calls);
@@ -111,7 +111,7 @@ export const useCombatCalls = () => {
 
   const second_wind = useMutation({
     mutationFn: (account?.address && requestRandomCall) ?
-      (explorerId: bigint) => {
+      (characterId: bigint) => {
         const entrypoint = "second_wind";
         const calls: Call[] = [
           // VRF multicall: request_random must be first
@@ -119,7 +119,7 @@ export const useCombatCalls = () => {
           {
             contractAddress,
             entrypoint,
-            calldata: callData.compile(entrypoint, [explorerId]),
+            calldata: callData.compile(entrypoint, [characterId]),
           },
         ];
         return account.execute(calls);
@@ -134,12 +134,12 @@ export const useCombatCalls = () => {
 
   const cunning_action = useMutation({
     mutationFn: account?.address ?
-      (explorerId: bigint) => {
+      (characterId: bigint) => {
         const entrypoint = "cunning_action";
         const calls: Call[] = [{
           contractAddress,
           entrypoint,
-          calldata: callData.compile(entrypoint, [explorerId]),
+          calldata: callData.compile(entrypoint, [characterId]),
         }];
         return account.execute(calls);
       } : undefined,

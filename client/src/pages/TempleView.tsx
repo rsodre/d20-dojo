@@ -116,8 +116,8 @@ function ChamberCard({
   );
 }
 
-function TempleStats({ templeId }: { templeId: bigint }) {
-  const temple = useTempleModels(templeId);
+function TempleStats({ dungeonId }: { dungeonId: bigint }) {
+  const temple = useTempleModels(dungeonId);
   const state = temple?.state;
 
   if (!state) {
@@ -152,12 +152,12 @@ function TempleStats({ templeId }: { templeId: bigint }) {
   );
 }
 
-function ExplorerInTemple({ explorerId }: { explorerId: bigint }) {
-  const { stats, health, combat, position } = useExplorerModels(explorerId);
+function ExplorerInTemple({ characterId }: { characterId: bigint }) {
+  const { stats, health, combat, position } = useExplorerModels(characterId);
 
   if (!position || BigInt(position.dungeon_id) === 0n) return null;
 
-  const className = enumVariant(stats?.adventurer_class);
+  const className = enumVariant(stats?.character_class);
   const emoji = CLASS_EMOJI[className] ?? "⚔️";
   const level = stats ? Number(stats.level) : undefined;
   const currentHp = health ? Number(health.current_hp) : undefined;
@@ -173,7 +173,7 @@ function ExplorerInTemple({ explorerId }: { explorerId: bigint }) {
         <Flex align="center" gap="2">
           <Text size="2">{emoji}</Text>
           <Text size="2" weight="bold">
-            {className !== "None" ? className : "Explorer"} #{explorerId.toString()}
+            {className !== "None" ? className : "Explorer"} #{characterId.toString()}
           </Text>
           {chamberId !== undefined && chamberId > 0 && (
             <Badge color="green" size="1" variant="soft">Chamber #{chamberId}</Badge>
@@ -199,28 +199,28 @@ function ExplorerInTemple({ explorerId }: { explorerId: bigint }) {
 
 /** Renders only if the explorer is in this temple */
 function ExplorerInTempleGate({
-  explorerId,
-  templeId,
+  characterId,
+  dungeonId,
 }: {
-  explorerId: bigint;
-  templeId: bigint;
+  characterId: bigint;
+  dungeonId: bigint;
 }) {
-  const { position } = useExplorerModels(explorerId);
-  if (!position || BigInt(position.dungeon_id) !== templeId) return null;
-  return <ExplorerInTemple explorerId={explorerId} />;
+  const { position } = useExplorerModels(characterId);
+  if (!position || BigInt(position.dungeon_id) !== dungeonId) return null;
+  return <ExplorerInTemple characterId={characterId} />;
 }
 
 // ─── main view ───────────────────────────────────────────────────────────────
 
 export function TempleView() {
-  const { templeId } = useParams<{ templeId: string }>();
-  const templeIdNum = templeId ? BigInt(templeId) : undefined;
+  const { dungeonId } = useParams<{ dungeonId: string }>();
+  const dungeonIdNum = dungeonId ? BigInt(dungeonId) : undefined;
 
   const { explorers } = usePlayerTokensContext();
 
-  const temple = useTempleModels(templeIdNum ?? 0n);
-  const chambers = useChambers(templeIdNum ?? 0n);
-  const monsters = useMonsterInstances(templeIdNum ?? 0n);
+  const temple = useTempleModels(dungeonIdNum ?? 0n);
+  const chambers = useChambers(dungeonIdNum ?? 0n);
+  const monsters = useMonsterInstances(dungeonIdNum ?? 0n);
   const bossChamber = temple?.state ? Number(temple.state.boss_chamber_id) : 0;
 
   // Build monster lookup: chamberId → MonsterInstance
@@ -229,7 +229,7 @@ export function TempleView() {
     monsterByChamberId.set(Number(m.chamber_id), m);
   }
 
-  if (!templeIdNum) {
+  if (!dungeonIdNum) {
     return (
       <Flex direction="column" gap="4">
         <Text color="red">Invalid temple ID.</Text>
@@ -245,14 +245,14 @@ export function TempleView() {
         <Link to="/">
           <Button variant="ghost" size="2">← Back</Button>
         </Link>
-        <Heading size="5">🏛️ Temple #{templeId}</Heading>
+        <Heading size="5">🏛️ Temple #{dungeonId}</Heading>
       </Flex>
 
       {/* Temple state */}
       <Card>
         <Flex direction="column" gap="3">
           <Heading size="3">Temple State</Heading>
-          <TempleStats templeId={templeIdNum} />
+          <TempleStats dungeonId={dungeonIdNum} />
         </Flex>
       </Card>
 
@@ -296,8 +296,8 @@ export function TempleView() {
               {explorers.map((token) => (
                 <ExplorerInTempleGate
                   key={token.tokenId}
-                  explorerId={token.tokenIdNum}
-                  templeId={templeIdNum}
+                  characterId={token.tokenIdNum}
+                  dungeonId={dungeonIdNum}
                 />
               ))}
             </Grid>

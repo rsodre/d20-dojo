@@ -8,7 +8,7 @@ export interface Config {
 	vrf_address: string;
 }
 
-// Type definition for `d20::d20::models::adventurer::AbilityScore` struct
+// Type definition for `d20::d20::models::character::AbilityScore` struct
 export interface AbilityScore {
 	strength: BigNumberish;
 	dexterity: BigNumberish;
@@ -18,9 +18,9 @@ export interface AbilityScore {
 	charisma: BigNumberish;
 }
 
-// Type definition for `d20::d20::models::adventurer::AdventurerCombat` struct
-export interface AdventurerCombat {
-	adventurer_id: BigNumberish;
+// Type definition for `d20::d20::models::character::CharacterCombat` struct
+export interface CharacterCombat {
+	character_id: BigNumberish;
 	armor_class: BigNumberish;
 	spell_slots_1: BigNumberish;
 	spell_slots_2: BigNumberish;
@@ -29,17 +29,17 @@ export interface AdventurerCombat {
 	action_surge_used: boolean;
 }
 
-// Type definition for `d20::d20::models::adventurer::AdventurerHealth` struct
-export interface AdventurerHealth {
-	adventurer_id: BigNumberish;
+// Type definition for `d20::d20::models::character::CharacterHealth` struct
+export interface CharacterHealth {
+	character_id: BigNumberish;
 	current_hp: BigNumberish;
 	max_hp: BigNumberish;
 	is_dead: boolean;
 }
 
-// Type definition for `d20::d20::models::adventurer::AdventurerInventory` struct
-export interface AdventurerInventory {
-	adventurer_id: BigNumberish;
+// Type definition for `d20::d20::models::character::CharacterInventory` struct
+export interface CharacterInventory {
+	character_id: BigNumberish;
 	primary_weapon: WeaponTypeEnum;
 	secondary_weapon: WeaponTypeEnum;
 	armor: ArmorTypeEnum;
@@ -48,34 +48,34 @@ export interface AdventurerInventory {
 	potions: BigNumberish;
 }
 
-// Type definition for `d20::d20::models::adventurer::AdventurerPosition` struct
-export interface AdventurerPosition {
-	adventurer_id: BigNumberish;
+// Type definition for `d20::d20::models::character::CharacterPosition` struct
+export interface CharacterPosition {
+	character_id: BigNumberish;
 	dungeon_id: BigNumberish;
 	chamber_id: BigNumberish;
 	in_combat: boolean;
 	combat_monster_id: BigNumberish;
 }
 
-// Type definition for `d20::d20::models::adventurer::AdventurerSkills` struct
-export interface AdventurerSkills {
-	adventurer_id: BigNumberish;
+// Type definition for `d20::d20::models::character::CharacterSkills` struct
+export interface CharacterSkills {
+	character_id: BigNumberish;
 	skills: SkillsSet;
 	expertise_1: SkillEnum;
 	expertise_2: SkillEnum;
 }
 
-// Type definition for `d20::d20::models::adventurer::AdventurerStats` struct
-export interface AdventurerStats {
-	adventurer_id: BigNumberish;
+// Type definition for `d20::d20::models::character::CharacterStats` struct
+export interface CharacterStats {
+	character_id: BigNumberish;
 	abilities: AbilityScore;
 	level: BigNumberish;
 	xp: BigNumberish;
-	adventurer_class: AdventurerClassEnum;
+	character_class: CharacterClassEnum;
 	dungeons_conquered: BigNumberish;
 }
 
-// Type definition for `d20::d20::models::adventurer::SkillsSet` struct
+// Type definition for `d20::d20::models::character::SkillsSet` struct
 export interface SkillsSet {
 	athletics: boolean;
 	stealth: boolean;
@@ -114,20 +114,20 @@ export interface ChamberFallenCount {
 	count: BigNumberish;
 }
 
-// Type definition for `d20::d20::models::dungeon::AdventurerDungeonProgress` struct
-export interface AdventurerDungeonProgress {
-	adventurer_id: BigNumberish;
+// Type definition for `d20::d20::models::dungeon::CharacterDungeonProgress` struct
+export interface CharacterDungeonProgress {
+	character_id: BigNumberish;
 	dungeon_id: BigNumberish;
 	chambers_explored: BigNumberish;
 	xp_earned: BigNumberish;
 }
 
-// Type definition for `d20::d20::models::dungeon::FallenAdventurer` struct
-export interface FallenAdventurer {
+// Type definition for `d20::d20::models::dungeon::FallenCharacter` struct
+export interface FallenCharacter {
 	dungeon_id: BigNumberish;
 	chamber_id: BigNumberish;
 	fallen_index: BigNumberish;
-	adventurer_id: BigNumberish;
+	character_id: BigNumberish;
 	dropped_weapon: WeaponTypeEnum;
 	dropped_armor: ArmorTypeEnum;
 	dropped_gold: BigNumberish;
@@ -159,7 +159,7 @@ export interface DungeonState {
 // Type definition for `d20::d20::models::events::BossDefeated` struct
 export interface BossDefeated {
 	dungeon_id: BigNumberish;
-	adventurer_id: BigNumberish;
+	character_id: BigNumberish;
 	monster_type: MonsterTypeEnum;
 }
 
@@ -174,7 +174,7 @@ export interface ChamberRevealed {
 
 // Type definition for `d20::d20::models::events::CombatResult` struct
 export interface CombatResult {
-	adventurer_id: BigNumberish;
+	character_id: BigNumberish;
 	action: CombatActionEnum;
 	roll: BigNumberish;
 	damage_dealt: BigNumberish;
@@ -182,24 +182,24 @@ export interface CombatResult {
 	monster_killed: boolean;
 }
 
-// Type definition for `d20::d20::models::events::AdventurerDied` struct
-export interface AdventurerDied {
-	adventurer_id: BigNumberish;
+// Type definition for `d20::d20::models::events::CharacterDied` struct
+export interface CharacterDied {
+	character_id: BigNumberish;
 	dungeon_id: BigNumberish;
 	chamber_id: BigNumberish;
 	killed_by: MonsterTypeEnum;
 }
 
-// Type definition for `d20::d20::models::events::AdventurerMinted` struct
-export interface AdventurerMinted {
-	adventurer_id: BigNumberish;
-	adventurer_class: AdventurerClassEnum;
+// Type definition for `d20::d20::models::events::CharacterMinted` struct
+export interface CharacterMinted {
+	character_id: BigNumberish;
+	character_class: CharacterClassEnum;
 	player: string;
 }
 
 // Type definition for `d20::d20::models::events::LevelUp` struct
 export interface LevelUp {
-	adventurer_id: BigNumberish;
+	character_id: BigNumberish;
 	new_level: BigNumberish;
 }
 
@@ -235,15 +235,15 @@ export interface Transfer {
 	token_id: BigNumberish;
 }
 
-// Type definition for `d20::d20::types::adventurer_class::AdventurerClass` enum
+// Type definition for `d20::d20::types::character_class::CharacterClass` enum
 export const explorerClass = [
 	'None',
 	'Fighter',
 	'Rogue',
 	'Wizard',
 ] as const;
-export type AdventurerClass = { [key in typeof explorerClass[number]]: string };
-export type AdventurerClassEnum = CairoCustomEnum;
+export type CharacterClass = { [key in typeof explorerClass[number]]: string };
+export type CharacterClassEnum = CairoCustomEnum;
 
 // Type definition for `d20::types::index::ChamberType` enum
 export const chamberType = [
@@ -348,25 +348,25 @@ export interface SchemaType extends ISchemaType {
 	d20: {
 		Config: Config,
 		AbilityScore: AbilityScore,
-		AdventurerCombat: AdventurerCombat,
-		AdventurerHealth: AdventurerHealth,
-		AdventurerInventory: AdventurerInventory,
-		AdventurerPosition: AdventurerPosition,
-		AdventurerSkills: AdventurerSkills,
-		AdventurerStats: AdventurerStats,
+		CharacterCombat: CharacterCombat,
+		CharacterHealth: CharacterHealth,
+		CharacterInventory: CharacterInventory,
+		CharacterPosition: CharacterPosition,
+		CharacterSkills: CharacterSkills,
+		CharacterStats: CharacterStats,
 		SkillsSet: SkillsSet,
 		Chamber: Chamber,
 		ChamberExit: ChamberExit,
 		ChamberFallenCount: ChamberFallenCount,
-		AdventurerDungeonProgress: AdventurerDungeonProgress,
-		FallenAdventurer: FallenAdventurer,
+		CharacterDungeonProgress: CharacterDungeonProgress,
+		FallenCharacter: FallenCharacter,
 		MonsterInstance: MonsterInstance,
 		DungeonState: DungeonState,
 		BossDefeated: BossDefeated,
 		ChamberRevealed: ChamberRevealed,
 		CombatResult: CombatResult,
-		AdventurerDied: AdventurerDied,
-		AdventurerMinted: AdventurerMinted,
+		CharacterDied: CharacterDied,
+		CharacterMinted: CharacterMinted,
 		LevelUp: LevelUp,
 		BatchMetadataUpdate: BatchMetadataUpdate,
 		MetadataUpdate: MetadataUpdate,
@@ -389,8 +389,8 @@ export const schema: SchemaType = {
 			wisdom: 0,
 			charisma: 0,
 		},
-		AdventurerCombat: {
-			adventurer_id: 0,
+		CharacterCombat: {
+			character_id: 0,
 			armor_class: 0,
 			spell_slots_1: 0,
 			spell_slots_2: 0,
@@ -398,14 +398,14 @@ export const schema: SchemaType = {
 			second_wind_used: false,
 			action_surge_used: false,
 		},
-		AdventurerHealth: {
-			adventurer_id: 0,
+		CharacterHealth: {
+			character_id: 0,
 			current_hp: 0,
 			max_hp: 0,
 			is_dead: false,
 		},
-		AdventurerInventory: {
-			adventurer_id: 0,
+		CharacterInventory: {
+			character_id: 0,
 		primary_weapon: new CairoCustomEnum({ 
 					None: "",
 				Longsword: undefined,
@@ -428,15 +428,15 @@ export const schema: SchemaType = {
 			gold: 0,
 			potions: 0,
 		},
-		AdventurerPosition: {
-			adventurer_id: 0,
+		CharacterPosition: {
+			character_id: 0,
 			dungeon_id: 0,
 			chamber_id: 0,
 			in_combat: false,
 			combat_monster_id: 0,
 		},
-		AdventurerSkills: {
-			adventurer_id: 0,
+		CharacterSkills: {
+			character_id: 0,
 		skills: { athletics: false, stealth: false, perception: false, persuasion: false, arcana: false, acrobatics: false, },
 		expertise_1: new CairoCustomEnum({ 
 					None: "",
@@ -455,12 +455,12 @@ export const schema: SchemaType = {
 				Arcana: undefined,
 				Acrobatics: undefined, }),
 		},
-		AdventurerStats: {
-			adventurer_id: 0,
+		CharacterStats: {
+			character_id: 0,
 		abilities: { strength: 0, dexterity: 0, constitution: 0, intelligence: 0, wisdom: 0, charisma: 0, },
 			level: 0,
 			xp: 0,
-		adventurer_class: new CairoCustomEnum({ 
+		character_class: new CairoCustomEnum({ 
 					None: "",
 				Fighter: undefined,
 				Rogue: undefined,
@@ -505,17 +505,17 @@ export const schema: SchemaType = {
 			chamber_id: 0,
 			count: 0,
 		},
-		AdventurerDungeonProgress: {
-			adventurer_id: 0,
+		CharacterDungeonProgress: {
+			character_id: 0,
 			dungeon_id: 0,
 			chambers_explored: 0,
 			xp_earned: 0,
 		},
-		FallenAdventurer: {
+		FallenCharacter: {
 			dungeon_id: 0,
 			chamber_id: 0,
 			fallen_index: 0,
-			adventurer_id: 0,
+			character_id: 0,
 		dropped_weapon: new CairoCustomEnum({ 
 					None: "",
 				Longsword: undefined,
@@ -558,7 +558,7 @@ export const schema: SchemaType = {
 		},
 		BossDefeated: {
 			dungeon_id: 0,
-			adventurer_id: 0,
+			character_id: 0,
 		monster_type: new CairoCustomEnum({ 
 					None: "",
 				PoisonousSnake: undefined,
@@ -584,7 +584,7 @@ export const schema: SchemaType = {
 			revealed_by: 0,
 		},
 		CombatResult: {
-			adventurer_id: 0,
+			character_id: 0,
 		action: new CairoCustomEnum({ 
 					None: "",
 				Attack: undefined,
@@ -599,8 +599,8 @@ export const schema: SchemaType = {
 			damage_taken: 0,
 			monster_killed: false,
 		},
-		AdventurerDied: {
-			adventurer_id: 0,
+		CharacterDied: {
+			character_id: 0,
 			dungeon_id: 0,
 			chamber_id: 0,
 		killed_by: new CairoCustomEnum({ 
@@ -613,9 +613,9 @@ export const schema: SchemaType = {
 				Mummy: undefined,
 				Wraith: undefined, }),
 		},
-		AdventurerMinted: {
-			adventurer_id: 0,
-		adventurer_class: new CairoCustomEnum({ 
+		CharacterMinted: {
+			character_id: 0,
+		character_class: new CairoCustomEnum({ 
 					None: "",
 				Fighter: undefined,
 				Rogue: undefined,
@@ -623,7 +623,7 @@ export const schema: SchemaType = {
 			player: "",
 		},
 		LevelUp: {
-			adventurer_id: 0,
+			character_id: 0,
 			new_level: 0,
 		},
 		BatchMetadataUpdate: {
@@ -653,21 +653,21 @@ export const schema: SchemaType = {
 export enum ModelsMapping {
 	Config = 'd20-Config',
 	AbilityScore = 'd20-AbilityScore',
-	AdventurerCombat = 'd20-AdventurerCombat',
-	AdventurerHealth = 'd20-AdventurerHealth',
-	AdventurerInventory = 'd20-AdventurerInventory',
-	AdventurerPosition = 'd20-AdventurerPosition',
-	AdventurerSkills = 'd20-AdventurerSkills',
-	AdventurerStats = 'd20-AdventurerStats',
+	CharacterCombat = 'd20-CharacterCombat',
+	CharacterHealth = 'd20-CharacterHealth',
+	CharacterInventory = 'd20-CharacterInventory',
+	CharacterPosition = 'd20-CharacterPosition',
+	CharacterSkills = 'd20-CharacterSkills',
+	CharacterStats = 'd20-CharacterStats',
 	SkillsSet = 'd20-SkillsSet',
 	Chamber = 'd20-Chamber',
 	ChamberExit = 'd20-ChamberExit',
 	ChamberFallenCount = 'd20-ChamberFallenCount',
-	AdventurerDungeonProgress = 'd20-AdventurerDungeonProgress',
-	FallenAdventurer = 'd20-FallenAdventurer',
+	CharacterDungeonProgress = 'd20-CharacterDungeonProgress',
+	FallenCharacter = 'd20-FallenCharacter',
 	MonsterInstance = 'd20-MonsterInstance',
 	DungeonState = 'd20-DungeonState',
-	AdventurerClass = 'd20-AdventurerClass',
+	CharacterClass = 'd20-CharacterClass',
 	ChamberType = 'd20-ChamberType',
 	Skill = 'd20-Skill',
 	ArmorType = 'd20-ArmorType',
@@ -676,8 +676,8 @@ export enum ModelsMapping {
 	BossDefeated = 'd20-BossDefeated',
 	ChamberRevealed = 'd20-ChamberRevealed',
 	CombatResult = 'd20-CombatResult',
-	AdventurerDied = 'd20-AdventurerDied',
-	AdventurerMinted = 'd20-AdventurerMinted',
+	CharacterDied = 'd20-CharacterDied',
+	CharacterMinted = 'd20-CharacterMinted',
 	LevelUp = 'd20-LevelUp',
 	CombatAction = 'd20-CombatAction',
 	ItemType = 'd20-ItemType',

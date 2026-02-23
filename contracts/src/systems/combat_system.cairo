@@ -5,30 +5,30 @@ use d20::d20::types::spells::SpellId;
 
 #[starknet::interface]
 pub trait ICombatSystem<TState> {
-    /// Attack the monster the adventurer is currently in combat with.
+    /// Attack the monster the character is currently in combat with.
     /// Rolls attack (d20 + STR/DEX mod + proficiency) vs monster AC.
     /// On hit, rolls weapon damage and deducts from MonsterInstance HP.
-    /// Monster counter-attacks after the adventurer's action (task 2.5).
+    /// Monster counter-attacks after the character's action (task 2.5).
     /// Emits CombatResult event.
-    fn attack(ref self: TState, adventurer_id: u128);
+    fn attack(ref self: TState, character_id: u128);
 
     /// Wizard: cast a spell (task 2.8).
     /// Handles cantrips (no slot cost) and leveled spells (consume slot).
     /// Monster counter-attacks after the spell unless it is killed.
-    fn cast_spell(ref self: TState, adventurer_id: u128, spell_id: SpellId);
+    fn cast_spell(ref self: TState, character_id: u128, spell_id: SpellId);
 
     /// Use a consumable item (task 2.8).
     /// HealthPotion: heals 2d4+2 HP.
-    fn use_item(ref self: TState, adventurer_id: u128, item_type: ItemType);
+    fn use_item(ref self: TState, character_id: u128, item_type: ItemType);
 
     /// Flee from combat (task 2.10 — stub).
-    fn flee(ref self: TState, adventurer_id: u128);
+    fn flee(ref self: TState, character_id: u128);
 
     /// Fighter: heal 1d10 + level once per rest (task 2.6).
-    fn second_wind(ref self: TState, adventurer_id: u128);
+    fn second_wind(ref self: TState, character_id: u128);
 
     /// Rogue: disengage from combat without triggering monster counter-attack (task 2.7).
-    fn cunning_action(ref self: TState, adventurer_id: u128);
+    fn cunning_action(ref self: TState, character_id: u128);
 }
 
 // ── Contract ────────────────────────────────────────────────────────────────
@@ -88,68 +88,68 @@ pub mod combat_system {
 
     #[abi(embed_v0)]
     impl CombatSystemImpl of ICombatSystem<ContractState> {
-        fn attack(ref self: ContractState, adventurer_id: u128) {
+        fn attack(ref self: ContractState, character_id: u128) {
             let mut world = self.world_default();
             let caller = get_caller_address();
             let mut seeder = SeederTrait::from_consume_vrf(world, caller);
             // Verify ownership
             let explorer_token = world.explorer_token_dispatcher();
-            assert(explorer_token.owner_of(adventurer_id.into()) == caller, 'not owner');
+            assert(explorer_token.owner_of(character_id.into()) == caller, 'not owner');
             // Execute action
-            self.combat.attack(ref world, adventurer_id, ref seeder);
+            self.combat.attack(ref world, character_id, ref seeder);
         }
 
-        fn cast_spell(ref self: ContractState, adventurer_id: u128, spell_id: SpellId) {
+        fn cast_spell(ref self: ContractState, character_id: u128, spell_id: SpellId) {
             let mut world = self.world_default();
             let caller = get_caller_address();
             let mut seeder = SeederTrait::from_consume_vrf(world, caller);
             // Verify ownership
             let explorer_token = world.explorer_token_dispatcher();
-            assert(explorer_token.owner_of(adventurer_id.into()) == caller, 'not owner');
+            assert(explorer_token.owner_of(character_id.into()) == caller, 'not owner');
             // Execute action
-            self.combat.cast_spell(ref world, adventurer_id, spell_id, ref seeder);
+            self.combat.cast_spell(ref world, character_id, spell_id, ref seeder);
         }
 
-        fn use_item(ref self: ContractState, adventurer_id: u128, item_type: ItemType) {
+        fn use_item(ref self: ContractState, character_id: u128, item_type: ItemType) {
             let mut world = self.world_default();
             let caller = get_caller_address();
             let mut seeder = SeederTrait::from_consume_vrf(world, caller);
             // Verify ownership
             let explorer_token = world.explorer_token_dispatcher();
-            assert(explorer_token.owner_of(adventurer_id.into()) == caller, 'not owner');
+            assert(explorer_token.owner_of(character_id.into()) == caller, 'not owner');
             // Execute action
-            self.combat.use_item(ref world, adventurer_id, item_type, ref seeder);
+            self.combat.use_item(ref world, character_id, item_type, ref seeder);
         }
 
-        fn flee(ref self: ContractState, adventurer_id: u128) {
+        fn flee(ref self: ContractState, character_id: u128) {
             let mut world = self.world_default();
             let caller = get_caller_address();
             let mut seeder = SeederTrait::from_consume_vrf(world, caller);
             // Verify ownership
             let explorer_token = world.explorer_token_dispatcher();
-            assert(explorer_token.owner_of(adventurer_id.into()) == caller, 'not owner');
+            assert(explorer_token.owner_of(character_id.into()) == caller, 'not owner');
             // Execute action
-            self.combat.flee(ref world, adventurer_id, ref seeder);
+            self.combat.flee(ref world, character_id, ref seeder);
         }
 
-        fn second_wind(ref self: ContractState, adventurer_id: u128) {
+        fn second_wind(ref self: ContractState, character_id: u128) {
             let mut world = self.world_default();
             let caller = get_caller_address();
             let mut seeder = SeederTrait::from_consume_vrf(world, caller);
             // Verify ownership
             let explorer_token = world.explorer_token_dispatcher();
-            assert(explorer_token.owner_of(adventurer_id.into()) == caller, 'not owner');
+            assert(explorer_token.owner_of(character_id.into()) == caller, 'not owner');
             // Execute action
-            self.combat.second_wind(ref world, adventurer_id, ref seeder);
+            self.combat.second_wind(ref world, character_id, ref seeder);
         }
 
-        fn cunning_action(ref self: ContractState, adventurer_id: u128) {
+        fn cunning_action(ref self: ContractState, character_id: u128) {
             let mut world = self.world_default();
             // Verify ownership
             let explorer_token = world.explorer_token_dispatcher();
-            assert(explorer_token.owner_of(adventurer_id.into()) == get_caller_address(), 'not owner');
+            assert(explorer_token.owner_of(character_id.into()) == get_caller_address(), 'not owner');
             // Execute action
-            self.combat.cunning_action(ref world, adventurer_id);
+            self.combat.cunning_action(ref world, character_id);
         }
     }
 }

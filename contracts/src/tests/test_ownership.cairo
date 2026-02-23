@@ -10,7 +10,7 @@ mod tests {
 
     use d20::systems::explorer_token::{IExplorerTokenDispatcher, IExplorerTokenDispatcherTrait};
     use d20::systems::temple_token::{ITempleTokenDispatcher, ITempleTokenDispatcherTrait};
-    use d20::d20::types::adventurer_class::AdventurerClass;
+    use d20::d20::types::character_class::CharacterClass;
     use d20::tests::mock_vrf::MockVrf;
 
     fn namespace_def() -> NamespaceDef {
@@ -18,13 +18,13 @@ mod tests {
             namespace: "d20_0_1",
             resources: array![
                 TestResource::Model(d20::models::config::m_Config::TEST_CLASS_HASH),
-                TestResource::Model(d20::d20::models::adventurer::m_AdventurerStats::TEST_CLASS_HASH),
-                TestResource::Model(d20::d20::models::adventurer::m_AdventurerHealth::TEST_CLASS_HASH),
-                TestResource::Model(d20::d20::models::adventurer::m_AdventurerCombat::TEST_CLASS_HASH),
-                TestResource::Model(d20::d20::models::adventurer::m_AdventurerInventory::TEST_CLASS_HASH),
-                TestResource::Model(d20::d20::models::adventurer::m_AdventurerPosition::TEST_CLASS_HASH),
-                TestResource::Model(d20::d20::models::adventurer::m_AdventurerSkills::TEST_CLASS_HASH),
-                TestResource::Event(d20::d20::models::events::e_AdventurerMinted::TEST_CLASS_HASH),
+                TestResource::Model(d20::d20::models::character::m_CharacterStats::TEST_CLASS_HASH),
+                TestResource::Model(d20::d20::models::character::m_CharacterHealth::TEST_CLASS_HASH),
+                TestResource::Model(d20::d20::models::character::m_CharacterCombat::TEST_CLASS_HASH),
+                TestResource::Model(d20::d20::models::character::m_CharacterInventory::TEST_CLASS_HASH),
+                TestResource::Model(d20::d20::models::character::m_CharacterPosition::TEST_CLASS_HASH),
+                TestResource::Model(d20::d20::models::character::m_CharacterSkills::TEST_CLASS_HASH),
+                TestResource::Event(d20::d20::models::events::e_CharacterMinted::TEST_CLASS_HASH),
                 TestResource::Contract(d20::systems::explorer_token::explorer_token::TEST_CLASS_HASH),
                 TestResource::Contract(d20::systems::temple_token::temple_token::TEST_CLASS_HASH),
             ].span(),
@@ -63,11 +63,11 @@ mod tests {
 
         // Mint explorer as owner
         starknet::testing::set_contract_address(owner);
-        let adventurer_id = explorer_token.mint_explorer(AdventurerClass::Fighter);
+        let character_id = explorer_token.mint_explorer(CharacterClass::Fighter);
 
         // Try to rest as non-owner
         starknet::testing::set_contract_address(non_owner);
-        explorer_token.rest(adventurer_id);
+        explorer_token.rest(character_id);
     }
 
     #[test]
@@ -89,10 +89,10 @@ mod tests {
 
         // Mint explorer as owner
         starknet::testing::set_contract_address(owner);
-        let adventurer_id = explorer_token.mint_explorer(AdventurerClass::Fighter);
+        let character_id = explorer_token.mint_explorer(CharacterClass::Fighter);
 
         // Try to enter temple as non-owner
         starknet::testing::set_contract_address(non_owner);
-        temple_token.enter_temple(adventurer_id, 1);
+        temple_token.enter_temple(character_id, 1);
     }
 }

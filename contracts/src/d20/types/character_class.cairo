@@ -1,8 +1,8 @@
 use d20::d20::types::items::{ArmorType, WeaponType};
-use d20::d20::models::adventurer::{Skill, SkillsSet};
+use d20::d20::models::character::{Skill, SkillsSet};
 
 #[derive(Serde, Copy, Drop, Introspect, PartialEq, Debug, DojoStore, Default)]
-pub enum AdventurerClass {
+pub enum CharacterClass {
     #[default]
     None,
     Fighter,
@@ -11,19 +11,19 @@ pub enum AdventurerClass {
 }
 
 #[generate_trait]
-pub impl AdventurerClassImpl of AdventurerClassTrait {
-    fn hit_die_max(self: AdventurerClass) -> u8 {
+pub impl CharacterClassImpl of CharacterClassTrait {
+    fn hit_die_max(self: CharacterClass) -> u8 {
         match self {
-            AdventurerClass::Fighter => 10,
-            AdventurerClass::Rogue => 8,
-            AdventurerClass::Wizard => 6,
-            AdventurerClass::None => 6,
+            CharacterClass::Fighter => 10,
+            CharacterClass::Rogue => 8,
+            CharacterClass::Wizard => 6,
+            CharacterClass::None => 6,
         }
     }
 
-    fn spell_slots_for(self: AdventurerClass, level: u8) -> (u8, u8, u8) {
+    fn spell_slots_for(self: CharacterClass, level: u8) -> (u8, u8, u8) {
         match self {
-            AdventurerClass::Wizard => {
+            CharacterClass::Wizard => {
                 if level >= 5 {
                     (4, 3, 2)
                 } else if level >= 4 {
@@ -41,22 +41,22 @@ pub impl AdventurerClassImpl of AdventurerClassTrait {
     }
 
     fn build_skills(
-        self: AdventurerClass, skill_choices: Span<Skill>
+        self: CharacterClass, skill_choices: Span<Skill>
     ) -> SkillsSet {
         let mut result: SkillsSet = Default::default();
 
         match self {
-            AdventurerClass::Fighter => {
+            CharacterClass::Fighter => {
                 result.athletics = true;
             },
-            AdventurerClass::Rogue => {
+            CharacterClass::Rogue => {
                 result.stealth = true;
                 result.acrobatics = true;
             },
-            AdventurerClass::Wizard => {
+            CharacterClass::Wizard => {
                 result.arcana = true;
             },
-            AdventurerClass::None => {},
+            CharacterClass::None => {},
         }
 
         let mut i: u32 = 0;
@@ -89,16 +89,16 @@ pub impl AdventurerClassImpl of AdventurerClassTrait {
         result
     }
 
-    fn validate_skill_choices(self: AdventurerClass, skill_choices: Span<Skill>) {
+    fn validate_skill_choices(self: CharacterClass, skill_choices: Span<Skill>) {
         match self {
-            AdventurerClass::Fighter => {
+            CharacterClass::Fighter => {
                 assert(skill_choices.len() == 1, 'fighter needs 1 skill choice');
                 let s = *skill_choices.at(0);
                 assert(
                     s == Skill::Perception || s == Skill::Acrobatics, 'invalid fighter skill choice'
                 );
             },
-            AdventurerClass::Rogue => {
+            CharacterClass::Rogue => {
                 assert(skill_choices.len() == 2, 'rogue needs 2 skill choices');
                 let mut i: u32 = 0;
                 while i < skill_choices.len() {
@@ -114,22 +114,22 @@ pub impl AdventurerClassImpl of AdventurerClassTrait {
                 };
                 assert(*skill_choices.at(0) != *skill_choices.at(1), 'duplicate skill choice');
             },
-            AdventurerClass::Wizard => {
+            CharacterClass::Wizard => {
                 assert(skill_choices.len() == 1, 'wizard needs 1 skill choice');
                 let s = *skill_choices.at(0);
                 assert(
                     s == Skill::Perception || s == Skill::Persuasion, 'invalid wizard skill choice'
                 );
             },
-            AdventurerClass::None => {},
+            CharacterClass::None => {},
         }
     }
 
     fn validate_expertise(
-        self: AdventurerClass, expertise_choices: Span<Skill>, skill_choices: Span<Skill>
+        self: CharacterClass, expertise_choices: Span<Skill>, skill_choices: Span<Skill>
     ) {
         match self {
-            AdventurerClass::Rogue => {
+            CharacterClass::Rogue => {
                 assert(expertise_choices.len() == 2, 'rogue needs 2 expertise');
                 let mut i: u32 = 0;
                 while i < expertise_choices.len() {
@@ -153,26 +153,26 @@ pub impl AdventurerClassImpl of AdventurerClassTrait {
         }
     }
 
-    fn starting_equipment(self: AdventurerClass) -> (WeaponType, WeaponType, ArmorType, bool) {
+    fn starting_equipment(self: CharacterClass) -> (WeaponType, WeaponType, ArmorType, bool) {
         match self {
-            AdventurerClass::Fighter => {
+            CharacterClass::Fighter => {
                 (WeaponType::Longsword, WeaponType::None, ArmorType::ChainMail, false)
             },
-            AdventurerClass::Rogue => {
+            CharacterClass::Rogue => {
                 (WeaponType::Dagger, WeaponType::Shortbow, ArmorType::Leather, false)
             },
-            AdventurerClass::Wizard => {
+            CharacterClass::Wizard => {
                 (WeaponType::Staff, WeaponType::None, ArmorType::None, false)
             },
-            AdventurerClass::None => {
+            CharacterClass::None => {
                 (WeaponType::None, WeaponType::None, ArmorType::None, false)
             },
         }
     }
 
-    fn sneak_attack_dice(self: AdventurerClass, level: u8) -> u8 {
+    fn sneak_attack_dice(self: CharacterClass, level: u8) -> u8 {
         match self {
-            AdventurerClass::Rogue => {
+            CharacterClass::Rogue => {
                 if level >= 5 {
                     3
                 } else if level >= 3 {
@@ -193,13 +193,13 @@ pub impl AdventurerClassImpl of AdventurerClassTrait {
     /// Fighter  : STR high, CON second, DEX third → STR=15, CON=14, DEX=13, WIS=12, INT=10, CHA=8
     /// Rogue    : DEX high, CON second, CHA third → DEX=15, CON=14, CHA=13, WIS=12, STR=10, INT=8
     /// Wizard   : INT high, WIS second, DEX third → INT=15, WIS=14, DEX=13, CON=12, CHA=10, STR=8
-    fn preferred_stat_order(self: AdventurerClass) -> Span<u8> {
+    fn preferred_stat_order(self: CharacterClass) -> Span<u8> {
         match self {
             // [STR, DEX, CON, INT, WIS, CHA] index into sorted array
-            AdventurerClass::Fighter => array![0_u8, 2_u8, 1_u8, 4_u8, 3_u8, 5_u8].span(),
-            AdventurerClass::Rogue   => array![1_u8, 2_u8, 5_u8, 4_u8, 0_u8, 3_u8].span(),
-            AdventurerClass::Wizard  => array![3_u8, 4_u8, 2_u8, 1_u8, 5_u8, 0_u8].span(),
-            AdventurerClass::None    => array![0_u8, 1_u8, 2_u8, 3_u8, 4_u8, 5_u8].span(),
+            CharacterClass::Fighter => array![0_u8, 2_u8, 1_u8, 4_u8, 3_u8, 5_u8].span(),
+            CharacterClass::Rogue   => array![1_u8, 2_u8, 5_u8, 4_u8, 0_u8, 3_u8].span(),
+            CharacterClass::Wizard  => array![3_u8, 4_u8, 2_u8, 1_u8, 5_u8, 0_u8].span(),
+            CharacterClass::None    => array![0_u8, 1_u8, 2_u8, 3_u8, 4_u8, 5_u8].span(),
         }
     }
 

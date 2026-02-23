@@ -3,9 +3,9 @@ import { Button, Card, Flex, Heading, Text } from "@radix-ui/themes";
 import { useExplorerCalls } from "@/hooks/use-explorer-calls";
 import { useAccount } from "@starknet-react/core";
 
-type AdventurerClass = "Fighter" | "Rogue" | "Wizard";
+type CharacterClass = "Fighter" | "Rogue" | "Wizard";
 
-const CLASS_INFO: Record<AdventurerClass, { label: string; desc: string; emoji: string }> = {
+const CLASS_INFO: Record<CharacterClass, { label: string; desc: string; emoji: string }> = {
   Fighter: { label: "Fighter", desc: "d10 HP · Longsword · Chain Mail AC 16", emoji: "⚔️" },
   Rogue: { label: "Rogue", desc: "d8 HP · Dagger + Shortbow · Leather AC", emoji: "🗡️" },
   Wizard: { label: "Wizard", desc: "d6 HP · Staff · Spells · AC 10+DEX", emoji: "🧙" },
@@ -15,7 +15,7 @@ export function MintExplorerPanel() {
   const { isConnected } = useAccount();
   const { mint_explorer } = useExplorerCalls();
 
-  const [selectedClass, setSelectedClass] = useState<AdventurerClass | null>(null);
+  const [selectedClass, setSelectedClass] = useState<CharacterClass | null>(null);
   const [txHash, setTxHash] = useState<string | null>(null);
 
   const canMint = mint_explorer && selectedClass;
@@ -34,7 +34,7 @@ export function MintExplorerPanel() {
         <Text size="2" color="gray">Choose your class — stats are randomized by VRF on-chain.</Text>
 
         <Flex gap="2" wrap="wrap">
-          {(Object.keys(CLASS_INFO) as AdventurerClass[]).map((cls) => {
+          {(Object.keys(CLASS_INFO) as CharacterClass[]).map((cls) => {
             const { label, desc, emoji } = CLASS_INFO[cls];
             const isSelected = selectedClass === cls;
             return (

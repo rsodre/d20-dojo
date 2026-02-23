@@ -1,13 +1,13 @@
 import { useDojoSDK } from "@dojoengine/sdk/react";
 import { useDojoConfig } from "@/contexts/dojo-config-provider";
-import type { Chamber, ChamberExit, FallenAdventurer, MonsterInstance } from "@/generated/models.gen";
+import type { Chamber, ChamberExit, FallenCharacter, MonsterInstance } from "@/generated/models.gen";
 
 /**
  * Returns all Chamber models for the given temple from the DojoStore.
  * Sorted by chamber_id ascending.
  * Requires useGameModels() to be running.
  */
-export function useChambers(templeId: bigint): Chamber[] {
+export function useChambers(dungeonId: bigint): Chamber[] {
   const { useDojoStore } = useDojoSDK();
   const { namespace } = useDojoConfig();
 
@@ -15,7 +15,7 @@ export function useChambers(templeId: bigint): Chamber[] {
     const entities = state.getEntitiesByModel(namespace, "Chamber");
     return entities
       .map((e: any) => e.models?.[namespace]?.["Chamber"] as Chamber | undefined)
-      .filter((c): c is Chamber => c != null && BigInt(c.dungeon_id) === templeId)
+      .filter((c): c is Chamber => c != null && BigInt(c.dungeon_id) === dungeonId)
       .sort((a, b) => Number(BigInt(a.chamber_id) - BigInt(b.chamber_id)));
   });
 }
@@ -24,7 +24,7 @@ export function useChambers(templeId: bigint): Chamber[] {
  * Returns all MonsterInstance models for the given temple from the DojoStore.
  * Requires useGameModels() to be running.
  */
-export function useMonsterInstances(templeId: bigint): MonsterInstance[] {
+export function useMonsterInstances(dungeonId: bigint): MonsterInstance[] {
   const { useDojoStore } = useDojoSDK();
   const { namespace } = useDojoConfig();
 
@@ -32,7 +32,7 @@ export function useMonsterInstances(templeId: bigint): MonsterInstance[] {
     const entities = state.getEntitiesByModel(namespace, "MonsterInstance");
     return entities
       .map((e: any) => e.models?.[namespace]?.["MonsterInstance"] as MonsterInstance | undefined)
-      .filter((m): m is MonsterInstance => m != null && BigInt(m.dungeon_id) === templeId);
+      .filter((m): m is MonsterInstance => m != null && BigInt(m.dungeon_id) === dungeonId);
   });
 }
 
@@ -40,7 +40,7 @@ export function useMonsterInstances(templeId: bigint): MonsterInstance[] {
  * Returns ChamberExit models for a specific chamber, sorted by exit_index.
  * Requires useGameModels() to be running.
  */
-export function useChamberExits(templeId: bigint, chamberId: bigint): ChamberExit[] {
+export function useChamberExits(dungeonId: bigint, chamberId: bigint): ChamberExit[] {
   const { useDojoStore } = useDojoSDK();
   const { namespace } = useDojoConfig();
 
@@ -51,7 +51,7 @@ export function useChamberExits(templeId: bigint, chamberId: bigint): ChamberExi
       .filter(
         (c): c is ChamberExit =>
           c != null &&
-          BigInt(c.dungeon_id) === templeId &&
+          BigInt(c.dungeon_id) === dungeonId &&
           BigInt(c.from_chamber_id) === chamberId,
       )
       .sort((a, b) => Number(BigInt(a.exit_index) - BigInt(b.exit_index)));
@@ -59,21 +59,21 @@ export function useChamberExits(templeId: bigint, chamberId: bigint): ChamberExi
 }
 
 /**
- * Returns FallenAdventurer models for a specific chamber, sorted by fallen_index.
+ * Returns FallenCharacter models for a specific chamber, sorted by fallen_index.
  * Requires useGameModels() to be running.
  */
-export function useFallenAdventurers(templeId: bigint, chamberId: bigint): FallenAdventurer[] {
+export function useFallenCharacters(dungeonId: bigint, chamberId: bigint): FallenCharacter[] {
   const { useDojoStore } = useDojoSDK();
   const { namespace } = useDojoConfig();
 
   return useDojoStore((state) => {
-    const entities = state.getEntitiesByModel(namespace, "FallenAdventurer");
+    const entities = state.getEntitiesByModel(namespace, "FallenCharacter");
     return entities
-      .map((e: any) => e.models?.[namespace]?.["FallenAdventurer"] as FallenAdventurer | undefined)
+      .map((e: any) => e.models?.[namespace]?.["FallenCharacter"] as FallenCharacter | undefined)
       .filter(
-        (f): f is FallenAdventurer =>
+        (f): f is FallenCharacter =>
           f != null &&
-          BigInt(f.dungeon_id) === templeId &&
+          BigInt(f.dungeon_id) === dungeonId &&
           BigInt(f.chamber_id) === chamberId,
       )
       .sort((a, b) => Number(BigInt(a.fallen_index) - BigInt(b.fallen_index)));

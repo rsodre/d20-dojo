@@ -13,23 +13,23 @@ export function useGameModels() {
   const { model } = useDojoConfig();
 
   const models = useMemo(() => ([
-    model("AdventurerStats"),
-    model("AdventurerHealth"),
-    model("AdventurerCombat"),
-    model("AdventurerInventory"),
-    model("AdventurerPosition"),
-    model("AdventurerSkills"),
+    model("CharacterStats"),
+    model("CharacterHealth"),
+    model("CharacterCombat"),
+    model("CharacterInventory"),
+    model("CharacterPosition"),
+    model("CharacterSkills"),
     model("DungeonState"),
     model("Chamber"),
     model("ChamberFallenCount"),
     model("MonsterInstance"),
     model("ChamberExit"),
-    model("FallenAdventurer"),
-    model("AdventurerDungeonProgress"),
+    model("FallenCharacter"),
+    model("CharacterDungeonProgress"),
 
   ]), [model])
 
-  // Explorer models — single key: adventurer_id
+  // Explorer models — single key: character_id
   useEntityQuery(
     new ToriiQueryBuilder<SchemaType>()
       // .withClause(

@@ -59,27 +59,27 @@ pub trait ITempleToken<TState> {
     fn mint_temple(ref self: TState, difficulty: u8) -> u128;
 
     /// Place an explorer at the temple's entrance chamber.
-    fn enter_temple(ref self: TState, adventurer_id: u128, dungeon_id: u128);
+    fn enter_temple(ref self: TState, character_id: u128, dungeon_id: u128);
 
     /// Remove an explorer from the temple (set dungeon_id=0, chamber_id=0).
-    fn exit_temple(ref self: TState, adventurer_id: u128);
+    fn exit_temple(ref self: TState, character_id: u128);
 
-    /// Open an unexplored exit from the adventurer's current chamber,
+    /// Open an unexplored exit from the character's current chamber,
     /// generating the destination chamber if it hasn't been discovered yet.
-    fn open_exit(ref self: TState, adventurer_id: u128, exit_index: u8);
+    fn open_exit(ref self: TState, character_id: u128, exit_index: u8);
 
-    /// Move the adventurer through a previously discovered exit.
-    fn move_to_chamber(ref self: TState, adventurer_id: u128, exit_index: u8);
+    /// Move the character through a previously discovered exit.
+    fn move_to_chamber(ref self: TState, character_id: u128, exit_index: u8);
 
     /// DEX/skill check to disarm a trap in the current chamber.
-    fn disarm_trap(ref self: TState, adventurer_id: u128);
+    fn disarm_trap(ref self: TState, character_id: u128);
 
     /// Loot the current chamber: Perception check (d20 + WIS) in Empty/Treasure chambers,
     /// awards gold and possibly a potion on success. Marks chamber as looted.
-    fn loot_treasure(ref self: TState, adventurer_id: u128);
+    fn loot_treasure(ref self: TState, character_id: u128);
 
     /// Pick up loot from a fallen explorer in the current chamber.
-    fn loot_fallen(ref self: TState, adventurer_id: u128, fallen_index: u32);
+    fn loot_fallen(ref self: TState, character_id: u128, fallen_index: u32);
 }
 
 #[starknet::interface]
@@ -93,27 +93,27 @@ pub trait ITempleTokenPublic<TState> {
     fn mint_temple(ref self: TState, difficulty: u8) -> u128;
 
     /// Place an explorer at the temple's entrance chamber.
-    fn enter_temple(ref self: TState, adventurer_id: u128, dungeon_id: u128);
+    fn enter_temple(ref self: TState, character_id: u128, dungeon_id: u128);
 
     /// Remove an explorer from the temple (set dungeon_id=0, chamber_id=0).
-    fn exit_temple(ref self: TState, adventurer_id: u128);
+    fn exit_temple(ref self: TState, character_id: u128);
 
-    /// Open an unexplored exit from the adventurer's current chamber,
+    /// Open an unexplored exit from the character's current chamber,
     /// generating the destination chamber if it hasn't been discovered yet.
-    fn open_exit(ref self: TState, adventurer_id: u128, exit_index: u8);
+    fn open_exit(ref self: TState, character_id: u128, exit_index: u8);
 
-    /// Move the adventurer through a previously discovered exit.
-    fn move_to_chamber(ref self: TState, adventurer_id: u128, exit_index: u8);
+    /// Move the character through a previously discovered exit.
+    fn move_to_chamber(ref self: TState, character_id: u128, exit_index: u8);
 
     /// DEX/skill check to disarm a trap in the current chamber.
-    fn disarm_trap(ref self: TState, adventurer_id: u128);
+    fn disarm_trap(ref self: TState, character_id: u128);
 
     /// Loot the current chamber: Perception check (d20 + WIS) in Empty/Treasure chambers,
     /// awards gold and possibly a potion on success. Marks chamber as looted.
-    fn loot_treasure(ref self: TState, adventurer_id: u128);
+    fn loot_treasure(ref self: TState, character_id: u128);
 
     /// Pick up loot from a fallen explorer in the current chamber.
-    fn loot_fallen(ref self: TState, adventurer_id: u128, fallen_index: u32);
+    fn loot_fallen(ref self: TState, character_id: u128, fallen_index: u32);
 }
 
 // ── Contract ────────────────────────────────────────────────────────────────
@@ -226,75 +226,75 @@ pub mod temple_token {
             dungeon_id
         }
 
-        fn enter_temple(ref self: ContractState, adventurer_id: u128, dungeon_id: u128) {
+        fn enter_temple(ref self: ContractState, character_id: u128, dungeon_id: u128) {
             let mut world = self.world_default();
             // Verify ownership
             let explorer_token = world.explorer_token_dispatcher();
-            assert(explorer_token.owner_of(adventurer_id.into()) == get_caller_address(), 'not owner');
+            assert(explorer_token.owner_of(character_id.into()) == get_caller_address(), 'not owner');
             // Execute action
-            self.dungeon.enter_temple(ref world, adventurer_id, dungeon_id);
+            self.dungeon.enter_temple(ref world, character_id, dungeon_id);
         }
 
-        fn exit_temple(ref self: ContractState, adventurer_id: u128) {
+        fn exit_temple(ref self: ContractState, character_id: u128) {
             let mut world = self.world_default();
             // Verify ownership
             let explorer_token = world.explorer_token_dispatcher();
-            assert(explorer_token.owner_of(adventurer_id.into()) == get_caller_address(), 'not owner');
+            assert(explorer_token.owner_of(character_id.into()) == get_caller_address(), 'not owner');
             // Execute action
-            self.dungeon.exit_temple(ref world, adventurer_id);
+            self.dungeon.exit_temple(ref world, character_id);
         }
 
-        fn open_exit(ref self: ContractState, adventurer_id: u128, exit_index: u8) {
+        fn open_exit(ref self: ContractState, character_id: u128, exit_index: u8) {
             let mut world = self.world_default();
             let caller = get_caller_address();
             let mut seeder = SeederTrait::from_consume_vrf(world, caller);
             // Verify ownership
             let explorer_token = world.explorer_token_dispatcher();
-            assert(explorer_token.owner_of(adventurer_id.into()) == caller, 'not owner');
+            assert(explorer_token.owner_of(character_id.into()) == caller, 'not owner');
             // Execute action
-            self.dungeon.open_exit(ref world, adventurer_id, exit_index, ref seeder);
+            self.dungeon.open_exit(ref world, character_id, exit_index, ref seeder);
         }
 
-        fn move_to_chamber(ref self: ContractState, adventurer_id: u128, exit_index: u8) {
+        fn move_to_chamber(ref self: ContractState, character_id: u128, exit_index: u8) {
             let mut world = self.world_default();
             let caller = get_caller_address();
             let mut seeder = SeederTrait::from_consume_vrf(world, caller);
             // Verify ownership
             let explorer_token = world.explorer_token_dispatcher();
-            assert(explorer_token.owner_of(adventurer_id.into()) == caller, 'not owner');
+            assert(explorer_token.owner_of(character_id.into()) == caller, 'not owner');
             // Execute action
-            self.dungeon.move_to_chamber(ref world, adventurer_id, exit_index, ref seeder);
+            self.dungeon.move_to_chamber(ref world, character_id, exit_index, ref seeder);
         }
 
-        fn disarm_trap(ref self: ContractState, adventurer_id: u128) {
+        fn disarm_trap(ref self: ContractState, character_id: u128) {
             let mut world = self.world_default();
             let caller = get_caller_address();
             let mut seeder = SeederTrait::from_consume_vrf(world, caller);
             // Verify ownership
             let explorer_token = world.explorer_token_dispatcher();
-            assert(explorer_token.owner_of(adventurer_id.into()) == caller, 'not owner');
+            assert(explorer_token.owner_of(character_id.into()) == caller, 'not owner');
             // Execute action
-            self.dungeon.disarm_trap(ref world, adventurer_id, ref seeder);
+            self.dungeon.disarm_trap(ref world, character_id, ref seeder);
         }
 
-        fn loot_treasure(ref self: ContractState, adventurer_id: u128) {
+        fn loot_treasure(ref self: ContractState, character_id: u128) {
             let mut world = self.world_default();
             let caller = get_caller_address();
             let mut seeder = SeederTrait::from_consume_vrf(world, caller);
             // Verify ownership
             let explorer_token = world.explorer_token_dispatcher();
-            assert(explorer_token.owner_of(adventurer_id.into()) == caller, 'not owner');
+            assert(explorer_token.owner_of(character_id.into()) == caller, 'not owner');
             // Execute action
-            self.dungeon.loot_treasure(ref world, adventurer_id, ref seeder);
+            self.dungeon.loot_treasure(ref world, character_id, ref seeder);
         }
 
-        fn loot_fallen(ref self: ContractState, adventurer_id: u128, fallen_index: u32) {
+        fn loot_fallen(ref self: ContractState, character_id: u128, fallen_index: u32) {
             let mut world = self.world_default();
             // Verify ownership
             let explorer_token = world.explorer_token_dispatcher();
-            assert(explorer_token.owner_of(adventurer_id.into()) == get_caller_address(), 'not owner');
+            assert(explorer_token.owner_of(character_id.into()) == get_caller_address(), 'not owner');
             // Execute action
-            self.dungeon.loot_fallen(ref world, adventurer_id, fallen_index);
+            self.dungeon.loot_fallen(ref world, character_id, fallen_index);
         }
     }
 

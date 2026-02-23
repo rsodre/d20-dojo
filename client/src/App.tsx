@@ -39,8 +39,8 @@ function ConnectedRoutes() {
     <PlayerTokensProvider>
       <Routes>
         <Route path="/" element={<LobbyContent />} />
-        <Route path="/temple/:templeId" element={<TempleView />} />
-        <Route path="/play/:templeId/:explorerId" element={<PlayView />} />
+        <Route path="/temple/:dungeonId" element={<TempleView />} />
+        <Route path="/play/:dungeonId/:characterId" element={<PlayView />} />
       </Routes>
     </PlayerTokensProvider>
   );

@@ -6,16 +6,16 @@ pub mod DungeonComponent {
     use dojo::event::EventStorage;
 
     use d20::d20::types::index::ChamberType;
-    use d20::d20::types::adventurer_class::AdventurerClass;
+    use d20::d20::types::character_class::CharacterClass;
     use d20::d20::types::items::{WeaponType, ArmorType};
     use d20::d20::models::monster::{MonsterType, MonsterTypeTrait};
     use d20::d20::models::dungeon::{
-        DungeonState, Chamber, MonsterInstance, ChamberExit, AdventurerDungeonProgress,
-        FallenAdventurer, ChamberFallenCount,
+        DungeonState, Chamber, MonsterInstance, ChamberExit, CharacterDungeonProgress,
+        FallenCharacter, ChamberFallenCount,
     };
-    use d20::d20::models::adventurer::{
-        AdventurerHealth, AdventurerPosition, AdventurerStats, AdventurerInventory,
-        AdventurerSkills, Skill,
+    use d20::d20::models::character::{
+        CharacterHealth, CharacterPosition, CharacterStats, CharacterInventory,
+        CharacterSkills, Skill,
     };
     use d20::d20::types::damage::DamageTrait;
     use d20::d20::models::events::ChamberRevealed;
@@ -89,7 +89,7 @@ pub mod DungeonComponent {
         fn enter_temple(
             ref self: ComponentState<TContractState>,
             ref world: WorldStorage,
-            adventurer_id: u128,
+            character_id: u128,
             dungeon_id: u128,
         ) {
             // Validate temple exists
@@ -97,29 +97,29 @@ pub mod DungeonComponent {
             assert(temple.difficulty_tier >= 1, 'temple does not exist');
 
             // Validate explorer is alive
-            let health: AdventurerHealth = world.read_model(adventurer_id);
+            let health: CharacterHealth = world.read_model(character_id);
             assert(!health.is_dead, 'dead explorers cannot enter');
 
             // Validate explorer is not in combat
-            let position: AdventurerPosition = world.read_model(adventurer_id);
+            let position: CharacterPosition = world.read_model(character_id);
             assert(!position.in_combat, 'explorer is in combat');
 
             // Place explorer at entrance chamber (overwrites any previous temple position)
-            world.write_model(@AdventurerPosition {
-                adventurer_id,
+            world.write_model(@CharacterPosition {
+                character_id,
                 dungeon_id,
                 chamber_id: 1, // entrance chamber is always id 1
                 in_combat: false,
                 combat_monster_id: 0,
             });
 
-            // Initialize AdventurerDungeonProgress for this temple visit
+            // Initialize CharacterDungeonProgress for this temple visit
             // (only write if not previously set — existing chambers_explored/xp_earned carry over
             //  from prior visits, so we only initialize on a fresh record)
-            let progress: AdventurerDungeonProgress = world.read_model((adventurer_id, dungeon_id));
+            let progress: CharacterDungeonProgress = world.read_model((character_id, dungeon_id));
             if progress.chambers_explored == 0 && progress.xp_earned == 0 {
-                world.write_model(@AdventurerDungeonProgress {
-                    adventurer_id,
+                world.write_model(@CharacterDungeonProgress {
+                    character_id,
                     dungeon_id,
                     chambers_explored: 0,
                     xp_earned: 0,
@@ -131,17 +131,17 @@ pub mod DungeonComponent {
         fn exit_temple(
             ref self: ComponentState<TContractState>,
             ref world: WorldStorage,
-            adventurer_id: u128,
+            character_id: u128,
         ) {
             // Validate explorer is in a temple
-            let position: AdventurerPosition = world.read_model(adventurer_id);
+            let position: CharacterPosition = world.read_model(character_id);
             assert(position.dungeon_id != 0, 'not inside any temple');
             assert(!position.in_combat, 'cannot exit during combat');
 
             // Clear temple/chamber position — stats, inventory, XP, and
-            // AdventurerDungeonProgress are all untouched (persisted on-chain).
-            world.write_model(@AdventurerPosition {
-                adventurer_id,
+            // CharacterDungeonProgress are all untouched (persisted on-chain).
+            world.write_model(@CharacterPosition {
+                character_id,
                 dungeon_id: 0,
                 chamber_id: 0,
                 in_combat: false,
@@ -149,20 +149,20 @@ pub mod DungeonComponent {
             });
         }
 
-        /// Open an unexplored exit from the adventurer's current chamber,
+        /// Open an unexplored exit from the character's current chamber,
         /// generating the destination chamber if it hasn't been discovered yet.
         fn open_exit(
             ref self: ComponentState<TContractState>,
             ref world: WorldStorage,
-            adventurer_id: u128,
+            character_id: u128,
             exit_index: u8,
             ref seeder: Seeder,
         ) {
             // ── Validate explorer state ──────────────────────────────────────
-            let health: AdventurerHealth = world.read_model(adventurer_id);
+            let health: CharacterHealth = world.read_model(character_id);
             assert(!health.is_dead, 'dead explorers cannot explore');
 
-            let position: AdventurerPosition = world.read_model(adventurer_id);
+            let position: CharacterPosition = world.read_model(character_id);
             assert(position.dungeon_id != 0, 'not inside any temple');
             assert(!position.in_combat, 'cannot open exit in combat');
 
@@ -184,7 +184,7 @@ pub mod DungeonComponent {
             world.write_model(@temple);
 
             // ── Read progress for boss probability ───────────────────────────
-            let progress: AdventurerDungeonProgress = world.read_model((adventurer_id, dungeon_id));
+            let progress: CharacterDungeonProgress = world.read_model((character_id, dungeon_id));
 
             // ── Generate the new chamber ─────────────────────────────────────
             let new_depth: u8 = current_chamber.depth + 1;
@@ -195,8 +195,8 @@ pub mod DungeonComponent {
                 current_chamber_id,
                 new_chamber_id,
                 new_depth,
-                adventurer_id,
-                adventurer_id, // revealed_by
+                character_id,
+                character_id, // revealed_by
                 temple.difficulty_tier,
                 progress.xp_earned,
                 temple.max_depth,
@@ -221,28 +221,28 @@ pub mod DungeonComponent {
                 is_discovered: true,
             });
 
-            // ── Increment chambers_explored on AdventurerDungeonProgress ──────
-            world.write_model(@AdventurerDungeonProgress {
-                adventurer_id,
+            // ── Increment chambers_explored on CharacterDungeonProgress ──────
+            world.write_model(@CharacterDungeonProgress {
+                character_id,
                 dungeon_id,
                 chambers_explored: progress.chambers_explored + 1,
                 xp_earned: progress.xp_earned,
             });
         }
 
-        /// Move the adventurer through a previously discovered exit.
+        /// Move the character through a previously discovered exit.
         fn move_to_chamber(
             ref self: ComponentState<TContractState>,
             ref world: WorldStorage,
-            adventurer_id: u128,
+            character_id: u128,
             exit_index: u8,
             ref seeder: Seeder,
         ) {
             // ── Validate explorer state ──────────────────────────────────────
-            let health: AdventurerHealth = world.read_model(adventurer_id);
+            let health: CharacterHealth = world.read_model(character_id);
             assert(!health.is_dead, 'dead explorers cannot move');
 
-            let position: AdventurerPosition = world.read_model(adventurer_id);
+            let position: CharacterPosition = world.read_model(character_id);
             assert(position.dungeon_id != 0, 'not inside any temple');
             assert(!position.in_combat, 'cannot move during combat');
 
@@ -266,8 +266,8 @@ pub mod DungeonComponent {
             let enters_combat: bool = monster.is_alive && dest_chamber.chamber_type == ChamberType::Monster
                 || (monster.is_alive && dest_chamber.chamber_type == ChamberType::Boss);
 
-            world.write_model(@AdventurerPosition {
-                adventurer_id,
+            world.write_model(@CharacterPosition {
+                character_id,
                 dungeon_id,
                 chamber_id: dest_chamber_id,
                 in_combat: enters_combat,
@@ -279,7 +279,7 @@ pub mod DungeonComponent {
             // On failed save, explorer takes 1d6 + depth/2 damage.
             if dest_chamber.chamber_type == ChamberType::Trap && !dest_chamber.trap_disarmed
                 && dest_chamber.trap_dc > 0 {
-                let stats: AdventurerStats = world.read_model(adventurer_id);
+                let stats: CharacterStats = world.read_model(character_id);
                 let dex_mod: i8 = ability_modifier(stats.abilities.dexterity);
                 // DEX saving throw
                 let save_roll: i16 = roll_d20(ref seeder).into() + dex_mod.into();
@@ -290,15 +290,15 @@ pub mod DungeonComponent {
                     let bonus: u16 = (dest_chamber.depth / 2).into();
                     let damage: u16 = base_dmg + bonus;
                     // Use the destination position so handle_death records the right chamber
-                    let dest_position = AdventurerPosition {
-                        adventurer_id,
+                    let dest_position = CharacterPosition {
+                        character_id,
                         dungeon_id,
                         chamber_id: dest_chamber_id,
                         in_combat: enters_combat,
                         combat_monster_id: if enters_combat { 1 } else { 0 },
                     };
-                    DamageTrait::apply_adventurer_damage(
-                        ref world, adventurer_id, health, dest_position, MonsterType::None, damage,
+                    DamageTrait::apply_character_damage(
+                        ref world, character_id, health, dest_position, MonsterType::None, damage,
                     );
                 }
             }
@@ -308,14 +308,14 @@ pub mod DungeonComponent {
         fn disarm_trap(
             ref self: ComponentState<TContractState>,
             ref world: WorldStorage,
-            adventurer_id: u128,
+            character_id: u128,
             ref seeder: Seeder,
         ) {
             // ── Validate explorer state ──────────────────────────────────────
-            let health: AdventurerHealth = world.read_model(adventurer_id);
+            let health: CharacterHealth = world.read_model(character_id);
             assert(!health.is_dead, 'dead explorers cannot disarm');
 
-            let position: AdventurerPosition = world.read_model(adventurer_id);
+            let position: CharacterPosition = world.read_model(character_id);
             assert(position.dungeon_id != 0, 'not inside any temple');
             assert(!position.in_combat, 'cannot disarm during combat');
 
@@ -332,12 +332,12 @@ pub mod DungeonComponent {
             // Rogues use DEX + proficiency (with expertise on Stealth/Acrobatics if selected).
             // All other classes use INT + proficiency only if proficient in Arcana.
             // Expertise on the relevant skill doubles the proficiency bonus.
-            let stats: AdventurerStats = world.read_model(adventurer_id);
-            let skills: AdventurerSkills = world.read_model(adventurer_id);
+            let stats: CharacterStats = world.read_model(character_id);
+            let skills: CharacterSkills = world.read_model(character_id);
             let prof: u8 = proficiency_bonus(stats.level);
 
-            let (ability_score, prof_mult): (u8, u8) = match stats.adventurer_class {
-                AdventurerClass::Rogue => {
+            let (ability_score, prof_mult): (u8, u8) = match stats.character_class {
+                CharacterClass::Rogue => {
                     // Check for expertise on Acrobatics (DEX skill → applies to fine motor work)
                     let expertise_mult: u8 = if skills.expertise_1 == Skill::Acrobatics
                         || skills.expertise_2 == Skill::Acrobatics { 2 } else { 1 };
@@ -379,8 +379,8 @@ pub mod DungeonComponent {
                     let base_dmg: u16 = roll_dice(ref seeder, 6, 1);
                     let bonus: u16 = (chamber.depth / 2).into();
                     let damage: u16 = base_dmg + bonus;
-                    DamageTrait::apply_adventurer_damage(
-                        ref world, adventurer_id, health, position, MonsterType::None, damage,
+                    DamageTrait::apply_character_damage(
+                        ref world, character_id, health, position, MonsterType::None, damage,
                     );
                 }
                 // On success of the DEX save: no damage, but trap still armed (can retry)
@@ -392,14 +392,14 @@ pub mod DungeonComponent {
         fn loot_treasure(
             ref self: ComponentState<TContractState>,
             ref world: WorldStorage,
-            adventurer_id: u128,
+            character_id: u128,
             ref seeder: Seeder,
         ) {
             // ── Validate explorer state ──────────────────────────────────────
-            let health: AdventurerHealth = world.read_model(adventurer_id);
+            let health: CharacterHealth = world.read_model(character_id);
             assert(!health.is_dead, 'dead explorers cannot loot');
 
-            let position: AdventurerPosition = world.read_model(adventurer_id);
+            let position: CharacterPosition = world.read_model(character_id);
             assert(position.dungeon_id != 0, 'not inside any temple');
             assert(!position.in_combat, 'cannot loot during combat');
 
@@ -417,8 +417,8 @@ pub mod DungeonComponent {
 
             // ── Perception check: d20 + WIS mod [+ proficiency if trained] ───
             // DC 12 for Empty chambers, DC 10 for Treasure chambers
-            let stats: AdventurerStats = world.read_model(adventurer_id);
-            let skills: AdventurerSkills = world.read_model(adventurer_id);
+            let stats: CharacterStats = world.read_model(character_id);
+            let skills: CharacterSkills = world.read_model(character_id);
 
             let wis_mod: i8 = ability_modifier(stats.abilities.wisdom);
             let prof: u8 = proficiency_bonus(stats.level);
@@ -440,9 +440,9 @@ pub mod DungeonComponent {
                 // Potion found on total roll >= 15
                 let potion_found: u8 = if roll >= 15 { 1 } else { 0 };
 
-                let inventory: AdventurerInventory = world.read_model(adventurer_id);
-                world.write_model(@AdventurerInventory {
-                    adventurer_id,
+                let inventory: CharacterInventory = world.read_model(character_id);
+                world.write_model(@CharacterInventory {
+                    character_id,
                     primary_weapon: inventory.primary_weapon,
                     secondary_weapon: inventory.secondary_weapon,
                     armor: inventory.armor,
@@ -471,14 +471,14 @@ pub mod DungeonComponent {
         fn loot_fallen(
             ref self: ComponentState<TContractState>,
             ref world: WorldStorage,
-            adventurer_id: u128,
+            character_id: u128,
             fallen_index: u32,
         ) {
             // ── Validate explorer state ──────────────────────────────────────
-            let health: AdventurerHealth = world.read_model(adventurer_id);
+            let health: CharacterHealth = world.read_model(character_id);
             assert(!health.is_dead, 'dead explorers cannot loot');
 
-            let position: AdventurerPosition = world.read_model(adventurer_id);
+            let position: CharacterPosition = world.read_model(character_id);
             assert(position.dungeon_id != 0, 'not inside any temple');
             assert(!position.in_combat, 'cannot loot during combat');
 
@@ -489,18 +489,18 @@ pub mod DungeonComponent {
             let fallen_count: ChamberFallenCount = world.read_model((dungeon_id, chamber_id));
             assert(fallen_index < fallen_count.count, 'no body at that index');
 
-            // ── Read the FallenAdventurer record ─────────────────────────────
-            let fallen: FallenAdventurer = world.read_model((dungeon_id, chamber_id, fallen_index));
+            // ── Read the FallenCharacter record ─────────────────────────────
+            let fallen: FallenCharacter = world.read_model((dungeon_id, chamber_id, fallen_index));
             assert(!fallen.is_looted, 'already looted');
 
-            // ── Cannot loot yourself (edge case: somehow same adventurer_id) ─
-            assert(fallen.adventurer_id != adventurer_id, 'cannot loot yourself');
+            // ── Cannot loot yourself (edge case: somehow same character_id) ─
+            assert(fallen.character_id != character_id, 'cannot loot yourself');
 
             // ── Merge dropped loot into explorer's inventory ─────────────────
             // Weapons: only take if explorer has None in that slot
             // Armor:   only upgrade if dropped armor > current (or current is None)
             // Gold + potions: always add
-            let inventory: AdventurerInventory = world.read_model(adventurer_id);
+            let inventory: CharacterInventory = world.read_model(character_id);
 
             let new_primary: WeaponType = if inventory.primary_weapon == WeaponType::None {
                 fallen.dropped_weapon
@@ -523,8 +523,8 @@ pub mod DungeonComponent {
                 inventory.armor
             };
 
-            world.write_model(@AdventurerInventory {
-                adventurer_id,
+            world.write_model(@CharacterInventory {
+                character_id,
                 primary_weapon: new_primary,
                 secondary_weapon: new_secondary,
                 armor: new_armor,
@@ -534,11 +534,11 @@ pub mod DungeonComponent {
             });
 
             // ── Mark fallen explorer as looted ───────────────────────────────
-            world.write_model(@FallenAdventurer {
+            world.write_model(@FallenCharacter {
                 dungeon_id,
                 chamber_id,
                 fallen_index,
-                adventurer_id: fallen.adventurer_id,
+                character_id: fallen.character_id,
                 dropped_weapon: fallen.dropped_weapon,
                 dropped_armor: fallen.dropped_armor,
                 dropped_gold: fallen.dropped_gold,
@@ -595,7 +595,7 @@ pub mod DungeonComponent {
         parent_chamber_id: u32,
         new_chamber_id: u32,
         depth: u8,
-        adventurer_id: u128,
+        character_id: u128,
         revealed_by: u128,
         difficulty: u8,
         xp_earned: u32,

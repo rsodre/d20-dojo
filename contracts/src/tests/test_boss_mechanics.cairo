@@ -4,13 +4,13 @@ mod tests {
     use starknet::{ContractAddress};
     use dojo::model::{ModelStorage, ModelStorageTest};
 
-    use d20::d20::models::adventurer::{
-        AdventurerStats, AdventurerHealth,
-        AdventurerPosition,
+    use d20::d20::models::character::{
+        CharacterStats, CharacterHealth,
+        CharacterPosition,
     };
     use d20::d20::models::dungeon::{
         DungeonState, MonsterInstance,
-        AdventurerDungeonProgress
+        CharacterDungeonProgress
     };
     use d20::d20::models::monster::MonsterType;
     use d20::tests::tester::{
@@ -27,7 +27,7 @@ mod tests {
 
         let (mut world, token, combat, temple) = setup_world();
 
-        let adventurer_id = mint_fighter(token);
+        let character_id = mint_fighter(token);
         let dungeon_id = temple.mint_temple(1_u8);
 
         // Set up temple with a known boss chamber
@@ -50,34 +50,34 @@ mod tests {
             max_hp: 45,
             is_alive: true,
         });
-        world.write_model_test(@AdventurerPosition {
-            adventurer_id,
+        world.write_model_test(@CharacterPosition {
+            character_id,
             dungeon_id,
             chamber_id: 2,
             in_combat: true,
             combat_monster_id: 1,
         });
-        world.write_model_test(@AdventurerHealth {
-            adventurer_id,
+        world.write_model_test(@CharacterHealth {
+            character_id,
             current_hp: 50,
             max_hp: 50,
             is_dead: false,
         });
-        world.write_model_test(@AdventurerDungeonProgress {
-            adventurer_id,
+        world.write_model_test(@CharacterDungeonProgress {
+            character_id,
             dungeon_id,
             chambers_explored: 5,
             xp_earned: 500,
         });
 
-        combat.attack(adventurer_id);
+        combat.attack(character_id);
 
         let monster_after: MonsterInstance = world.read_model((dungeon_id, 2_u32, 1_u32));
         if !monster_after.is_alive {
             let temple_after: DungeonState = world.read_model(dungeon_id);
             assert(!temple_after.boss_alive, 'boss should be marked dead');
 
-            let stats_after: AdventurerStats = world.read_model(adventurer_id);
+            let stats_after: CharacterStats = world.read_model(character_id);
             assert(stats_after.dungeons_conquered == 1, 'dungeons_conquered should be 1');
         }
     }
@@ -90,17 +90,17 @@ mod tests {
 
         let (mut world, token, combat, temple) = setup_world();
 
-        let adventurer_id = mint_fighter(token);
+        let character_id = mint_fighter(token);
         let dungeon_id = temple.mint_temple(1_u8);
 
         // Explorer with 1 prior conquest
-        let stats: AdventurerStats = world.read_model(adventurer_id);
-        world.write_model_test(@AdventurerStats {
-            adventurer_id,
+        let stats: CharacterStats = world.read_model(character_id);
+        world.write_model_test(@CharacterStats {
+            character_id,
             abilities: stats.abilities,
             level: stats.level,
             xp: stats.xp,
-            adventurer_class: stats.adventurer_class,
+            character_class: stats.character_class,
             dungeons_conquered: 1, // previously conquered 1 temple
         });
 
@@ -121,31 +121,31 @@ mod tests {
             max_hp: 45,
             is_alive: true,
         });
-        world.write_model_test(@AdventurerPosition {
-            adventurer_id,
+        world.write_model_test(@CharacterPosition {
+            character_id,
             dungeon_id,
             chamber_id: 2,
             in_combat: true,
             combat_monster_id: 1,
         });
-        world.write_model_test(@AdventurerHealth {
-            adventurer_id,
+        world.write_model_test(@CharacterHealth {
+            character_id,
             current_hp: 50,
             max_hp: 50,
             is_dead: false,
         });
-        world.write_model_test(@AdventurerDungeonProgress {
-            adventurer_id,
+        world.write_model_test(@CharacterDungeonProgress {
+            character_id,
             dungeon_id,
             chambers_explored: 3,
             xp_earned: 300,
         });
 
-        combat.attack(adventurer_id);
+        combat.attack(character_id);
 
         let monster_after: MonsterInstance = world.read_model((dungeon_id, 2_u32, 1_u32));
         if !monster_after.is_alive {
-            let stats_after: AdventurerStats = world.read_model(adventurer_id);
+            let stats_after: CharacterStats = world.read_model(character_id);
             assert(stats_after.dungeons_conquered == 2, 'should have 2 conquests now');
         }
     }

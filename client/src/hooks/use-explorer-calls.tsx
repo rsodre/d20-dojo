@@ -54,12 +54,12 @@ export const useExplorerCalls = () => {
 
   const rest = useMutation({
     mutationFn: account?.address ?
-      (explorerId: bigint) => {
+      (characterId: bigint) => {
         const entrypoint = "rest";
         const calls: Call[] = [{
           contractAddress,
           entrypoint,
-          calldata: callData.compile(entrypoint, [explorerId]),
+          calldata: callData.compile(entrypoint, [characterId]),
         }];
         return account.execute(calls);
       } : undefined,

@@ -36,12 +36,12 @@ export const useTempleCalls = () => {
 
   const enter_temple = useMutation({
     mutationFn: account?.address ?
-      ({ explorerId, templeId }: { explorerId: bigint; templeId: bigint }) => {
+      ({ characterId, dungeonId }: { characterId: bigint; dungeonId: bigint }) => {
         const entrypoint = "enter_temple";
         const calls: Call[] = [{
           contractAddress,
           entrypoint,
-          calldata: callData.compile(entrypoint, [explorerId, templeId]),
+          calldata: callData.compile(entrypoint, [characterId, dungeonId]),
         }];
         return account.execute(calls);
       } : undefined,
@@ -55,12 +55,12 @@ export const useTempleCalls = () => {
 
   const exit_temple = useMutation({
     mutationFn: account?.address ?
-      (explorerId: bigint) => {
+      (characterId: bigint) => {
         const entrypoint = "exit_temple";
         const calls: Call[] = [{
           contractAddress,
           entrypoint,
-          calldata: callData.compile(entrypoint, [explorerId]),
+          calldata: callData.compile(entrypoint, [characterId]),
         }];
         return account.execute(calls);
       } : undefined,
@@ -74,7 +74,7 @@ export const useTempleCalls = () => {
 
   const open_exit = useMutation({
     mutationFn: (account?.address && requestRandomCall) ?
-      ({ explorerId, exitIndex }: { explorerId: bigint; exitIndex: number }) => {
+      ({ characterId, exitIndex }: { characterId: bigint; exitIndex: number }) => {
         const entrypoint = "open_exit";
         const calls: Call[] = [
           // VRF multicall: request_random must be first
@@ -82,7 +82,7 @@ export const useTempleCalls = () => {
           {
             contractAddress,
             entrypoint,
-            calldata: callData.compile(entrypoint, [explorerId, exitIndex]),
+            calldata: callData.compile(entrypoint, [characterId, exitIndex]),
           },
         ];
         return account.execute(calls);
@@ -97,7 +97,7 @@ export const useTempleCalls = () => {
 
   const move_to_chamber = useMutation({
     mutationFn: (account?.address && requestRandomCall) ?
-      ({ explorerId, exitIndex }: { explorerId: bigint; exitIndex: number }) => {
+      ({ characterId, exitIndex }: { characterId: bigint; exitIndex: number }) => {
         const entrypoint = "move_to_chamber";
         const calls: Call[] = [
           // VRF multicall: request_random must be first
@@ -105,7 +105,7 @@ export const useTempleCalls = () => {
           {
             contractAddress,
             entrypoint,
-            calldata: callData.compile(entrypoint, [explorerId, exitIndex]),
+            calldata: callData.compile(entrypoint, [characterId, exitIndex]),
           },
         ];
         return account.execute(calls);
@@ -120,7 +120,7 @@ export const useTempleCalls = () => {
 
   const disarm_trap = useMutation({
     mutationFn: (account?.address && requestRandomCall) ?
-      (explorerId: bigint) => {
+      (characterId: bigint) => {
         const entrypoint = "disarm_trap";
         const calls: Call[] = [
           // VRF multicall: request_random must be first
@@ -128,7 +128,7 @@ export const useTempleCalls = () => {
           {
             contractAddress,
             entrypoint,
-            calldata: callData.compile(entrypoint, [explorerId]),
+            calldata: callData.compile(entrypoint, [characterId]),
           },
         ];
         return account.execute(calls);
@@ -143,7 +143,7 @@ export const useTempleCalls = () => {
 
   const loot_treasure = useMutation({
     mutationFn: (account?.address && requestRandomCall) ?
-      (explorerId: bigint) => {
+      (characterId: bigint) => {
         const entrypoint = "loot_treasure";
         const calls: Call[] = [
           // VRF multicall: request_random must be first
@@ -151,7 +151,7 @@ export const useTempleCalls = () => {
           {
             contractAddress,
             entrypoint,
-            calldata: callData.compile(entrypoint, [explorerId]),
+            calldata: callData.compile(entrypoint, [characterId]),
           },
         ];
         return account.execute(calls);
@@ -166,12 +166,12 @@ export const useTempleCalls = () => {
 
   const loot_fallen = useMutation({
     mutationFn: account?.address ?
-      ({ explorerId, fallenIndex }: { explorerId: bigint; fallenIndex: number }) => {
+      ({ characterId, fallenIndex }: { characterId: bigint; fallenIndex: number }) => {
         const entrypoint = "loot_fallen";
         const calls: Call[] = [{
           contractAddress,
           entrypoint,
-          calldata: callData.compile(entrypoint, [explorerId, fallenIndex]),
+          calldata: callData.compile(entrypoint, [characterId, fallenIndex]),
         }];
         return account.execute(calls);
       } : undefined,

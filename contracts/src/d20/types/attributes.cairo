@@ -1,6 +1,6 @@
 #[derive(Drop)]
 pub struct CharacterAttributes {
-    pub adventurer_class: ByteArray,
+    pub character_class: ByteArray,
     pub level: u8,
     pub current_hp: i16,
     pub max_hp: u16,

@@ -5,13 +5,13 @@ pub mod d20 {
         pub mod dungeon_component;
     }
     pub mod models {
-        pub mod adventurer;
+        pub mod character;
         pub mod dungeon;
         pub mod monster;
         pub mod events;
     }
     pub mod types {
-        pub mod adventurer_class;
+        pub mod character_class;
         pub mod attributes;
         pub mod damage;
         pub mod index;

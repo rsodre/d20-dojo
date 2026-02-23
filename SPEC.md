@@ -52,7 +52,7 @@ Every formula in this spec is written with integer math in mind. When implementi
 └─────────────────────────────────┘
 ```
 
-**No game master server.** The contracts enforce all rules. The web client on the adventurer's machine does two things:
+**No game master server.** The contracts enforce all rules. The web client on the character's machine does two things:
 1. Queries world state via Torii and displays it (HP, chamber type, monster info, available exits, inventory)
 2. Computes the list of valid actions from that state and shows them as clickable buttons — the player clicks one, the client submits the corresponding transaction
 
@@ -68,7 +68,7 @@ All NFTs use dedicated ERC-721 contracts built with **OpenZeppelin ERC-721 compo
 - On-chain metadata rendering via `ERC721ComboHooksTrait`
 - ERC-7572, ERC-4906, ERC-2981 extensions
 
-**Token IDs** are `u256` (OpenZeppelin standard). The internal counter auto-increments on each `_mint_next()` call. All Dojo models use `u128` keys — conversion: `let adventurer_id: u128 = token_id.low;` (high part is always 0 for counter-minted IDs).
+**Token IDs** are `u256` (OpenZeppelin standard). The internal counter auto-increments on each `_mint_next()` call. All Dojo models use `u128` keys — conversion: `let character_id: u128 = token_id.low;` (high part is always 0 for counter-minted IDs).
 
 ### Explorer NFT
 - Each explorer is an NFT minted when a player creates a character
@@ -267,9 +267,9 @@ Monster ability scores are used for saving throws and contested checks (e.g., mo
 All dice rolls use the **Cartridge VRF (Verifiable Random Function)** service for on-chain randomness.
 
 ### How it works
-1. The game contract calls `request_random(caller, source)` as the first call in the adventurer's multicall
+1. The game contract calls `request_random(caller, source)` as the first call in the character's multicall
 2. The Cartridge VRF server generates a random value using the VRF algorithm for the provided entropy source
-3. The Cartridge Paymaster wraps the adventurer's multicall with `submit_random` and `assert_consumed` calls
+3. The Cartridge Paymaster wraps the character's multicall with `submit_random` and `assert_consumed` calls
 4. The game contract calls `consume_random(source)` on the VRF contract to get the verified random value
 5. The VRF Proof is verified on-chain, ensuring the integrity of the random value
 
@@ -363,23 +363,23 @@ pub struct AbilityScore {
 
 #[derive(Copy, Drop, Serde)]
 #[dojo::model]
-pub struct AdventurerStats {
+pub struct CharacterStats {
     #[key]
-    pub adventurer_id: u128,    // Explorer NFT token ID (from cairo-nft-combo _mint_next())
+    pub character_id: u128,    // Explorer NFT token ID (from cairo-nft-combo _mint_next())
     pub abilities: AbilityScore,  // packed ability scores (each 3-20)
     // Progression
     pub level: u8,
     pub xp: u32,
-    pub adventurer_class: AdventurerClass,
+    pub character_class: CharacterClass,
     // Achievements
     pub dungeons_conquered: u16,   // how many temple bosses killed
 }
 
 #[derive(Copy, Drop, Serde)]
 #[dojo::model]
-pub struct AdventurerHealth {
+pub struct CharacterHealth {
     #[key]
-    pub adventurer_id: u128,
+    pub character_id: u128,
     pub current_hp: i16,      // signed — can go negative (overkill detection, then clamped to 0)
     pub max_hp: u16,
     pub is_dead: bool,
@@ -387,9 +387,9 @@ pub struct AdventurerHealth {
 
 #[derive(Copy, Drop, Serde)]
 #[dojo::model]
-pub struct AdventurerCombat {
+pub struct CharacterCombat {
     #[key]
-    pub adventurer_id: u128,
+    pub character_id: u128,
     pub armor_class: u8,
     // Class resources
     pub spell_slots_1: u8,
@@ -401,9 +401,9 @@ pub struct AdventurerCombat {
 
 #[derive(Copy, Drop, Serde)]
 #[dojo::model]
-pub struct AdventurerInventory {
+pub struct CharacterInventory {
     #[key]
-    pub adventurer_id: u128,
+    pub character_id: u128,
     pub primary_weapon: WeaponType,
     pub secondary_weapon: WeaponType,   // Rogue starts with Dagger + Shortbow
     pub armor: ArmorType,
@@ -414,9 +414,9 @@ pub struct AdventurerInventory {
 
 #[derive(Copy, Drop, Serde)]
 #[dojo::model]
-pub struct AdventurerPosition {
+pub struct CharacterPosition {
     #[key]
-    pub adventurer_id: u128,
+    pub character_id: u128,
     pub dungeon_id: u128,      // 0 if not in any temple
     pub chamber_id: u32,      // 0 if not in any temple
     pub in_combat: bool,
@@ -436,9 +436,9 @@ pub struct SkillsSet {
 
 #[derive(Copy, Drop, Serde)]
 #[dojo::model]
-pub struct AdventurerSkills {
+pub struct CharacterSkills {
     #[key]
-    pub adventurer_id: u128,
+    pub character_id: u128,
     pub skills: SkillsSet,    // packed proficiency flags
     // Expertise (double proficiency, Rogue feature)
     pub expertise_1: Skill,
@@ -448,9 +448,9 @@ pub struct AdventurerSkills {
 // Tracks an explorer's progress within a specific temple (composite key)
 #[derive(Copy, Drop, Serde)]
 #[dojo::model]
-pub struct AdventurerDungeonProgress {
+pub struct CharacterDungeonProgress {
     #[key]
-    pub adventurer_id: u128,
+    pub character_id: u128,
     #[key]
     pub dungeon_id: u128,
     pub chambers_explored: u16,   // how many chambers this explorer has opened
@@ -511,14 +511,14 @@ pub struct ChamberExit {
 // A single chamber can contain many fallen explorers.
 #[derive(Copy, Drop, Serde)]
 #[dojo::model]
-pub struct FallenAdventurer {
+pub struct FallenCharacter {
     #[key]
     pub dungeon_id: u128,
     #[key]
     pub chamber_id: u32,
     #[key]
     pub fallen_index: u32,        // sequential index per chamber
-    pub adventurer_id: u128,        // the dead explorer's token ID
+    pub character_id: u128,        // the dead explorer's token ID
     // Dropped loot
     pub dropped_weapon: WeaponType,
     pub dropped_armor: ArmorType,
@@ -557,7 +557,7 @@ All enums stored in Dojo models must derive `Introspect`, `DojoStore`, and `Defa
 
 ```cairo
 #[derive(Serde, Copy, Drop, Introspect, PartialEq, Debug, DojoStore, Default)]
-pub enum AdventurerClass {
+pub enum CharacterClass {
     #[default]
     None,
     Fighter,
@@ -601,7 +601,7 @@ pub enum WeaponType {
 }
 
 // ArmorType does NOT include Shield — shields are tracked separately
-// via `has_shield: bool` on AdventurerInventory. In D&D, shields stack
+// via `has_shield: bool` on CharacterInventory. In D&D, shields stack
 // with armor (e.g., Chain Mail + Shield = AC 18).
 #[derive(Serde, Copy, Drop, Introspect, PartialEq, Debug, DojoStore, Default)]
 pub enum ArmorType {
@@ -698,9 +698,9 @@ Systems are `#[dojo::contract]` modules, not free functions. Each contract has a
 
 | Contract | Tag | Writes to |
 |----------|-----|-----------|
-| `explorer_token` | `d20_0_1-explorer_token` | AdventurerStats, AdventurerHealth, AdventurerCombat, AdventurerInventory, AdventurerSkills |
-| `combat_system` | `d20_0_1-combat_system` | AdventurerHealth, AdventurerCombat, AdventurerInventory, AdventurerPosition, MonsterInstance, FallenAdventurer, ChamberFallenCount |
-| `temple_token` | `d20_0_1-temple_token` | AdventurerPosition, AdventurerDungeonProgress, AdventurerStats, AdventurerHealth, AdventurerInventory, DungeonState, Chamber, MonsterInstance, ChamberExit, FallenAdventurer, ChamberFallenCount |
+| `explorer_token` | `d20_0_1-explorer_token` | CharacterStats, CharacterHealth, CharacterCombat, CharacterInventory, CharacterSkills |
+| `combat_system` | `d20_0_1-combat_system` | CharacterHealth, CharacterCombat, CharacterInventory, CharacterPosition, MonsterInstance, FallenCharacter, ChamberFallenCount |
+| `temple_token` | `d20_0_1-temple_token` | CharacterPosition, CharacterDungeonProgress, CharacterStats, CharacterHealth, CharacterInventory, DungeonState, Chamber, MonsterInstance, ChamberExit, FallenCharacter, ChamberFallenCount |
 
 ```cairo
 // ──────────────────────────────────────────────
@@ -726,9 +726,9 @@ fn calculate_ac(armor: ArmorType, has_shield: bool, dex_mod: i8) -> u8
 #[starknet::interface]
 trait IExplorerTokenPublic<T> {
     // VRF multicall required — stats, skills, and expertise are all randomized on-chain.
-    fn mint_explorer(ref self: T, adventurer_class: AdventurerClass) -> u128;  // returns explorer token ID
+    fn mint_explorer(ref self: T, character_class: CharacterClass) -> u128;  // returns explorer token ID
 
-    fn rest(ref self: T, adventurer_id: u128);  // restore HP, spell slots, class features
+    fn rest(ref self: T, character_id: u128);  // restore HP, spell slots, class features
 }
 
 // gain_xp and level_up are internal helpers called by combat/temple systems,
@@ -739,19 +739,19 @@ trait IExplorerTokenPublic<T> {
 // ──────────────────────────────────────────────
 #[starknet::interface]
 trait ICombatSystem<T> {
-    fn attack(ref self: T, adventurer_id: u128);
-    fn cast_spell(ref self: T, adventurer_id: u128, spell_id: SpellId);
-    fn use_item(ref self: T, adventurer_id: u128, item_type: ItemType);
-    fn flee(ref self: T, adventurer_id: u128);   // contested DEX check
-    fn second_wind(ref self: T, adventurer_id: u128);   // Fighter: heal 1d10+level
-    fn cunning_action(ref self: T, adventurer_id: u128); // Rogue: disengage/hide
+    fn attack(ref self: T, character_id: u128);
+    fn cast_spell(ref self: T, character_id: u128, spell_id: SpellId);
+    fn use_item(ref self: T, character_id: u128, item_type: ItemType);
+    fn flee(ref self: T, character_id: u128);   // contested DEX check
+    fn second_wind(ref self: T, character_id: u128);   // Fighter: heal 1d10+level
+    fn cunning_action(ref self: T, character_id: u128); // Rogue: disengage/hide
 }
 
 // Death logic is an internal function called when HP reaches 0:
-// - sets is_dead = true on AdventurerHealth
-// - creates FallenAdventurer with dropped loot in current chamber
+// - sets is_dead = true on CharacterHealth
+// - creates FallenCharacter with dropped loot in current chamber
 // - increments ChamberFallenCount
-// - emits AdventurerDied event
+// - emits CharacterDied event
 
 // ──────────────────────────────────────────────
 // temple_token contract
@@ -759,13 +759,13 @@ trait ICombatSystem<T> {
 #[starknet::interface]
 trait ITempleTokenPublic<T> {
     fn mint_temple(ref self: T, difficulty: u8) -> u128;
-    fn enter_temple(ref self: T, adventurer_id: u128, dungeon_id: u128);
-    fn exit_temple(ref self: T, adventurer_id: u128);
-    fn open_exit(ref self: T, adventurer_id: u128, exit_index: u8);
-    fn move_to_chamber(ref self: T, adventurer_id: u128, exit_index: u8);
-    fn disarm_trap(ref self: T, adventurer_id: u128);      // DEX/skill check
-    fn loot_treasure(ref self: T, adventurer_id: u128);    // Perception check + loot pickup
-    fn loot_fallen(ref self: T, adventurer_id: u128, fallen_index: u32);
+    fn enter_temple(ref self: T, character_id: u128, dungeon_id: u128);
+    fn exit_temple(ref self: T, character_id: u128);
+    fn open_exit(ref self: T, character_id: u128, exit_index: u8);
+    fn move_to_chamber(ref self: T, character_id: u128, exit_index: u8);
+    fn disarm_trap(ref self: T, character_id: u128);      // DEX/skill check
+    fn loot_treasure(ref self: T, character_id: u128);    // Perception check + loot pickup
+    fn loot_fallen(ref self: T, character_id: u128, fallen_index: u32);
 }
 
 // generate_chamber and calculate_boss_probability are internal helpers,
@@ -779,10 +779,10 @@ Events are critical for Torii indexing and client state updates. All events use 
 ```cairo
 #[derive(Copy, Drop, Serde)]
 #[dojo::event]
-pub struct AdventurerMinted {
+pub struct CharacterMinted {
     #[key]
-    pub adventurer_id: u128,
-    pub adventurer_class: AdventurerClass,
+    pub character_id: u128,
+    pub character_class: CharacterClass,
     pub player: ContractAddress,
 }
 
@@ -790,7 +790,7 @@ pub struct AdventurerMinted {
 #[dojo::event]
 pub struct CombatResult {
     #[key]
-    pub adventurer_id: u128,
+    pub character_id: u128,
     pub action: CombatAction,
     pub roll: u8,
     pub damage_dealt: u16,
@@ -800,9 +800,9 @@ pub struct CombatResult {
 
 #[derive(Copy, Drop, Serde)]
 #[dojo::event]
-pub struct AdventurerDied {
+pub struct CharacterDied {
     #[key]
-    pub adventurer_id: u128,
+    pub character_id: u128,
     pub dungeon_id: u128,
     pub chamber_id: u32,
     pub killed_by: MonsterType,
@@ -823,7 +823,7 @@ pub struct ChamberRevealed {
 #[dojo::event]
 pub struct LevelUp {
     #[key]
-    pub adventurer_id: u128,
+    pub character_id: u128,
     pub new_level: u8,
 }
 
@@ -832,7 +832,7 @@ pub struct LevelUp {
 pub struct BossDefeated {
     #[key]
     pub dungeon_id: u128,
-    pub adventurer_id: u128,
+    pub character_id: u128,
     pub monster_type: MonsterType,
 }
 ```
@@ -867,8 +867,8 @@ Chambers are **not** pre-generated. They are created one at a time as explorers 
 When a new chamber is generated, the system calculates the probability that it becomes the **Boss Chamber**. This probability increases with three factors:
 
 - **Depth (y)**: Distance from the entrance. The deeper you go, the more likely the boss appears.
-- **Chambers explored (c)**: How many chambers the adventurer who opened this exit has explored in this temple.
-- **XP earned (x)**: How much XP the adventurer has earned in this temple, as a proxy for "experience" (combat survived, challenges overcome).
+- **Chambers explored (c)**: How many chambers the character who opened this exit has explored in this temple.
+- **XP earned (x)**: How much XP the character has earned in this temple, as a proxy for "experience" (combat survived, challenges overcome).
 
 ### The Formula (Integer-Only, Cairo-Safe)
 
@@ -929,7 +929,7 @@ The quadratic depth curve means early exploration feels safe and rewarding, whil
 ### On-chain Resolution (Cairo-safe)
 The boss probability is compared against a VRF roll:
 ```cairo
-let prob_bps: u32 = calculate_boss_probability(dungeon_id, adventurer_id, depth);
+let prob_bps: u32 = calculate_boss_probability(dungeon_id, character_id, depth);
 let roll: u32 = (vrf.consume_random(source) % 10000).try_into().unwrap();  // 0-9999
 let is_boss: bool = roll < prob_bps;
 ```
@@ -941,9 +941,9 @@ let is_boss: bool = roll < prob_bps;
 **Death is permanent.** When an explorer reaches 0 HP:
 
 1. **Explorer dies forever.** The `is_dead` flag is set to true. The Explorer NFT remains on-chain as a permanent record but can never take another action.
-2. **Loot drops.** A `FallenAdventurer` record is created in the current chamber, containing the adventurer's weapon, armor, gold, and potions. The `ChamberFallenCount` is incremented.
+2. **Loot drops.** A `FallenCharacter` record is created in the current chamber, containing the character's weapon, armor, gold, and potions. The `ChamberFallenCount` is incremented.
 3. **The body remains.** Other explorers entering the chamber can see the fallen explorer's body. The AI narrator describes them and their dropped loot.
-4. **Loot is first-come-first-served.** Any living explorer in the chamber can call `loot_fallen(adventurer_id, fallen_index)` to pick up items. Once looted, `is_looted` is set to true.
+4. **Loot is first-come-first-served.** Any living explorer in the chamber can call `loot_fallen(character_id, fallen_index)` to pick up items. Once looted, `is_looted` is set to true.
 5. **Multiple bodies can accumulate.** A particularly deadly chamber might have many fallen explorers, each with their own loot. This creates "loot graveyards" that attract other explorers.
 6. **MAYBE: Abilities drop too.** Open question — should fallen explorers also drop class abilities or skill proficiencies that other explorers can absorb? This could create interesting "soul harvesting" mechanics but needs careful balancing.
 

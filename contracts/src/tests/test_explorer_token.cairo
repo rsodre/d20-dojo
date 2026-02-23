@@ -13,17 +13,17 @@ mod tests {
     use d20::systems::explorer_token::{
         IExplorerTokenDispatcher, IExplorerTokenDispatcherTrait,
     };
-    use d20::d20::models::adventurer::{
-        AdventurerStats,
-        AdventurerHealth,
-        AdventurerCombat,
-        AdventurerInventory,
-        AdventurerPosition,
-        AdventurerSkills,
+    use d20::d20::models::character::{
+        CharacterStats,
+        CharacterHealth,
+        CharacterCombat,
+        CharacterInventory,
+        CharacterPosition,
+        CharacterSkills,
         Skill,
     };
     use d20::d20::types::items::{WeaponType, ArmorType};
-    use d20::d20::types::adventurer_class::AdventurerClass;
+    use d20::d20::types::character_class::CharacterClass;
     use d20::tests::mock_vrf::MockVrf;
 
     // ── Test world setup ──────────────────────────────────────────────────────
@@ -33,13 +33,13 @@ mod tests {
             namespace: "d20_0_1",
             resources: [
                 TestResource::Model(d20::models::config::m_Config::TEST_CLASS_HASH),
-                TestResource::Model(d20::d20::models::adventurer::m_AdventurerStats::TEST_CLASS_HASH),
-                TestResource::Model(d20::d20::models::adventurer::m_AdventurerHealth::TEST_CLASS_HASH),
-                TestResource::Model(d20::d20::models::adventurer::m_AdventurerCombat::TEST_CLASS_HASH),
-                TestResource::Model(d20::d20::models::adventurer::m_AdventurerInventory::TEST_CLASS_HASH),
-                TestResource::Model(d20::d20::models::adventurer::m_AdventurerPosition::TEST_CLASS_HASH),
-                TestResource::Model(d20::d20::models::adventurer::m_AdventurerSkills::TEST_CLASS_HASH),
-                TestResource::Event(d20::d20::models::events::e_AdventurerMinted::TEST_CLASS_HASH),
+                TestResource::Model(d20::d20::models::character::m_CharacterStats::TEST_CLASS_HASH),
+                TestResource::Model(d20::d20::models::character::m_CharacterHealth::TEST_CLASS_HASH),
+                TestResource::Model(d20::d20::models::character::m_CharacterCombat::TEST_CLASS_HASH),
+                TestResource::Model(d20::d20::models::character::m_CharacterInventory::TEST_CLASS_HASH),
+                TestResource::Model(d20::d20::models::character::m_CharacterPosition::TEST_CLASS_HASH),
+                TestResource::Model(d20::d20::models::character::m_CharacterSkills::TEST_CLASS_HASH),
+                TestResource::Event(d20::d20::models::events::e_CharacterMinted::TEST_CLASS_HASH),
                 TestResource::Contract(d20::systems::explorer_token::explorer_token::TEST_CLASS_HASH),
             ].span(),
         }
@@ -67,7 +67,7 @@ mod tests {
     // ── Helper: verify standard array invariant ───────────────────────────────
 
     /// Assert each stat value is from [15,14,13,12,10,8].
-    fn assert_standard_array(stats: @AdventurerStats) {
+    fn assert_standard_array(stats: @CharacterStats) {
         assert_valid_stat(*stats.abilities.strength);
         assert_valid_stat(*stats.abilities.dexterity);
         assert_valid_stat(*stats.abilities.constitution);
@@ -95,18 +95,18 @@ mod tests {
 
         let (world, token) = setup_world();
 
-        let adventurer_id = token.mint_explorer(AdventurerClass::Fighter);
+        let character_id = token.mint_explorer(CharacterClass::Fighter);
 
         // ERC-721 token ID starts at 1
-        assert(adventurer_id == 1_u128, 'adventurer_id should be 1');
+        assert(character_id == 1_u128, 'character_id should be 1');
 
         // Verify ERC721 state
         assert(token.total_supply() == 1_u256, 'supply should be 1');
         assert(token.balance_of(caller) == 1_u256, 'balance should be 1');
-        assert(token.owner_of(adventurer_id.into()) == caller, 'wrong owner');
+        assert(token.owner_of(character_id.into()) == caller, 'wrong owner');
 
-        let stats: AdventurerStats = world.read_model(adventurer_id);
-        assert(stats.adventurer_class == AdventurerClass::Fighter, 'wrong class');
+        let stats: CharacterStats = world.read_model(character_id);
+        assert(stats.character_class == CharacterClass::Fighter, 'wrong class');
         assert(stats.level == 1, 'wrong level');
         assert(stats.xp == 0, 'wrong xp');
         assert(stats.dungeons_conquered == 0, 'wrong temples');
@@ -122,11 +122,11 @@ mod tests {
 
         let (world, token) = setup_world();
 
-        let adventurer_id = token.mint_explorer(AdventurerClass::Fighter);
+        let character_id = token.mint_explorer(CharacterClass::Fighter);
 
-        // let stats: AdventurerStats = world.read_model(adventurer_id);
-        let health: AdventurerHealth = world.read_model(adventurer_id);
-        let combat: AdventurerCombat = world.read_model(adventurer_id);
+        // let stats: CharacterStats = world.read_model(character_id);
+        let health: CharacterHealth = world.read_model(character_id);
+        let combat: CharacterCombat = world.read_model(character_id);
 
         // Fighter hit die = 10, CON mod in [-1, +2] → HP in [9, 12]
         assert(health.max_hp >= 9 && health.max_hp <= 12, 'fighter HP out of range');
@@ -146,9 +146,9 @@ mod tests {
         starknet::testing::set_contract_address(caller);
 
         let (world, token) = setup_world();
-        let adventurer_id = token.mint_explorer(AdventurerClass::Fighter);
+        let character_id = token.mint_explorer(CharacterClass::Fighter);
 
-        let inv: AdventurerInventory = world.read_model(adventurer_id);
+        let inv: CharacterInventory = world.read_model(character_id);
         assert(inv.primary_weapon == WeaponType::Longsword, 'fighter weapon: longsword');
         assert(inv.secondary_weapon == WeaponType::None, 'fighter no secondary');
         assert(inv.armor == ArmorType::ChainMail, 'fighter armor: chain mail');
@@ -163,9 +163,9 @@ mod tests {
         starknet::testing::set_contract_address(caller);
 
         let (world, token) = setup_world();
-        let adventurer_id = token.mint_explorer(AdventurerClass::Fighter);
+        let character_id = token.mint_explorer(CharacterClass::Fighter);
 
-        let skills: AdventurerSkills = world.read_model(adventurer_id);
+        let skills: CharacterSkills = world.read_model(character_id);
         // Fighter always has Athletics
         assert(skills.skills.athletics, 'fighter: athletics auto');
         // Fighter gets exactly one of Perception or Acrobatics (not both, not neither)
@@ -184,9 +184,9 @@ mod tests {
         starknet::testing::set_contract_address(caller);
 
         let (world, token) = setup_world();
-        let adventurer_id = token.mint_explorer(AdventurerClass::Fighter);
+        let character_id = token.mint_explorer(CharacterClass::Fighter);
 
-        let pos: AdventurerPosition = world.read_model(adventurer_id);
+        let pos: CharacterPosition = world.read_model(character_id);
         assert(pos.dungeon_id == 0, 'not in a temple');
         assert(pos.chamber_id == 0, 'not in a chamber');
         assert(!pos.in_combat, 'not in combat');
@@ -202,17 +202,17 @@ mod tests {
 
         let (world, token) = setup_world();
 
-        let adventurer_id = token.mint_explorer(AdventurerClass::Rogue);
+        let character_id = token.mint_explorer(CharacterClass::Rogue);
 
-        let stats: AdventurerStats = world.read_model(adventurer_id);
-        assert(stats.adventurer_class == AdventurerClass::Rogue, 'wrong class');
+        let stats: CharacterStats = world.read_model(character_id);
+        assert(stats.character_class == CharacterClass::Rogue, 'wrong class');
         assert_standard_array(@stats);
 
-        let health: AdventurerHealth = world.read_model(adventurer_id);
+        let health: CharacterHealth = world.read_model(character_id);
         // Rogue hit die = 8, CON mod in [-1, +2] → HP in [7, 10]
         assert(health.max_hp >= 7 && health.max_hp <= 10, 'rogue HP out of range');
 
-        let combat: AdventurerCombat = world.read_model(adventurer_id);
+        let combat: CharacterCombat = world.read_model(character_id);
         // Rogue: Leather AC = 11 + DEX mod. DEX mod in [-1, +2] → AC in [10, 13]
         assert(combat.armor_class >= 10 && combat.armor_class <= 13, 'rogue AC out of range');
         assert(combat.spell_slots_1 == 0, 'rogue has no spell slots');
@@ -224,9 +224,9 @@ mod tests {
         starknet::testing::set_contract_address(caller);
 
         let (world, token) = setup_world();
-        let adventurer_id = token.mint_explorer(AdventurerClass::Rogue);
+        let character_id = token.mint_explorer(CharacterClass::Rogue);
 
-        let inv: AdventurerInventory = world.read_model(adventurer_id);
+        let inv: CharacterInventory = world.read_model(character_id);
         assert(inv.primary_weapon == WeaponType::Dagger, 'rogue weapon: dagger');
         assert(inv.secondary_weapon == WeaponType::Shortbow, 'rogue secondary: shortbow');
         assert(inv.armor == ArmorType::Leather, 'rogue armor: leather');
@@ -238,9 +238,9 @@ mod tests {
         starknet::testing::set_contract_address(caller);
 
         let (world, token) = setup_world();
-        let adventurer_id = token.mint_explorer(AdventurerClass::Rogue);
+        let character_id = token.mint_explorer(CharacterClass::Rogue);
 
-        let skills: AdventurerSkills = world.read_model(adventurer_id);
+        let skills: CharacterSkills = world.read_model(character_id);
         // Rogue always has Stealth and Acrobatics
         assert(skills.skills.stealth, 'rogue: stealth auto');
         assert(skills.skills.acrobatics, 'rogue: acrobatics auto');
@@ -259,17 +259,17 @@ mod tests {
 
         let (world, token) = setup_world();
 
-        let adventurer_id = token.mint_explorer(AdventurerClass::Wizard);
+        let character_id = token.mint_explorer(CharacterClass::Wizard);
 
-        let stats: AdventurerStats = world.read_model(adventurer_id);
-        assert(stats.adventurer_class == AdventurerClass::Wizard, 'wrong class');
+        let stats: CharacterStats = world.read_model(character_id);
+        assert(stats.character_class == CharacterClass::Wizard, 'wrong class');
         assert_standard_array(@stats);
 
-        let health: AdventurerHealth = world.read_model(adventurer_id);
+        let health: CharacterHealth = world.read_model(character_id);
         // Wizard hit die = 6, CON mod in [-1, +2] → HP in [5, 8]
         assert(health.max_hp >= 5 && health.max_hp <= 8, 'wizard HP out of range');
 
-        let combat: AdventurerCombat = world.read_model(adventurer_id);
+        let combat: CharacterCombat = world.read_model(character_id);
         // Wizard: no armor AC = 10 + DEX mod. DEX mod in [-1, +2] → AC in [9, 12]
         assert(combat.armor_class >= 9 && combat.armor_class <= 12, 'wizard AC out of range');
         assert(combat.spell_slots_1 == 2, 'wizard level1 slots = 2');
@@ -283,9 +283,9 @@ mod tests {
         starknet::testing::set_contract_address(caller);
 
         let (world, token) = setup_world();
-        let adventurer_id = token.mint_explorer(AdventurerClass::Wizard);
+        let character_id = token.mint_explorer(CharacterClass::Wizard);
 
-        let inv: AdventurerInventory = world.read_model(adventurer_id);
+        let inv: CharacterInventory = world.read_model(character_id);
         assert(inv.primary_weapon == WeaponType::Staff, 'wizard weapon: staff');
         assert(inv.secondary_weapon == WeaponType::None, 'wizard no secondary');
         assert(inv.armor == ArmorType::None, 'wizard no armor');
@@ -297,9 +297,9 @@ mod tests {
         starknet::testing::set_contract_address(caller);
 
         let (world, token) = setup_world();
-        let adventurer_id = token.mint_explorer(AdventurerClass::Wizard);
+        let character_id = token.mint_explorer(CharacterClass::Wizard);
 
-        let skills: AdventurerSkills = world.read_model(adventurer_id);
+        let skills: CharacterSkills = world.read_model(character_id);
         // Wizard always has Arcana
         assert(skills.skills.arcana, 'wizard: arcana auto');
         // Wizard gets exactly one of Perception or Persuasion
@@ -319,9 +319,9 @@ mod tests {
 
         let (world, token) = setup_world();
 
-        let id1 = token.mint_explorer(AdventurerClass::Fighter);
-        let id2 = token.mint_explorer(AdventurerClass::Wizard);
-        let id3 = token.mint_explorer(AdventurerClass::Rogue);
+        let id1 = token.mint_explorer(CharacterClass::Fighter);
+        let id2 = token.mint_explorer(CharacterClass::Wizard);
+        let id3 = token.mint_explorer(CharacterClass::Rogue);
 
         assert(id1 == 1_u128, 'first id should be 1');
         assert(id2 == 2_u128, 'second id should be 2');
@@ -335,12 +335,12 @@ mod tests {
         assert(token.owner_of(id3.into()) == caller, 'wrong owner id3');
 
         // Each explorer has independent state
-        let s1: AdventurerStats = world.read_model(id1);
-        let s2: AdventurerStats = world.read_model(id2);
-        let s3: AdventurerStats = world.read_model(id3);
-        assert(s1.adventurer_class == AdventurerClass::Fighter, 'id1 should be fighter');
-        assert(s2.adventurer_class == AdventurerClass::Wizard, 'id2 should be wizard');
-        assert(s3.adventurer_class == AdventurerClass::Rogue, 'id3 should be rogue');
+        let s1: CharacterStats = world.read_model(id1);
+        let s2: CharacterStats = world.read_model(id2);
+        let s3: CharacterStats = world.read_model(id3);
+        assert(s1.character_class == CharacterClass::Fighter, 'id1 should be fighter');
+        assert(s2.character_class == CharacterClass::Wizard, 'id2 should be wizard');
+        assert(s3.character_class == CharacterClass::Rogue, 'id3 should be rogue');
     }
 
     // ── rest() tests ──────────────────────────────────────────────────────────
@@ -351,18 +351,18 @@ mod tests {
         starknet::testing::set_contract_address(caller);
 
         let (mut world, token) = setup_world();
-        let adventurer_id = token.mint_explorer(AdventurerClass::Fighter);
+        let character_id = token.mint_explorer(CharacterClass::Fighter);
 
         // Simulate damage by writing model directly
-        let mut health: AdventurerHealth = world.read_model(adventurer_id);
+        let mut health: CharacterHealth = world.read_model(character_id);
         let max_hp = health.max_hp;
         health.current_hp = 3;
         world.write_model_test(@health);
 
         // Rest should restore HP
-        token.rest(adventurer_id);
+        token.rest(character_id);
 
-        let health: AdventurerHealth = world.read_model(adventurer_id);
+        let health: CharacterHealth = world.read_model(character_id);
         assert(health.current_hp == max_hp.try_into().unwrap(), 'HP should be restored');
     }
 
@@ -372,17 +372,17 @@ mod tests {
         starknet::testing::set_contract_address(caller);
 
         let (mut world, token) = setup_world();
-        let adventurer_id = token.mint_explorer(AdventurerClass::Fighter);
+        let character_id = token.mint_explorer(CharacterClass::Fighter);
 
         // Simulate spent class resources
-        let mut combat: AdventurerCombat = world.read_model(adventurer_id);
+        let mut combat: CharacterCombat = world.read_model(character_id);
         combat.second_wind_used = true;
         combat.action_surge_used = true;
         world.write_model_test(@combat);
 
-        token.rest(adventurer_id);
+        token.rest(character_id);
 
-        let combat: AdventurerCombat = world.read_model(adventurer_id);
+        let combat: CharacterCombat = world.read_model(character_id);
         assert(!combat.second_wind_used, 'second_wind reset');
         assert(!combat.action_surge_used, 'action_surge reset');
     }
@@ -393,16 +393,16 @@ mod tests {
         starknet::testing::set_contract_address(caller);
 
         let (mut world, token) = setup_world();
-        let adventurer_id = token.mint_explorer(AdventurerClass::Wizard);
+        let character_id = token.mint_explorer(CharacterClass::Wizard);
 
         // Spend all spell slots
-        let mut combat: AdventurerCombat = world.read_model(adventurer_id);
+        let mut combat: CharacterCombat = world.read_model(character_id);
         combat.spell_slots_1 = 0;
         world.write_model_test(@combat);
 
-        token.rest(adventurer_id);
+        token.rest(character_id);
 
-        let combat: AdventurerCombat = world.read_model(adventurer_id);
+        let combat: CharacterCombat = world.read_model(character_id);
         assert(combat.spell_slots_1 == 2, 'wizard level1 slots restored');
     }
 
@@ -415,7 +415,7 @@ mod tests {
         starknet::testing::set_contract_address(caller);
 
         let (_world, token) = setup_world();
-        token.mint_explorer(AdventurerClass::None);
+        token.mint_explorer(CharacterClass::None);
     }
 
     #[test]
@@ -425,14 +425,14 @@ mod tests {
         starknet::testing::set_contract_address(caller);
 
         let (mut world, token) = setup_world();
-        let adventurer_id = token.mint_explorer(AdventurerClass::Fighter);
+        let character_id = token.mint_explorer(CharacterClass::Fighter);
 
-        // Kill the adventurer via write_model_test
-        let mut health: AdventurerHealth = world.read_model(adventurer_id);
+        // Kill the character via write_model_test
+        let mut health: CharacterHealth = world.read_model(character_id);
         health.is_dead = true;
         health.current_hp = 0;
         world.write_model_test(@health);
 
-        token.rest(adventurer_id); // should panic
+        token.rest(character_id); // should panic
     }
 }

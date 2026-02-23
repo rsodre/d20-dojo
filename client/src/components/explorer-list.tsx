@@ -20,7 +20,7 @@ function ExplorerCard({ token, selectedTempleId }: ExplorerCardProps) {
   const { stats, health, combat, position } = useExplorerModels(token.tokenIdNum);
   const { enter_temple, exit_temple } = useTempleCalls();
 
-  const className = stats?.adventurer_class as unknown as string ?? undefined;
+  const className = stats?.character_class as unknown as string ?? undefined;
   const emoji = className ? (CLASS_EMOJI[className] ?? "⚔️") : "⚔️";
   const level = stats ? Number(stats.level) : undefined;
   const xp = stats ? Number(stats.xp) : undefined;
@@ -29,8 +29,8 @@ function ExplorerCard({ token, selectedTempleId }: ExplorerCardProps) {
   const ac = combat ? Number(combat.armor_class) : undefined;
   const isDead = health?.is_dead ?? false;
 
-  const templeId = position ? BigInt(position.dungeon_id) : 0n;
-  const isInTemple = templeId > 0n;
+  const dungeonId = position ? BigInt(position.dungeon_id) : 0n;
+  const isInTemple = dungeonId > 0n;
 
   const isPending = enter_temple.isPending || exit_temple.isPending;
 
@@ -43,7 +43,7 @@ function ExplorerCard({ token, selectedTempleId }: ExplorerCardProps) {
             {className ?? "Explorer"} #{token.tokenIdNum.toString()}
           </Text>
           {isDead && <Badge color="red" size="1">Dead</Badge>}
-          {isInTemple && <Badge color="green" size="1">In Temple #{templeId.toString()}</Badge>}
+          {isInTemple && <Badge color="green" size="1">In Temple #{dungeonId.toString()}</Badge>}
         </Flex>
 
         {stats ? (
@@ -67,7 +67,7 @@ function ExplorerCard({ token, selectedTempleId }: ExplorerCardProps) {
                 disabled={isPending}
                 loading={enter_temple.isPending}
                 onClick={() =>
-                  enter_temple.mutate({ explorerId: token.tokenIdNum, templeId: selectedTempleId })
+                  enter_temple.mutate({ characterId: token.tokenIdNum, dungeonId: selectedTempleId })
                 }
               >
                 Enter Temple #{selectedTempleId.toString()}
@@ -78,7 +78,7 @@ function ExplorerCard({ token, selectedTempleId }: ExplorerCardProps) {
             )}
             {isInTemple && (
               <>
-                <Link to={`/play/${templeId}/${token.tokenIdNum}`} style={{ textDecoration: "none" }}>
+                <Link to={`/play/${dungeonId}/${token.tokenIdNum}`} style={{ textDecoration: "none" }}>
                   <Button size="1" color="amber">Play →</Button>
                 </Link>
                 <Button

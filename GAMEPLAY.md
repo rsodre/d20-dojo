@@ -35,7 +35,7 @@ The game logic is divided into three main contracts. Each contract exposes a pub
 >     contractAddress: GAME_SYSTEM_ADDRESS,
 >     entrypoint: 'attack', // or any other VRF action
 >     calldata: CallData.compile({
->       adventurer_id: '1',
+>       character_id: '1',
 >     }),
 >   }
 > ]
@@ -91,7 +91,7 @@ Discover a new chamber from an unexplored exit in the current chamber.
 - **VRF**: Consumes VRF to generate the new chamber's layout, type, and contents.
 
 ### `move_to_chamber`
-Move the adventurer through a previously discovered exit.
+Move the character through a previously discovered exit.
 - **Mechanic**: May trigger combat (if a monster is present) or fire a trap.
 
 ### `disarm_trap`
@@ -144,5 +144,5 @@ Rogue-only feature: disengage or hide without triggering a monster counter-attac
 All actions involving dice rolls require Cartridge VRF. These transactions must be submitted via a provider or paymaster that handles the VRF Request/Consume flow (like the Cartridge Controller).
 
 ### Death is Permanent
-When `AdventurerHealth.is_dead` becomes true, the NFT is frozen. The character's inventory is dropped in the chamber where they fell, and can be retrieved by other explorers via `loot_fallen`.
+When `CharacterHealth.is_dead` becomes true, the NFT is frozen. The character's inventory is dropped in the chamber where they fell, and can be retrieved by other explorers via `loot_fallen`.
 
