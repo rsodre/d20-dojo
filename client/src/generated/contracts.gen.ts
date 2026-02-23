@@ -8,15 +8,15 @@ export function setupWorld(provider: DojoProvider) {
 		return {
 			contractName: "combat_system",
 			entrypoint: "attack",
-			calldata: [explorerId],
+			calldata: [characterId],
 		};
 	};
 
-	const combat_system_attack = async (snAccount: Account | AccountInterface, explorerId: BigNumberish) => {
+	const combat_system_attack = async (snAccount: Account | AccountInterface, characterId: BigNumberish) => {
 		try {
 			return await provider.execute(
 				snAccount,
-				build_combat_system_attack_calldata(explorerId),
+				build_combat_system_attack_calldata(characterId),
 				"d20_0_1",
 			);
 		} catch (error) {
@@ -25,19 +25,19 @@ export function setupWorld(provider: DojoProvider) {
 		}
 	};
 
-	const build_combat_system_castSpell_calldata = (explorerId: BigNumberish, spellId: CairoCustomEnum): DojoCall => {
+	const build_combat_system_castSpell_calldata = (characterId: BigNumberish, spellId: CairoCustomEnum): DojoCall => {
 		return {
 			contractName: "combat_system",
 			entrypoint: "cast_spell",
-			calldata: [explorerId, spellId],
+			calldata: [characterId, spellId],
 		};
 	};
 
-	const combat_system_castSpell = async (snAccount: Account | AccountInterface, explorerId: BigNumberish, spellId: CairoCustomEnum) => {
+	const combat_system_castSpell = async (snAccount: Account | AccountInterface, characterId: BigNumberish, spellId: CairoCustomEnum) => {
 		try {
 			return await provider.execute(
 				snAccount,
-				build_combat_system_castSpell_calldata(explorerId, spellId),
+				build_combat_system_castSpell_calldata(characterId, spellId),
 				"d20_0_1",
 			);
 		} catch (error) {
@@ -46,19 +46,19 @@ export function setupWorld(provider: DojoProvider) {
 		}
 	};
 
-	const build_combat_system_cunningAction_calldata = (explorerId: BigNumberish): DojoCall => {
+	const build_combat_system_cunningAction_calldata = (characterId: BigNumberish): DojoCall => {
 		return {
 			contractName: "combat_system",
 			entrypoint: "cunning_action",
-			calldata: [explorerId],
+			calldata: [characterId],
 		};
 	};
 
-	const combat_system_cunningAction = async (snAccount: Account | AccountInterface, explorerId: BigNumberish) => {
+	const combat_system_cunningAction = async (snAccount: Account | AccountInterface, characterId: BigNumberish) => {
 		try {
 			return await provider.execute(
 				snAccount,
-				build_combat_system_cunningAction_calldata(explorerId),
+				build_combat_system_cunningAction_calldata(characterId),
 				"d20_0_1",
 			);
 		} catch (error) {
@@ -67,19 +67,19 @@ export function setupWorld(provider: DojoProvider) {
 		}
 	};
 
-	const build_combat_system_flee_calldata = (explorerId: BigNumberish): DojoCall => {
+	const build_combat_system_flee_calldata = (characterId: BigNumberish): DojoCall => {
 		return {
 			contractName: "combat_system",
 			entrypoint: "flee",
-			calldata: [explorerId],
+			calldata: [characterId],
 		};
 	};
 
-	const combat_system_flee = async (snAccount: Account | AccountInterface, explorerId: BigNumberish) => {
+	const combat_system_flee = async (snAccount: Account | AccountInterface, characterId: BigNumberish) => {
 		try {
 			return await provider.execute(
 				snAccount,
-				build_combat_system_flee_calldata(explorerId),
+				build_combat_system_flee_calldata(characterId),
 				"d20_0_1",
 			);
 		} catch (error) {
@@ -88,19 +88,19 @@ export function setupWorld(provider: DojoProvider) {
 		}
 	};
 
-	const build_combat_system_secondWind_calldata = (explorerId: BigNumberish): DojoCall => {
+	const build_combat_system_secondWind_calldata = (characterId: BigNumberish): DojoCall => {
 		return {
 			contractName: "combat_system",
 			entrypoint: "second_wind",
-			calldata: [explorerId],
+			calldata: [characterId],
 		};
 	};
 
-	const combat_system_secondWind = async (snAccount: Account | AccountInterface, explorerId: BigNumberish) => {
+	const combat_system_secondWind = async (snAccount: Account | AccountInterface, characterId: BigNumberish) => {
 		try {
 			return await provider.execute(
 				snAccount,
-				build_combat_system_secondWind_calldata(explorerId),
+				build_combat_system_secondWind_calldata(characterId),
 				"d20_0_1",
 			);
 		} catch (error) {
@@ -109,19 +109,19 @@ export function setupWorld(provider: DojoProvider) {
 		}
 	};
 
-	const build_combat_system_useItem_calldata = (explorerId: BigNumberish, itemType: CairoCustomEnum): DojoCall => {
+	const build_combat_system_useItem_calldata = (characterId: BigNumberish, itemType: CairoCustomEnum): DojoCall => {
 		return {
 			contractName: "combat_system",
 			entrypoint: "use_item",
-			calldata: [explorerId, itemType],
+			calldata: [characterId, itemType],
 		};
 	};
 
-	const combat_system_useItem = async (snAccount: Account | AccountInterface, explorerId: BigNumberish, itemType: CairoCustomEnum) => {
+	const combat_system_useItem = async (snAccount: Account | AccountInterface, characterId: BigNumberish, itemType: CairoCustomEnum) => {
 		try {
 			return await provider.execute(
 				snAccount,
-				build_combat_system_useItem_calldata(explorerId, itemType),
+				build_combat_system_useItem_calldata(characterId, itemType),
 				"d20_0_1",
 			);
 		} catch (error) {
@@ -338,19 +338,19 @@ export function setupWorld(provider: DojoProvider) {
 		}
 	};
 
-	const build_explorer_token_mintExplorer_calldata = (explorerClass: CairoCustomEnum): DojoCall => {
+	const build_explorer_token_mintExplorer_calldata = (characterClass: CairoCustomEnum): DojoCall => {
 		return {
 			contractName: "explorer_token",
 			entrypoint: "mint_explorer",
-			calldata: [explorerClass],
+			calldata: [characterClass],
 		};
 	};
 
-	const explorer_token_mintExplorer = async (snAccount: Account | AccountInterface, explorerClass: CairoCustomEnum) => {
+	const explorer_token_mintExplorer = async (snAccount: Account | AccountInterface, characterClass: CairoCustomEnum) => {
 		try {
 			return await provider.execute(
 				snAccount,
-				build_explorer_token_mintExplorer_calldata(explorerClass),
+				build_explorer_token_mintExplorer_calldata(characterClass),
 				"d20_0_1",
 			);
 		} catch (error) {
@@ -427,19 +427,19 @@ export function setupWorld(provider: DojoProvider) {
 		}
 	};
 
-	const build_explorer_token_rest_calldata = (explorerId: BigNumberish): DojoCall => {
+	const build_explorer_token_rest_calldata = (characterId: BigNumberish): DojoCall => {
 		return {
 			contractName: "explorer_token",
 			entrypoint: "rest",
-			calldata: [explorerId],
+			calldata: [characterId],
 		};
 	};
 
-	const explorer_token_rest = async (snAccount: Account | AccountInterface, explorerId: BigNumberish) => {
+	const explorer_token_rest = async (snAccount: Account | AccountInterface, characterId: BigNumberish) => {
 		try {
 			return await provider.execute(
 				snAccount,
-				build_explorer_token_rest_calldata(explorerId),
+				build_explorer_token_rest_calldata(characterId),
 				"d20_0_1",
 			);
 		} catch (error) {
@@ -719,19 +719,19 @@ export function setupWorld(provider: DojoProvider) {
 		}
 	};
 
-	const build_temple_token_disarmTrap_calldata = (explorerId: BigNumberish): DojoCall => {
+	const build_temple_token_disarmTrap_calldata = (characterId: BigNumberish): DojoCall => {
 		return {
 			contractName: "temple_token",
 			entrypoint: "disarm_trap",
-			calldata: [explorerId],
+			calldata: [characterId],
 		};
 	};
 
-	const temple_token_disarmTrap = async (snAccount: Account | AccountInterface, explorerId: BigNumberish) => {
+	const temple_token_disarmTrap = async (snAccount: Account | AccountInterface, characterId: BigNumberish) => {
 		try {
 			return await provider.execute(
 				snAccount,
-				build_temple_token_disarmTrap_calldata(explorerId),
+				build_temple_token_disarmTrap_calldata(characterId),
 				"d20_0_1",
 			);
 		} catch (error) {
@@ -740,19 +740,19 @@ export function setupWorld(provider: DojoProvider) {
 		}
 	};
 
-	const build_temple_token_enterTemple_calldata = (explorerId: BigNumberish, templeId: BigNumberish): DojoCall => {
+	const build_temple_token_enterTemple_calldata = (characterId: BigNumberish, dungeonId: BigNumberish): DojoCall => {
 		return {
 			contractName: "temple_token",
 			entrypoint: "enter_temple",
-			calldata: [explorerId, templeId],
+			calldata: [characterId, dungeonId],
 		};
 	};
 
-	const temple_token_enterTemple = async (snAccount: Account | AccountInterface, explorerId: BigNumberish, templeId: BigNumberish) => {
+	const temple_token_enterTemple = async (snAccount: Account | AccountInterface, characterId: BigNumberish, dungeonId: BigNumberish) => {
 		try {
 			return await provider.execute(
 				snAccount,
-				build_temple_token_enterTemple_calldata(explorerId, templeId),
+				build_temple_token_enterTemple_calldata(characterId, dungeonId),
 				"d20_0_1",
 			);
 		} catch (error) {
@@ -761,19 +761,19 @@ export function setupWorld(provider: DojoProvider) {
 		}
 	};
 
-	const build_temple_token_exitTemple_calldata = (explorerId: BigNumberish): DojoCall => {
+	const build_temple_token_exitTemple_calldata = (characterId: BigNumberish): DojoCall => {
 		return {
 			contractName: "temple_token",
 			entrypoint: "exit_temple",
-			calldata: [explorerId],
+			calldata: [characterId],
 		};
 	};
 
-	const temple_token_exitTemple = async (snAccount: Account | AccountInterface, explorerId: BigNumberish) => {
+	const temple_token_exitTemple = async (snAccount: Account | AccountInterface, characterId: BigNumberish) => {
 		try {
 			return await provider.execute(
 				snAccount,
-				build_temple_token_exitTemple_calldata(explorerId),
+				build_temple_token_exitTemple_calldata(characterId),
 				"d20_0_1",
 			);
 		} catch (error) {
@@ -884,19 +884,19 @@ export function setupWorld(provider: DojoProvider) {
 		}
 	};
 
-	const build_temple_token_lootFallen_calldata = (explorerId: BigNumberish, fallenIndex: BigNumberish): DojoCall => {
+	const build_temple_token_lootFallen_calldata = (characterId: BigNumberish, fallenIndex: BigNumberish): DojoCall => {
 		return {
 			contractName: "temple_token",
 			entrypoint: "loot_fallen",
-			calldata: [explorerId, fallenIndex],
+			calldata: [characterId, fallenIndex],
 		};
 	};
 
-	const temple_token_lootFallen = async (snAccount: Account | AccountInterface, explorerId: BigNumberish, fallenIndex: BigNumberish) => {
+	const temple_token_lootFallen = async (snAccount: Account | AccountInterface, characterId: BigNumberish, fallenIndex: BigNumberish) => {
 		try {
 			return await provider.execute(
 				snAccount,
-				build_temple_token_lootFallen_calldata(explorerId, fallenIndex),
+				build_temple_token_lootFallen_calldata(characterId, fallenIndex),
 				"d20_0_1",
 			);
 		} catch (error) {
@@ -905,19 +905,19 @@ export function setupWorld(provider: DojoProvider) {
 		}
 	};
 
-	const build_temple_token_lootTreasure_calldata = (explorerId: BigNumberish): DojoCall => {
+	const build_temple_token_lootTreasure_calldata = (characterId: BigNumberish): DojoCall => {
 		return {
 			contractName: "temple_token",
 			entrypoint: "loot_treasure",
-			calldata: [explorerId],
+			calldata: [characterId],
 		};
 	};
 
-	const temple_token_lootTreasure = async (snAccount: Account | AccountInterface, explorerId: BigNumberish) => {
+	const temple_token_lootTreasure = async (snAccount: Account | AccountInterface, characterId: BigNumberish) => {
 		try {
 			return await provider.execute(
 				snAccount,
-				build_temple_token_lootTreasure_calldata(explorerId),
+				build_temple_token_lootTreasure_calldata(characterId),
 				"d20_0_1",
 			);
 		} catch (error) {
@@ -981,19 +981,19 @@ export function setupWorld(provider: DojoProvider) {
 		}
 	};
 
-	const build_temple_token_moveToChamber_calldata = (explorerId: BigNumberish, exitIndex: BigNumberish): DojoCall => {
+	const build_temple_token_moveToChamber_calldata = (characterId: BigNumberish, exitIndex: BigNumberish): DojoCall => {
 		return {
 			contractName: "temple_token",
 			entrypoint: "move_to_chamber",
-			calldata: [explorerId, exitIndex],
+			calldata: [characterId, exitIndex],
 		};
 	};
 
-	const temple_token_moveToChamber = async (snAccount: Account | AccountInterface, explorerId: BigNumberish, exitIndex: BigNumberish) => {
+	const temple_token_moveToChamber = async (snAccount: Account | AccountInterface, characterId: BigNumberish, exitIndex: BigNumberish) => {
 		try {
 			return await provider.execute(
 				snAccount,
-				build_temple_token_moveToChamber_calldata(explorerId, exitIndex),
+				build_temple_token_moveToChamber_calldata(characterId, exitIndex),
 				"d20_0_1",
 			);
 		} catch (error) {
@@ -1019,19 +1019,19 @@ export function setupWorld(provider: DojoProvider) {
 		}
 	};
 
-	const build_temple_token_openExit_calldata = (explorerId: BigNumberish, exitIndex: BigNumberish): DojoCall => {
+	const build_temple_token_openExit_calldata = (characterId: BigNumberish, exitIndex: BigNumberish): DojoCall => {
 		return {
 			contractName: "temple_token",
 			entrypoint: "open_exit",
-			calldata: [explorerId, exitIndex],
+			calldata: [characterId, exitIndex],
 		};
 	};
 
-	const temple_token_openExit = async (snAccount: Account | AccountInterface, explorerId: BigNumberish, exitIndex: BigNumberish) => {
+	const temple_token_openExit = async (snAccount: Account | AccountInterface, characterId: BigNumberish, exitIndex: BigNumberish) => {
 		try {
 			return await provider.execute(
 				snAccount,
-				build_temple_token_openExit_calldata(explorerId, exitIndex),
+				build_temple_token_openExit_calldata(characterId, exitIndex),
 				"d20_0_1",
 			);
 		} catch (error) {

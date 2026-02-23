@@ -2,12 +2,6 @@ import type { SchemaType as ISchemaType } from "@dojoengine/sdk";
 
 import { CairoCustomEnum, BigNumberish } from 'starknet';
 
-// Type definition for `d20::models::config::Config` struct
-export interface Config {
-	key: BigNumberish;
-	vrf_address: string;
-}
-
 // Type definition for `d20::d20::models::character::AbilityScore` struct
 export interface AbilityScore {
 	strength: BigNumberish;
@@ -110,6 +104,16 @@ export interface CharacterDungeonProgress {
 	xp_earned: BigNumberish;
 }
 
+// Type definition for `d20::d20::models::dungeon::DungeonState` struct
+export interface DungeonState {
+	dungeon_id: BigNumberish;
+	difficulty_tier: BigNumberish;
+	next_chamber_id: BigNumberish;
+	boss_chamber_id: BigNumberish;
+	boss_alive: boolean;
+	max_depth: BigNumberish;
+}
+
 // Type definition for `d20::d20::models::dungeon::FallenCharacter` struct
 export interface FallenCharacter {
 	dungeon_id: BigNumberish;
@@ -123,7 +127,7 @@ export interface FallenCharacter {
 	is_looted: boolean;
 }
 
-// Type definition for `d20::d20::models::dungeon::MonsterInstance` struct
+// Type definition for `d20::d20::models::monster::MonsterInstance` struct
 export interface MonsterInstance {
 	dungeon_id: BigNumberish;
 	chamber_id: BigNumberish;
@@ -134,14 +138,10 @@ export interface MonsterInstance {
 	is_alive: boolean;
 }
 
-// Type definition for `d20::d20::models::dungeon::DungeonState` struct
-export interface DungeonState {
-	dungeon_id: BigNumberish;
-	difficulty_tier: BigNumberish;
-	next_chamber_id: BigNumberish;
-	boss_chamber_id: BigNumberish;
-	boss_alive: boolean;
-	max_depth: BigNumberish;
+// Type definition for `d20::models::config::Config` struct
+export interface Config {
+	key: BigNumberish;
+	vrf_address: string;
 }
 
 // Type definition for `d20::d20::models::events::BossDefeated` struct
@@ -160,16 +160,6 @@ export interface ChamberRevealed {
 	revealed_by: BigNumberish;
 }
 
-// Type definition for `d20::d20::models::events::CombatResult` struct
-export interface CombatResult {
-	character_id: BigNumberish;
-	action: CombatActionEnum;
-	roll: BigNumberish;
-	damage_dealt: BigNumberish;
-	damage_taken: BigNumberish;
-	monster_killed: boolean;
-}
-
 // Type definition for `d20::d20::models::events::CharacterDied` struct
 export interface CharacterDied {
 	character_id: BigNumberish;
@@ -183,6 +173,16 @@ export interface CharacterMinted {
 	character_id: BigNumberish;
 	character_class: CharacterClassEnum;
 	player: string;
+}
+
+// Type definition for `d20::d20::models::events::CombatResult` struct
+export interface CombatResult {
+	character_id: BigNumberish;
+	action: CombatActionEnum;
+	roll: BigNumberish;
+	damage_dealt: BigNumberish;
+	damage_taken: BigNumberish;
+	monster_killed: boolean;
 }
 
 // Type definition for `d20::d20::models::events::LevelUp` struct
@@ -223,30 +223,7 @@ export interface Transfer {
 	token_id: BigNumberish;
 }
 
-// Type definition for `d20::d20::types::character_class::CharacterClass` enum
-export const explorerClass = [
-	'None',
-	'Fighter',
-	'Rogue',
-	'Wizard',
-] as const;
-export type CharacterClass = { [key in typeof explorerClass[number]]: string };
-export type CharacterClassEnum = CairoCustomEnum;
-
-// Type definition for `d20::types::index::ChamberType` enum
-export const chamberType = [
-	'None',
-	'Entrance',
-	'Empty',
-	'Monster',
-	'Treasure',
-	'Trap',
-	'Boss',
-] as const;
-export type ChamberType = { [key in typeof chamberType[number]]: string };
-export type ChamberTypeEnum = CairoCustomEnum;
-
-// Type definition for `d20::types::index::Skill` enum
+// Type definition for `d20::d20::models::character::Skill` enum
 export const skill = [
 	'None',
 	'Athletics',
@@ -258,27 +235,6 @@ export const skill = [
 ] as const;
 export type Skill = { [key in typeof skill[number]]: string };
 export type SkillEnum = CairoCustomEnum;
-
-// Type definition for `d20::types::items::ArmorType` enum
-export const armorType = [
-	'None',
-	'Leather',
-	'ChainMail',
-] as const;
-export type ArmorType = { [key in typeof armorType[number]]: string };
-export type ArmorTypeEnum = CairoCustomEnum;
-
-// Type definition for `d20::types::items::WeaponType` enum
-export const weaponType = [
-	'None',
-	'Longsword',
-	'Dagger',
-	'Shortbow',
-	'Greataxe',
-	'Staff',
-] as const;
-export type WeaponType = { [key in typeof weaponType[number]]: string };
-export type WeaponTypeEnum = CairoCustomEnum;
 
 // Type definition for `d20::d20::models::monster::MonsterType` enum
 export const monsterType = [
@@ -294,7 +250,51 @@ export const monsterType = [
 export type MonsterType = { [key in typeof monsterType[number]]: string };
 export type MonsterTypeEnum = CairoCustomEnum;
 
-// Type definition for `d20::types::index::CombatAction` enum
+// Type definition for `d20::d20::types::character_class::CharacterClass` enum
+export const characterClass = [
+	'None',
+	'Fighter',
+	'Rogue',
+	'Wizard',
+] as const;
+export type CharacterClass = { [key in typeof characterClass[number]]: string };
+export type CharacterClassEnum = CairoCustomEnum;
+
+// Type definition for `d20::d20::types::index::ChamberType` enum
+export const chamberType = [
+	'None',
+	'Entrance',
+	'Empty',
+	'Monster',
+	'Treasure',
+	'Trap',
+	'Boss',
+] as const;
+export type ChamberType = { [key in typeof chamberType[number]]: string };
+export type ChamberTypeEnum = CairoCustomEnum;
+
+// Type definition for `d20::d20::types::items::ArmorType` enum
+export const armorType = [
+	'None',
+	'Leather',
+	'ChainMail',
+] as const;
+export type ArmorType = { [key in typeof armorType[number]]: string };
+export type ArmorTypeEnum = CairoCustomEnum;
+
+// Type definition for `d20::d20::types::items::WeaponType` enum
+export const weaponType = [
+	'None',
+	'Longsword',
+	'Dagger',
+	'Shortbow',
+	'Greataxe',
+	'Staff',
+] as const;
+export type WeaponType = { [key in typeof weaponType[number]]: string };
+export type WeaponTypeEnum = CairoCustomEnum;
+
+// Type definition for `d20::d20::types::index::CombatAction` enum
 export const combatAction = [
 	'None',
 	'Attack',
@@ -308,7 +308,7 @@ export const combatAction = [
 export type CombatAction = { [key in typeof combatAction[number]]: string };
 export type CombatActionEnum = CairoCustomEnum;
 
-// Type definition for `d20::types::index::ItemType` enum
+// Type definition for `d20::d20::types::items::ItemType` enum
 export const itemType = [
 	'None',
 	'HealthPotion',
@@ -316,7 +316,7 @@ export const itemType = [
 export type ItemType = { [key in typeof itemType[number]]: string };
 export type ItemTypeEnum = CairoCustomEnum;
 
-// Type definition for `d20::types::spells::SpellId` enum
+// Type definition for `d20::d20::types::spells::SpellId` enum
 export const spellId = [
 	'None',
 	'FireBolt',
@@ -334,7 +334,6 @@ export type SpellIdEnum = CairoCustomEnum;
 
 export interface SchemaType extends ISchemaType {
 	d20: {
-		Config: Config,
 		AbilityScore: AbilityScore,
 		CharacterCombat: CharacterCombat,
 		CharacterInventory: CharacterInventory,
@@ -345,14 +344,15 @@ export interface SchemaType extends ISchemaType {
 		Chamber: Chamber,
 		ChamberExit: ChamberExit,
 		CharacterDungeonProgress: CharacterDungeonProgress,
+		DungeonState: DungeonState,
 		FallenCharacter: FallenCharacter,
 		MonsterInstance: MonsterInstance,
-		DungeonState: DungeonState,
+		Config: Config,
 		BossDefeated: BossDefeated,
 		ChamberRevealed: ChamberRevealed,
-		CombatResult: CombatResult,
 		CharacterDied: CharacterDied,
 		CharacterMinted: CharacterMinted,
+		CombatResult: CombatResult,
 		LevelUp: LevelUp,
 		BatchMetadataUpdate: BatchMetadataUpdate,
 		MetadataUpdate: MetadataUpdate,
@@ -363,10 +363,6 @@ export interface SchemaType extends ISchemaType {
 }
 export const schema: SchemaType = {
 	d20: {
-		Config: {
-			key: 0,
-			vrf_address: "",
-		},
 		AbilityScore: {
 			strength: 0,
 			dexterity: 0,
@@ -489,6 +485,14 @@ export const schema: SchemaType = {
 			chambers_explored: 0,
 			xp_earned: 0,
 		},
+		DungeonState: {
+			dungeon_id: 0,
+			difficulty_tier: 0,
+			next_chamber_id: 0,
+			boss_chamber_id: 0,
+			boss_alive: false,
+			max_depth: 0,
+		},
 		FallenCharacter: {
 			dungeon_id: 0,
 			chamber_id: 0,
@@ -526,13 +530,9 @@ export const schema: SchemaType = {
 			max_hp: 0,
 			is_alive: false,
 		},
-		DungeonState: {
-			dungeon_id: 0,
-			difficulty_tier: 0,
-			next_chamber_id: 0,
-			boss_chamber_id: 0,
-			boss_alive: false,
-			max_depth: 0,
+		Config: {
+			key: 0,
+			vrf_address: "",
 		},
 		BossDefeated: {
 			dungeon_id: 0,
@@ -561,22 +561,6 @@ export const schema: SchemaType = {
 			depth: 0,
 			revealed_by: 0,
 		},
-		CombatResult: {
-			character_id: 0,
-		action: new CairoCustomEnum({ 
-					None: "",
-				Attack: undefined,
-				CastSpell: undefined,
-				UseItem: undefined,
-				Flee: undefined,
-				Dodge: undefined,
-				SecondWind: undefined,
-				CunningAction: undefined, }),
-			roll: 0,
-			damage_dealt: 0,
-			damage_taken: 0,
-			monster_killed: false,
-		},
 		CharacterDied: {
 			character_id: 0,
 			dungeon_id: 0,
@@ -599,6 +583,22 @@ export const schema: SchemaType = {
 				Rogue: undefined,
 				Wizard: undefined, }),
 			player: "",
+		},
+		CombatResult: {
+			character_id: 0,
+		action: new CairoCustomEnum({ 
+					None: "",
+				Attack: undefined,
+				CastSpell: undefined,
+				UseItem: undefined,
+				Flee: undefined,
+				Dodge: undefined,
+				SecondWind: undefined,
+				CunningAction: undefined, }),
+			roll: 0,
+			damage_dealt: 0,
+			damage_taken: 0,
+			monster_killed: false,
 		},
 		LevelUp: {
 			character_id: 0,
@@ -629,31 +629,31 @@ export const schema: SchemaType = {
 	},
 };
 export enum ModelsMapping {
-	Config = 'd20-Config',
 	AbilityScore = 'd20-AbilityScore',
 	CharacterCombat = 'd20-CharacterCombat',
 	CharacterInventory = 'd20-CharacterInventory',
 	CharacterPosition = 'd20-CharacterPosition',
 	CharacterSkills = 'd20-CharacterSkills',
 	CharacterStats = 'd20-CharacterStats',
+	Skill = 'd20-Skill',
 	SkillsSet = 'd20-SkillsSet',
 	Chamber = 'd20-Chamber',
 	ChamberExit = 'd20-ChamberExit',
 	CharacterDungeonProgress = 'd20-CharacterDungeonProgress',
+	DungeonState = 'd20-DungeonState',
 	FallenCharacter = 'd20-FallenCharacter',
 	MonsterInstance = 'd20-MonsterInstance',
-	DungeonState = 'd20-DungeonState',
+	MonsterType = 'd20-MonsterType',
 	CharacterClass = 'd20-CharacterClass',
 	ChamberType = 'd20-ChamberType',
-	Skill = 'd20-Skill',
 	ArmorType = 'd20-ArmorType',
 	WeaponType = 'd20-WeaponType',
-	MonsterType = 'd20-MonsterType',
+	Config = 'd20-Config',
 	BossDefeated = 'd20-BossDefeated',
 	ChamberRevealed = 'd20-ChamberRevealed',
-	CombatResult = 'd20-CombatResult',
 	CharacterDied = 'd20-CharacterDied',
 	CharacterMinted = 'd20-CharacterMinted',
+	CombatResult = 'd20-CombatResult',
 	LevelUp = 'd20-LevelUp',
 	CombatAction = 'd20-CombatAction',
 	ItemType = 'd20-ItemType',
