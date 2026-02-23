@@ -91,17 +91,9 @@ mod tests {
         });
 
         // Boost WIS to guarantee perception check passes (no modifier needed)
-        let stats: CharacterStats = world.read_model(character_id);
-        let mut abilities = stats.abilities;
-        abilities.wisdom = 20; // +5 mod guarantees DC 10
-        world.write_model_test(@CharacterStats {
-            character_id,
-            abilities,
-            level: stats.level,
-            xp: stats.xp,
-            character_class: stats.character_class,
-            dungeons_conquered: stats.dungeons_conquered,
-        });
+        let mut stats: CharacterStats = world.read_model(character_id);
+        stats.abilities.wisdom = 20; // +5 mod guarantees DC 10
+        world.write_model_test(@stats);
 
         temple.loot_treasure(character_id);
 
@@ -208,10 +200,9 @@ mod tests {
         world.write_model_test(@Chamber { dungeon_id, chamber_id: 2, chamber_type: ChamberType::Empty, depth: 1, exit_count: 0, is_revealed: true, treasure_looted: false, trap_disarmed: false, trap_dc: 0 });
         world.write_model_test(@CharacterPosition { character_id, dungeon_id, chamber_id: 2, in_combat: false, combat_monster_id: 0 });
 
-        let stats: CharacterStats = world.read_model(character_id);
-        let mut abilities = stats.abilities;
-        abilities.wisdom = 20;
-        world.write_model_test(@CharacterStats { character_id, abilities, level: stats.level, xp: stats.xp, character_class: stats.character_class, dungeons_conquered: stats.dungeons_conquered });
+        let mut stats: CharacterStats = world.read_model(character_id);
+        stats.abilities.wisdom = 20;
+        world.write_model_test(@stats);
 
         temple.loot_treasure(character_id);
 

@@ -5,7 +5,7 @@ mod tests {
     use dojo::model::{ModelStorage, ModelStorageTest};
 
     use d20::d20::models::character::{
-        CharacterStats, CharacterHealth,
+        CharacterStats,
         CharacterPosition,
     };
     use d20::d20::models::dungeon::{
@@ -57,12 +57,11 @@ mod tests {
             in_combat: true,
             combat_monster_id: 1,
         });
-        world.write_model_test(@CharacterHealth {
-            character_id,
-            current_hp: 50,
-            max_hp: 50,
-            is_dead: false,
-        });
+        let mut stats: CharacterStats = world.read_model(character_id);
+        stats.current_hp = 50;
+        stats.max_hp = 50;
+        stats.is_dead = false;
+        world.write_model_test(@stats);
         world.write_model_test(@CharacterDungeonProgress {
             character_id,
             dungeon_id,
@@ -94,15 +93,9 @@ mod tests {
         let dungeon_id = temple.mint_temple(1_u8);
 
         // Explorer with 1 prior conquest
-        let stats: CharacterStats = world.read_model(character_id);
-        world.write_model_test(@CharacterStats {
-            character_id,
-            abilities: stats.abilities,
-            level: stats.level,
-            xp: stats.xp,
-            character_class: stats.character_class,
-            dungeons_conquered: 1, // previously conquered 1 temple
-        });
+        let mut stats: CharacterStats = world.read_model(character_id);
+        stats.dungeons_conquered = 1; // previously conquered 1 temple
+        world.write_model_test(@stats);
 
         world.write_model_test(@DungeonState {
             dungeon_id,
@@ -128,12 +121,11 @@ mod tests {
             in_combat: true,
             combat_monster_id: 1,
         });
-        world.write_model_test(@CharacterHealth {
-            character_id,
-            current_hp: 50,
-            max_hp: 50,
-            is_dead: false,
-        });
+        let mut stats2: CharacterStats = world.read_model(character_id);
+        stats2.current_hp = 50;
+        stats2.max_hp = 50;
+        stats2.is_dead = false;
+        world.write_model_test(@stats2);
         world.write_model_test(@CharacterDungeonProgress {
             character_id,
             dungeon_id,

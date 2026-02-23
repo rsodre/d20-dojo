@@ -18,7 +18,6 @@ mod tests {
     use d20::models::config::{Config};
     use d20::d20::models::character::{
         CharacterStats,
-        CharacterHealth,
         CharacterCombat,
         CharacterInventory,
         CharacterPosition,
@@ -43,7 +42,6 @@ mod tests {
             resources: [
                 TestResource::Model(d20::models::config::m_Config::TEST_CLASS_HASH),
                 TestResource::Model(d20::d20::models::character::m_CharacterStats::TEST_CLASS_HASH),
-                TestResource::Model(d20::d20::models::character::m_CharacterHealth::TEST_CLASS_HASH),
                 TestResource::Model(d20::d20::models::character::m_CharacterCombat::TEST_CLASS_HASH),
                 TestResource::Model(d20::d20::models::character::m_CharacterInventory::TEST_CLASS_HASH),
                 TestResource::Model(d20::d20::models::character::m_CharacterPosition::TEST_CLASS_HASH),
@@ -127,12 +125,12 @@ mod tests {
         dungeon_id: u128,
         chamber_id: u32,
     ) {
-        let health: CharacterHealth = world.read_model(character_id);
-        assert(health.is_dead, 'explorer should be dead');
-        assert(health.current_hp == 0, 'hp should be 0 on death');
+        let stats: CharacterStats = world.read_model(character_id);
+        assert(stats.is_dead, 'explorer should be dead');
+        assert(stats.current_hp == 0, 'hp should be 0 on death');
 
         let pos: CharacterPosition = world.read_model(character_id);
-        assert(!pos.in_combat, 'dead explorer not in combat');
+        assert(!pos.in_combat, 'dead character not in combat');
 
         let fallen_count: ChamberFallenCount = world.read_model((dungeon_id, chamber_id));
         assert(fallen_count.count >= 1, 'fallen count should be >= 1');
@@ -200,18 +198,14 @@ mod tests {
         let character_id = mint_fighter(token);
 
         // Reduce HP to 3 to simulate damage
-        let health: CharacterHealth = world.read_model(character_id);
-        let max_hp = health.max_hp;
-        world.write_model_test(@CharacterHealth {
-            character_id,
-            current_hp: 3,
-            max_hp,
-            is_dead: false,
-        });
+        let mut stats: CharacterStats = world.read_model(character_id);
+        let max_hp = stats.max_hp;
+        stats.current_hp = 3;
+        world.write_model_test(@stats);
 
         combat_sys.second_wind(character_id);
 
-        let after: CharacterHealth = world.read_model(character_id);
+        let after: CharacterStats = world.read_model(character_id);
         // 1d10+level heal from 3 HP.
         assert(after.current_hp > 3, 'second wind should heal');
         assert(after.current_hp <= max_hp.try_into().unwrap(), 'cannot exceed max hp');
@@ -270,7 +264,7 @@ mod tests {
         // Fighter starts at full HP. Second wind should not exceed max.
         combat_sys.second_wind(character_id);
 
-        let after: CharacterHealth = world.read_model(character_id);
+        let after: CharacterStats = world.read_model(character_id);
         assert(after.current_hp <= after.max_hp.try_into().unwrap(), 'hp cannot exceed max');
         assert(after.current_hp >= 1, 'hp must be at least 1');
     }
@@ -288,15 +282,9 @@ mod tests {
         let character_id = mint_rogue(token);
 
         // Level to 2
-        let stats: CharacterStats = world.read_model(character_id);
-        world.write_model_test(@CharacterStats {
-            character_id,
-            abilities: stats.abilities,
-            level: 2,
-            xp: stats.xp,
-            character_class: stats.character_class,
-            dungeons_conquered: stats.dungeons_conquered,
-        });
+        let mut stats: CharacterStats = world.read_model(character_id);
+        stats.level = 2;
+        world.write_model_test(@stats);
 
         world.write_model_test(@CharacterPosition {
             character_id,
@@ -344,15 +332,9 @@ mod tests {
         let character_id = mint_rogue(token);
 
         // Level to 2
-        let stats: CharacterStats = world.read_model(character_id);
-        world.write_model_test(@CharacterStats {
-            character_id,
-            abilities: stats.abilities,
-            level: 2,
-            xp: stats.xp,
-            character_class: stats.character_class,
-            dungeons_conquered: stats.dungeons_conquered,
-        });
+        let mut stats: CharacterStats = world.read_model(character_id);
+        stats.level = 2;
+        world.write_model_test(@stats);
 
         world.write_model_test(@CharacterPosition {
             character_id,
@@ -396,17 +378,16 @@ mod tests {
         });
 
         // Give enough HP to survive a counter-attack
-        world.write_model_test(@CharacterHealth {
-            character_id,
-            current_hp: 50,
-            max_hp: 50,
-            is_dead: false,
-        });
+        let mut stats: CharacterStats = world.read_model(character_id);
+        stats.current_hp = 50;
+        stats.max_hp = 50;
+        stats.is_dead = false;
+        world.write_model_test(@stats);
 
         combat_sys.flee(character_id);
 
         // Explorer should be alive regardless of flee outcome
-        let after: CharacterHealth = world.read_model(character_id);
+        let after: CharacterStats = world.read_model(character_id);
         assert(!after.is_dead, 'explorer should survive flee');
     }
 
@@ -439,12 +420,11 @@ mod tests {
         let (mut world, token, combat_sys) = setup_world();
         let character_id = mint_fighter(token);
 
-        world.write_model_test(@CharacterHealth {
-            character_id,
-            current_hp: 0,
-            max_hp: 11,
-            is_dead: true,
-        });
+        let mut stats: CharacterStats = world.read_model(character_id);
+        stats.current_hp = 0;
+        stats.max_hp = 11;
+        stats.is_dead = true;
+        world.write_model_test(@stats);
 
         world.write_model_test(@CharacterPosition {
             character_id,
@@ -470,12 +450,11 @@ mod tests {
         let (mut world, token, combat_sys) = setup_world();
         let character_id = mint_fighter(token);
 
-        world.write_model_test(@CharacterHealth {
-            character_id,
-            current_hp: 0,
-            max_hp: 11,
-            is_dead: true,
-        });
+        let mut stats: CharacterStats = world.read_model(character_id);
+        stats.current_hp = 0;
+        stats.max_hp = 11;
+        stats.is_dead = true;
+        world.write_model_test(@stats);
 
         world.write_model_test(@MonsterInstance {
             dungeon_id: 1,
@@ -507,12 +486,11 @@ mod tests {
         let (mut world, token, combat_sys) = setup_world();
         let character_id = mint_fighter(token);
 
-        world.write_model_test(@CharacterHealth {
-            character_id,
-            current_hp: 0,
-            max_hp: 11,
-            is_dead: true,
-        });
+        let mut stats: CharacterStats = world.read_model(character_id);
+        stats.current_hp = 0;
+        stats.max_hp = 11;
+        stats.is_dead = true;
+        world.write_model_test(@stats);
 
         combat_sys.second_wind(character_id);
     }
@@ -529,12 +507,11 @@ mod tests {
         let (mut world, token, combat_sys) = setup_world();
         let character_id = mint_fighter(token);
 
-        world.write_model_test(@CharacterHealth {
-            character_id,
-            current_hp: 3,
-            max_hp: 11,
-            is_dead: false,
-        });
+        let mut stats: CharacterStats = world.read_model(character_id);
+        stats.current_hp = 3;
+        stats.max_hp = 11;
+        stats.is_dead = false;
+        world.write_model_test(@stats);
         world.write_model_test(@CharacterInventory {
             character_id,
             primary_weapon: WeaponType::Longsword,
@@ -547,7 +524,7 @@ mod tests {
 
         combat_sys.use_item(character_id, ItemType::HealthPotion);
 
-        let after: CharacterHealth = world.read_model(character_id);
+        let after: CharacterStats = world.read_model(character_id);
         assert(after.current_hp > 3, 'potion should heal');
         assert(after.current_hp <= 11, 'cannot exceed max hp');
 
@@ -599,12 +576,11 @@ mod tests {
         });
 
         // Give high HP so explorer survives counter-attack
-        world.write_model_test(@CharacterHealth {
-            character_id,
-            current_hp: 50,
-            max_hp: 50,
-            is_dead: false,
-        });
+        let mut stats: CharacterStats = world.read_model(character_id);
+        stats.current_hp = 50;
+        stats.max_hp = 50;
+        stats.is_dead = false;
+        world.write_model_test(@stats);
 
         combat_sys.attack(character_id);
 
@@ -642,12 +618,11 @@ mod tests {
         });
 
         // 1 HP — any monster hit kills the character
-        world.write_model_test(@CharacterHealth {
-            character_id,
-            current_hp: 1,
-            max_hp: 11,
-            is_dead: false,
-        });
+        let mut stats: CharacterStats = world.read_model(character_id);
+        stats.current_hp = 1;
+        stats.max_hp = 11;
+        stats.is_dead = false;
+        world.write_model_test(@stats);
 
         world.write_model_test(@CharacterInventory {
             character_id,
@@ -661,7 +636,7 @@ mod tests {
 
         combat_sys.attack(character_id);
 
-        let after: CharacterHealth = world.read_model(character_id);
+        let after: CharacterStats = world.read_model(character_id);
 
         if after.is_dead {
             assert_explorer_dead(ref world, character_id, 10_u128, 5_u32);
@@ -754,12 +729,11 @@ mod tests {
             in_combat: true,
             combat_monster_id: 1,
         });
-        world.write_model_test(@CharacterHealth {
-            character_id,
-            current_hp: 50,
-            max_hp: 50,
-            is_dead: false,
-        });
+        let mut stats: CharacterStats = world.read_model(character_id);
+        stats.current_hp = 50;
+        stats.max_hp = 50;
+        stats.is_dead = false;
+        world.write_model_test(@stats);
 
         let combat_before: CharacterCombat = world.read_model(character_id);
         let slots_before = combat_before.spell_slots_1;
@@ -812,15 +786,9 @@ mod tests {
         let character_id = mint_wizard(token);
 
         // Give wizard 2nd level spell slots (requires level 3+)
-        let stats: CharacterStats = world.read_model(character_id);
-        world.write_model_test(@CharacterStats {
-            character_id,
-            abilities: stats.abilities,
-            level: 3,
-            xp: stats.xp,
-            character_class: stats.character_class,
-            dungeons_conquered: stats.dungeons_conquered,
-        });
+        let mut stats: CharacterStats = world.read_model(character_id);
+        stats.level = 3;
+        world.write_model_test(@stats);
         world.write_model_test(@CharacterCombat {
             character_id,
             armor_class: 10,
@@ -889,12 +857,11 @@ mod tests {
             in_combat: true,
             combat_monster_id: 1,
         });
-        world.write_model_test(@CharacterHealth {
-            character_id,
-            current_hp: 50,
-            max_hp: 50,
-            is_dead: false,
-        });
+        let mut stats: CharacterStats = world.read_model(character_id);
+        stats.current_hp = 50;
+        stats.max_hp = 50;
+        stats.is_dead = false;
+        world.write_model_test(@stats);
 
         combat_sys.cast_spell(character_id, SpellId::Sleep);
 
@@ -947,12 +914,11 @@ mod tests {
         let (mut world, token, combat_sys) = setup_world();
         let character_id = mint_wizard(token);
 
-        world.write_model_test(@CharacterHealth {
-            character_id,
-            current_hp: 0,
-            max_hp: 6,
-            is_dead: true,
-        });
+        let mut stats: CharacterStats = world.read_model(character_id);
+        stats.current_hp = 0;
+        stats.max_hp = 6;
+        stats.is_dead = true;
+        world.write_model_test(@stats);
 
         combat_sys.cast_spell(character_id, SpellId::FireBolt);
     }
@@ -1009,7 +975,6 @@ mod tests {
         let (mut world, token, combat_sys) = setup_world();
         let character_id = mint_fighter(token);
 
-        let _health: CharacterHealth = world.read_model(character_id);
         // At full HP, potion shouldn't exceed max
         world.write_model_test(@CharacterInventory {
             character_id,
@@ -1023,7 +988,7 @@ mod tests {
 
         combat_sys.use_item(character_id, ItemType::HealthPotion);
 
-        let after: CharacterHealth = world.read_model(character_id);
+        let after: CharacterStats = world.read_model(character_id);
         assert(after.current_hp <= after.max_hp.try_into().unwrap(), 'hp capped at max');
     }
 

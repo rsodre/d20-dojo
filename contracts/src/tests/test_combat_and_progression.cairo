@@ -5,7 +5,7 @@ mod tests {
     use dojo::model::{ModelStorage, ModelStorageTest};
 
     use d20::d20::models::character::{
-        CharacterStats, CharacterHealth,
+        CharacterStats,
         CharacterPosition
     };
     use d20::d20::models::dungeon::{
@@ -91,12 +91,11 @@ mod tests {
         let dungeon_id = temple.mint_temple(1_u8);
 
         // Give explorer high HP so they survive the counter-attack
-        world.write_model_test(@CharacterHealth {
-            character_id,
-            current_hp: 50,
-            max_hp: 50,
-            is_dead: false,
-        });
+        let mut stats: CharacterStats = world.read_model(character_id);
+        stats.current_hp = 50;
+        stats.max_hp = 50;
+        stats.is_dead = false;
+        world.write_model_test(@stats);
 
         // Manually place in combat vs a skeleton in the temple
         world.write_model_test(@MonsterInstance {
@@ -153,12 +152,11 @@ mod tests {
             in_combat: true,
             combat_monster_id: 1,
         });
-        world.write_model_test(@CharacterHealth {
-            character_id,
-            current_hp: 50,
-            max_hp: 50,
-            is_dead: false,
-        });
+        let mut stats: CharacterStats = world.read_model(character_id);
+        stats.current_hp = 50;
+        stats.max_hp = 50;
+        stats.is_dead = false;
+        world.write_model_test(@stats);
 
         // Initialize progress so gain_xp can update it
         world.write_model_test(@CharacterDungeonProgress {
@@ -210,12 +208,11 @@ mod tests {
             in_combat: true,
             combat_monster_id: 1,
         });
-        world.write_model_test(@CharacterHealth {
-            character_id,
-            current_hp: 50,
-            max_hp: 50,
-            is_dead: false,
-        });
+        let mut stats: CharacterStats = world.read_model(character_id);
+        stats.current_hp = 50;
+        stats.max_hp = 50;
+        stats.is_dead = false;
+        world.write_model_test(@stats);
         world.write_model_test(@CharacterDungeonProgress {
             character_id,
             dungeon_id,
@@ -245,17 +242,12 @@ mod tests {
         let dungeon_id = temple.mint_temple(1_u8);
 
         // Set XP just below level 2 threshold (300 XP)
-        let stats: CharacterStats = world.read_model(character_id);
-        world.write_model_test(@CharacterStats {
-            character_id,
-            abilities: stats.abilities,
-            level: 1,
-            xp: 250, // skeleton = 50 XP → total 300 = level 2
-            character_class: stats.character_class,
-            dungeons_conquered: stats.dungeons_conquered,
-        });
+        let mut stats: CharacterStats = world.read_model(character_id);
+        stats.level = 1;
+        stats.xp = 250; // skeleton = 50 XP → total 300 = level 2
+        world.write_model_test(@stats);
 
-        let health_before: CharacterHealth = world.read_model(character_id);
+        let stats_before: CharacterStats = world.read_model(character_id);
 
         // 1 HP skeleton → guaranteed kill
         world.write_model_test(@MonsterInstance {
@@ -274,12 +266,11 @@ mod tests {
             in_combat: true,
             combat_monster_id: 1,
         });
-        world.write_model_test(@CharacterHealth {
-            character_id,
-            current_hp: 50,
-            max_hp: 50,
-            is_dead: false,
-        });
+        let mut stats: CharacterStats = world.read_model(character_id);
+        stats.current_hp = 50;
+        stats.max_hp = 50;
+        stats.is_dead = false;
+        world.write_model_test(@stats);
         world.write_model_test(@CharacterDungeonProgress {
             character_id,
             dungeon_id,
@@ -294,8 +285,7 @@ mod tests {
             let stats_after: CharacterStats = world.read_model(character_id);
             if stats_after.xp >= 300 {
                 assert(stats_after.level == 2, 'should be level 2');
-                let health_after: CharacterHealth = world.read_model(character_id);
-                assert(health_after.max_hp > health_before.max_hp, 'max_hp should increase');
+                assert(stats_after.max_hp > stats_before.max_hp, 'max_hp should increase');
             }
         }
     }

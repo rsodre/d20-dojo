@@ -14,7 +14,7 @@ use d20::systems::combat_system::{ICombatSystemDispatcher};
 use d20::systems::temple_token::{ITempleTokenDispatcher};
 use d20::models::config::m_Config;
 use d20::d20::models::character::{
-    CharacterHealth, CharacterInventory, CharacterPosition,
+    CharacterStats, CharacterInventory, CharacterPosition,
 };
 use d20::d20::models::dungeon::{FallenCharacter, ChamberFallenCount};
 use d20::d20::types::character_class::CharacterClass;
@@ -30,7 +30,6 @@ pub fn namespace_def() -> NamespaceDef {
             TestResource::Model(m_Config::TEST_CLASS_HASH),
             // Explorer models
             TestResource::Model(d20::d20::models::character::m_CharacterStats::TEST_CLASS_HASH),
-            TestResource::Model(d20::d20::models::character::m_CharacterHealth::TEST_CLASS_HASH),
             TestResource::Model(d20::d20::models::character::m_CharacterCombat::TEST_CLASS_HASH),
             TestResource::Model(d20::d20::models::character::m_CharacterInventory::TEST_CLASS_HASH),
             TestResource::Model(d20::d20::models::character::m_CharacterPosition::TEST_CLASS_HASH),
@@ -128,12 +127,12 @@ pub fn assert_explorer_dead(
     dungeon_id: u128,
     chamber_id: u32,
 ) {
-    let health: CharacterHealth = world.read_model(character_id);
-    assert(health.is_dead, 'explorer should be dead');
-    assert(health.current_hp == 0, 'hp should be 0 on death');
+    let stats: CharacterStats = world.read_model(character_id);
+    assert(stats.is_dead, 'explorer should be dead');
+    assert(stats.current_hp == 0, 'hp should be 0 on death');
 
     let pos: CharacterPosition = world.read_model(character_id);
-    assert(!pos.in_combat, 'dead explorer not in combat');
+    assert(!pos.in_combat, 'dead character not in combat');
 
     let fallen_count: ChamberFallenCount = world.read_model((dungeon_id, chamber_id));
     assert(fallen_count.count >= 1, 'fallen count should be >= 1');

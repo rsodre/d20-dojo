@@ -5,7 +5,7 @@ mod tests {
     use dojo::model::{ModelStorage, ModelStorageTest};
 
     use d20::d20::models::character::{
-        CharacterStats, CharacterHealth, CharacterPosition,
+        CharacterStats, CharacterPosition,
     };
     use d20::d20::models::dungeon::{
         DungeonState, Chamber, ChamberExit,
@@ -138,12 +138,11 @@ mod tests {
         let character_id = mint_fighter(token);
         let dungeon_id = temple.mint_temple(1_u8);
 
-        world.write_model_test(@CharacterHealth {
-            character_id,
-            current_hp: 0,
-            max_hp: 11,
-            is_dead: true,
-        });
+        let mut stats: CharacterStats = world.read_model(character_id);
+        stats.current_hp = 0;
+        stats.max_hp = 11;
+        stats.is_dead = true;
+        world.write_model_test(@stats);
 
         temple.enter_temple(character_id, dungeon_id);
     }

@@ -15,7 +15,6 @@ mod tests {
     };
     use d20::d20::models::character::{
         CharacterStats,
-        CharacterHealth,
         CharacterCombat,
         CharacterInventory,
         CharacterPosition,
@@ -34,7 +33,6 @@ mod tests {
             resources: [
                 TestResource::Model(d20::models::config::m_Config::TEST_CLASS_HASH),
                 TestResource::Model(d20::d20::models::character::m_CharacterStats::TEST_CLASS_HASH),
-                TestResource::Model(d20::d20::models::character::m_CharacterHealth::TEST_CLASS_HASH),
                 TestResource::Model(d20::d20::models::character::m_CharacterCombat::TEST_CLASS_HASH),
                 TestResource::Model(d20::d20::models::character::m_CharacterInventory::TEST_CLASS_HASH),
                 TestResource::Model(d20::d20::models::character::m_CharacterPosition::TEST_CLASS_HASH),
@@ -124,14 +122,13 @@ mod tests {
 
         let character_id = token.mint_explorer(CharacterClass::Fighter);
 
-        // let stats: CharacterStats = world.read_model(character_id);
-        let health: CharacterHealth = world.read_model(character_id);
+        let stats: CharacterStats = world.read_model(character_id);
         let combat: CharacterCombat = world.read_model(character_id);
 
         // Fighter hit die = 10, CON mod in [-1, +2] → HP in [9, 12]
-        assert(health.max_hp >= 9 && health.max_hp <= 12, 'fighter HP out of range');
-        assert(health.current_hp == health.max_hp.try_into().unwrap(), 'current_hp = max_hp');
-        assert(!health.is_dead, 'should not be dead');
+        assert(stats.max_hp >= 9 && stats.max_hp <= 12, 'fighter HP out of range');
+        assert(stats.current_hp == stats.max_hp.try_into().unwrap(), 'current_hp = max_hp');
+        assert(!stats.is_dead, 'should not be dead');
 
         // Fighter: Chain Mail → AC = 16 (ignores DEX)
         assert(combat.armor_class == 16, 'fighter AC should be 16');
@@ -208,9 +205,9 @@ mod tests {
         assert(stats.character_class == CharacterClass::Rogue, 'wrong class');
         assert_standard_array(@stats);
 
-        let health: CharacterHealth = world.read_model(character_id);
+        let rogue_stats: CharacterStats = world.read_model(character_id);
         // Rogue hit die = 8, CON mod in [-1, +2] → HP in [7, 10]
-        assert(health.max_hp >= 7 && health.max_hp <= 10, 'rogue HP out of range');
+        assert(rogue_stats.max_hp >= 7 && rogue_stats.max_hp <= 10, 'rogue HP out of range');
 
         let combat: CharacterCombat = world.read_model(character_id);
         // Rogue: Leather AC = 11 + DEX mod. DEX mod in [-1, +2] → AC in [10, 13]
@@ -265,9 +262,9 @@ mod tests {
         assert(stats.character_class == CharacterClass::Wizard, 'wrong class');
         assert_standard_array(@stats);
 
-        let health: CharacterHealth = world.read_model(character_id);
+        let wiz_stats: CharacterStats = world.read_model(character_id);
         // Wizard hit die = 6, CON mod in [-1, +2] → HP in [5, 8]
-        assert(health.max_hp >= 5 && health.max_hp <= 8, 'wizard HP out of range');
+        assert(wiz_stats.max_hp >= 5 && wiz_stats.max_hp <= 8, 'wizard HP out of range');
 
         let combat: CharacterCombat = world.read_model(character_id);
         // Wizard: no armor AC = 10 + DEX mod. DEX mod in [-1, +2] → AC in [9, 12]
@@ -354,16 +351,16 @@ mod tests {
         let character_id = token.mint_explorer(CharacterClass::Fighter);
 
         // Simulate damage by writing model directly
-        let mut health: CharacterHealth = world.read_model(character_id);
-        let max_hp = health.max_hp;
-        health.current_hp = 3;
-        world.write_model_test(@health);
+        let mut stats: CharacterStats = world.read_model(character_id);
+        let max_hp = stats.max_hp;
+        stats.current_hp = 3;
+        world.write_model_test(@stats);
 
         // Rest should restore HP
         token.rest(character_id);
 
-        let health: CharacterHealth = world.read_model(character_id);
-        assert(health.current_hp == max_hp.try_into().unwrap(), 'HP should be restored');
+        let stats: CharacterStats = world.read_model(character_id);
+        assert(stats.current_hp == max_hp.try_into().unwrap(), 'HP should be restored');
     }
 
     #[test]
@@ -419,7 +416,7 @@ mod tests {
     }
 
     #[test]
-    #[should_panic(expected: ('dead explorers cannot rest', 'ENTRYPOINT_FAILED'))]
+    #[should_panic(expected: ('dead characters cannot rest', 'ENTRYPOINT_FAILED'))]
     fn test_rest_rejects_dead_explorer() {
         let caller: ContractAddress = 'player1'.try_into().unwrap();
         starknet::testing::set_contract_address(caller);
@@ -428,10 +425,10 @@ mod tests {
         let character_id = token.mint_explorer(CharacterClass::Fighter);
 
         // Kill the character via write_model_test
-        let mut health: CharacterHealth = world.read_model(character_id);
-        health.is_dead = true;
-        health.current_hp = 0;
-        world.write_model_test(@health);
+        let mut stats: CharacterStats = world.read_model(character_id);
+        stats.is_dead = true;
+        stats.current_hp = 0;
+        world.write_model_test(@stats);
 
         token.rest(character_id); // should panic
     }

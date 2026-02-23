@@ -5,7 +5,7 @@ mod tests {
     use dojo::model::{ModelStorage, ModelStorageTest};
 
     use d20::d20::models::character::{
-        CharacterHealth, CharacterPosition,
+        CharacterStats, CharacterPosition,
     };
     use d20::d20::models::dungeon::{
         DungeonState, Chamber, ChamberExit,
@@ -206,7 +206,11 @@ mod tests {
         let character_id = mint_fighter(token);
         let dungeon_id = temple.mint_temple(1_u8);
 
-        world.write_model_test(@CharacterHealth { character_id, current_hp: 0, max_hp: 11, is_dead: true });
+        let mut stats: CharacterStats = world.read_model(character_id);
+        stats.current_hp = 0;
+        stats.max_hp = 11;
+        stats.is_dead = true;
+        world.write_model_test(@stats);
         world.write_model_test(@Chamber { dungeon_id, chamber_id: 1, chamber_type: ChamberType::Entrance, depth: 0, exit_count: 1, is_revealed: true, treasure_looted: false, trap_disarmed: false, trap_dc: 0 });
         world.write_model_test(@ChamberExit { dungeon_id, from_chamber_id: 1, exit_index: 0, to_chamber_id: 0, is_discovered: false });
         world.write_model_test(@CharacterPosition { character_id, dungeon_id, chamber_id: 1, in_combat: false, combat_monster_id: 0 });
@@ -328,7 +332,11 @@ mod tests {
         let character_id = mint_fighter(token);
         let dungeon_id = temple.mint_temple(1_u8);
 
-        world.write_model_test(@CharacterHealth { character_id, current_hp: 0, max_hp: 11, is_dead: true });
+        let mut stats: CharacterStats = world.read_model(character_id);
+        stats.current_hp = 0;
+        stats.max_hp = 11;
+        stats.is_dead = true;
+        world.write_model_test(@stats);
         world.write_model_test(@Chamber { dungeon_id, chamber_id: 1, chamber_type: ChamberType::Entrance, depth: 0, exit_count: 1, is_revealed: true, treasure_looted: false, trap_disarmed: false, trap_dc: 0 });
         world.write_model_test(@ChamberExit { dungeon_id, from_chamber_id: 1, exit_index: 0, to_chamber_id: 2, is_discovered: true });
         world.write_model_test(@Chamber { dungeon_id, chamber_id: 2, chamber_type: ChamberType::Empty, depth: 1, exit_count: 0, is_revealed: true, treasure_looted: false, trap_disarmed: false, trap_dc: 0 });

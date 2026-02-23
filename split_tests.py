@@ -150,7 +150,7 @@ mod tests {
     use dojo::world::{WorldStorageTrait};
 
     use d20::d20::models::character::{
-        CharacterStats, CharacterHealth, CharacterCombat, CharacterInventory,
+        CharacterStats, CharacterCombat, CharacterInventory,
         CharacterPosition, CharacterSkills
     };
     use d20::d20::models::dungeon::{

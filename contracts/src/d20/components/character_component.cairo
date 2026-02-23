@@ -7,7 +7,7 @@ pub mod CharacterComponent {
 
     use d20::d20::models::character::{
         AbilityScore, Skill, SkillsSet,
-        CharacterStats, CharacterHealth, CharacterCombat, CharacterInventory,
+        CharacterStats, CharacterCombat, CharacterInventory,
         CharacterPosition, CharacterSkills,
     };
     use d20::d20::types::character_class::{CharacterClass, CharacterClassTrait};
@@ -56,7 +56,7 @@ pub mod CharacterComponent {
             // Randomly pick skills from VRF
             let (skills, expertise_1, expertise_2) = random_skills(character_class, ref seeder);
 
-            // Write all explorer Dojo models
+            // Write all character Dojo models
             world.write_model(@CharacterStats {
                 character_id,
                 abilities,
@@ -64,10 +64,6 @@ pub mod CharacterComponent {
                 xp: 0,
                 character_class,
                 dungeons_conquered: 0,
-            });
-
-            world.write_model(@CharacterHealth {
-                character_id,
                 current_hp: max_hp.try_into().unwrap(),
                 max_hp,
                 is_dead: false,
@@ -122,7 +118,6 @@ pub mod CharacterComponent {
             character_id: u128,
         ) -> CharacterAttributes {
             let stats: CharacterStats = world.read_model(character_id);
-            let health: CharacterHealth = world.read_model(character_id);
             let combat: CharacterCombat = world.read_model(character_id);
 
             let class_name: ByteArray = match stats.character_class {
@@ -135,8 +130,8 @@ pub mod CharacterComponent {
             CharacterAttributes {
                 character_class: class_name,
                 level: stats.level,
-                current_hp: health.current_hp,
-                max_hp: health.max_hp,
+                current_hp: stats.current_hp,
+                max_hp: stats.max_hp,
                 armor_class: combat.armor_class,
                 strength: stats.abilities.strength,
                 dexterity: stats.abilities.dexterity,
@@ -144,7 +139,7 @@ pub mod CharacterComponent {
                 intelligence: stats.abilities.intelligence,
                 wisdom: stats.abilities.wisdom,
                 charisma: stats.abilities.charisma,
-                is_dead: health.is_dead,
+                is_dead: stats.is_dead,
             }
         }
 
@@ -153,18 +148,14 @@ pub mod CharacterComponent {
             ref world: WorldStorage,
             character_id: u128,
         ) {
-            let stats: CharacterStats = world.read_model(character_id);
-            assert(stats.character_class != CharacterClass::None, 'explorer does not exist');
+            let mut stats: CharacterStats = world.read_model(character_id);
+            assert(stats.character_class != CharacterClass::None, 'character does not exist');
 
-            let health: CharacterHealth = world.read_model(character_id);
-            assert(!health.is_dead, 'dead explorers cannot rest');
+            assert(!stats.is_dead, 'dead characters cannot rest');
 
-            world.write_model(@CharacterHealth {
-                character_id,
-                current_hp: health.max_hp.try_into().unwrap(),
-                max_hp: health.max_hp,
-                is_dead: false,
-            });
+            stats.current_hp = stats.max_hp.try_into().unwrap();
+            stats.is_dead = false;
+            world.write_model(@stats);
 
             let (slots_1, slots_2, slots_3) = stats.character_class.spell_slots_for(stats.level);
             let combat: CharacterCombat = world.read_model(character_id);

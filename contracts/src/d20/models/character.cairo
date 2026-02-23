@@ -13,6 +13,10 @@ pub struct CharacterStats {
     pub character_class: CharacterClass,
     // Achievements
     pub dungeons_conquered: u16,
+    // Health
+    pub current_hp: i16,
+    pub max_hp: u16,
+    pub is_dead: bool,
 }
 
 #[derive(Copy, Drop, Serde, IntrospectPacked, DojoStore, Default)]
@@ -37,16 +41,6 @@ pub struct AbilityScore {
 //     Wisdom,
 //     Charisma,
 // }
-
-#[derive(Copy, Drop, Serde)]
-#[dojo::model]
-pub struct CharacterHealth {
-    #[key]
-    pub character_id: u128,
-    pub current_hp: i16,
-    pub max_hp: u16,
-    pub is_dead: bool,
-}
 
 #[derive(Copy, Drop, Serde)]
 #[dojo::model]

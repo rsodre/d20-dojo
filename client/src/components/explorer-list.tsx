@@ -17,17 +17,17 @@ interface ExplorerCardProps {
 }
 
 function ExplorerCard({ token, selectedTempleId }: ExplorerCardProps) {
-  const { stats, health, combat, position } = useExplorerModels(token.tokenIdNum);
+  const { stats, combat, position } = useExplorerModels(token.tokenIdNum);
   const { enter_temple, exit_temple } = useTempleCalls();
 
   const className = stats?.character_class as unknown as string ?? undefined;
   const emoji = className ? (CLASS_EMOJI[className] ?? "⚔️") : "⚔️";
   const level = stats ? Number(stats.level) : undefined;
   const xp = stats ? Number(stats.xp) : undefined;
-  const currentHp = health ? Number(health.current_hp) : undefined;
-  const maxHp = health ? Number(health.max_hp) : undefined;
+  const currentHp = stats ? Number(stats.current_hp) : undefined;
+  const maxHp = stats ? Number(stats.max_hp) : undefined;
   const ac = combat ? Number(combat.armor_class) : undefined;
-  const isDead = health?.is_dead ?? false;
+  const isDead = stats?.is_dead ?? false;
 
   const dungeonId = position ? BigInt(position.dungeon_id) : 0n;
   const isInTemple = dungeonId > 0n;

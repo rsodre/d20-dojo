@@ -29,14 +29,6 @@ export interface CharacterCombat {
 	action_surge_used: boolean;
 }
 
-// Type definition for `d20::d20::models::character::CharacterHealth` struct
-export interface CharacterHealth {
-	character_id: BigNumberish;
-	current_hp: BigNumberish;
-	max_hp: BigNumberish;
-	is_dead: boolean;
-}
-
 // Type definition for `d20::d20::models::character::CharacterInventory` struct
 export interface CharacterInventory {
 	character_id: BigNumberish;
@@ -73,6 +65,9 @@ export interface CharacterStats {
 	xp: BigNumberish;
 	character_class: CharacterClassEnum;
 	dungeons_conquered: BigNumberish;
+	current_hp: BigNumberish;
+	max_hp: BigNumberish;
+	is_dead: boolean;
 }
 
 // Type definition for `d20::d20::models::character::SkillsSet` struct
@@ -349,7 +344,6 @@ export interface SchemaType extends ISchemaType {
 		Config: Config,
 		AbilityScore: AbilityScore,
 		CharacterCombat: CharacterCombat,
-		CharacterHealth: CharacterHealth,
 		CharacterInventory: CharacterInventory,
 		CharacterPosition: CharacterPosition,
 		CharacterSkills: CharacterSkills,
@@ -397,12 +391,6 @@ export const schema: SchemaType = {
 			spell_slots_3: 0,
 			second_wind_used: false,
 			action_surge_used: false,
-		},
-		CharacterHealth: {
-			character_id: 0,
-			current_hp: 0,
-			max_hp: 0,
-			is_dead: false,
 		},
 		CharacterInventory: {
 			character_id: 0,
@@ -466,6 +454,9 @@ export const schema: SchemaType = {
 				Rogue: undefined,
 				Wizard: undefined, }),
 			dungeons_conquered: 0,
+			current_hp: 0,
+			max_hp: 0,
+			is_dead: false,
 		},
 		SkillsSet: {
 			athletics: false,
@@ -654,7 +645,6 @@ export enum ModelsMapping {
 	Config = 'd20-Config',
 	AbilityScore = 'd20-AbilityScore',
 	CharacterCombat = 'd20-CharacterCombat',
-	CharacterHealth = 'd20-CharacterHealth',
 	CharacterInventory = 'd20-CharacterInventory',
 	CharacterPosition = 'd20-CharacterPosition',
 	CharacterSkills = 'd20-CharacterSkills',

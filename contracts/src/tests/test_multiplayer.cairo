@@ -5,7 +5,7 @@ mod tests {
     use dojo::model::{ModelStorage, ModelStorageTest};
 
     use d20::d20::models::character::{
-        CharacterStats, CharacterHealth, CharacterInventory,
+        CharacterStats, CharacterInventory,
         CharacterPosition
     };
     use d20::d20::models::dungeon::{
@@ -191,17 +191,9 @@ mod tests {
             trap_dc: 0,
         });
         // Give A high WIS for guaranteed perception
-        let stats_a: CharacterStats = world.read_model(explorer_a);
-        let mut abilities_a = stats_a.abilities;
-        abilities_a.wisdom = 20;
-        world.write_model_test(@CharacterStats {
-            character_id: explorer_a,
-            abilities: abilities_a,
-            level: stats_a.level,
-            xp: stats_a.xp,
-            character_class: stats_a.character_class,
-            dungeons_conquered: stats_a.dungeons_conquered,
-        });
+        let mut stats_a: CharacterStats = world.read_model(explorer_a);
+        stats_a.abilities.wisdom = 20;
+        world.write_model_test(@stats_a);
 
         // Player A loots treasure
         temple.loot_treasure(explorer_a);
@@ -219,12 +211,11 @@ mod tests {
             in_combat: false,
             combat_monster_id: 0,
         });
-        world.write_model_test(@CharacterHealth {
-            character_id: explorer_b,
-            current_hp: 10,
-            max_hp: 10,
-            is_dead: false,
-        });
+        let mut stats_b: CharacterStats = world.read_model(explorer_b);
+        stats_b.current_hp = 10;
+        stats_b.max_hp = 10;
+        stats_b.is_dead = false;
+        world.write_model_test(@stats_b);
 
         // Player B tries to loot — should panic (treasure_looted is true)
         temple.loot_treasure(explorer_b);
@@ -296,8 +287,8 @@ mod tests {
         temple.enter_temple(explorer_b, dungeon_id);
 
         // Record B's HP before moving to trap chamber
-        let health_before: CharacterHealth = world.read_model(explorer_b);
-        let hp_before = health_before.current_hp;
+        let stats_b_before: CharacterStats = world.read_model(explorer_b);
+        let hp_before = stats_b_before.current_hp;
 
         // Move B to trap chamber — trap is already disarmed, no damage
         temple.move_to_chamber(explorer_b, 0);
@@ -305,8 +296,8 @@ mod tests {
         let pos_b: CharacterPosition = world.read_model(explorer_b);
         assert(pos_b.chamber_id == 2, 'B in trap chamber');
 
-        let health_after: CharacterHealth = world.read_model(explorer_b);
-        assert(health_after.current_hp == hp_before, 'B takes no trap dmg');
+        let stats_b_after: CharacterStats = world.read_model(explorer_b);
+        assert(stats_b_after.current_hp == hp_before, 'B takes no trap dmg');
     }
 
     // ═══════════════════════════════════════════════════════════════════════
@@ -476,12 +467,11 @@ mod tests {
             in_combat: true,
             combat_monster_id: 1,
         });
-        world.write_model_test(@CharacterHealth {
-            character_id: explorer_a,
-            current_hp: 1,
-            max_hp: 11,
-            is_dead: false,
-        });
+        let mut stats_a: CharacterStats = world.read_model(explorer_a);
+        stats_a.current_hp = 1;
+        stats_a.max_hp = 11;
+        stats_a.is_dead = false;
+        world.write_model_test(@stats_a);
         world.write_model_test(@CharacterInventory {
             character_id: explorer_a,
             primary_weapon: WeaponType::Longsword,
@@ -495,8 +485,8 @@ mod tests {
         // A attacks and dies from counter-attack
         combat.attack(explorer_a);
 
-        let health_a: CharacterHealth = world.read_model(explorer_a);
-        if !health_a.is_dead {
+        let stats_a: CharacterStats = world.read_model(explorer_a);
+        if !stats_a.is_dead {
             return; // Non-deterministic — A survived; skip rest of test
         }
 

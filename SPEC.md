@@ -74,7 +74,7 @@ All NFTs use dedicated ERC-721 contracts built with **OpenZeppelin ERC-721 compo
 - Each explorer is an NFT minted when a player creates a character
 - The token ID (`u128`) is the primary key for all explorer-related models
 - An explorer NFT represents a unique character with stats, inventory, and history
-- **Permadeath:** When an explorer dies, the NFT is frozen permanently. The explorer's body remains visible at the chamber where they fell. A dead explorer can never be used again — the player must mint a new explorer to continue playing.
+- **Permadeath:** When an explorer dies, the NFT is frozen permanently. The explorer's body remains visible at the chamber where they fell. A dead character can never be used again — the player must mint a new explorer to continue playing.
 - The explorer tracks how many temples they have conquered (killed the boss)
 
 ### Temple NFT
@@ -373,13 +373,7 @@ pub struct CharacterStats {
     pub character_class: CharacterClass,
     // Achievements
     pub dungeons_conquered: u16,   // how many temple bosses killed
-}
-
-#[derive(Copy, Drop, Serde)]
-#[dojo::model]
-pub struct CharacterHealth {
-    #[key]
-    pub character_id: u128,
+    // Health
     pub current_hp: i16,      // signed — can go negative (overkill detection, then clamped to 0)
     pub max_hp: u16,
     pub is_dead: bool,
@@ -518,7 +512,7 @@ pub struct FallenCharacter {
     pub chamber_id: u32,
     #[key]
     pub fallen_index: u32,        // sequential index per chamber
-    pub character_id: u128,        // the dead explorer's token ID
+    pub character_id: u128,        // the dead character's token ID
     // Dropped loot
     pub dropped_weapon: WeaponType,
     pub dropped_armor: ArmorType,
@@ -698,9 +692,9 @@ Systems are `#[dojo::contract]` modules, not free functions. Each contract has a
 
 | Contract | Tag | Writes to |
 |----------|-----|-----------|
-| `explorer_token` | `d20_0_1-explorer_token` | CharacterStats, CharacterHealth, CharacterCombat, CharacterInventory, CharacterSkills |
-| `combat_system` | `d20_0_1-combat_system` | CharacterHealth, CharacterCombat, CharacterInventory, CharacterPosition, MonsterInstance, FallenCharacter, ChamberFallenCount |
-| `temple_token` | `d20_0_1-temple_token` | CharacterPosition, CharacterDungeonProgress, CharacterStats, CharacterHealth, CharacterInventory, DungeonState, Chamber, MonsterInstance, ChamberExit, FallenCharacter, ChamberFallenCount |
+| `explorer_token` | `d20_0_1-explorer_token` | CharacterStats, CharacterCombat, CharacterInventory, CharacterSkills |
+| `combat_system` | `d20_0_1-combat_system` | CharacterCombat, CharacterInventory, CharacterPosition, MonsterInstance, FallenCharacter, ChamberFallenCount |
+| `temple_token` | `d20_0_1-temple_token` | CharacterPosition, CharacterDungeonProgress, CharacterStats, CharacterInventory, DungeonState, Chamber, MonsterInstance, ChamberExit, FallenCharacter, ChamberFallenCount |
 
 ```cairo
 // ──────────────────────────────────────────────
@@ -748,7 +742,7 @@ trait ICombatSystem<T> {
 }
 
 // Death logic is an internal function called when HP reaches 0:
-// - sets is_dead = true on CharacterHealth
+// - sets is_dead = true on CharacterStats
 // - creates FallenCharacter with dropped loot in current chamber
 // - increments ChamberFallenCount
 // - emits CharacterDied event

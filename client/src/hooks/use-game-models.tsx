@@ -14,7 +14,6 @@ export function useGameModels() {
 
   const models = useMemo(() => ([
     model("CharacterStats"),
-    model("CharacterHealth"),
     model("CharacterCombat"),
     model("CharacterInventory"),
     model("CharacterPosition"),

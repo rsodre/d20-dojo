@@ -16,7 +16,7 @@ If you are an agent tasked with **developing or modifying** the game's contracts
 
 ## Death is Permanent
 
-Caution: Once an explorer dies, the character cannot be restored. Monitor your HP via the `CharacterHealth` model and exit the temple or rest if you are in danger.
+Caution: Once an explorer dies, the character cannot be restored. Monitor your HP via the `CharacterStats` model and exit the temple or rest if you are in danger.
 
 ## Key Resources
 

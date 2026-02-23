@@ -103,7 +103,7 @@ Search for gold and potions in `Empty` or `Treasure` chambers.
 - **VRF**: Consumes VRF for the Perception check.
 
 ### `loot_fallen`
-Pick up items dropped by a dead explorer in the current chamber.
+Pick up items dropped by a dead character in the current chamber.
 
 ---
 
@@ -144,5 +144,5 @@ Rogue-only feature: disengage or hide without triggering a monster counter-attac
 All actions involving dice rolls require Cartridge VRF. These transactions must be submitted via a provider or paymaster that handles the VRF Request/Consume flow (like the Cartridge Controller).
 
 ### Death is Permanent
-When `CharacterHealth.is_dead` becomes true, the NFT is frozen. The character's inventory is dropped in the chamber where they fell, and can be retrieved by other explorers via `loot_fallen`.
+When `CharacterStats.is_dead` becomes true, the NFT is frozen. The character's inventory is dropped in the chamber where they fell, and can be retrieved by other explorers via `loot_fallen`.
 

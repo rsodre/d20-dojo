@@ -1,7 +1,7 @@
 use dojo::model::ModelStorage;
 use dojo::event::EventStorage;
 use dojo::world::WorldStorage;
-use d20::d20::models::character::{CharacterHealth, CharacterPosition, CharacterInventory};
+use d20::d20::models::character::{CharacterStats, CharacterPosition, CharacterInventory};
 use d20::d20::models::dungeon::{FallenCharacter, ChamberFallenCount};
 use d20::d20::models::events::CharacterDied;
 use d20::d20::models::monster::MonsterType;
@@ -24,7 +24,7 @@ pub trait DamageTrait {
     fn apply_character_damage(
         ref world: WorldStorage,
         character_id: u128,
-        health: CharacterHealth,
+        stats: CharacterStats,
         position: CharacterPosition,
         monster_type: MonsterType,
         damage: u16,
@@ -33,7 +33,7 @@ pub trait DamageTrait {
     fn handle_death(
         ref world: WorldStorage,
         character_id: u128,
-        health: CharacterHealth,
+        stats: CharacterStats,
         position: CharacterPosition,
         monster_type: MonsterType,
     );
@@ -45,31 +45,29 @@ pub impl DamageImpl of DamageTrait {
     fn apply_character_damage(
         ref world: WorldStorage,
         character_id: u128,
-        health: CharacterHealth,
+        stats: CharacterStats,
         position: CharacterPosition,
         monster_type: MonsterType,
         damage: u16,
     ) -> u16 {
         let damage_i16: i16 = damage.try_into().unwrap();
-        let new_hp: i16 = health.current_hp - damage_i16;
+        let new_hp: i16 = stats.current_hp - damage_i16;
 
         if new_hp <= 0 {
-            Self::handle_death(ref world, character_id, health, position, monster_type);
+            Self::handle_death(ref world, character_id, stats, position, monster_type);
             // Return actual HP lost (capped at what the character had)
-            health.current_hp.try_into().unwrap()
+            stats.current_hp.try_into().unwrap()
         } else {
-            world.write_model(@CharacterHealth {
-                character_id,
-                current_hp: new_hp,
-                max_hp: health.max_hp,
-                is_dead: false,
-            });
+            let mut updated_stats = stats;
+            updated_stats.current_hp = new_hp;
+            updated_stats.is_dead = false;
+            world.write_model(@updated_stats);
             damage
         }
     }
 
     /// Handle explorer death:
-    ///   1. Set is_dead on CharacterHealth, clear HP to 0.
+    ///   1. Set is_dead on CharacterStats, clear HP to 0.
     ///   2. Clear combat state on CharacterPosition.
     ///   3. Read inventory and create FallenCharacter with dropped loot.
     ///   4. Increment ChamberFallenCount.
@@ -78,17 +76,15 @@ pub impl DamageImpl of DamageTrait {
     fn handle_death(
         ref world: WorldStorage,
         character_id: u128,
-        health: CharacterHealth,
+        stats: CharacterStats,
         position: CharacterPosition,
         monster_type: MonsterType,
     ) {
         // 1. Mark explorer dead
-        world.write_model(@CharacterHealth {
-            character_id,
-            current_hp: 0,
-            max_hp: health.max_hp,
-            is_dead: true,
-        });
+        let mut dead_stats = stats;
+        dead_stats.current_hp = 0;
+        dead_stats.is_dead = true;
+        world.write_model(@dead_stats);
 
         // 2. Clear combat state
         world.write_model(@CharacterPosition {

@@ -5,7 +5,7 @@ mod tests {
     use dojo::model::{ModelStorage, ModelStorageTest};
 
     use d20::d20::models::character::{
-        CharacterStats, CharacterHealth, CharacterInventory,
+        CharacterStats, CharacterInventory,
         CharacterPosition,
     };
     use d20::d20::models::dungeon::{
@@ -62,12 +62,11 @@ mod tests {
         });
 
         // 1 HP explorer with DEX 10 (modifier 0) — any damage is fatal
-        world.write_model_test(@CharacterHealth {
-            character_id,
-            current_hp: 1,
-            max_hp: 11,
-            is_dead: false,
-        });
+        let mut stats: CharacterStats = world.read_model(character_id);
+        stats.current_hp = 1;
+        stats.max_hp = 11;
+        stats.is_dead = false;
+        world.write_model_test(@stats);
         // Give some gold/potions so we can verify they get dropped
         world.write_model_test(@CharacterInventory {
             character_id,
@@ -116,12 +115,11 @@ mod tests {
             in_combat: false,
             combat_monster_id: 0,
         });
-        world.write_model_test(@CharacterHealth {
-            character_id,
-            current_hp: 1,
-            max_hp: 11,
-            is_dead: false,
-        });
+        let mut stats: CharacterStats = world.read_model(character_id);
+        stats.current_hp = 1;
+        stats.max_hp = 11;
+        stats.is_dead = false;
+        world.write_model_test(@stats);
         world.write_model_test(@CharacterInventory {
             character_id,
             primary_weapon: WeaponType::Longsword,
@@ -138,14 +136,9 @@ mod tests {
         let mut abilities = stats.abilities;
         abilities.intelligence = 8;
         abilities.dexterity = 10;
-        world.write_model_test(@CharacterStats {
-            character_id,
-            abilities,
-            level: stats.level,
-            xp: stats.xp,
-            character_class: stats.character_class,
-            dungeons_conquered: stats.dungeons_conquered,
-        });
+        let mut updated_stats = stats;
+        updated_stats.abilities = abilities;
+        world.write_model_test(@updated_stats);
 
         temple.disarm_trap(character_id);
 
@@ -184,26 +177,18 @@ mod tests {
         let stats: CharacterStats = world.read_model(character_id);
         let mut abilities = stats.abilities;
         abilities.dexterity = 20;
-        world.write_model_test(@CharacterStats {
-            character_id,
-            abilities,
-            level: stats.level,
-            xp: stats.xp,
-            character_class: stats.character_class,
-            dungeons_conquered: stats.dungeons_conquered,
-        });
-        world.write_model_test(@CharacterHealth {
-            character_id,
-            current_hp: 50,
-            max_hp: 50,
-            is_dead: false,
-        });
+        let mut updated_stats = stats;
+        updated_stats.abilities = abilities;
+        updated_stats.current_hp = 50;
+        updated_stats.max_hp = 50;
+        updated_stats.is_dead = false;
+        world.write_model_test(@updated_stats);
 
         temple.disarm_trap(character_id);
 
         let chamber_after: Chamber = world.read_model((dungeon_id, 3_u32));
-        let health_after: CharacterHealth = world.read_model(character_id);
-        assert(!health_after.is_dead || chamber_after.trap_disarmed || health_after.current_hp < 50,
+        let stats_after: CharacterStats = world.read_model(character_id);
+        assert(!stats_after.is_dead || chamber_after.trap_disarmed || stats_after.current_hp < 50,
             'disarm had some effect');
     }
 
@@ -284,7 +269,11 @@ mod tests {
         let character_id = mint_fighter(token);
         let dungeon_id = temple.mint_temple(1_u8);
 
-        world.write_model_test(@CharacterHealth { character_id, current_hp: 0, max_hp: 11, is_dead: true });
+        let mut stats: CharacterStats = world.read_model(character_id);
+        stats.current_hp = 0;
+        stats.max_hp = 11;
+        stats.is_dead = true;
+        world.write_model_test(@stats);
         world.write_model_test(@Chamber { dungeon_id, chamber_id: 3, chamber_type: ChamberType::Trap, depth: 2, exit_count: 1, is_revealed: true, treasure_looted: false, trap_disarmed: false, trap_dc: 10 });
         world.write_model_test(@CharacterPosition { character_id, dungeon_id, chamber_id: 3, in_combat: false, combat_monster_id: 0 });
 
@@ -323,7 +312,11 @@ mod tests {
         world.write_model_test(@Chamber { dungeon_id, chamber_id: 2, chamber_type: ChamberType::Trap, depth: 4, exit_count: 0, is_revealed: true, treasure_looted: false, trap_disarmed: false, trap_dc: 25 });
 
         temple.enter_temple(character_id, dungeon_id);
-        world.write_model_test(@CharacterHealth { character_id, current_hp: 50, max_hp: 50, is_dead: false });
+        let mut stats: CharacterStats = world.read_model(character_id);
+        stats.current_hp = 50;
+        stats.max_hp = 50;
+        stats.is_dead = false;
+        world.write_model_test(@stats);
 
         temple.move_to_chamber(character_id, 0);
 
@@ -346,12 +339,12 @@ mod tests {
         world.write_model_test(@Chamber { dungeon_id, chamber_id: 2, chamber_type: ChamberType::Trap, depth: 1, exit_count: 0, is_revealed: true, treasure_looted: false, trap_disarmed: true, trap_dc: 15 });
 
         temple.enter_temple(character_id, dungeon_id);
-        let health_before: CharacterHealth = world.read_model(character_id);
+        let stats_before: CharacterStats = world.read_model(character_id);
 
         temple.move_to_chamber(character_id, 0);
 
-        let health_after: CharacterHealth = world.read_model(character_id);
-        assert(health_after.current_hp == health_before.current_hp, 'no damage from disarmed trap');
+        let stats_after: CharacterStats = world.read_model(character_id);
+        assert(stats_after.current_hp == stats_before.current_hp, 'no damage from disarmed trap');
     }
 
 }

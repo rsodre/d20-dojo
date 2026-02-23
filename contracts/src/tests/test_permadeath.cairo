@@ -5,7 +5,7 @@ mod tests {
     use dojo::model::{ModelStorage, ModelStorageTest};
 
     use d20::d20::models::character::{
-        CharacterHealth, CharacterInventory, CharacterPosition,
+        CharacterStats, CharacterInventory, CharacterPosition,
     };
     use d20::d20::models::dungeon::{
         MonsterInstance,
@@ -188,11 +188,15 @@ mod tests {
         world.write_model_test(@CharacterInventory { character_id: explorer_a, primary_weapon: WeaponType::Longsword, secondary_weapon: WeaponType::None, armor: ArmorType::ChainMail, has_shield: false, gold: 42, potions: 3 });
         world.write_model_test(@CharacterPosition { character_id: explorer_a, dungeon_id, chamber_id: 1, in_combat: true, combat_monster_id: 1 });
         world.write_model_test(@MonsterInstance { dungeon_id, chamber_id: 1, monster_id: 1, monster_type: MonsterType::Skeleton, current_hp: 50, max_hp: 50, is_alive: true });
-        world.write_model_test(@CharacterHealth { character_id: explorer_a, current_hp: 1, max_hp: 11, is_dead: false });
+        let mut stats_a: CharacterStats = world.read_model(explorer_a);
+        stats_a.current_hp = 1;
+        stats_a.max_hp = 11;
+        stats_a.is_dead = false;
+        world.write_model_test(@stats_a);
 
         combat.attack(explorer_a);
 
-        let health_a: CharacterHealth = world.read_model(explorer_a);
+        let health_a: CharacterStats = world.read_model(explorer_a);
         if !health_a.is_dead { return; }
 
         let fallen_count: ChamberFallenCount = world.read_model((dungeon_id, 1_u32));
@@ -248,7 +252,7 @@ mod tests {
 
     // ═══════════════════════════════════════════════════════════════════════
     #[test]
-    #[should_panic(expected: ('dead explorers cannot loot', 'ENTRYPOINT_FAILED'))]
+    #[should_panic(expected: ('dead characters cannot loot', 'ENTRYPOINT_FAILED'))]
     fn test_dead_explorer_cannot_loot_treasure() {
         let caller: ContractAddress = 'deadloot1'.try_into().unwrap();
         starknet::testing::set_contract_address(caller);
@@ -257,14 +261,18 @@ mod tests {
         let character_id = mint_fighter(token);
         let dungeon_id = temple.mint_temple(1_u8);
         temple.enter_temple(character_id, dungeon_id);
-        world.write_model_test(@CharacterHealth { character_id, current_hp: 0, max_hp: 11, is_dead: true });
+        let mut stats: CharacterStats = world.read_model(character_id);
+        stats.current_hp = 0;
+        stats.max_hp = 11;
+        stats.is_dead = true;
+        world.write_model_test(@stats);
 
         temple.loot_treasure(character_id);
     }
 
     // ═══════════════════════════════════════════════════════════════════════
     #[test]
-    #[should_panic(expected: ('dead explorers cannot loot', 'ENTRYPOINT_FAILED'))]
+    #[should_panic(expected: ('dead characters cannot loot', 'ENTRYPOINT_FAILED'))]
     fn test_dead_explorer_cannot_loot_fallen() {
         let caller: ContractAddress = 'deadloot2'.try_into().unwrap();
         starknet::testing::set_contract_address(caller);
@@ -276,14 +284,18 @@ mod tests {
 
         world.write_model_test(@ChamberFallenCount { dungeon_id, chamber_id: 1, count: 1 });
         world.write_model_test(@FallenCharacter { dungeon_id, chamber_id: 1, fallen_index: 0, character_id: 9999, dropped_weapon: WeaponType::Dagger, dropped_armor: ArmorType::None, dropped_gold: 10, dropped_potions: 0, is_looted: false });
-        world.write_model_test(@CharacterHealth { character_id, current_hp: 0, max_hp: 11, is_dead: true });
+        let mut stats: CharacterStats = world.read_model(character_id);
+        stats.current_hp = 0;
+        stats.max_hp = 11;
+        stats.is_dead = true;
+        world.write_model_test(@stats);
 
         temple.loot_fallen(character_id, 0);
     }
 
     // ═══════════════════════════════════════════════════════════════════════
     #[test]
-    #[should_panic(expected: ('dead explorer cannot act', 'ENTRYPOINT_FAILED'))]
+    #[should_panic(expected: ('dead character cannot act', 'ENTRYPOINT_FAILED'))]
     fn test_dead_explorer_cannot_use_item() {
         let caller: ContractAddress = 'deaditem'.try_into().unwrap();
         starknet::testing::set_contract_address(caller);
@@ -291,7 +303,11 @@ mod tests {
         let (mut world, token, combat, _temple) = setup_world();
         let character_id = mint_fighter(token);
 
-        world.write_model_test(@CharacterHealth { character_id, current_hp: 0, max_hp: 11, is_dead: true });
+        let mut stats: CharacterStats = world.read_model(character_id);
+        stats.current_hp = 0;
+        stats.max_hp = 11;
+        stats.is_dead = true;
+        world.write_model_test(@stats);
         world.write_model_test(@CharacterInventory { character_id, primary_weapon: WeaponType::Longsword, secondary_weapon: WeaponType::None, armor: ArmorType::ChainMail, has_shield: false, gold: 0, potions: 1 });
 
         combat.use_item(character_id, ItemType::HealthPotion);
@@ -308,11 +324,15 @@ mod tests {
         let dungeon_id = temple.mint_temple(1_u8);
         temple.enter_temple(character_id, dungeon_id);
 
-        world.write_model_test(@CharacterHealth { character_id, current_hp: 0, max_hp: 11, is_dead: true });
+        let mut stats: CharacterStats = world.read_model(character_id);
+        stats.current_hp = 0;
+        stats.max_hp = 11;
+        stats.is_dead = true;
+        world.write_model_test(@stats);
 
-        let health: CharacterHealth = world.read_model(character_id);
-        assert(health.is_dead, 'explorer should be dead');
-        assert(health.current_hp == 0, 'hp should be 0');
+        let stats: CharacterStats = world.read_model(character_id);
+        assert(stats.is_dead, 'explorer should be dead');
+        assert(stats.current_hp == 0, 'hp should be 0');
 
         let pos: CharacterPosition = world.read_model(character_id);
         assert(pos.dungeon_id == dungeon_id, 'body in temple');

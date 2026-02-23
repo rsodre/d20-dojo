@@ -153,17 +153,17 @@ function TempleStats({ dungeonId }: { dungeonId: bigint }) {
 }
 
 function ExplorerInTemple({ characterId }: { characterId: bigint }) {
-  const { stats, health, combat, position } = useExplorerModels(characterId);
+  const { stats, combat, position } = useExplorerModels(characterId);
 
   if (!position || BigInt(position.dungeon_id) === 0n) return null;
 
   const className = enumVariant(stats?.character_class);
   const emoji = CLASS_EMOJI[className] ?? "⚔️";
   const level = stats ? Number(stats.level) : undefined;
-  const currentHp = health ? Number(health.current_hp) : undefined;
-  const maxHp = health ? Number(health.max_hp) : undefined;
+  const currentHp = stats ? Number(stats.current_hp) : undefined;
+  const maxHp = stats ? Number(stats.max_hp) : undefined;
   const ac = combat ? Number(combat.armor_class) : undefined;
-  const isDead = health?.is_dead ?? false;
+  const isDead = stats?.is_dead ?? false;
   const inCombat = position?.in_combat ?? false;
   const chamberId = position ? Number(position.chamber_id) : undefined;
 

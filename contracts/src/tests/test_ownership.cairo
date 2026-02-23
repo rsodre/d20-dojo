@@ -19,7 +19,6 @@ mod tests {
             resources: array![
                 TestResource::Model(d20::models::config::m_Config::TEST_CLASS_HASH),
                 TestResource::Model(d20::d20::models::character::m_CharacterStats::TEST_CLASS_HASH),
-                TestResource::Model(d20::d20::models::character::m_CharacterHealth::TEST_CLASS_HASH),
                 TestResource::Model(d20::d20::models::character::m_CharacterCombat::TEST_CLASS_HASH),
                 TestResource::Model(d20::d20::models::character::m_CharacterInventory::TEST_CLASS_HASH),
                 TestResource::Model(d20::d20::models::character::m_CharacterPosition::TEST_CLASS_HASH),

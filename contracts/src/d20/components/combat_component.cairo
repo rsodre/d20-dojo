@@ -10,7 +10,7 @@ pub mod CombatComponent {
     use d20::d20::types::spells::{SpellId, SpellIdTrait};
     use d20::d20::types::character_class::{CharacterClass, CharacterClassTrait};
     use d20::d20::models::character::{
-        CharacterStats, CharacterHealth, CharacterCombat, CharacterInventory, CharacterPosition,
+        CharacterStats, CharacterCombat, CharacterInventory, CharacterPosition,
     };
     use d20::d20::models::dungeon::{MonsterInstance, CharacterDungeonProgress, DungeonState};
     use d20::d20::models::events::{CombatResult, LevelUp, BossDefeated};
@@ -37,10 +37,8 @@ pub mod CombatComponent {
             ref seeder: Seeder,
         ) {
             let stats: CharacterStats = world.read_model(character_id);
-            assert(stats.character_class != CharacterClass::None, 'explorer does not exist');
-
-            let health: CharacterHealth = world.read_model(character_id);
-            assert(!health.is_dead, 'dead explorer cannot act');
+            assert(stats.character_class != CharacterClass::None, 'character does not exist');
+            assert(!stats.is_dead, 'dead character cannot act');
 
             let position: CharacterPosition = world.read_model(character_id);
             assert(position.in_combat, 'not in combat');
@@ -174,8 +172,8 @@ pub mod CombatComponent {
             // Monster counter-attack
             let mut damage_taken: u16 = 0;
             if !monster_killed {
-                let updated_health: CharacterHealth = world.read_model(character_id);
-                if !updated_health.is_dead {
+                let updated_stats: CharacterStats = world.read_model(character_id);
+                if !updated_stats.is_dead {
                     let updated_monster = MonsterInstance {
                         dungeon_id: position.dungeon_id,
                         chamber_id: position.chamber_id,
@@ -186,7 +184,7 @@ pub mod CombatComponent {
                         is_alive: true,
                     };
                     let (dmg, _died) = monster_turn(
-                        ref world, ref seeder, character_id, stats, updated_health,
+                        ref world, ref seeder, character_id, updated_stats,
                         combat, position, updated_monster,
                     );
                     damage_taken = dmg;
@@ -212,10 +210,8 @@ pub mod CombatComponent {
         ) {
             let stats: CharacterStats = world.read_model(character_id);
             assert(stats.character_class == CharacterClass::Wizard, 'only wizards cast spells');
-            assert(stats.character_class != CharacterClass::None, 'explorer does not exist');
-
-            let health: CharacterHealth = world.read_model(character_id);
-            assert(!health.is_dead, 'dead explorer cannot act');
+            assert(stats.character_class != CharacterClass::None, 'character does not exist');
+            assert(!stats.is_dead, 'dead character cannot act');
 
             let position: CharacterPosition = world.read_model(character_id);
 
@@ -516,14 +512,14 @@ pub mod CombatComponent {
                 // Re-read position — MistyStep may have cleared in_combat
                 let updated_position: CharacterPosition = world.read_model(character_id);
                 if updated_position.in_combat {
-                    let updated_health: CharacterHealth = world.read_model(character_id);
-                    if !updated_health.is_dead {
+                    let updated_stats: CharacterStats = world.read_model(character_id);
+                    if !updated_stats.is_dead {
                         let updated_combat: CharacterCombat = world.read_model(character_id);
                         let live_monster: MonsterInstance = world.read_model(
                             (position.dungeon_id, position.chamber_id, position.combat_monster_id)
                         );
                         let (dmg, _died) = monster_turn(
-                            ref world, ref seeder, character_id, stats, updated_health,
+                            ref world, ref seeder, character_id, updated_stats,
                             updated_combat, updated_position, live_monster,
                         );
                         damage_taken = dmg;
@@ -550,10 +546,8 @@ pub mod CombatComponent {
             ref seeder: Seeder,
         ) {
             let stats: CharacterStats = world.read_model(character_id);
-            assert(stats.character_class != CharacterClass::None, 'explorer does not exist');
-
-            let health: CharacterHealth = world.read_model(character_id);
-            assert(!health.is_dead, 'dead explorer cannot act');
+            assert(stats.character_class != CharacterClass::None, 'character does not exist');
+            assert(!stats.is_dead, 'dead character cannot act');
 
             match item_type {
                 ItemType::None => { assert(false, 'no item specified'); },
@@ -567,32 +561,30 @@ pub mod CombatComponent {
                     let raw_heal: u16 = roll_dice(ref seeder, 4, 2);
                     let heal_total: u16 = raw_heal + 2;
 
-                    let new_hp_i16: i16 = health.current_hp + heal_total.try_into().unwrap();
-                    let new_hp: i16 = if new_hp_i16 > health.max_hp.try_into().unwrap() {
-                        health.max_hp.try_into().unwrap()
+                    let new_hp_i16: i16 = stats.current_hp + heal_total.try_into().unwrap();
+                    let new_hp: i16 = if new_hp_i16 > stats.max_hp.try_into().unwrap() {
+                        stats.max_hp.try_into().unwrap()
                     } else {
                         new_hp_i16
                     };
 
-                    world.write_model(@CharacterHealth {
-                        character_id,
-                        current_hp: new_hp,
-                        max_hp: health.max_hp,
-                        is_dead: false,
-                    });
+                    let mut healed_stats = stats;
+                    healed_stats.current_hp = new_hp;
+                    healed_stats.is_dead = false;
+                    world.write_model(@healed_stats);
 
                     // Monster counter-attacks after using item (if in combat)
                     let position: CharacterPosition = world.read_model(character_id);
                     let mut damage_taken: u16 = 0;
                     if position.in_combat {
-                        let updated_health: CharacterHealth = world.read_model(character_id);
+                        let updated_stats: CharacterStats = world.read_model(character_id);
                         let combat: CharacterCombat = world.read_model(character_id);
                         let monster: MonsterInstance = world.read_model(
                             (position.dungeon_id, position.chamber_id, position.combat_monster_id)
                         );
                         if monster.is_alive {
                             let (dmg, _died) = monster_turn(
-                                ref world, ref seeder, character_id, stats, updated_health,
+                                ref world, ref seeder, character_id, updated_stats,
                                 combat, position, monster,
                             );
                             damage_taken = dmg;
@@ -620,9 +612,7 @@ pub mod CombatComponent {
         ) {
             let stats: CharacterStats = world.read_model(character_id);
             assert(stats.character_class == CharacterClass::Fighter, 'only fighters can second wind');
-
-            let health: CharacterHealth = world.read_model(character_id);
-            assert(!health.is_dead, 'dead explorer cannot act');
+            assert(!stats.is_dead, 'dead character cannot act');
 
             let mut combat: CharacterCombat = world.read_model(character_id);
             assert(!combat.second_wind_used, 'second wind already used');
@@ -630,19 +620,17 @@ pub mod CombatComponent {
             let heal_roll: u16 = roll_dice(ref seeder, 10, 1);
             let heal_total: u16 = heal_roll + stats.level.into();
 
-            let new_hp_i16: i16 = health.current_hp + heal_total.try_into().unwrap();
-            let new_hp: i16 = if new_hp_i16 > health.max_hp.try_into().unwrap() {
-                health.max_hp.try_into().unwrap()
+            let new_hp_i16: i16 = stats.current_hp + heal_total.try_into().unwrap();
+            let new_hp: i16 = if new_hp_i16 > stats.max_hp.try_into().unwrap() {
+                stats.max_hp.try_into().unwrap()
             } else {
                 new_hp_i16
             };
 
-            world.write_model(@CharacterHealth {
-                character_id,
-                current_hp: new_hp,
-                max_hp: health.max_hp,
-                is_dead: false,
-            });
+            let mut healed_stats = stats;
+            healed_stats.current_hp = new_hp;
+            healed_stats.is_dead = false;
+            world.write_model(@healed_stats);
 
             combat.second_wind_used = true;
             world.write_model(@combat);
@@ -666,9 +654,7 @@ pub mod CombatComponent {
             let stats: CharacterStats = world.read_model(character_id);
             assert(stats.character_class == CharacterClass::Rogue, 'only rogues can cunning action');
             assert(stats.level >= 2, 'cunning action needs level 2');
-
-            let health: CharacterHealth = world.read_model(character_id);
-            assert(!health.is_dead, 'dead explorer cannot act');
+            assert(!stats.is_dead, 'dead character cannot act');
 
             let position: CharacterPosition = world.read_model(character_id);
             assert(position.in_combat, 'not in combat');
@@ -691,8 +677,8 @@ pub mod CombatComponent {
             });
         }
 
-        /// Contested DEX check: roll d20 + explorer DEX mod vs roll d20 + monster DEX mod.
-        /// On success: explorer disengages (clears in_combat) — no counter-attack.
+        /// Contested DEX check: roll d20 + character DEX mod vs roll d20 + monster DEX mod.
+        /// On success: character disengages (clears in_combat) — no counter-attack.
         /// On failure: monster gets a free counter-attack.
         fn flee(
             ref self: ComponentState<TContractState>,
@@ -701,10 +687,8 @@ pub mod CombatComponent {
             ref seeder: Seeder,
         ) {
             let stats: CharacterStats = world.read_model(character_id);
-            assert(stats.character_class != CharacterClass::None, 'explorer does not exist');
-
-            let health: CharacterHealth = world.read_model(character_id);
-            assert(!health.is_dead, 'dead explorer cannot act');
+            assert(stats.character_class != CharacterClass::None, 'character does not exist');
+            assert(!stats.is_dead, 'dead character cannot act');
 
             let mut position: CharacterPosition = world.read_model(character_id);
             assert(position.in_combat, 'not in combat');
@@ -747,7 +731,7 @@ pub mod CombatComponent {
                 // Monster gets a free counter-attack on failed flee
                 let combat: CharacterCombat = world.read_model(character_id);
                 let (dmg, _died) = monster_turn(
-                    ref world, ref seeder, character_id, stats, health, combat, position, monster,
+                    ref world, ref seeder, character_id, stats, combat, position, monster,
                 );
                 damage_taken = dmg;
             }
@@ -772,7 +756,6 @@ pub mod CombatComponent {
         ref seeder: Seeder,
         character_id: u128,
         stats: CharacterStats,
-        health: CharacterHealth,
         combat: CharacterCombat,
         position: CharacterPosition,
         monster: MonsterInstance,
@@ -781,7 +764,7 @@ pub mod CombatComponent {
 
         let mut total_damage: u16 = 0;
         let mut character_died: bool = false;
-        let mut current_health = health;
+        let mut current_stats = stats;
 
         let mut attack_num: u8 = 0;
         while attack_num < monster_stats.num_attacks && !character_died {
@@ -813,12 +796,12 @@ pub mod CombatComponent {
                 };
 
                 let damage_i16: i16 = monster_damage.try_into().unwrap();
-                let new_hp: i16 = current_health.current_hp - damage_i16;
+                let new_hp: i16 = current_stats.current_hp - damage_i16;
 
                 let damage_taken = DamageTrait::apply_character_damage(
                     ref world,
                     character_id,
-                    current_health,
+                    current_stats,
                     position,
                     monster.monster_type,
                     monster_damage,
@@ -829,12 +812,8 @@ pub mod CombatComponent {
                 if new_hp <= 0 {
                     character_died = true;
                 } else {
-                    current_health = CharacterHealth {
-                        character_id,
-                        current_hp: new_hp,
-                        max_hp: current_health.max_hp,
-                        is_dead: false,
-                    };
+                    current_stats.current_hp = new_hp;
+                    current_stats.is_dead = false;
                 }
             }
 
@@ -860,19 +839,8 @@ pub mod CombatComponent {
         ref seeder: Seeder,
         character_id: u128,
         stats: CharacterStats,
-        health: CharacterHealth,
     ) {
         let new_level: u8 = stats.level + 1;
-
-        // Update level in CharacterStats
-        world.write_model(@CharacterStats {
-            character_id,
-            abilities: stats.abilities,
-            level: new_level,
-            xp: stats.xp,
-            character_class: stats.character_class,
-            dungeons_conquered: stats.dungeons_conquered,
-        });
 
         // Roll hit die + CON modifier, minimum 1, add to max HP
         let hit_sides: u8 = stats.character_class.hit_die_max();
@@ -882,13 +850,19 @@ pub mod CombatComponent {
         let con_mod_i32: i32 = con_mod.into();
         let hp_gain_i32: i32 = raw_roll_i32 + con_mod_i32;
         let hp_gain: u16 = if hp_gain_i32 < 1 { 1 } else { hp_gain_i32.try_into().unwrap() };
-        let new_max_hp: u16 = health.max_hp + hp_gain;
+        let new_max_hp: u16 = stats.max_hp + hp_gain;
 
-        world.write_model(@CharacterHealth {
+        // Update level and max HP in CharacterStats
+        world.write_model(@CharacterStats {
             character_id,
-            current_hp: health.current_hp,
+            abilities: stats.abilities,
+            level: new_level,
+            xp: stats.xp,
+            character_class: stats.character_class,
+            dungeons_conquered: stats.dungeons_conquered,
+            current_hp: stats.current_hp,
             max_hp: new_max_hp,
-            is_dead: false,
+            is_dead: stats.is_dead,
         });
 
         // Update spell slots for Wizards
@@ -948,8 +922,7 @@ pub mod CombatComponent {
             if new_xp >= next_threshold {
                 // Re-read stats in case level already updated
                 let current_stats: CharacterStats = world.read_model(character_id);
-                let current_health: CharacterHealth = world.read_model(character_id);
-                level_up(ref world, ref seeder, character_id, current_stats, current_health);
+                level_up(ref world, ref seeder, character_id, current_stats);
                 current_level += 1;
             } else {
                 break;

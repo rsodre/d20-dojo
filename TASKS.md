@@ -8,7 +8,7 @@
 
 - [x] **1.1** Replace starter code: update namespace from `dojo_starter` to `d20_0_1` in `Scarb.toml` and `dojo_dev.toml`, update world name/seed, remove starter models/systems
 - [x] **1.2** Define all enums in `src/types.cairo` with correct derives (`Serde, Copy, Drop, Introspect, PartialEq, Debug, DojoStore, Default`)
-- [x] **1.3** Implement explorer models in `src/models/` (CharacterStats, CharacterHealth, CharacterCombat, CharacterInventory, CharacterPosition, CharacterSkills) with `#[dojo::model]` and `#[derive(Copy, Drop, Serde)]`
+- [x] **1.3** Implement explorer models in `src/models/` (CharacterStats, CharacterCombat, CharacterInventory, CharacterPosition, CharacterSkills) with `#[dojo::model]` and `#[derive(Copy, Drop, Serde)]`
 - [x] **1.4** Implement temple/chamber models (DungeonState, Chamber, MonsterInstance, ChamberExit, FallenCharacter, ChamberFallenCount, CharacterDungeonProgress)
 - [x] **1.5** Implement D20 utility module (`src/utils/d20.cairo`): `roll_d20`, `roll_dice`, `ability_modifier`, `proficiency_bonus`, `calculate_ac`
 - [x] **1.6** Implement monster stat lookup (`src/utils/monsters.cairo`): pure function returning stats for each MonsterType
@@ -81,7 +81,7 @@
 - [x] **4.14** Implement action panel: render `getAvailableActions` output as clickable buttons; disable all buttons while a tx is pending; show tx status (pending / confirmed / error).
 - [x] **4.15** Implement game loop: on mount/update → query state → render state panel + action panel → player clicks → submit tx (with VRF multicall if needed) → wait for confirmation → re-query state → repeat.
 - [x] **4.16** Implement temple selection flow: list available temples (temple ID, difficulty tier, boss alive/dead), "Enter" button per temple, "Mint New Temple" picker.
-- [ ] **4.17** Handle edge cases: dead explorer (show death screen, "Mint New Explorer" button), no valid actions (display reason), tx error (show error message + retry button).
+- [ ] **4.17** Handle edge cases: dead character (show death screen, "Mint New Explorer" button), no valid actions (display reason), tx error (show error message + retry button).
 
 ## Day 5: Integration, Testing & Deploy
 

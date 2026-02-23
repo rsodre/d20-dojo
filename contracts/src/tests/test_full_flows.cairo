@@ -5,7 +5,7 @@ mod tests {
     use dojo::model::{ModelStorage, ModelStorageTest};
 
     use d20::d20::models::character::{
-        CharacterStats, CharacterHealth, CharacterInventory,
+        CharacterStats, CharacterInventory,
         CharacterPosition
     };
     use d20::d20::models::dungeon::{
@@ -104,12 +104,11 @@ mod tests {
             in_combat: true,
             combat_monster_id: 1,
         });
-        world.write_model_test(@CharacterHealth {
-            character_id,
-            current_hp: 50,
-            max_hp: 50,
-            is_dead: false,
-        });
+        let mut stats: CharacterStats = world.read_model(character_id);
+        stats.current_hp = 50;
+        stats.max_hp = 50;
+        stats.is_dead = false;
+        world.write_model_test(@stats);
 
         let stats_pre: CharacterStats = world.read_model(character_id);
         let xp_before: u32 = stats_pre.xp;
@@ -173,17 +172,9 @@ mod tests {
         });
 
         // Boost WIS to ensure loot check passes
-        let stats: CharacterStats = world.read_model(character_id);
-        let mut abilities = stats.abilities;
-        abilities.wisdom = 20;
-        world.write_model_test(@CharacterStats {
-            character_id,
-            abilities,
-            level: stats.level,
-            xp: stats.xp,
-            character_class: stats.character_class,
-            dungeons_conquered: stats.dungeons_conquered,
-        });
+        let mut stats: CharacterStats = world.read_model(character_id);
+        stats.abilities.wisdom = 20;
+        world.write_model_test(@stats);
 
         let inv_before: CharacterInventory = world.read_model(character_id);
         temple.loot_treasure(character_id);
@@ -239,12 +230,11 @@ mod tests {
             in_combat: true,
             combat_monster_id: 1,
         });
-        world.write_model_test(@CharacterHealth {
-            character_id,
-            current_hp: 50,
-            max_hp: 50,
-            is_dead: false,
-        });
+        let mut stats: CharacterStats = world.read_model(character_id);
+        stats.current_hp = 50;
+        stats.max_hp = 50;
+        stats.is_dead = false;
+        world.write_model_test(@stats);
         world.write_model_test(@CharacterDungeonProgress {
             character_id,
             dungeon_id,

@@ -5,7 +5,7 @@ mod tests {
     use dojo::model::{ModelStorage, ModelStorageTest};
 
     use d20::d20::models::character::{
-        CharacterStats, CharacterHealth, CharacterCombat, CharacterInventory,
+        CharacterStats, CharacterCombat, CharacterInventory,
         CharacterPosition
     };
     use d20::d20::models::dungeon::{
@@ -36,15 +36,10 @@ mod tests {
 
         // Enter temple A, give some XP, exit
         temple.enter_temple(character_id, temple_a);
-        let stats: CharacterStats = world.read_model(character_id);
-        world.write_model_test(@CharacterStats {
-            character_id,
-            abilities: stats.abilities,
-            level: 1,
-            xp: 150,
-            character_class: stats.character_class,
-            dungeons_conquered: stats.dungeons_conquered,
-        });
+        let mut stats: CharacterStats = world.read_model(character_id);
+        stats.level = 1;
+        stats.xp = 150;
+        world.write_model_test(@stats);
         temple.exit_temple(character_id);
 
         // Enter temple B
@@ -76,18 +71,21 @@ mod tests {
 
         world.write_model_test(@MonsterInstance { dungeon_id: temple_a, chamber_id: 1, monster_id: 1, monster_type: MonsterType::Skeleton, current_hp: 1, max_hp: 13, is_alive: true });
         world.write_model_test(@CharacterPosition { character_id, dungeon_id: temple_a, chamber_id: 1, in_combat: true, combat_monster_id: 1 });
-        world.write_model_test(@CharacterHealth { character_id, current_hp: 50, max_hp: 50, is_dead: false });
-
-        let stats: CharacterStats = world.read_model(character_id);
-        world.write_model_test(@CharacterStats { character_id, abilities: stats.abilities, level: 1, xp: 250, character_class: stats.character_class, dungeons_conquered: 0 });
+        let mut stats: CharacterStats = world.read_model(character_id);
+        stats.current_hp = 50;
+        stats.max_hp = 50;
+        stats.is_dead = false;
+        stats.level = 1;
+        stats.xp = 250;
+        stats.dungeons_conquered = 0;
+        world.write_model_test(@stats);
 
         combat.attack(character_id);
 
         let stats_after_kill: CharacterStats = world.read_model(character_id);
         let level_in_a = stats_after_kill.level;
         let xp_in_a = stats_after_kill.xp;
-        let health_in_a: CharacterHealth = world.read_model(character_id);
-        let max_hp_in_a = health_in_a.max_hp;
+        let max_hp_in_a = stats_after_kill.max_hp;
 
         let pos: CharacterPosition = world.read_model(character_id);
         if pos.in_combat {
@@ -100,8 +98,8 @@ mod tests {
         assert(stats_in_b.level == level_in_a, 'level carries to B');
         assert(stats_in_b.xp == xp_in_a, 'xp carries to B');
 
-        let health_in_b: CharacterHealth = world.read_model(character_id);
-        assert(health_in_b.max_hp == max_hp_in_a, 'max_hp carries to B');
+        let stats_in_b: CharacterStats = world.read_model(character_id);
+        assert(stats_in_b.max_hp == max_hp_in_a, 'max_hp carries to B');
     }
 
     // ═══════════════════════════════════════════════════════════════════════
@@ -141,12 +139,16 @@ mod tests {
         let temple_b = temple.mint_temple(2_u8);
 
         temple.enter_temple(character_id, temple_a);
-        world.write_model_test(@CharacterHealth { character_id, current_hp: 3, max_hp: 11, is_dead: false });
+        let mut hp_stats: CharacterStats = world.read_model(character_id);
+        hp_stats.current_hp = 3;
+        hp_stats.max_hp = 11;
+        hp_stats.is_dead = false;
+        world.write_model_test(@hp_stats);
 
         temple.exit_temple(character_id);
         temple.enter_temple(character_id, temple_b);
 
-        let health: CharacterHealth = world.read_model(character_id);
+        let health: CharacterStats = world.read_model(character_id);
         assert(health.current_hp == 3, 'hp NOT auto-healed');
         assert(health.max_hp == 11, 'max_hp preserved');
     }
@@ -217,7 +219,11 @@ mod tests {
 
         world.write_model_test(@MonsterInstance { dungeon_id: temple_a, chamber_id: 1, monster_id: 1, monster_type: MonsterType::PoisonousSnake, current_hp: 1, max_hp: 1, is_alive: true });
         world.write_model_test(@CharacterPosition { character_id, dungeon_id: temple_a, chamber_id: 1, in_combat: true, combat_monster_id: 1 });
-        world.write_model_test(@CharacterHealth { character_id, current_hp: 50, max_hp: 50, is_dead: false });
+        let mut flow_stats: CharacterStats = world.read_model(character_id);
+        flow_stats.current_hp = 50;
+        flow_stats.max_hp = 50;
+        flow_stats.is_dead = false;
+        world.write_model_test(@flow_stats);
 
         let inv_before: CharacterInventory = world.read_model(character_id);
         world.write_model_test(@CharacterInventory { character_id, primary_weapon: inv_before.primary_weapon, secondary_weapon: inv_before.secondary_weapon, armor: inv_before.armor, has_shield: inv_before.has_shield, gold: 25, potions: 2 });
@@ -235,9 +241,9 @@ mod tests {
 
         token.rest(character_id);
 
-        let health_after_rest: CharacterHealth = world.read_model(character_id);
-        let max_hp_i16: i16 = health_after_rest.max_hp.try_into().unwrap();
-        assert(health_after_rest.current_hp == max_hp_i16, 'rest restores HP');
+        let stats_after_rest: CharacterStats = world.read_model(character_id);
+        let max_hp_i16: i16 = stats_after_rest.max_hp.try_into().unwrap();
+        assert(stats_after_rest.current_hp == max_hp_i16, 'rest restores HP');
 
         let combat_after_rest: CharacterCombat = world.read_model(character_id);
         assert(!combat_after_rest.second_wind_used, 'rest resets second_wind');
@@ -251,9 +257,9 @@ mod tests {
         assert(inv_b.gold == 25, 'gold preserved');
         assert(inv_b.potions == 2, 'potions preserved');
 
-        let health_b: CharacterHealth = world.read_model(character_id);
-        let max_hp_b: i16 = health_b.max_hp.try_into().unwrap();
-        assert(health_b.current_hp == max_hp_b, 'full HP in B');
+        let stats_b: CharacterStats = world.read_model(character_id);
+        let max_hp_b: i16 = stats_b.max_hp.try_into().unwrap();
+        assert(stats_b.current_hp == max_hp_b, 'full HP in B');
     }
 
 }

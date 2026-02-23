@@ -88,14 +88,14 @@ function useExecuteAction() {
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
 function ExplorerSheet({ characterId }: { characterId: bigint }) {
-  const { stats, health, combat, inventory, skills } = useExplorerModels(characterId);
+  const { stats, combat, inventory, skills } = useExplorerModels(characterId);
 
   const explorerClass = enumVariant(stats?.character_class);
   const emoji = CLASS_EMOJI[explorerClass] ?? "⚔️";
   const level = stats ? Number(stats.level) : "—";
   const xp = stats ? Number(stats.xp) : "—";
-  const currentHp = health ? Number(health.current_hp) : "—";
-  const maxHp = health ? Number(health.max_hp) : "—";
+  const currentHp = stats ? Number(stats.current_hp) : "—";
+  const maxHp = stats ? Number(stats.max_hp) : "—";
   const ac = combat ? Number(combat.armor_class) : "—";
 
   return (
@@ -358,7 +358,7 @@ export function PlayView() {
   const characterIdNum = characterId ? BigInt(characterId) : undefined;
 
   const { profileConfig } = useDojoConfig();
-  const { stats, health, combat, inventory, position } = useExplorerModels(characterIdNum ?? 0n);
+  const { stats, combat, inventory, position } = useExplorerModels(characterIdNum ?? 0n);
   const temple = useTempleModels(dungeonIdNum ?? 0n);
   const exits = useChamberExits(dungeonIdNum ?? 0n, position ? BigInt(position.chamber_id) : 0n);
   const fallen = useFallenCharacters(dungeonIdNum ?? 0n, position ? BigInt(position.chamber_id) : 0n);
@@ -374,7 +374,7 @@ export function PlayView() {
   }
 
   const explorerClass = enumVariant(stats?.character_class);
-  const isDead = health?.is_dead ?? false;
+  const isDead = stats?.is_dead ?? false;
   const inCombat = position?.in_combat ?? false;
   const chamberId = position ? BigInt(position.chamber_id) : 0n;
   const chamber = chambers.find((c) => BigInt(c.chamber_id) === chamberId);
