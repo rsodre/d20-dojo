@@ -14,10 +14,16 @@ export function ConnectButton() {
     await connectAsync({ connector: connectors[0] });
   };
 
+  const _openProfile = async () => {
+    if (openProfile) {
+      await openProfile();
+    }
+  }
+
   if (isConnected) {
     return (
       <div style={{ display: "flex", gap: "8px" }}>
-        <Button variant="soft" onClick={openProfile as any}>
+        <Button variant="soft" onClick={_openProfile}>
           {username ?? "Profile"}
         </Button>
         <IconButton variant="soft" onClick={() => disconnect()}>

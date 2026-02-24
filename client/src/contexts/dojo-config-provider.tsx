@@ -9,10 +9,12 @@ import { DojoSdkProvider } from "@dojoengine/sdk/react";
 import { init, SDK } from "@dojoengine/sdk";
 import { setupWorld } from "@/generated/contracts.gen.ts";
 import type { SchemaType } from "@/generated/models.gen.ts";
+import { buildPolicies } from "@/utils/policies";
 
 //----------------------------
 // Profile config
 //
+
 const profileName: ProfileName = import.meta.env.VITE_PROFILE as ProfileName;
 const profileConfig: ProfileConfig = getProfileConfig(profileName);
 console.log(`ProfileConfig [${profileName}]:`, profileConfig)
@@ -20,7 +22,7 @@ console.log(`ProfileConfig [${profileName}]:`, profileConfig)
 const options: ControllerOptions = {
   defaultChainId: profileConfig.chainId,
   chains: [{ rpcUrl: profileConfig.rpcUrl }],
-  // policies: buildPolicies(),
+  policies: buildPolicies(profileConfig.vrfAddress),
   // preset: "cartridge",
   namespace: profileConfig.namespace,
   slot: profileConfig.slotName,
@@ -29,6 +31,7 @@ const options: ControllerOptions = {
     erc721: [profileConfig.contractAddresses.explorer, profileConfig.contractAddresses.temple],
   },
 };
+console.log(`ControllerOptions:`, options)
 
 //----------------------------
 // Dojo SDK
