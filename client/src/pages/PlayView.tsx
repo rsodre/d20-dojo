@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { useParams, Link } from "react-router-dom";
-import { Badge, Button, Card, Flex, Heading, Spinner, Text } from "@radix-ui/themes";
+import { Badge, Button, Card, Flex, Heading, Spinner, Text, Box } from "@radix-ui/themes";
 import { useMutation } from "@tanstack/react-query";
 import { CallData } from "starknet";
 import { useAccount } from "@starknet-react/core";
@@ -8,6 +8,7 @@ import { useExplorerModels } from "@/hooks/use-explorer-state";
 import { useChambers, useChamberExits, useFallenCharacters, useMonsterInstances } from "@/hooks/use-chambers";
 import { useTempleModels } from "@/hooks/use-temple-state";
 import { useRoomImagePrompt } from "@/hooks/use-room-image-prompt";
+import { useRoomImage, type RoomImageState } from "@/hooks/use-room-image";
 import { useDojoConfig } from "@/contexts/dojo-config-provider";
 import { useVrfCall } from "@/hooks/use-vrf";
 import { getAvailableActions, enumVariant, type Action, type GameActionContext } from "@/utils/get-available-actions";
@@ -304,6 +305,108 @@ function ChamberInfo({
   );
 }
 
+function RoomImagePanel({
+  roomImage,
+  chamberId,
+}: {
+  roomImage: RoomImageState;
+  chamberId: bigint;
+}) {
+  if (chamberId === 0n) {
+    return (
+      <Box
+        style={{
+          aspectRatio: "16/9",
+          background: "var(--gray-3)",
+          borderRadius: "var(--radius-3)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <Text size="2" color="gray">Not in a chamber.</Text>
+      </Box>
+    );
+  }
+
+  if (roomImage.isGenerating) {
+    return (
+      <Box
+        style={{
+          aspectRatio: "16/9",
+          background: "var(--gray-3)",
+          borderRadius: "var(--radius-3)",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: "12px",
+        }}
+      >
+        <Spinner size="3" />
+        <Text size="2" color="gray">Generating room image…</Text>
+      </Box>
+    );
+  }
+
+  if (roomImage.error) {
+    return (
+      <Box
+        style={{
+          aspectRatio: "16/9",
+          background: "var(--gray-3)",
+          borderRadius: "var(--radius-3)",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: "8px",
+          padding: "16px",
+        }}
+      >
+        <Text size="2" color="red" align="center">Image generation failed</Text>
+        <Text size="1" color="gray" align="center" style={{ fontFamily: "monospace" }}>
+          {roomImage.error}
+        </Text>
+      </Box>
+    );
+  }
+
+  if (roomImage.base64) {
+    return (
+      <img
+        src={`data:${roomImage.mimeType};base64,${roomImage.base64}`}
+        alt="Room"
+        style={{
+          width: "100%",
+          borderRadius: "var(--radius-3)",
+          display: "block",
+          objectFit: "cover",
+        }}
+      />
+    );
+  }
+
+  // No key configured
+  return (
+    <Box
+      style={{
+        aspectRatio: "16/9",
+        background: "var(--gray-3)",
+        borderRadius: "var(--radius-3)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "16px",
+      }}
+    >
+      <Text size="2" color="gray" align="center">
+        Set VITE_GOOGLE_AI_API_KEY or VITE_OPENAI_API_KEY in .env to enable room images.
+      </Text>
+    </Box>
+  );
+}
+
 function ActionPanel({
   ctx,
 }: {
@@ -380,6 +483,8 @@ export function PlayView() {
     dungeonState: temple?.state,
   });
 
+  const roomImage = useRoomImage(imagePrompt, chamberId);
+
   if (!dungeonIdNum || !characterIdNum) {
     return (
       <Flex direction="column" gap="4">
@@ -439,12 +544,11 @@ export function PlayView() {
         {isDead && <Badge color="gray" variant="soft">💀 Dead</Badge>}
       </Flex>
 
-      {/* Two-column layout: explorer sheet + chamber info */}
-      <Flex gap="4" direction={{ initial: "column", sm: "row" }}>
-        <div style={{ flex: 1 }}>
+      {/* Main layout: left column (explorer + chamber) + right column (room image) */}
+      <Flex gap="4" direction={{ initial: "column", sm: "row" }} align="start">
+        {/* Left column: explorer sheet stacked above chamber info */}
+        <Flex direction="column" gap="4" style={{ flex: "0 0 340px" }}>
           <ExplorerSheet characterId={characterIdNum} />
-        </div>
-        <div style={{ flex: 1 }}>
           {chamberId > 0n ? (
             <ChamberInfo dungeonId={dungeonIdNum} chamberId={chamberId} />
           ) : (
@@ -452,6 +556,10 @@ export function PlayView() {
               <Text size="2" color="gray">Not in a chamber.</Text>
             </Card>
           )}
+        </Flex>
+        {/* Right column: room image */}
+        <div style={{ flex: 1 }}>
+          <RoomImagePanel roomImage={roomImage} chamberId={chamberId} />
         </div>
       </Flex>
 
@@ -469,7 +577,7 @@ export function PlayView() {
         <ActionPanel ctx={ctx} />
       )}
 
-      {/* Image generation prompt */}
+      {/* Image generation prompt (debug) */}
       {imagePrompt && (
         <Card>
           <Flex direction="column" gap="2">
