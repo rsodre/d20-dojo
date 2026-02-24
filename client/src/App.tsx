@@ -51,7 +51,7 @@ export default function App() {
     <div className="min-h-screen">
       <header className="flex items-center justify-between px-6 py-4 border-b border-[var(--gray-6)]">
         <span className="text-xl font-bold tracking-wide text-[var(--amber-9)]">
-          D20 On-Chain
+          D20 Dojo
         </span>
         <ConnectButton />
       </header>

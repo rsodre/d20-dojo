@@ -1,4 +1,4 @@
-# D20 On-Chain: Gameplay Guide
+# D20 Dojo: Gameplay Guide
 
 This document provides a detailed technical reference for the game's systems and public interfaces. It is intended for both human players and autonomous agents who need to understand the underlying contract methods.
 

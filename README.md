@@ -1,17 +1,25 @@
-# D20 - An on-chain implementation of the D20 system (D&D)
+# D20 Dojo - An on-chain implementation of the D20 system (D&D)
 
 Cartridge AI Hackathon Project
 
 ## Features
 
-- Implementation of a complex existing game system.
-- Using a subset of the [D20](./D20.md) character classes.
-- Made with Claude Code: specification, planning, core contract and client development.
-- And Google Antigravity: refactors, manual tasks.
+- **On-chain D&D Combat & Mechanics**: Implements core D20 systems including standard ability scores, proficiency bonuses, Armor Class (AC), attack/damage rolls, and saving throws.
+- **Three Playable Classes**: Choose between Fighter (Second Wind, Extra Attack), Rogue (Sneak Attack, Cunning Action, precise trap disarming), and Wizard (Spellcasting with 1st-3rd level spells).
+- **Procedurally Generated Dungeons (Temples)**: Deterministic chamber generation using Verifiable Randomness (VRF), featuring empty rooms, traps, treasures, regular monsters, and bosses.
+- **Multiplayer & Shared State**: Multiple players can explore the same temple simultaneously. Discovered chambers, defeated monsters, and triggered traps are shared globally.
+- **Permadeath & Corpse Looting**: When an explorer falls in combat, their items and equipment remain in the chamber. Other players can discover and loot fallen characters.
+- **ERC-721 Integration**: Both Explorers and Temples are fully on-chain NFTs, maintaining progress, stats, and loot transparently.
+- **Agentic Development**: Spec, planning, and core logic built with Claude Code; refactoring and orchestration via Google Antigravity.
 
 ## Gameplay
-TODO
 
+1. **Minting & Preparation**: Start by minting an Explorer NFT. Your stats are rolled via VRF, weighted by your chosen class's preferences. Mint or select a Temple NFT to explore.
+2. **Exploration**: Enter a Temple and navigate room by room. You can discover new exits, attempt to disarm traps (with class-specific bonuses), and loot empty spaces for gold or health potions.
+3. **Turn-Based Combat**: Encounter classic D&D monsters. Engage using physical attacks, spells, or class abilities. Enemies will counter-attack. If things look dire, attempt to flee using a contested Dexterity check.
+4. **Progression**: Defeating monsters grants XP. Level up to increase your maximum HP and gain new abilities or spell slots.
+5. **Boss Battles**: The deeper you delve into a temple and the more XP you earn, the higher the probability of generating a Boss chamber. Defeating the boss conquers the temple.
+6. **Survival**: HP and spell slots do not regenerate automatically. You must consume health potions or exit the temple to safely rest, resetting your vital resources for the next run.
 
 
 ## Task Log

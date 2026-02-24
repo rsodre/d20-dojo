@@ -1,4 +1,4 @@
-# D20 On-Chain: Build Tasks
+# D20 Dojo: Build Tasks
 
 > Extracted from [SPEC.md](SPEC.md). Check off tasks as they are completed.
 

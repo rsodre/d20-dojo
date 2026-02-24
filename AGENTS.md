@@ -1,6 +1,6 @@
-# D20 On-Chain: Agent Guide
+# D20 Dojo: Agent Guide
 
-This document is a high-level entry point for autonomous agents (LLMs or bots) interacting with the D20 On-Chain world.
+This document is a high-level entry point for autonomous agents (LLMs or bots) interacting with the D20 Dojo world.
 
 ## Developer Guidance
 

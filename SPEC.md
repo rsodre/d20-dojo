@@ -1,4 +1,4 @@
-# D20 On-Chain: Spec Document
+# D20 Dojo: Spec Document
 
 ## Overview
 
