@@ -17,7 +17,7 @@ export function setupWorld(provider: DojoProvider) {
 			return await provider.execute(
 				snAccount,
 				build_combat_system_attack_calldata(characterId),
-				"d20_0_1",
+				"d20_0_2",
 			);
 		} catch (error) {
 			console.error(error);
@@ -38,7 +38,7 @@ export function setupWorld(provider: DojoProvider) {
 			return await provider.execute(
 				snAccount,
 				build_combat_system_castSpell_calldata(characterId, spellId),
-				"d20_0_1",
+				"d20_0_2",
 			);
 		} catch (error) {
 			console.error(error);
@@ -59,7 +59,7 @@ export function setupWorld(provider: DojoProvider) {
 			return await provider.execute(
 				snAccount,
 				build_combat_system_cunningAction_calldata(characterId),
-				"d20_0_1",
+				"d20_0_2",
 			);
 		} catch (error) {
 			console.error(error);
@@ -80,7 +80,7 @@ export function setupWorld(provider: DojoProvider) {
 			return await provider.execute(
 				snAccount,
 				build_combat_system_flee_calldata(characterId),
-				"d20_0_1",
+				"d20_0_2",
 			);
 		} catch (error) {
 			console.error(error);
@@ -101,7 +101,7 @@ export function setupWorld(provider: DojoProvider) {
 			return await provider.execute(
 				snAccount,
 				build_combat_system_secondWind_calldata(characterId),
-				"d20_0_1",
+				"d20_0_2",
 			);
 		} catch (error) {
 			console.error(error);
@@ -122,7 +122,7 @@ export function setupWorld(provider: DojoProvider) {
 			return await provider.execute(
 				snAccount,
 				build_combat_system_useItem_calldata(characterId, itemType),
-				"d20_0_1",
+				"d20_0_2",
 			);
 		} catch (error) {
 			console.error(error);
@@ -143,7 +143,7 @@ export function setupWorld(provider: DojoProvider) {
 			return await provider.execute(
 				snAccount,
 				build_explorer_token_approve_calldata(to, tokenId),
-				"d20_0_1",
+				"d20_0_2",
 			);
 		} catch (error) {
 			console.error(error);
@@ -161,7 +161,7 @@ export function setupWorld(provider: DojoProvider) {
 
 	const explorer_token_availableSupply = async () => {
 		try {
-			return await provider.call("d20_0_1", build_explorer_token_availableSupply_calldata());
+			return await provider.call("d20_0_2", build_explorer_token_availableSupply_calldata());
 		} catch (error) {
 			console.error(error);
 			throw error;
@@ -178,7 +178,7 @@ export function setupWorld(provider: DojoProvider) {
 
 	const explorer_token_balanceOf = async (account: string) => {
 		try {
-			return await provider.call("d20_0_1", build_explorer_token_balanceOf_calldata(account));
+			return await provider.call("d20_0_2", build_explorer_token_balanceOf_calldata(account));
 		} catch (error) {
 			console.error(error);
 			throw error;
@@ -195,7 +195,7 @@ export function setupWorld(provider: DojoProvider) {
 
 	const explorer_token_contractUri = async () => {
 		try {
-			return await provider.call("d20_0_1", build_explorer_token_contractUri_calldata());
+			return await provider.call("d20_0_2", build_explorer_token_contractUri_calldata());
 		} catch (error) {
 			console.error(error);
 			throw error;
@@ -212,7 +212,7 @@ export function setupWorld(provider: DojoProvider) {
 
 	const explorer_token_defaultRoyalty = async () => {
 		try {
-			return await provider.call("d20_0_1", build_explorer_token_defaultRoyalty_calldata());
+			return await provider.call("d20_0_2", build_explorer_token_defaultRoyalty_calldata());
 		} catch (error) {
 			console.error(error);
 			throw error;
@@ -229,7 +229,7 @@ export function setupWorld(provider: DojoProvider) {
 
 	const explorer_token_getApproved = async (tokenId: BigNumberish) => {
 		try {
-			return await provider.call("d20_0_1", build_explorer_token_getApproved_calldata(tokenId));
+			return await provider.call("d20_0_2", build_explorer_token_getApproved_calldata(tokenId));
 		} catch (error) {
 			console.error(error);
 			throw error;
@@ -246,7 +246,7 @@ export function setupWorld(provider: DojoProvider) {
 
 	const explorer_token_isApprovedForAll = async (owner: string, operator: string) => {
 		try {
-			return await provider.call("d20_0_1", build_explorer_token_isApprovedForAll_calldata(owner, operator));
+			return await provider.call("d20_0_2", build_explorer_token_isApprovedForAll_calldata(owner, operator));
 		} catch (error) {
 			console.error(error);
 			throw error;
@@ -263,7 +263,7 @@ export function setupWorld(provider: DojoProvider) {
 
 	const explorer_token_isMintedOut = async () => {
 		try {
-			return await provider.call("d20_0_1", build_explorer_token_isMintedOut_calldata());
+			return await provider.call("d20_0_2", build_explorer_token_isMintedOut_calldata());
 		} catch (error) {
 			console.error(error);
 			throw error;
@@ -280,7 +280,7 @@ export function setupWorld(provider: DojoProvider) {
 
 	const explorer_token_isMintingPaused = async () => {
 		try {
-			return await provider.call("d20_0_1", build_explorer_token_isMintingPaused_calldata());
+			return await provider.call("d20_0_2", build_explorer_token_isMintingPaused_calldata());
 		} catch (error) {
 			console.error(error);
 			throw error;
@@ -297,7 +297,7 @@ export function setupWorld(provider: DojoProvider) {
 
 	const explorer_token_isOwnerOf = async (address: string, tokenId: BigNumberish) => {
 		try {
-			return await provider.call("d20_0_1", build_explorer_token_isOwnerOf_calldata(address, tokenId));
+			return await provider.call("d20_0_2", build_explorer_token_isOwnerOf_calldata(address, tokenId));
 		} catch (error) {
 			console.error(error);
 			throw error;
@@ -314,7 +314,7 @@ export function setupWorld(provider: DojoProvider) {
 
 	const explorer_token_lastTokenId = async () => {
 		try {
-			return await provider.call("d20_0_1", build_explorer_token_lastTokenId_calldata());
+			return await provider.call("d20_0_2", build_explorer_token_lastTokenId_calldata());
 		} catch (error) {
 			console.error(error);
 			throw error;
@@ -331,7 +331,7 @@ export function setupWorld(provider: DojoProvider) {
 
 	const explorer_token_maxSupply = async () => {
 		try {
-			return await provider.call("d20_0_1", build_explorer_token_maxSupply_calldata());
+			return await provider.call("d20_0_2", build_explorer_token_maxSupply_calldata());
 		} catch (error) {
 			console.error(error);
 			throw error;
@@ -351,7 +351,7 @@ export function setupWorld(provider: DojoProvider) {
 			return await provider.execute(
 				snAccount,
 				build_explorer_token_mintExplorer_calldata(characterClass),
-				"d20_0_1",
+				"d20_0_2",
 			);
 		} catch (error) {
 			console.error(error);
@@ -369,7 +369,7 @@ export function setupWorld(provider: DojoProvider) {
 
 	const explorer_token_mintedSupply = async () => {
 		try {
-			return await provider.call("d20_0_1", build_explorer_token_mintedSupply_calldata());
+			return await provider.call("d20_0_2", build_explorer_token_mintedSupply_calldata());
 		} catch (error) {
 			console.error(error);
 			throw error;
@@ -386,7 +386,7 @@ export function setupWorld(provider: DojoProvider) {
 
 	const explorer_token_name = async () => {
 		try {
-			return await provider.call("d20_0_1", build_explorer_token_name_calldata());
+			return await provider.call("d20_0_2", build_explorer_token_name_calldata());
 		} catch (error) {
 			console.error(error);
 			throw error;
@@ -403,7 +403,7 @@ export function setupWorld(provider: DojoProvider) {
 
 	const explorer_token_ownerOf = async (tokenId: BigNumberish) => {
 		try {
-			return await provider.call("d20_0_1", build_explorer_token_ownerOf_calldata(tokenId));
+			return await provider.call("d20_0_2", build_explorer_token_ownerOf_calldata(tokenId));
 		} catch (error) {
 			console.error(error);
 			throw error;
@@ -420,7 +420,7 @@ export function setupWorld(provider: DojoProvider) {
 
 	const explorer_token_reservedSupply = async () => {
 		try {
-			return await provider.call("d20_0_1", build_explorer_token_reservedSupply_calldata());
+			return await provider.call("d20_0_2", build_explorer_token_reservedSupply_calldata());
 		} catch (error) {
 			console.error(error);
 			throw error;
@@ -440,7 +440,7 @@ export function setupWorld(provider: DojoProvider) {
 			return await provider.execute(
 				snAccount,
 				build_explorer_token_rest_calldata(characterId),
-				"d20_0_1",
+				"d20_0_2",
 			);
 		} catch (error) {
 			console.error(error);
@@ -458,7 +458,7 @@ export function setupWorld(provider: DojoProvider) {
 
 	const explorer_token_royaltyInfo = async (tokenId: BigNumberish, salePrice: BigNumberish) => {
 		try {
-			return await provider.call("d20_0_1", build_explorer_token_royaltyInfo_calldata(tokenId, salePrice));
+			return await provider.call("d20_0_2", build_explorer_token_royaltyInfo_calldata(tokenId, salePrice));
 		} catch (error) {
 			console.error(error);
 			throw error;
@@ -478,7 +478,7 @@ export function setupWorld(provider: DojoProvider) {
 			return await provider.execute(
 				snAccount,
 				build_explorer_token_safeTransferFrom_calldata(from, to, tokenId, data),
-				"d20_0_1",
+				"d20_0_2",
 			);
 		} catch (error) {
 			console.error(error);
@@ -499,7 +499,7 @@ export function setupWorld(provider: DojoProvider) {
 			return await provider.execute(
 				snAccount,
 				build_explorer_token_setApprovalForAll_calldata(operator, approved),
-				"d20_0_1",
+				"d20_0_2",
 			);
 		} catch (error) {
 			console.error(error);
@@ -517,7 +517,7 @@ export function setupWorld(provider: DojoProvider) {
 
 	const explorer_token_supportsInterface = async (interfaceId: BigNumberish) => {
 		try {
-			return await provider.call("d20_0_1", build_explorer_token_supportsInterface_calldata(interfaceId));
+			return await provider.call("d20_0_2", build_explorer_token_supportsInterface_calldata(interfaceId));
 		} catch (error) {
 			console.error(error);
 			throw error;
@@ -534,7 +534,7 @@ export function setupWorld(provider: DojoProvider) {
 
 	const explorer_token_symbol = async () => {
 		try {
-			return await provider.call("d20_0_1", build_explorer_token_symbol_calldata());
+			return await provider.call("d20_0_2", build_explorer_token_symbol_calldata());
 		} catch (error) {
 			console.error(error);
 			throw error;
@@ -551,7 +551,7 @@ export function setupWorld(provider: DojoProvider) {
 
 	const explorer_token_tokenRoyalty = async (tokenId: BigNumberish) => {
 		try {
-			return await provider.call("d20_0_1", build_explorer_token_tokenRoyalty_calldata(tokenId));
+			return await provider.call("d20_0_2", build_explorer_token_tokenRoyalty_calldata(tokenId));
 		} catch (error) {
 			console.error(error);
 			throw error;
@@ -568,7 +568,7 @@ export function setupWorld(provider: DojoProvider) {
 
 	const explorer_token_tokenUri = async (tokenId: BigNumberish) => {
 		try {
-			return await provider.call("d20_0_1", build_explorer_token_tokenUri_calldata(tokenId));
+			return await provider.call("d20_0_2", build_explorer_token_tokenUri_calldata(tokenId));
 		} catch (error) {
 			console.error(error);
 			throw error;
@@ -585,7 +585,7 @@ export function setupWorld(provider: DojoProvider) {
 
 	const explorer_token_tokenExists = async (tokenId: BigNumberish) => {
 		try {
-			return await provider.call("d20_0_1", build_explorer_token_tokenExists_calldata(tokenId));
+			return await provider.call("d20_0_2", build_explorer_token_tokenExists_calldata(tokenId));
 		} catch (error) {
 			console.error(error);
 			throw error;
@@ -602,7 +602,7 @@ export function setupWorld(provider: DojoProvider) {
 
 	const explorer_token_totalSupply = async () => {
 		try {
-			return await provider.call("d20_0_1", build_explorer_token_totalSupply_calldata());
+			return await provider.call("d20_0_2", build_explorer_token_totalSupply_calldata());
 		} catch (error) {
 			console.error(error);
 			throw error;
@@ -622,7 +622,7 @@ export function setupWorld(provider: DojoProvider) {
 			return await provider.execute(
 				snAccount,
 				build_explorer_token_transferFrom_calldata(from, to, tokenId),
-				"d20_0_1",
+				"d20_0_2",
 			);
 		} catch (error) {
 			console.error(error);
@@ -643,7 +643,7 @@ export function setupWorld(provider: DojoProvider) {
 			return await provider.execute(
 				snAccount,
 				build_temple_token_approve_calldata(to, tokenId),
-				"d20_0_1",
+				"d20_0_2",
 			);
 		} catch (error) {
 			console.error(error);
@@ -661,7 +661,7 @@ export function setupWorld(provider: DojoProvider) {
 
 	const temple_token_availableSupply = async () => {
 		try {
-			return await provider.call("d20_0_1", build_temple_token_availableSupply_calldata());
+			return await provider.call("d20_0_2", build_temple_token_availableSupply_calldata());
 		} catch (error) {
 			console.error(error);
 			throw error;
@@ -678,7 +678,7 @@ export function setupWorld(provider: DojoProvider) {
 
 	const temple_token_balanceOf = async (account: string) => {
 		try {
-			return await provider.call("d20_0_1", build_temple_token_balanceOf_calldata(account));
+			return await provider.call("d20_0_2", build_temple_token_balanceOf_calldata(account));
 		} catch (error) {
 			console.error(error);
 			throw error;
@@ -695,7 +695,7 @@ export function setupWorld(provider: DojoProvider) {
 
 	const temple_token_contractUri = async () => {
 		try {
-			return await provider.call("d20_0_1", build_temple_token_contractUri_calldata());
+			return await provider.call("d20_0_2", build_temple_token_contractUri_calldata());
 		} catch (error) {
 			console.error(error);
 			throw error;
@@ -712,7 +712,7 @@ export function setupWorld(provider: DojoProvider) {
 
 	const temple_token_defaultRoyalty = async () => {
 		try {
-			return await provider.call("d20_0_1", build_temple_token_defaultRoyalty_calldata());
+			return await provider.call("d20_0_2", build_temple_token_defaultRoyalty_calldata());
 		} catch (error) {
 			console.error(error);
 			throw error;
@@ -732,7 +732,7 @@ export function setupWorld(provider: DojoProvider) {
 			return await provider.execute(
 				snAccount,
 				build_temple_token_disarmTrap_calldata(characterId),
-				"d20_0_1",
+				"d20_0_2",
 			);
 		} catch (error) {
 			console.error(error);
@@ -753,7 +753,7 @@ export function setupWorld(provider: DojoProvider) {
 			return await provider.execute(
 				snAccount,
 				build_temple_token_enterTemple_calldata(characterId, dungeonId),
-				"d20_0_1",
+				"d20_0_2",
 			);
 		} catch (error) {
 			console.error(error);
@@ -774,7 +774,7 @@ export function setupWorld(provider: DojoProvider) {
 			return await provider.execute(
 				snAccount,
 				build_temple_token_exitTemple_calldata(characterId),
-				"d20_0_1",
+				"d20_0_2",
 			);
 		} catch (error) {
 			console.error(error);
@@ -792,7 +792,7 @@ export function setupWorld(provider: DojoProvider) {
 
 	const temple_token_getApproved = async (tokenId: BigNumberish) => {
 		try {
-			return await provider.call("d20_0_1", build_temple_token_getApproved_calldata(tokenId));
+			return await provider.call("d20_0_2", build_temple_token_getApproved_calldata(tokenId));
 		} catch (error) {
 			console.error(error);
 			throw error;
@@ -809,7 +809,7 @@ export function setupWorld(provider: DojoProvider) {
 
 	const temple_token_isApprovedForAll = async (owner: string, operator: string) => {
 		try {
-			return await provider.call("d20_0_1", build_temple_token_isApprovedForAll_calldata(owner, operator));
+			return await provider.call("d20_0_2", build_temple_token_isApprovedForAll_calldata(owner, operator));
 		} catch (error) {
 			console.error(error);
 			throw error;
@@ -826,7 +826,7 @@ export function setupWorld(provider: DojoProvider) {
 
 	const temple_token_isMintedOut = async () => {
 		try {
-			return await provider.call("d20_0_1", build_temple_token_isMintedOut_calldata());
+			return await provider.call("d20_0_2", build_temple_token_isMintedOut_calldata());
 		} catch (error) {
 			console.error(error);
 			throw error;
@@ -843,7 +843,7 @@ export function setupWorld(provider: DojoProvider) {
 
 	const temple_token_isMintingPaused = async () => {
 		try {
-			return await provider.call("d20_0_1", build_temple_token_isMintingPaused_calldata());
+			return await provider.call("d20_0_2", build_temple_token_isMintingPaused_calldata());
 		} catch (error) {
 			console.error(error);
 			throw error;
@@ -860,7 +860,7 @@ export function setupWorld(provider: DojoProvider) {
 
 	const temple_token_isOwnerOf = async (address: string, tokenId: BigNumberish) => {
 		try {
-			return await provider.call("d20_0_1", build_temple_token_isOwnerOf_calldata(address, tokenId));
+			return await provider.call("d20_0_2", build_temple_token_isOwnerOf_calldata(address, tokenId));
 		} catch (error) {
 			console.error(error);
 			throw error;
@@ -877,7 +877,7 @@ export function setupWorld(provider: DojoProvider) {
 
 	const temple_token_lastTokenId = async () => {
 		try {
-			return await provider.call("d20_0_1", build_temple_token_lastTokenId_calldata());
+			return await provider.call("d20_0_2", build_temple_token_lastTokenId_calldata());
 		} catch (error) {
 			console.error(error);
 			throw error;
@@ -897,7 +897,7 @@ export function setupWorld(provider: DojoProvider) {
 			return await provider.execute(
 				snAccount,
 				build_temple_token_lootFallen_calldata(characterId, fallenIndex),
-				"d20_0_1",
+				"d20_0_2",
 			);
 		} catch (error) {
 			console.error(error);
@@ -918,7 +918,7 @@ export function setupWorld(provider: DojoProvider) {
 			return await provider.execute(
 				snAccount,
 				build_temple_token_lootTreasure_calldata(characterId),
-				"d20_0_1",
+				"d20_0_2",
 			);
 		} catch (error) {
 			console.error(error);
@@ -936,7 +936,7 @@ export function setupWorld(provider: DojoProvider) {
 
 	const temple_token_maxSupply = async () => {
 		try {
-			return await provider.call("d20_0_1", build_temple_token_maxSupply_calldata());
+			return await provider.call("d20_0_2", build_temple_token_maxSupply_calldata());
 		} catch (error) {
 			console.error(error);
 			throw error;
@@ -956,7 +956,7 @@ export function setupWorld(provider: DojoProvider) {
 			return await provider.execute(
 				snAccount,
 				build_temple_token_mintTemple_calldata(difficulty),
-				"d20_0_1",
+				"d20_0_2",
 			);
 		} catch (error) {
 			console.error(error);
@@ -974,7 +974,7 @@ export function setupWorld(provider: DojoProvider) {
 
 	const temple_token_mintedSupply = async () => {
 		try {
-			return await provider.call("d20_0_1", build_temple_token_mintedSupply_calldata());
+			return await provider.call("d20_0_2", build_temple_token_mintedSupply_calldata());
 		} catch (error) {
 			console.error(error);
 			throw error;
@@ -994,7 +994,7 @@ export function setupWorld(provider: DojoProvider) {
 			return await provider.execute(
 				snAccount,
 				build_temple_token_moveToChamber_calldata(characterId, exitIndex),
-				"d20_0_1",
+				"d20_0_2",
 			);
 		} catch (error) {
 			console.error(error);
@@ -1012,7 +1012,7 @@ export function setupWorld(provider: DojoProvider) {
 
 	const temple_token_name = async () => {
 		try {
-			return await provider.call("d20_0_1", build_temple_token_name_calldata());
+			return await provider.call("d20_0_2", build_temple_token_name_calldata());
 		} catch (error) {
 			console.error(error);
 			throw error;
@@ -1032,7 +1032,7 @@ export function setupWorld(provider: DojoProvider) {
 			return await provider.execute(
 				snAccount,
 				build_temple_token_openExit_calldata(characterId, exitIndex),
-				"d20_0_1",
+				"d20_0_2",
 			);
 		} catch (error) {
 			console.error(error);
@@ -1050,7 +1050,7 @@ export function setupWorld(provider: DojoProvider) {
 
 	const temple_token_ownerOf = async (tokenId: BigNumberish) => {
 		try {
-			return await provider.call("d20_0_1", build_temple_token_ownerOf_calldata(tokenId));
+			return await provider.call("d20_0_2", build_temple_token_ownerOf_calldata(tokenId));
 		} catch (error) {
 			console.error(error);
 			throw error;
@@ -1067,7 +1067,7 @@ export function setupWorld(provider: DojoProvider) {
 
 	const temple_token_reservedSupply = async () => {
 		try {
-			return await provider.call("d20_0_1", build_temple_token_reservedSupply_calldata());
+			return await provider.call("d20_0_2", build_temple_token_reservedSupply_calldata());
 		} catch (error) {
 			console.error(error);
 			throw error;
@@ -1084,7 +1084,7 @@ export function setupWorld(provider: DojoProvider) {
 
 	const temple_token_royaltyInfo = async (tokenId: BigNumberish, salePrice: BigNumberish) => {
 		try {
-			return await provider.call("d20_0_1", build_temple_token_royaltyInfo_calldata(tokenId, salePrice));
+			return await provider.call("d20_0_2", build_temple_token_royaltyInfo_calldata(tokenId, salePrice));
 		} catch (error) {
 			console.error(error);
 			throw error;
@@ -1104,7 +1104,7 @@ export function setupWorld(provider: DojoProvider) {
 			return await provider.execute(
 				snAccount,
 				build_temple_token_safeTransferFrom_calldata(from, to, tokenId, data),
-				"d20_0_1",
+				"d20_0_2",
 			);
 		} catch (error) {
 			console.error(error);
@@ -1125,7 +1125,7 @@ export function setupWorld(provider: DojoProvider) {
 			return await provider.execute(
 				snAccount,
 				build_temple_token_setApprovalForAll_calldata(operator, approved),
-				"d20_0_1",
+				"d20_0_2",
 			);
 		} catch (error) {
 			console.error(error);
@@ -1143,7 +1143,7 @@ export function setupWorld(provider: DojoProvider) {
 
 	const temple_token_supportsInterface = async (interfaceId: BigNumberish) => {
 		try {
-			return await provider.call("d20_0_1", build_temple_token_supportsInterface_calldata(interfaceId));
+			return await provider.call("d20_0_2", build_temple_token_supportsInterface_calldata(interfaceId));
 		} catch (error) {
 			console.error(error);
 			throw error;
@@ -1160,7 +1160,7 @@ export function setupWorld(provider: DojoProvider) {
 
 	const temple_token_symbol = async () => {
 		try {
-			return await provider.call("d20_0_1", build_temple_token_symbol_calldata());
+			return await provider.call("d20_0_2", build_temple_token_symbol_calldata());
 		} catch (error) {
 			console.error(error);
 			throw error;
@@ -1177,7 +1177,7 @@ export function setupWorld(provider: DojoProvider) {
 
 	const temple_token_tokenRoyalty = async (tokenId: BigNumberish) => {
 		try {
-			return await provider.call("d20_0_1", build_temple_token_tokenRoyalty_calldata(tokenId));
+			return await provider.call("d20_0_2", build_temple_token_tokenRoyalty_calldata(tokenId));
 		} catch (error) {
 			console.error(error);
 			throw error;
@@ -1194,7 +1194,7 @@ export function setupWorld(provider: DojoProvider) {
 
 	const temple_token_tokenUri = async (tokenId: BigNumberish) => {
 		try {
-			return await provider.call("d20_0_1", build_temple_token_tokenUri_calldata(tokenId));
+			return await provider.call("d20_0_2", build_temple_token_tokenUri_calldata(tokenId));
 		} catch (error) {
 			console.error(error);
 			throw error;
@@ -1211,7 +1211,7 @@ export function setupWorld(provider: DojoProvider) {
 
 	const temple_token_tokenExists = async (tokenId: BigNumberish) => {
 		try {
-			return await provider.call("d20_0_1", build_temple_token_tokenExists_calldata(tokenId));
+			return await provider.call("d20_0_2", build_temple_token_tokenExists_calldata(tokenId));
 		} catch (error) {
 			console.error(error);
 			throw error;
@@ -1228,7 +1228,7 @@ export function setupWorld(provider: DojoProvider) {
 
 	const temple_token_totalSupply = async () => {
 		try {
-			return await provider.call("d20_0_1", build_temple_token_totalSupply_calldata());
+			return await provider.call("d20_0_2", build_temple_token_totalSupply_calldata());
 		} catch (error) {
 			console.error(error);
 			throw error;
@@ -1248,7 +1248,7 @@ export function setupWorld(provider: DojoProvider) {
 			return await provider.execute(
 				snAccount,
 				build_temple_token_transferFrom_calldata(from, to, tokenId),
-				"d20_0_1",
+				"d20_0_2",
 			);
 		} catch (error) {
 			console.error(error);

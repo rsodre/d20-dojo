@@ -29,7 +29,7 @@ mod tests {
 
     fn namespace_def() -> NamespaceDef {
         NamespaceDef {
-            namespace: "d20_0_1",
+            namespace: "d20_0_2",
             resources: [
                 TestResource::Model(d20::models::config::m_Config::TEST_CLASS_HASH),
                 TestResource::Model(d20::d20::models::character::m_CharacterStats::TEST_CLASS_HASH),
@@ -50,8 +50,8 @@ mod tests {
         ).unwrap_syscall();
 
         let contract_defs: Span<ContractDef> = [
-            ContractDefTrait::new(@"d20_0_1", @"explorer_token")
-                .with_writer_of([dojo::utils::bytearray_hash(@"d20_0_1")].span())
+            ContractDefTrait::new(@"d20_0_2", @"explorer_token")
+                .with_writer_of([dojo::utils::bytearray_hash(@"d20_0_2")].span())
                 .with_init_calldata([mock_vrf_address.into()].span()),
         ].span();
 

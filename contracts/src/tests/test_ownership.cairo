@@ -15,7 +15,7 @@ mod tests {
 
     fn namespace_def() -> NamespaceDef {
         NamespaceDef {
-            namespace: "d20_0_1",
+            namespace: "d20_0_2",
             resources: array![
                 TestResource::Model(d20::models::config::m_Config::TEST_CLASS_HASH),
                 TestResource::Model(d20::d20::models::character::m_CharacterStats::TEST_CLASS_HASH),
@@ -36,11 +36,11 @@ mod tests {
         ).unwrap_syscall();
 
         let contract_defs: Span<ContractDef> = array![
-            ContractDefTrait::new(@"d20_0_1", @"explorer_token")
-                .with_writer_of(array![dojo::utils::bytearray_hash(@"d20_0_1")].span())
+            ContractDefTrait::new(@"d20_0_2", @"explorer_token")
+                .with_writer_of(array![dojo::utils::bytearray_hash(@"d20_0_2")].span())
                 .with_init_calldata(array![mock_vrf_address.into()].span()),
-            ContractDefTrait::new(@"d20_0_1", @"temple_token")
-                .with_writer_of(array![dojo::utils::bytearray_hash(@"d20_0_1")].span()),
+            ContractDefTrait::new(@"d20_0_2", @"temple_token")
+                .with_writer_of(array![dojo::utils::bytearray_hash(@"d20_0_2")].span()),
         ].span();
 
         let mut world = spawn_test_world(world::TEST_CLASS_HASH, array![namespace_def()].span());

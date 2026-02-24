@@ -202,7 +202,7 @@ pub mod temple_token {
     #[generate_trait]
     impl InternalImpl of InternalTrait {
         fn world_default(self: @ContractState) -> WorldStorage {
-            self.world(@"d20_0_1")
+            self.world(@"d20_0_2")
         }
     }
 

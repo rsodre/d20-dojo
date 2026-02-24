@@ -310,15 +310,15 @@ All rolls — ability checks, attack rolls, saving throws, damage dice, initiati
 
 ### Namespace
 
-All resources live under the **`d20_0_1`** namespace. This replaces the default `dojo_starter` namespace from the template.
+All resources live under the **`d20_0_2`** namespace. This replaces the default `dojo_starter` namespace from the template.
 
 ```toml
 # dojo_dev.toml
 [namespace]
-default = "d20_0_1"
+default = "d20_0_2"
 
 [writers]
-"d20_0_1" = ["d20_0_1-explorer_token", "d20_0_1-combat_system", "d20_0_1-temple_token"]
+"d20_0_2" = ["d20_0_2-explorer_token", "d20_0_2-combat_system", "d20_0_2-temple_token"]
 ```
 
 ### Models (Components)
@@ -682,9 +682,9 @@ Systems are `#[dojo::contract]` modules, not free functions. Each contract has a
 
 | Contract | Tag | Writes to |
 |----------|-----|-----------|
-| `explorer_token` | `d20_0_1-explorer_token` | CharacterStats, CharacterCombat, CharacterInventory, CharacterSkills |
-| `combat_system` | `d20_0_1-combat_system` | CharacterCombat, CharacterInventory, CharacterPosition, MonsterInstance, FallenCharacter |
-| `temple_token` | `d20_0_1-temple_token` | CharacterPosition, CharacterDungeonProgress, CharacterStats, CharacterInventory, DungeonState, Chamber, MonsterInstance, ChamberExit, FallenCharacter |
+| `explorer_token` | `d20_0_2-explorer_token` | CharacterStats, CharacterCombat, CharacterInventory, CharacterSkills |
+| `combat_system` | `d20_0_2-combat_system` | CharacterCombat, CharacterInventory, CharacterPosition, MonsterInstance, FallenCharacter |
+| `temple_token` | `d20_0_2-temple_token` | CharacterPosition, CharacterDungeonProgress, CharacterStats, CharacterInventory, DungeonState, Chamber, MonsterInstance, ChamberExit, FallenCharacter |
 
 ```cairo
 // ──────────────────────────────────────────────

@@ -24,7 +24,7 @@ use d20::tests::mock_vrf::MockVrf;
 
 pub fn namespace_def() -> NamespaceDef {
     NamespaceDef {
-        namespace: "d20_0_1",
+        namespace: "d20_0_2",
         resources: [
             // Config
             TestResource::Model(m_Config::TEST_CLASS_HASH),
@@ -73,14 +73,14 @@ pub fn setup_world() -> (
 
     // 2. Build contract defs — pass vrf_address as init calldata for both token contracts
     let contract_defs: Span<ContractDef> = [
-        ContractDefTrait::new(@"d20_0_1", @"explorer_token")
-            .with_writer_of([dojo::utils::bytearray_hash(@"d20_0_1")].span())
+        ContractDefTrait::new(@"d20_0_2", @"explorer_token")
+            .with_writer_of([dojo::utils::bytearray_hash(@"d20_0_2")].span())
             .with_init_calldata([mock_vrf_address.into()].span()),
-        ContractDefTrait::new(@"d20_0_1", @"combat_system")
-            .with_writer_of([dojo::utils::bytearray_hash(@"d20_0_1")].span())
+        ContractDefTrait::new(@"d20_0_2", @"combat_system")
+            .with_writer_of([dojo::utils::bytearray_hash(@"d20_0_2")].span())
             .with_init_calldata([mock_vrf_address.into()].span()),
-        ContractDefTrait::new(@"d20_0_1", @"temple_token")
-            .with_writer_of([dojo::utils::bytearray_hash(@"d20_0_1")].span()),
+        ContractDefTrait::new(@"d20_0_2", @"temple_token")
+            .with_writer_of([dojo::utils::bytearray_hash(@"d20_0_2")].span()),
     ].span();
 
     // 3. Spawn world and sync

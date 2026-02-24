@@ -3,10 +3,10 @@ name = "D20 On-Chain"
 description = "A fully on-chain RPG built on Starknet using Cairo and the Dojo framework. Implements D20 SRD rules as smart contracts."
 cover_uri = "file://assets/cover.png"
 icon_uri = "file://assets/icon.png"
-seed = "d20_0_1"
+seed = "d20_0_2"
 
 [namespace]
-default = "d20_0_1"
+default = "d20_0_2"
 
 [env]
 rpc_url = "https://api.cartridge.gg/x/d20-katana/katana"
@@ -16,9 +16,9 @@ account_address = "0x127fd5f1fe78a71f8bcd1fec63e3fe2f0486b6ecd5c86a0466c3a21fa5c
 private_key = "0xc5b2fcab997346f3ea1c00b002ecf6f382c5f9c9659a3894eb783c5320f912"
 
 [writers]
-"d20_0_1" = ["d20_0_1-explorer_token", "d20_0_1-combat_system", "d20_0_1-temple_token"]
+"d20_0_2" = ["d20_0_2-explorer_token", "d20_0_2-combat_system", "d20_0_2-temple_token"]
 
 [init_call_args]
 # VRF provider address
-"d20_0_1-explorer_token" = ["0x051fea4450da9d6aee758bdeba88b2f665bcbf549d2c61421aa724e9ac0ced8f"]
-"d20_0_1-combat_system" = ["0x051fea4450da9d6aee758bdeba88b2f665bcbf549d2c61421aa724e9ac0ced8f"]
+"d20_0_2-explorer_token" = ["0x051fea4450da9d6aee758bdeba88b2f665bcbf549d2c61421aa724e9ac0ced8f"]
+"d20_0_2-combat_system" = ["0x051fea4450da9d6aee758bdeba88b2f665bcbf549d2c61421aa724e9ac0ced8f"]

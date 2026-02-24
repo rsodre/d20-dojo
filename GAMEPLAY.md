@@ -12,6 +12,7 @@ This document provides a detailed technical reference for the game's systems and
   - Explorer: `0x0468d3fbf587e6099286aee2e42f4e8e37bf3f95d0dec368f53b2479f51e882f`
   - Temple: `0x027c7a362ba89a2292673d1eb84d37f0b66416b7d1cc43449139f89d45230b9f`
   - VRF: `0x051fea4450da9d6aee758bdeba88b2f665bcbf549d2c61421aa724e9ac0ced8f`
+- Dojo namespace: `d20_0_2`
 
 ## System Overview
 
