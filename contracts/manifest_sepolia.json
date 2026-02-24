@@ -1,8 +1,8 @@
 {
   "world": {
     "class_hash": "0x613551abceb2b37073b1149bb862ea70cf029981ce1ca47e9dd7c7ab97cb65d",
-    "address": "0x400feed25cca789d09cfdc33debcc94c11703995cb3eb3dae2501fd215d1b3a",
-    "seed": "d20_0_1",
+    "address": "0x19ad793d43e25c705789ebafaf845727f4ba1ac8185af701472b2b4ecc93d0",
+    "seed": "d20_0_2",
     "name": "D20 On-Chain",
     "entrypoints": [
       "uuid",
@@ -33,13 +33,13 @@
   },
   "contracts": [
     {
-      "address": "0x5c6a7b7e245f1bcb01b43966d9fd2c24186b1e8184a54f52e23a9dc1163d780",
-      "class_hash": "0x58078604f54f27bf504aa5c02c4f5d83cf58913e97221990a819ff73ed60581",
+      "address": "0x7f2edad319105e48cd554dfbf69b4194893cffe2a1c524b734de213f1e92861",
+      "class_hash": "0x735271820d66555f93a0b0436e35ddf10713ad205e591af911403b6544c62cc",
       "init_calldata": [
         "0x051fea4450da9d6aee758bdeba88b2f665bcbf549d2c61421aa724e9ac0ced8f"
       ],
-      "tag": "d20_0_1-combat_system",
-      "selector": "0x3c1af41041bccafdf2c2a36dc7549784a6ba6727a8f2bc30be877b47098a471",
+      "tag": "d20_0_2-combat_system",
+      "selector": "0x5e385e8f5d6096ecba39753086f744474519fb8861ed69c942b41dfe6cfa79e",
       "systems": [
         "dojo_init",
         "attack",
@@ -52,13 +52,13 @@
       ]
     },
     {
-      "address": "0x468d3fbf587e6099286aee2e42f4e8e37bf3f95d0dec368f53b2479f51e882f",
-      "class_hash": "0x35683d5bdb47add80f29730156ab9376a570dbd3ed9dba1d7b3a32a694ade95",
+      "address": "0x276a9e7e606febaa5240e35198236826049d06d8b58f0589c334fe6525fb8a3",
+      "class_hash": "0x2bf0903fc0da75d73f55ed8054f1201dd9b41ea54c692ba433d732874a9a689",
       "init_calldata": [
         "0x051fea4450da9d6aee758bdeba88b2f665bcbf549d2c61421aa724e9ac0ced8f"
       ],
-      "tag": "d20_0_1-explorer_token",
-      "selector": "0x3eadb251441261436cc41b718569b5c2c6236330e126f426b30f93c8f4ff6a1",
+      "tag": "d20_0_2-explorer_token",
+      "selector": "0x2250281834bff233fcc34da911bf91c67d9fd353e9b8b1db02460c1fb1168d7",
       "systems": [
         "dojo_init",
         "mint_explorer",
@@ -74,11 +74,11 @@
       ]
     },
     {
-      "address": "0x27c7a362ba89a2292673d1eb84d37f0b66416b7d1cc43449139f89d45230b9f",
-      "class_hash": "0x4a4a0b0692b131bcef7c2ec5166722c5e638280a6e96ffafc2875b7b3db0dba",
+      "address": "0x549d301eef0341da7a293a76639421429a2c38b65ec0887d29e582def92a9a6",
+      "class_hash": "0x4f5db01eb306dd6d53caabe4720e8d7e8d20e272f789693f3a40154382b276e",
       "init_calldata": [],
-      "tag": "d20_0_1-temple_token",
-      "selector": "0x6c84dcfaf0c2645d94dd633dd2b6d079f91d09ec7e63c865482860da03b0de5",
+      "tag": "d20_0_2-temple_token",
+      "selector": "0xa5ade648a6eb59c5321ab94e4fa442832b0f5f2e687bcfa930ccfbc38aa913",
       "systems": [
         "dojo_init",
         "mint_temple",
@@ -105,7 +105,7 @@
     {
       "members": [
         {
-          "name": "temple_id",
+          "name": "dungeon_id",
           "type": "core::integer::u128",
           "key": true
         },
@@ -116,11 +116,11 @@
         },
         {
           "name": "chamber_type",
-          "type": "d20::types::index::ChamberType",
+          "type": "d20::d20::models::dungeon::ChamberType",
           "key": false
         },
         {
-          "name": "yonder",
+          "name": "depth",
           "type": "core::integer::u8",
           "key": false
         },
@@ -148,16 +148,21 @@
           "name": "trap_dc",
           "type": "core::integer::u8",
           "key": false
+        },
+        {
+          "name": "fallen_count",
+          "type": "core::integer::u32",
+          "key": false
         }
       ],
-      "class_hash": "0x1a1625e3b2d7c3e42a3427de0f172b630f72b21117bb298d0ac23b2a5bfe6b0",
-      "tag": "d20_0_1-Chamber",
-      "selector": "0x68d8f1994339c90a1e871d77925683a4019478b3dcc14f6f8bbfa042d93b63f"
+      "class_hash": "0x6aceaad98c3c7db0fd6297205ef8e58525c1c88f18e28a52341eabbebe7fd95",
+      "tag": "d20_0_2-Chamber",
+      "selector": "0x3ea6e635aaa4d8e05e8dcafae28910702674be504f64f48fd75bc4f40b2d94c"
     },
     {
       "members": [
         {
-          "name": "temple_id",
+          "name": "dungeon_id",
           "type": "core::integer::u128",
           "key": true
         },
@@ -182,53 +187,14 @@
           "key": false
         }
       ],
-      "class_hash": "0x2399b0461fd5129bf5179704008ff0220df58381e65cb99bc2b16de2edf7ec2",
-      "tag": "d20_0_1-ChamberExit",
-      "selector": "0x12d79515b3da7c7ee98aaa3bc679fc281d58afece629b46a35aa2d7aea59a95"
+      "class_hash": "0x23d81f50e8ff27071c342e83908925decc9ec3f64c79e1ff828a52fc0d4d5f",
+      "tag": "d20_0_2-ChamberExit",
+      "selector": "0x56296714778fa0b0c94d33355abd86337b9addd495a4e2d7a65ce7f5301fcf1"
     },
     {
       "members": [
         {
-          "name": "temple_id",
-          "type": "core::integer::u128",
-          "key": true
-        },
-        {
-          "name": "chamber_id",
-          "type": "core::integer::u32",
-          "key": true
-        },
-        {
-          "name": "count",
-          "type": "core::integer::u32",
-          "key": false
-        }
-      ],
-      "class_hash": "0x1b191d0074860bca6e4e8b361ddf2c1425ab901ce76c261666edb9136e6ef8c",
-      "tag": "d20_0_1-ChamberFallenCount",
-      "selector": "0x333781756799054cd742c7f285e0d57b1034e5c9124914ac41a2f67f1d8b072"
-    },
-    {
-      "members": [
-        {
-          "name": "key",
-          "type": "core::integer::u8",
-          "key": true
-        },
-        {
-          "name": "vrf_address",
-          "type": "core::starknet::contract_address::ContractAddress",
-          "key": false
-        }
-      ],
-      "class_hash": "0x37685c10b9638bd236eb44d0ed5eb5c09fb19270e5a3f2b3991b36445588da5",
-      "tag": "d20_0_1-Config",
-      "selector": "0x57e4837fe6a3772d98f1d54cb2641b841d582ac94d91b769a5e690618a446e5"
-    },
-    {
-      "members": [
-        {
-          "name": "explorer_id",
+          "name": "character_id",
           "type": "core::integer::u128",
           "key": true
         },
@@ -263,57 +229,57 @@
           "key": false
         }
       ],
-      "class_hash": "0x1d1d2041161429497784b84f4c19f5d7b4a1f3da158ba2d69ac5f93efea203a",
-      "tag": "d20_0_1-ExplorerCombat",
-      "selector": "0x2b4a9831c822257e37c35045fb097b9a679d03fbaf20afc36d34d1dc98fad05"
+      "class_hash": "0x21e862e07326ac0d4ac79c150dd815d6ca87cee5677f3fa3ac745615470f252",
+      "tag": "d20_0_2-CharacterCombat",
+      "selector": "0x42c7bf9be2834d739ef081d91d6ae542e4b3965563b9b8b3888d84f97f544a4"
     },
     {
       "members": [
         {
-          "name": "explorer_id",
+          "name": "character_id",
           "type": "core::integer::u128",
           "key": true
         },
         {
-          "name": "current_hp",
-          "type": "core::integer::i16",
-          "key": false
+          "name": "dungeon_id",
+          "type": "core::integer::u128",
+          "key": true
         },
         {
-          "name": "max_hp",
+          "name": "chambers_explored",
           "type": "core::integer::u16",
           "key": false
         },
         {
-          "name": "is_dead",
-          "type": "core::bool",
+          "name": "xp_earned",
+          "type": "core::integer::u32",
           "key": false
         }
       ],
-      "class_hash": "0x73c9bb76f6abb17f3751f987c239d66eab2daa2dd96c781465d07d31492d10b",
-      "tag": "d20_0_1-ExplorerHealth",
-      "selector": "0x6e0aa9e06d73b383eca25b863ae18bba5b8382353bf4b6af52422abf7e232e5"
+      "class_hash": "0x708dd1fd6f3f9894193109609f1490abe352f9870592b4da3ff09dec27a2d38",
+      "tag": "d20_0_2-CharacterDungeonProgress",
+      "selector": "0x10d887f1c06cad399914e60bf12758bba8da1f0666db1ff8e4cd28c7373696b"
     },
     {
       "members": [
         {
-          "name": "explorer_id",
+          "name": "character_id",
           "type": "core::integer::u128",
           "key": true
         },
         {
           "name": "primary_weapon",
-          "type": "d20::types::items::WeaponType",
+          "type": "d20::d20::types::items::WeaponType",
           "key": false
         },
         {
           "name": "secondary_weapon",
-          "type": "d20::types::items::WeaponType",
+          "type": "d20::d20::types::items::WeaponType",
           "key": false
         },
         {
           "name": "armor",
-          "type": "d20::types::items::ArmorType",
+          "type": "d20::d20::types::items::ArmorType",
           "key": false
         },
         {
@@ -332,19 +298,19 @@
           "key": false
         }
       ],
-      "class_hash": "0x28564cc2ceafb10dc04d7a6dea0a1960a708abd19487b087003674661a50488",
-      "tag": "d20_0_1-ExplorerInventory",
-      "selector": "0x20fcbaacfa7ae21ba4452b09095e58b5d4a99d22ab2f2873a84e4e7070c2d6e"
+      "class_hash": "0x6b465487e8b719f4430579ff2bf9f50f4d9e838ea6cd93639b456c689cd660a",
+      "tag": "d20_0_2-CharacterInventory",
+      "selector": "0x3495205f506b63822c8d40c05b62e8803575bc83a34a241c0aca610a4b093d0"
     },
     {
       "members": [
         {
-          "name": "explorer_id",
+          "name": "character_id",
           "type": "core::integer::u128",
           "key": true
         },
         {
-          "name": "temple_id",
+          "name": "dungeon_id",
           "type": "core::integer::u128",
           "key": false
         },
@@ -364,47 +330,47 @@
           "key": false
         }
       ],
-      "class_hash": "0x1b327c6ba7ed1a57db845e3a5447bf3ed79d2e81c27a9f45eff630661248174",
-      "tag": "d20_0_1-ExplorerPosition",
-      "selector": "0x76d9b7ea74bf05ee6cc1c91111c8a2ea6a59b1a2fc813b60ac8c90673037a41"
+      "class_hash": "0x64ddf246f23572a05d59023914ec53d41881f3636642acf6b77772549687ccb",
+      "tag": "d20_0_2-CharacterPosition",
+      "selector": "0x319070391521164a7fa170ccd1ba50cb39439eee40227f0a2f7b4760abd2a20"
     },
     {
       "members": [
         {
-          "name": "explorer_id",
+          "name": "character_id",
           "type": "core::integer::u128",
           "key": true
         },
         {
           "name": "skills",
-          "type": "d20::models::explorer::SkillsSet",
+          "type": "d20::d20::models::character::SkillsSet",
           "key": false
         },
         {
           "name": "expertise_1",
-          "type": "d20::types::index::Skill",
+          "type": "d20::d20::models::character::Skill",
           "key": false
         },
         {
           "name": "expertise_2",
-          "type": "d20::types::index::Skill",
+          "type": "d20::d20::models::character::Skill",
           "key": false
         }
       ],
-      "class_hash": "0x31bbcccc8144017621a1abaa2927f70d3f526f3765b0e40fe92fbfe6f9feb77",
-      "tag": "d20_0_1-ExplorerSkills",
-      "selector": "0x50ca00121096333f080aedbb397f604f06bae20cd9210c15b60424daae9afec"
+      "class_hash": "0x663c01c4d19c900350ce54827112d1085fd839caa69da8c9662120086cc1aa4",
+      "tag": "d20_0_2-CharacterSkills",
+      "selector": "0x43a9604e39441b6f47c5c7b7ffb18ff2f9d49496bd744d033fd6c3573bcc087"
     },
     {
       "members": [
         {
-          "name": "explorer_id",
+          "name": "character_id",
           "type": "core::integer::u128",
           "key": true
         },
         {
           "name": "abilities",
-          "type": "d20::models::explorer::AbilityScore",
+          "type": "d20::d20::models::character::AbilityScore",
           "key": false
         },
         {
@@ -418,119 +384,13 @@
           "key": false
         },
         {
-          "name": "explorer_class",
-          "type": "d20::types::explorer_class::ExplorerClass",
+          "name": "character_class",
+          "type": "d20::d20::types::character_class::CharacterClass",
           "key": false
         },
         {
-          "name": "temples_conquered",
+          "name": "dungeons_conquered",
           "type": "core::integer::u16",
-          "key": false
-        }
-      ],
-      "class_hash": "0x73cbcf7a86d2f4332015fcb1ed3add39b28ac3a0a8b9d3b5da490bf36019f0a",
-      "tag": "d20_0_1-ExplorerStats",
-      "selector": "0x943328377bc3ffda4b8d939906551e3b75759070afbf2fed4a7f4aaba39f79"
-    },
-    {
-      "members": [
-        {
-          "name": "explorer_id",
-          "type": "core::integer::u128",
-          "key": true
-        },
-        {
-          "name": "temple_id",
-          "type": "core::integer::u128",
-          "key": true
-        },
-        {
-          "name": "chambers_explored",
-          "type": "core::integer::u16",
-          "key": false
-        },
-        {
-          "name": "xp_earned",
-          "type": "core::integer::u32",
-          "key": false
-        }
-      ],
-      "class_hash": "0xdee7f5d746c7a8c239ea6deacd6e510fcbf5a242c15ed095f18eca0013c523",
-      "tag": "d20_0_1-ExplorerTempleProgress",
-      "selector": "0xd3e0ebbc5c76afd46bbb947e59c9d608fb6a6ce962553ae54d5564a4af4395"
-    },
-    {
-      "members": [
-        {
-          "name": "temple_id",
-          "type": "core::integer::u128",
-          "key": true
-        },
-        {
-          "name": "chamber_id",
-          "type": "core::integer::u32",
-          "key": true
-        },
-        {
-          "name": "fallen_index",
-          "type": "core::integer::u32",
-          "key": true
-        },
-        {
-          "name": "explorer_id",
-          "type": "core::integer::u128",
-          "key": false
-        },
-        {
-          "name": "dropped_weapon",
-          "type": "d20::types::items::WeaponType",
-          "key": false
-        },
-        {
-          "name": "dropped_armor",
-          "type": "d20::types::items::ArmorType",
-          "key": false
-        },
-        {
-          "name": "dropped_gold",
-          "type": "core::integer::u32",
-          "key": false
-        },
-        {
-          "name": "dropped_potions",
-          "type": "core::integer::u8",
-          "key": false
-        },
-        {
-          "name": "is_looted",
-          "type": "core::bool",
-          "key": false
-        }
-      ],
-      "class_hash": "0x472872be7513d4676ba0f0fc217c182f1d292f6d615225a87f71b8025238fbe",
-      "tag": "d20_0_1-FallenExplorer",
-      "selector": "0x34ae034ea5d27035d8cdc2fc66064a0f5754fb6a867f7e82497e89ca0dccef3"
-    },
-    {
-      "members": [
-        {
-          "name": "temple_id",
-          "type": "core::integer::u128",
-          "key": true
-        },
-        {
-          "name": "chamber_id",
-          "type": "core::integer::u32",
-          "key": true
-        },
-        {
-          "name": "monster_id",
-          "type": "core::integer::u32",
-          "key": true
-        },
-        {
-          "name": "monster_type",
-          "type": "d20::types::monster::MonsterType",
           "key": false
         },
         {
@@ -544,19 +404,36 @@
           "key": false
         },
         {
-          "name": "is_alive",
+          "name": "is_dead",
           "type": "core::bool",
           "key": false
         }
       ],
-      "class_hash": "0x713817e94868d5de4da82dd207f2c85bceffcb04b072ea54a48630c8f1ac19f",
-      "tag": "d20_0_1-MonsterInstance",
-      "selector": "0x2a3db4f1190413a521f9f383c18f6ebfa7048715341f1c9a6188bdcba52c5be"
+      "class_hash": "0x702905f9004f18d3dba830462f3d942abae4f2b5c154d19a04a7b12e8e4791a",
+      "tag": "d20_0_2-CharacterStats",
+      "selector": "0x289bb1209ed31b81de52cab3d3ed23f8df02734ae6e83a28c4f4392f3208412"
     },
     {
       "members": [
         {
-          "name": "temple_id",
+          "name": "key",
+          "type": "core::integer::u8",
+          "key": true
+        },
+        {
+          "name": "vrf_address",
+          "type": "core::starknet::contract_address::ContractAddress",
+          "key": false
+        }
+      ],
+      "class_hash": "0x37685c10b9638bd236eb44d0ed5eb5c09fb19270e5a3f2b3991b36445588da5",
+      "tag": "d20_0_2-Config",
+      "selector": "0xb130fb81f3e8fdf4a553de8e5c215ee7c91dc6c5b3fa0ee1d11fc215e3ac2d"
+    },
+    {
+      "members": [
+        {
+          "name": "dungeon_id",
           "type": "core::integer::u128",
           "key": true
         },
@@ -581,43 +458,137 @@
           "key": false
         },
         {
-          "name": "max_yonder",
+          "name": "max_depth",
           "type": "core::integer::u8",
           "key": false
         }
       ],
-      "class_hash": "0x279ebccedbf38a5d46e67775f3d066c14158092e213115d7fba0cacd4356d4d",
-      "tag": "d20_0_1-TempleState",
-      "selector": "0x2aa9b9ab07d900c40168c3396f5532c300205b46349277b0c31437a0752f55c"
+      "class_hash": "0x3a148262189ebffd7b40d43d2d39aa98309668151464d8c1b2ecf300d0dc367",
+      "tag": "d20_0_2-DungeonState",
+      "selector": "0x5797e2da21652ceacdde52130bb8fc3c88276e3ce82cc203249d7ceba85a962"
+    },
+    {
+      "members": [
+        {
+          "name": "dungeon_id",
+          "type": "core::integer::u128",
+          "key": true
+        },
+        {
+          "name": "chamber_id",
+          "type": "core::integer::u32",
+          "key": true
+        },
+        {
+          "name": "fallen_index",
+          "type": "core::integer::u32",
+          "key": true
+        },
+        {
+          "name": "character_id",
+          "type": "core::integer::u128",
+          "key": false
+        },
+        {
+          "name": "dropped_weapon",
+          "type": "d20::d20::types::items::WeaponType",
+          "key": false
+        },
+        {
+          "name": "dropped_armor",
+          "type": "d20::d20::types::items::ArmorType",
+          "key": false
+        },
+        {
+          "name": "dropped_gold",
+          "type": "core::integer::u32",
+          "key": false
+        },
+        {
+          "name": "dropped_potions",
+          "type": "core::integer::u8",
+          "key": false
+        },
+        {
+          "name": "is_looted",
+          "type": "core::bool",
+          "key": false
+        }
+      ],
+      "class_hash": "0x223e960258c4e136547bdf73fcd5dd5c9cbbb7f9b056fee82e91c1e1d97c2be",
+      "tag": "d20_0_2-FallenCharacter",
+      "selector": "0x397815e1e754a4fdbacfe9e975276db813bb4792f8630d5161b3c8f22dfe06e"
+    },
+    {
+      "members": [
+        {
+          "name": "dungeon_id",
+          "type": "core::integer::u128",
+          "key": true
+        },
+        {
+          "name": "chamber_id",
+          "type": "core::integer::u32",
+          "key": true
+        },
+        {
+          "name": "monster_id",
+          "type": "core::integer::u32",
+          "key": true
+        },
+        {
+          "name": "monster_type",
+          "type": "d20::d20::models::monster::MonsterType",
+          "key": false
+        },
+        {
+          "name": "current_hp",
+          "type": "core::integer::i16",
+          "key": false
+        },
+        {
+          "name": "max_hp",
+          "type": "core::integer::u16",
+          "key": false
+        },
+        {
+          "name": "is_alive",
+          "type": "core::bool",
+          "key": false
+        }
+      ],
+      "class_hash": "0x166572935dde3ca9b0c8d1a28f728bd598cb2006f0191cbaa0083dc730961f",
+      "tag": "d20_0_2-MonsterInstance",
+      "selector": "0x3699717650445b25a038288a1bb2742b7c12792a123a8319dc6745d7f3c57d3"
     }
   ],
   "events": [
     {
       "members": [
         {
-          "name": "temple_id",
+          "name": "dungeon_id",
           "type": "core::integer::u128",
           "key": true
         },
         {
-          "name": "explorer_id",
+          "name": "character_id",
           "type": "core::integer::u128",
           "key": false
         },
         {
           "name": "monster_type",
-          "type": "d20::types::monster::MonsterType",
+          "type": "d20::d20::models::monster::MonsterType",
           "key": false
         }
       ],
-      "class_hash": "0x49e9dce8082b71436767d37a129cfd1a9f1ea74508dcba70d289b1a57f5dd7",
-      "tag": "d20_0_1-BossDefeated",
-      "selector": "0x32fada6b6297ab12527854ac8b9c624a4a040ac0dcddbd0f58c5276da43bfe6"
+      "class_hash": "0x34701772706a617d31d6f35691dce7329b55ab29bb893d787b3155eb6fe3571",
+      "tag": "d20_0_2-BossDefeated",
+      "selector": "0x33339219ce17df5d6403bdf42a779c921b888951e667bd2d0e0052793f0e6fd"
     },
     {
       "members": [
         {
-          "name": "temple_id",
+          "name": "dungeon_id",
           "type": "core::integer::u128",
           "key": true
         },
@@ -628,11 +599,11 @@
         },
         {
           "name": "chamber_type",
-          "type": "d20::types::index::ChamberType",
+          "type": "d20::d20::models::dungeon::ChamberType",
           "key": false
         },
         {
-          "name": "yonder",
+          "name": "depth",
           "type": "core::integer::u8",
           "key": false
         },
@@ -642,20 +613,69 @@
           "key": false
         }
       ],
-      "class_hash": "0x2fd297bc226f2a631368f65e02be42d9344526cb974b6e8e3ef2920cbdf937c",
-      "tag": "d20_0_1-ChamberRevealed",
-      "selector": "0x7e23ba3c186dd0c96ba31ac0a725c172c29391ad79c8274b682414a9ed31d11"
+      "class_hash": "0x28789441d1a57e1d93ee07bc407696b22dfc8dea839d6290f7fe2998fd795ef",
+      "tag": "d20_0_2-ChamberRevealed",
+      "selector": "0x36cb470e9e68be5bb6e22f2a1b6d8f7810d69160ec7e768f8139d8c745491e4"
     },
     {
       "members": [
         {
-          "name": "explorer_id",
+          "name": "character_id",
+          "type": "core::integer::u128",
+          "key": true
+        },
+        {
+          "name": "dungeon_id",
+          "type": "core::integer::u128",
+          "key": false
+        },
+        {
+          "name": "chamber_id",
+          "type": "core::integer::u32",
+          "key": false
+        },
+        {
+          "name": "killed_by",
+          "type": "d20::d20::models::monster::MonsterType",
+          "key": false
+        }
+      ],
+      "class_hash": "0x1261f5b6210ec75a0990284cdc1f25d3106dd53a3bc8f27511a3d8016967ff6",
+      "tag": "d20_0_2-CharacterDied",
+      "selector": "0x631f5784f64d1eceba8fc00df6600cff3886268a019954b1d53da70d2aba3c6"
+    },
+    {
+      "members": [
+        {
+          "name": "character_id",
+          "type": "core::integer::u128",
+          "key": true
+        },
+        {
+          "name": "character_class",
+          "type": "d20::d20::types::character_class::CharacterClass",
+          "key": false
+        },
+        {
+          "name": "player",
+          "type": "core::starknet::contract_address::ContractAddress",
+          "key": false
+        }
+      ],
+      "class_hash": "0x2365445913a7779149c2a776210ae038e1b3d8061cca146dfc7bbf8ca504bd8",
+      "tag": "d20_0_2-CharacterMinted",
+      "selector": "0x7b6797e3e50dc5f2bb6a5f71cdd4c65ace825b1fcd6f84092dd36b4b176675a"
+    },
+    {
+      "members": [
+        {
+          "name": "character_id",
           "type": "core::integer::u128",
           "key": true
         },
         {
           "name": "action",
-          "type": "d20::types::index::CombatAction",
+          "type": "d20::d20::types::combat::CombatAction",
           "key": false
         },
         {
@@ -679,63 +699,14 @@
           "key": false
         }
       ],
-      "class_hash": "0x26d11db817edfab17b757fb9849c22c0a50ff331abe82f4ebc371aa51de0b55",
-      "tag": "d20_0_1-CombatResult",
-      "selector": "0x3328d6cb8bd693e743d282e30140f45a611afc55fa98d6b99802b20ac37cdb5"
+      "class_hash": "0x756e622093f3bdb4e5a55eb955b35de1eac1b4b89a56a6d35affb9ac6e3d0b8",
+      "tag": "d20_0_2-CombatResult",
+      "selector": "0xefdfb40ea900d110442e2898d64a4a37bfb668453f85560f3f4d9fe7308cfe"
     },
     {
       "members": [
         {
-          "name": "explorer_id",
-          "type": "core::integer::u128",
-          "key": true
-        },
-        {
-          "name": "temple_id",
-          "type": "core::integer::u128",
-          "key": false
-        },
-        {
-          "name": "chamber_id",
-          "type": "core::integer::u32",
-          "key": false
-        },
-        {
-          "name": "killed_by",
-          "type": "d20::types::monster::MonsterType",
-          "key": false
-        }
-      ],
-      "class_hash": "0x208c5e773f333fa5b6381f5b33dfe869c1dd0203cbcda69817a1398b75d93a4",
-      "tag": "d20_0_1-ExplorerDied",
-      "selector": "0x4055c48e90a1f3dfca0897b48fe57956a633ae74a58e69d789e052d5279bce"
-    },
-    {
-      "members": [
-        {
-          "name": "explorer_id",
-          "type": "core::integer::u128",
-          "key": true
-        },
-        {
-          "name": "explorer_class",
-          "type": "d20::types::explorer_class::ExplorerClass",
-          "key": false
-        },
-        {
-          "name": "player",
-          "type": "core::starknet::contract_address::ContractAddress",
-          "key": false
-        }
-      ],
-      "class_hash": "0x5ca6144a979c41ff0ee9a5adb9a27f9b168208682a097ab4afcbc321953b7e7",
-      "tag": "d20_0_1-ExplorerMinted",
-      "selector": "0x272fd482b80aa424b0e40d55bce73f963c42a04ad7445d7156bb373d564e307"
-    },
-    {
-      "members": [
-        {
-          "name": "explorer_id",
+          "name": "character_id",
           "type": "core::integer::u128",
           "key": true
         },
@@ -745,9 +716,9 @@
           "key": false
         }
       ],
-      "class_hash": "0x66a36498395bd363e32adf256a512630ea7338f0276a723dd0090b4e61ea855",
-      "tag": "d20_0_1-LevelUp",
-      "selector": "0x706b353497cc568c5c266e31a0ee67c9a9d6d8b33107303985323a376aa9be0"
+      "class_hash": "0x7c55ea963c85f4a4ff2ce40508c3f27f33c777417589df70ee06872565ad56a",
+      "tag": "d20_0_2-LevelUp",
+      "selector": "0x3c11fd996e448aa9dbb4fda508c68ebb43c3be830d9550acf25dc1a4835853b"
     }
   ],
   "external_contracts": [],
@@ -908,43 +879,449 @@
       ]
     },
     {
+      "type": "event",
+      "name": "d20::d20::components::character_component::CharacterComponent::Event",
+      "kind": "enum",
+      "variants": []
+    },
+    {
+      "type": "event",
+      "name": "d20::d20::components::combat_component::CombatComponent::Event",
+      "kind": "enum",
+      "variants": []
+    },
+    {
+      "type": "event",
+      "name": "d20::d20::components::dungeon_component::DungeonComponent::Event",
+      "kind": "enum",
+      "variants": []
+    },
+    {
       "type": "struct",
-      "name": "d20::events::BossDefeated",
+      "name": "d20::d20::models::character::AbilityScore",
       "members": [
         {
-          "name": "temple_id",
-          "type": "core::integer::u128"
+          "name": "strength",
+          "type": "core::integer::u8"
         },
         {
-          "name": "explorer_id",
-          "type": "core::integer::u128"
+          "name": "dexterity",
+          "type": "core::integer::u8"
         },
         {
-          "name": "monster_type",
-          "type": "d20::types::monster::MonsterType"
+          "name": "constitution",
+          "type": "core::integer::u8"
+        },
+        {
+          "name": "intelligence",
+          "type": "core::integer::u8"
+        },
+        {
+          "name": "wisdom",
+          "type": "core::integer::u8"
+        },
+        {
+          "name": "charisma",
+          "type": "core::integer::u8"
         }
       ]
     },
     {
       "type": "struct",
-      "name": "d20::events::BossDefeatedValue",
+      "name": "d20::d20::models::character::CharacterCombat",
       "members": [
         {
-          "name": "explorer_id",
+          "name": "character_id",
           "type": "core::integer::u128"
         },
         {
-          "name": "monster_type",
-          "type": "d20::types::monster::MonsterType"
+          "name": "armor_class",
+          "type": "core::integer::u8"
+        },
+        {
+          "name": "spell_slots_1",
+          "type": "core::integer::u8"
+        },
+        {
+          "name": "spell_slots_2",
+          "type": "core::integer::u8"
+        },
+        {
+          "name": "spell_slots_3",
+          "type": "core::integer::u8"
+        },
+        {
+          "name": "second_wind_used",
+          "type": "core::bool"
+        },
+        {
+          "name": "action_surge_used",
+          "type": "core::bool"
         }
       ]
     },
     {
       "type": "struct",
-      "name": "d20::events::ChamberRevealed",
+      "name": "d20::d20::models::character::CharacterCombatValue",
       "members": [
         {
-          "name": "temple_id",
+          "name": "armor_class",
+          "type": "core::integer::u8"
+        },
+        {
+          "name": "spell_slots_1",
+          "type": "core::integer::u8"
+        },
+        {
+          "name": "spell_slots_2",
+          "type": "core::integer::u8"
+        },
+        {
+          "name": "spell_slots_3",
+          "type": "core::integer::u8"
+        },
+        {
+          "name": "second_wind_used",
+          "type": "core::bool"
+        },
+        {
+          "name": "action_surge_used",
+          "type": "core::bool"
+        }
+      ]
+    },
+    {
+      "type": "struct",
+      "name": "d20::d20::models::character::CharacterInventory",
+      "members": [
+        {
+          "name": "character_id",
+          "type": "core::integer::u128"
+        },
+        {
+          "name": "primary_weapon",
+          "type": "d20::d20::types::items::WeaponType"
+        },
+        {
+          "name": "secondary_weapon",
+          "type": "d20::d20::types::items::WeaponType"
+        },
+        {
+          "name": "armor",
+          "type": "d20::d20::types::items::ArmorType"
+        },
+        {
+          "name": "has_shield",
+          "type": "core::bool"
+        },
+        {
+          "name": "gold",
+          "type": "core::integer::u32"
+        },
+        {
+          "name": "potions",
+          "type": "core::integer::u8"
+        }
+      ]
+    },
+    {
+      "type": "struct",
+      "name": "d20::d20::models::character::CharacterInventoryValue",
+      "members": [
+        {
+          "name": "primary_weapon",
+          "type": "d20::d20::types::items::WeaponType"
+        },
+        {
+          "name": "secondary_weapon",
+          "type": "d20::d20::types::items::WeaponType"
+        },
+        {
+          "name": "armor",
+          "type": "d20::d20::types::items::ArmorType"
+        },
+        {
+          "name": "has_shield",
+          "type": "core::bool"
+        },
+        {
+          "name": "gold",
+          "type": "core::integer::u32"
+        },
+        {
+          "name": "potions",
+          "type": "core::integer::u8"
+        }
+      ]
+    },
+    {
+      "type": "struct",
+      "name": "d20::d20::models::character::CharacterPosition",
+      "members": [
+        {
+          "name": "character_id",
+          "type": "core::integer::u128"
+        },
+        {
+          "name": "dungeon_id",
+          "type": "core::integer::u128"
+        },
+        {
+          "name": "chamber_id",
+          "type": "core::integer::u32"
+        },
+        {
+          "name": "in_combat",
+          "type": "core::bool"
+        },
+        {
+          "name": "combat_monster_id",
+          "type": "core::integer::u32"
+        }
+      ]
+    },
+    {
+      "type": "struct",
+      "name": "d20::d20::models::character::CharacterPositionValue",
+      "members": [
+        {
+          "name": "dungeon_id",
+          "type": "core::integer::u128"
+        },
+        {
+          "name": "chamber_id",
+          "type": "core::integer::u32"
+        },
+        {
+          "name": "in_combat",
+          "type": "core::bool"
+        },
+        {
+          "name": "combat_monster_id",
+          "type": "core::integer::u32"
+        }
+      ]
+    },
+    {
+      "type": "struct",
+      "name": "d20::d20::models::character::CharacterSkills",
+      "members": [
+        {
+          "name": "character_id",
+          "type": "core::integer::u128"
+        },
+        {
+          "name": "skills",
+          "type": "d20::d20::models::character::SkillsSet"
+        },
+        {
+          "name": "expertise_1",
+          "type": "d20::d20::models::character::Skill"
+        },
+        {
+          "name": "expertise_2",
+          "type": "d20::d20::models::character::Skill"
+        }
+      ]
+    },
+    {
+      "type": "struct",
+      "name": "d20::d20::models::character::CharacterSkillsValue",
+      "members": [
+        {
+          "name": "skills",
+          "type": "d20::d20::models::character::SkillsSet"
+        },
+        {
+          "name": "expertise_1",
+          "type": "d20::d20::models::character::Skill"
+        },
+        {
+          "name": "expertise_2",
+          "type": "d20::d20::models::character::Skill"
+        }
+      ]
+    },
+    {
+      "type": "struct",
+      "name": "d20::d20::models::character::CharacterStats",
+      "members": [
+        {
+          "name": "character_id",
+          "type": "core::integer::u128"
+        },
+        {
+          "name": "abilities",
+          "type": "d20::d20::models::character::AbilityScore"
+        },
+        {
+          "name": "level",
+          "type": "core::integer::u8"
+        },
+        {
+          "name": "xp",
+          "type": "core::integer::u32"
+        },
+        {
+          "name": "character_class",
+          "type": "d20::d20::types::character_class::CharacterClass"
+        },
+        {
+          "name": "dungeons_conquered",
+          "type": "core::integer::u16"
+        },
+        {
+          "name": "current_hp",
+          "type": "core::integer::i16"
+        },
+        {
+          "name": "max_hp",
+          "type": "core::integer::u16"
+        },
+        {
+          "name": "is_dead",
+          "type": "core::bool"
+        }
+      ]
+    },
+    {
+      "type": "struct",
+      "name": "d20::d20::models::character::CharacterStatsValue",
+      "members": [
+        {
+          "name": "abilities",
+          "type": "d20::d20::models::character::AbilityScore"
+        },
+        {
+          "name": "level",
+          "type": "core::integer::u8"
+        },
+        {
+          "name": "xp",
+          "type": "core::integer::u32"
+        },
+        {
+          "name": "character_class",
+          "type": "d20::d20::types::character_class::CharacterClass"
+        },
+        {
+          "name": "dungeons_conquered",
+          "type": "core::integer::u16"
+        },
+        {
+          "name": "current_hp",
+          "type": "core::integer::i16"
+        },
+        {
+          "name": "max_hp",
+          "type": "core::integer::u16"
+        },
+        {
+          "name": "is_dead",
+          "type": "core::bool"
+        }
+      ]
+    },
+    {
+      "type": "enum",
+      "name": "d20::d20::models::character::Skill",
+      "variants": [
+        {
+          "name": "None",
+          "type": "()"
+        },
+        {
+          "name": "Athletics",
+          "type": "()"
+        },
+        {
+          "name": "Stealth",
+          "type": "()"
+        },
+        {
+          "name": "Perception",
+          "type": "()"
+        },
+        {
+          "name": "Persuasion",
+          "type": "()"
+        },
+        {
+          "name": "Arcana",
+          "type": "()"
+        },
+        {
+          "name": "Acrobatics",
+          "type": "()"
+        }
+      ]
+    },
+    {
+      "type": "struct",
+      "name": "d20::d20::models::character::SkillsSet",
+      "members": [
+        {
+          "name": "athletics",
+          "type": "core::bool"
+        },
+        {
+          "name": "stealth",
+          "type": "core::bool"
+        },
+        {
+          "name": "perception",
+          "type": "core::bool"
+        },
+        {
+          "name": "persuasion",
+          "type": "core::bool"
+        },
+        {
+          "name": "arcana",
+          "type": "core::bool"
+        },
+        {
+          "name": "acrobatics",
+          "type": "core::bool"
+        }
+      ]
+    },
+    {
+      "type": "event",
+      "name": "d20::d20::models::character::m_CharacterCombat::Event",
+      "kind": "enum",
+      "variants": []
+    },
+    {
+      "type": "event",
+      "name": "d20::d20::models::character::m_CharacterInventory::Event",
+      "kind": "enum",
+      "variants": []
+    },
+    {
+      "type": "event",
+      "name": "d20::d20::models::character::m_CharacterPosition::Event",
+      "kind": "enum",
+      "variants": []
+    },
+    {
+      "type": "event",
+      "name": "d20::d20::models::character::m_CharacterSkills::Event",
+      "kind": "enum",
+      "variants": []
+    },
+    {
+      "type": "event",
+      "name": "d20::d20::models::character::m_CharacterStats::Event",
+      "kind": "enum",
+      "variants": []
+    },
+    {
+      "type": "struct",
+      "name": "d20::d20::models::dungeon::Chamber",
+      "members": [
+        {
+          "name": "dungeon_id",
           "type": "core::integer::u128"
         },
         {
@@ -953,10 +1330,394 @@
         },
         {
           "name": "chamber_type",
-          "type": "d20::types::index::ChamberType"
+          "type": "d20::d20::models::dungeon::ChamberType"
         },
         {
-          "name": "yonder",
+          "name": "depth",
+          "type": "core::integer::u8"
+        },
+        {
+          "name": "exit_count",
+          "type": "core::integer::u8"
+        },
+        {
+          "name": "is_revealed",
+          "type": "core::bool"
+        },
+        {
+          "name": "treasure_looted",
+          "type": "core::bool"
+        },
+        {
+          "name": "trap_disarmed",
+          "type": "core::bool"
+        },
+        {
+          "name": "trap_dc",
+          "type": "core::integer::u8"
+        },
+        {
+          "name": "fallen_count",
+          "type": "core::integer::u32"
+        }
+      ]
+    },
+    {
+      "type": "struct",
+      "name": "d20::d20::models::dungeon::ChamberExit",
+      "members": [
+        {
+          "name": "dungeon_id",
+          "type": "core::integer::u128"
+        },
+        {
+          "name": "from_chamber_id",
+          "type": "core::integer::u32"
+        },
+        {
+          "name": "exit_index",
+          "type": "core::integer::u8"
+        },
+        {
+          "name": "to_chamber_id",
+          "type": "core::integer::u32"
+        },
+        {
+          "name": "is_discovered",
+          "type": "core::bool"
+        }
+      ]
+    },
+    {
+      "type": "struct",
+      "name": "d20::d20::models::dungeon::ChamberExitValue",
+      "members": [
+        {
+          "name": "to_chamber_id",
+          "type": "core::integer::u32"
+        },
+        {
+          "name": "is_discovered",
+          "type": "core::bool"
+        }
+      ]
+    },
+    {
+      "type": "enum",
+      "name": "d20::d20::models::dungeon::ChamberType",
+      "variants": [
+        {
+          "name": "None",
+          "type": "()"
+        },
+        {
+          "name": "Entrance",
+          "type": "()"
+        },
+        {
+          "name": "Empty",
+          "type": "()"
+        },
+        {
+          "name": "Monster",
+          "type": "()"
+        },
+        {
+          "name": "Treasure",
+          "type": "()"
+        },
+        {
+          "name": "Trap",
+          "type": "()"
+        },
+        {
+          "name": "Boss",
+          "type": "()"
+        }
+      ]
+    },
+    {
+      "type": "struct",
+      "name": "d20::d20::models::dungeon::ChamberValue",
+      "members": [
+        {
+          "name": "chamber_type",
+          "type": "d20::d20::models::dungeon::ChamberType"
+        },
+        {
+          "name": "depth",
+          "type": "core::integer::u8"
+        },
+        {
+          "name": "exit_count",
+          "type": "core::integer::u8"
+        },
+        {
+          "name": "is_revealed",
+          "type": "core::bool"
+        },
+        {
+          "name": "treasure_looted",
+          "type": "core::bool"
+        },
+        {
+          "name": "trap_disarmed",
+          "type": "core::bool"
+        },
+        {
+          "name": "trap_dc",
+          "type": "core::integer::u8"
+        },
+        {
+          "name": "fallen_count",
+          "type": "core::integer::u32"
+        }
+      ]
+    },
+    {
+      "type": "struct",
+      "name": "d20::d20::models::dungeon::CharacterDungeonProgress",
+      "members": [
+        {
+          "name": "character_id",
+          "type": "core::integer::u128"
+        },
+        {
+          "name": "dungeon_id",
+          "type": "core::integer::u128"
+        },
+        {
+          "name": "chambers_explored",
+          "type": "core::integer::u16"
+        },
+        {
+          "name": "xp_earned",
+          "type": "core::integer::u32"
+        }
+      ]
+    },
+    {
+      "type": "struct",
+      "name": "d20::d20::models::dungeon::CharacterDungeonProgressValue",
+      "members": [
+        {
+          "name": "chambers_explored",
+          "type": "core::integer::u16"
+        },
+        {
+          "name": "xp_earned",
+          "type": "core::integer::u32"
+        }
+      ]
+    },
+    {
+      "type": "struct",
+      "name": "d20::d20::models::dungeon::DungeonState",
+      "members": [
+        {
+          "name": "dungeon_id",
+          "type": "core::integer::u128"
+        },
+        {
+          "name": "difficulty_tier",
+          "type": "core::integer::u8"
+        },
+        {
+          "name": "next_chamber_id",
+          "type": "core::integer::u32"
+        },
+        {
+          "name": "boss_chamber_id",
+          "type": "core::integer::u32"
+        },
+        {
+          "name": "boss_alive",
+          "type": "core::bool"
+        },
+        {
+          "name": "max_depth",
+          "type": "core::integer::u8"
+        }
+      ]
+    },
+    {
+      "type": "struct",
+      "name": "d20::d20::models::dungeon::DungeonStateValue",
+      "members": [
+        {
+          "name": "difficulty_tier",
+          "type": "core::integer::u8"
+        },
+        {
+          "name": "next_chamber_id",
+          "type": "core::integer::u32"
+        },
+        {
+          "name": "boss_chamber_id",
+          "type": "core::integer::u32"
+        },
+        {
+          "name": "boss_alive",
+          "type": "core::bool"
+        },
+        {
+          "name": "max_depth",
+          "type": "core::integer::u8"
+        }
+      ]
+    },
+    {
+      "type": "struct",
+      "name": "d20::d20::models::dungeon::FallenCharacter",
+      "members": [
+        {
+          "name": "dungeon_id",
+          "type": "core::integer::u128"
+        },
+        {
+          "name": "chamber_id",
+          "type": "core::integer::u32"
+        },
+        {
+          "name": "fallen_index",
+          "type": "core::integer::u32"
+        },
+        {
+          "name": "character_id",
+          "type": "core::integer::u128"
+        },
+        {
+          "name": "dropped_weapon",
+          "type": "d20::d20::types::items::WeaponType"
+        },
+        {
+          "name": "dropped_armor",
+          "type": "d20::d20::types::items::ArmorType"
+        },
+        {
+          "name": "dropped_gold",
+          "type": "core::integer::u32"
+        },
+        {
+          "name": "dropped_potions",
+          "type": "core::integer::u8"
+        },
+        {
+          "name": "is_looted",
+          "type": "core::bool"
+        }
+      ]
+    },
+    {
+      "type": "struct",
+      "name": "d20::d20::models::dungeon::FallenCharacterValue",
+      "members": [
+        {
+          "name": "character_id",
+          "type": "core::integer::u128"
+        },
+        {
+          "name": "dropped_weapon",
+          "type": "d20::d20::types::items::WeaponType"
+        },
+        {
+          "name": "dropped_armor",
+          "type": "d20::d20::types::items::ArmorType"
+        },
+        {
+          "name": "dropped_gold",
+          "type": "core::integer::u32"
+        },
+        {
+          "name": "dropped_potions",
+          "type": "core::integer::u8"
+        },
+        {
+          "name": "is_looted",
+          "type": "core::bool"
+        }
+      ]
+    },
+    {
+      "type": "event",
+      "name": "d20::d20::models::dungeon::m_Chamber::Event",
+      "kind": "enum",
+      "variants": []
+    },
+    {
+      "type": "event",
+      "name": "d20::d20::models::dungeon::m_ChamberExit::Event",
+      "kind": "enum",
+      "variants": []
+    },
+    {
+      "type": "event",
+      "name": "d20::d20::models::dungeon::m_CharacterDungeonProgress::Event",
+      "kind": "enum",
+      "variants": []
+    },
+    {
+      "type": "event",
+      "name": "d20::d20::models::dungeon::m_DungeonState::Event",
+      "kind": "enum",
+      "variants": []
+    },
+    {
+      "type": "event",
+      "name": "d20::d20::models::dungeon::m_FallenCharacter::Event",
+      "kind": "enum",
+      "variants": []
+    },
+    {
+      "type": "struct",
+      "name": "d20::d20::models::events::BossDefeated",
+      "members": [
+        {
+          "name": "dungeon_id",
+          "type": "core::integer::u128"
+        },
+        {
+          "name": "character_id",
+          "type": "core::integer::u128"
+        },
+        {
+          "name": "monster_type",
+          "type": "d20::d20::models::monster::MonsterType"
+        }
+      ]
+    },
+    {
+      "type": "struct",
+      "name": "d20::d20::models::events::BossDefeatedValue",
+      "members": [
+        {
+          "name": "character_id",
+          "type": "core::integer::u128"
+        },
+        {
+          "name": "monster_type",
+          "type": "d20::d20::models::monster::MonsterType"
+        }
+      ]
+    },
+    {
+      "type": "struct",
+      "name": "d20::d20::models::events::ChamberRevealed",
+      "members": [
+        {
+          "name": "dungeon_id",
+          "type": "core::integer::u128"
+        },
+        {
+          "name": "chamber_id",
+          "type": "core::integer::u32"
+        },
+        {
+          "name": "chamber_type",
+          "type": "d20::d20::models::dungeon::ChamberType"
+        },
+        {
+          "name": "depth",
           "type": "core::integer::u8"
         },
         {
@@ -967,7 +1728,7 @@
     },
     {
       "type": "struct",
-      "name": "d20::events::ChamberRevealedValue",
+      "name": "d20::d20::models::events::ChamberRevealedValue",
       "members": [
         {
           "name": "chamber_id",
@@ -975,10 +1736,10 @@
         },
         {
           "name": "chamber_type",
-          "type": "d20::types::index::ChamberType"
+          "type": "d20::d20::models::dungeon::ChamberType"
         },
         {
-          "name": "yonder",
+          "name": "depth",
           "type": "core::integer::u8"
         },
         {
@@ -989,15 +1750,87 @@
     },
     {
       "type": "struct",
-      "name": "d20::events::CombatResult",
+      "name": "d20::d20::models::events::CharacterDied",
       "members": [
         {
-          "name": "explorer_id",
+          "name": "character_id",
+          "type": "core::integer::u128"
+        },
+        {
+          "name": "dungeon_id",
+          "type": "core::integer::u128"
+        },
+        {
+          "name": "chamber_id",
+          "type": "core::integer::u32"
+        },
+        {
+          "name": "killed_by",
+          "type": "d20::d20::models::monster::MonsterType"
+        }
+      ]
+    },
+    {
+      "type": "struct",
+      "name": "d20::d20::models::events::CharacterDiedValue",
+      "members": [
+        {
+          "name": "dungeon_id",
+          "type": "core::integer::u128"
+        },
+        {
+          "name": "chamber_id",
+          "type": "core::integer::u32"
+        },
+        {
+          "name": "killed_by",
+          "type": "d20::d20::models::monster::MonsterType"
+        }
+      ]
+    },
+    {
+      "type": "struct",
+      "name": "d20::d20::models::events::CharacterMinted",
+      "members": [
+        {
+          "name": "character_id",
+          "type": "core::integer::u128"
+        },
+        {
+          "name": "character_class",
+          "type": "d20::d20::types::character_class::CharacterClass"
+        },
+        {
+          "name": "player",
+          "type": "core::starknet::contract_address::ContractAddress"
+        }
+      ]
+    },
+    {
+      "type": "struct",
+      "name": "d20::d20::models::events::CharacterMintedValue",
+      "members": [
+        {
+          "name": "character_class",
+          "type": "d20::d20::types::character_class::CharacterClass"
+        },
+        {
+          "name": "player",
+          "type": "core::starknet::contract_address::ContractAddress"
+        }
+      ]
+    },
+    {
+      "type": "struct",
+      "name": "d20::d20::models::events::CombatResult",
+      "members": [
+        {
+          "name": "character_id",
           "type": "core::integer::u128"
         },
         {
           "name": "action",
-          "type": "d20::types::index::CombatAction"
+          "type": "d20::d20::types::combat::CombatAction"
         },
         {
           "name": "roll",
@@ -1019,11 +1852,11 @@
     },
     {
       "type": "struct",
-      "name": "d20::events::CombatResultValue",
+      "name": "d20::d20::models::events::CombatResultValue",
       "members": [
         {
           "name": "action",
-          "type": "d20::types::index::CombatAction"
+          "type": "d20::d20::types::combat::CombatAction"
         },
         {
           "name": "roll",
@@ -1045,82 +1878,10 @@
     },
     {
       "type": "struct",
-      "name": "d20::events::ExplorerDied",
+      "name": "d20::d20::models::events::LevelUp",
       "members": [
         {
-          "name": "explorer_id",
-          "type": "core::integer::u128"
-        },
-        {
-          "name": "temple_id",
-          "type": "core::integer::u128"
-        },
-        {
-          "name": "chamber_id",
-          "type": "core::integer::u32"
-        },
-        {
-          "name": "killed_by",
-          "type": "d20::types::monster::MonsterType"
-        }
-      ]
-    },
-    {
-      "type": "struct",
-      "name": "d20::events::ExplorerDiedValue",
-      "members": [
-        {
-          "name": "temple_id",
-          "type": "core::integer::u128"
-        },
-        {
-          "name": "chamber_id",
-          "type": "core::integer::u32"
-        },
-        {
-          "name": "killed_by",
-          "type": "d20::types::monster::MonsterType"
-        }
-      ]
-    },
-    {
-      "type": "struct",
-      "name": "d20::events::ExplorerMinted",
-      "members": [
-        {
-          "name": "explorer_id",
-          "type": "core::integer::u128"
-        },
-        {
-          "name": "explorer_class",
-          "type": "d20::types::explorer_class::ExplorerClass"
-        },
-        {
-          "name": "player",
-          "type": "core::starknet::contract_address::ContractAddress"
-        }
-      ]
-    },
-    {
-      "type": "struct",
-      "name": "d20::events::ExplorerMintedValue",
-      "members": [
-        {
-          "name": "explorer_class",
-          "type": "d20::types::explorer_class::ExplorerClass"
-        },
-        {
-          "name": "player",
-          "type": "core::starknet::contract_address::ContractAddress"
-        }
-      ]
-    },
-    {
-      "type": "struct",
-      "name": "d20::events::LevelUp",
-      "members": [
-        {
-          "name": "explorer_id",
+          "name": "character_id",
           "type": "core::integer::u128"
         },
         {
@@ -1131,7 +1892,7 @@
     },
     {
       "type": "struct",
-      "name": "d20::events::LevelUpValue",
+      "name": "d20::d20::models::events::LevelUpValue",
       "members": [
         {
           "name": "new_level",
@@ -1141,39 +1902,307 @@
     },
     {
       "type": "event",
-      "name": "d20::events::e_BossDefeated::Event",
+      "name": "d20::d20::models::events::e_BossDefeated::Event",
       "kind": "enum",
       "variants": []
     },
     {
       "type": "event",
-      "name": "d20::events::e_ChamberRevealed::Event",
+      "name": "d20::d20::models::events::e_ChamberRevealed::Event",
       "kind": "enum",
       "variants": []
     },
     {
       "type": "event",
-      "name": "d20::events::e_CombatResult::Event",
+      "name": "d20::d20::models::events::e_CharacterDied::Event",
       "kind": "enum",
       "variants": []
     },
     {
       "type": "event",
-      "name": "d20::events::e_ExplorerDied::Event",
+      "name": "d20::d20::models::events::e_CharacterMinted::Event",
       "kind": "enum",
       "variants": []
     },
     {
       "type": "event",
-      "name": "d20::events::e_ExplorerMinted::Event",
+      "name": "d20::d20::models::events::e_CombatResult::Event",
       "kind": "enum",
       "variants": []
     },
     {
       "type": "event",
-      "name": "d20::events::e_LevelUp::Event",
+      "name": "d20::d20::models::events::e_LevelUp::Event",
       "kind": "enum",
       "variants": []
+    },
+    {
+      "type": "struct",
+      "name": "d20::d20::models::monster::MonsterInstance",
+      "members": [
+        {
+          "name": "dungeon_id",
+          "type": "core::integer::u128"
+        },
+        {
+          "name": "chamber_id",
+          "type": "core::integer::u32"
+        },
+        {
+          "name": "monster_id",
+          "type": "core::integer::u32"
+        },
+        {
+          "name": "monster_type",
+          "type": "d20::d20::models::monster::MonsterType"
+        },
+        {
+          "name": "current_hp",
+          "type": "core::integer::i16"
+        },
+        {
+          "name": "max_hp",
+          "type": "core::integer::u16"
+        },
+        {
+          "name": "is_alive",
+          "type": "core::bool"
+        }
+      ]
+    },
+    {
+      "type": "struct",
+      "name": "d20::d20::models::monster::MonsterInstanceValue",
+      "members": [
+        {
+          "name": "monster_type",
+          "type": "d20::d20::models::monster::MonsterType"
+        },
+        {
+          "name": "current_hp",
+          "type": "core::integer::i16"
+        },
+        {
+          "name": "max_hp",
+          "type": "core::integer::u16"
+        },
+        {
+          "name": "is_alive",
+          "type": "core::bool"
+        }
+      ]
+    },
+    {
+      "type": "enum",
+      "name": "d20::d20::models::monster::MonsterType",
+      "variants": [
+        {
+          "name": "None",
+          "type": "()"
+        },
+        {
+          "name": "PoisonousSnake",
+          "type": "()"
+        },
+        {
+          "name": "Skeleton",
+          "type": "()"
+        },
+        {
+          "name": "Shadow",
+          "type": "()"
+        },
+        {
+          "name": "AnimatedArmor",
+          "type": "()"
+        },
+        {
+          "name": "Gargoyle",
+          "type": "()"
+        },
+        {
+          "name": "Mummy",
+          "type": "()"
+        },
+        {
+          "name": "Wraith",
+          "type": "()"
+        }
+      ]
+    },
+    {
+      "type": "event",
+      "name": "d20::d20::models::monster::m_MonsterInstance::Event",
+      "kind": "enum",
+      "variants": []
+    },
+    {
+      "type": "enum",
+      "name": "d20::d20::types::character_class::CharacterClass",
+      "variants": [
+        {
+          "name": "None",
+          "type": "()"
+        },
+        {
+          "name": "Fighter",
+          "type": "()"
+        },
+        {
+          "name": "Rogue",
+          "type": "()"
+        },
+        {
+          "name": "Wizard",
+          "type": "()"
+        }
+      ]
+    },
+    {
+      "type": "enum",
+      "name": "d20::d20::types::combat::CombatAction",
+      "variants": [
+        {
+          "name": "None",
+          "type": "()"
+        },
+        {
+          "name": "Attack",
+          "type": "()"
+        },
+        {
+          "name": "CastSpell",
+          "type": "()"
+        },
+        {
+          "name": "UseItem",
+          "type": "()"
+        },
+        {
+          "name": "Flee",
+          "type": "()"
+        },
+        {
+          "name": "Dodge",
+          "type": "()"
+        },
+        {
+          "name": "SecondWind",
+          "type": "()"
+        },
+        {
+          "name": "CunningAction",
+          "type": "()"
+        }
+      ]
+    },
+    {
+      "type": "enum",
+      "name": "d20::d20::types::items::ArmorType",
+      "variants": [
+        {
+          "name": "None",
+          "type": "()"
+        },
+        {
+          "name": "Leather",
+          "type": "()"
+        },
+        {
+          "name": "ChainMail",
+          "type": "()"
+        }
+      ]
+    },
+    {
+      "type": "enum",
+      "name": "d20::d20::types::items::ItemType",
+      "variants": [
+        {
+          "name": "None",
+          "type": "()"
+        },
+        {
+          "name": "HealthPotion",
+          "type": "()"
+        }
+      ]
+    },
+    {
+      "type": "enum",
+      "name": "d20::d20::types::items::WeaponType",
+      "variants": [
+        {
+          "name": "None",
+          "type": "()"
+        },
+        {
+          "name": "Longsword",
+          "type": "()"
+        },
+        {
+          "name": "Dagger",
+          "type": "()"
+        },
+        {
+          "name": "Shortbow",
+          "type": "()"
+        },
+        {
+          "name": "Greataxe",
+          "type": "()"
+        },
+        {
+          "name": "Staff",
+          "type": "()"
+        }
+      ]
+    },
+    {
+      "type": "enum",
+      "name": "d20::d20::types::spells::SpellId",
+      "variants": [
+        {
+          "name": "None",
+          "type": "()"
+        },
+        {
+          "name": "FireBolt",
+          "type": "()"
+        },
+        {
+          "name": "MageHand",
+          "type": "()"
+        },
+        {
+          "name": "Light",
+          "type": "()"
+        },
+        {
+          "name": "MagicMissile",
+          "type": "()"
+        },
+        {
+          "name": "ShieldSpell",
+          "type": "()"
+        },
+        {
+          "name": "Sleep",
+          "type": "()"
+        },
+        {
+          "name": "ScorchingRay",
+          "type": "()"
+        },
+        {
+          "name": "MistyStep",
+          "type": "()"
+        },
+        {
+          "name": "Fireball",
+          "type": "()"
+        }
+      ]
     },
     {
       "type": "struct",
@@ -1206,820 +2235,6 @@
       "variants": []
     },
     {
-      "type": "struct",
-      "name": "d20::models::explorer::AbilityScore",
-      "members": [
-        {
-          "name": "strength",
-          "type": "core::integer::u8"
-        },
-        {
-          "name": "dexterity",
-          "type": "core::integer::u8"
-        },
-        {
-          "name": "constitution",
-          "type": "core::integer::u8"
-        },
-        {
-          "name": "intelligence",
-          "type": "core::integer::u8"
-        },
-        {
-          "name": "wisdom",
-          "type": "core::integer::u8"
-        },
-        {
-          "name": "charisma",
-          "type": "core::integer::u8"
-        }
-      ]
-    },
-    {
-      "type": "struct",
-      "name": "d20::models::explorer::ExplorerCombat",
-      "members": [
-        {
-          "name": "explorer_id",
-          "type": "core::integer::u128"
-        },
-        {
-          "name": "armor_class",
-          "type": "core::integer::u8"
-        },
-        {
-          "name": "spell_slots_1",
-          "type": "core::integer::u8"
-        },
-        {
-          "name": "spell_slots_2",
-          "type": "core::integer::u8"
-        },
-        {
-          "name": "spell_slots_3",
-          "type": "core::integer::u8"
-        },
-        {
-          "name": "second_wind_used",
-          "type": "core::bool"
-        },
-        {
-          "name": "action_surge_used",
-          "type": "core::bool"
-        }
-      ]
-    },
-    {
-      "type": "struct",
-      "name": "d20::models::explorer::ExplorerCombatValue",
-      "members": [
-        {
-          "name": "armor_class",
-          "type": "core::integer::u8"
-        },
-        {
-          "name": "spell_slots_1",
-          "type": "core::integer::u8"
-        },
-        {
-          "name": "spell_slots_2",
-          "type": "core::integer::u8"
-        },
-        {
-          "name": "spell_slots_3",
-          "type": "core::integer::u8"
-        },
-        {
-          "name": "second_wind_used",
-          "type": "core::bool"
-        },
-        {
-          "name": "action_surge_used",
-          "type": "core::bool"
-        }
-      ]
-    },
-    {
-      "type": "struct",
-      "name": "d20::models::explorer::ExplorerHealth",
-      "members": [
-        {
-          "name": "explorer_id",
-          "type": "core::integer::u128"
-        },
-        {
-          "name": "current_hp",
-          "type": "core::integer::i16"
-        },
-        {
-          "name": "max_hp",
-          "type": "core::integer::u16"
-        },
-        {
-          "name": "is_dead",
-          "type": "core::bool"
-        }
-      ]
-    },
-    {
-      "type": "struct",
-      "name": "d20::models::explorer::ExplorerHealthValue",
-      "members": [
-        {
-          "name": "current_hp",
-          "type": "core::integer::i16"
-        },
-        {
-          "name": "max_hp",
-          "type": "core::integer::u16"
-        },
-        {
-          "name": "is_dead",
-          "type": "core::bool"
-        }
-      ]
-    },
-    {
-      "type": "struct",
-      "name": "d20::models::explorer::ExplorerInventory",
-      "members": [
-        {
-          "name": "explorer_id",
-          "type": "core::integer::u128"
-        },
-        {
-          "name": "primary_weapon",
-          "type": "d20::types::items::WeaponType"
-        },
-        {
-          "name": "secondary_weapon",
-          "type": "d20::types::items::WeaponType"
-        },
-        {
-          "name": "armor",
-          "type": "d20::types::items::ArmorType"
-        },
-        {
-          "name": "has_shield",
-          "type": "core::bool"
-        },
-        {
-          "name": "gold",
-          "type": "core::integer::u32"
-        },
-        {
-          "name": "potions",
-          "type": "core::integer::u8"
-        }
-      ]
-    },
-    {
-      "type": "struct",
-      "name": "d20::models::explorer::ExplorerInventoryValue",
-      "members": [
-        {
-          "name": "primary_weapon",
-          "type": "d20::types::items::WeaponType"
-        },
-        {
-          "name": "secondary_weapon",
-          "type": "d20::types::items::WeaponType"
-        },
-        {
-          "name": "armor",
-          "type": "d20::types::items::ArmorType"
-        },
-        {
-          "name": "has_shield",
-          "type": "core::bool"
-        },
-        {
-          "name": "gold",
-          "type": "core::integer::u32"
-        },
-        {
-          "name": "potions",
-          "type": "core::integer::u8"
-        }
-      ]
-    },
-    {
-      "type": "struct",
-      "name": "d20::models::explorer::ExplorerPosition",
-      "members": [
-        {
-          "name": "explorer_id",
-          "type": "core::integer::u128"
-        },
-        {
-          "name": "temple_id",
-          "type": "core::integer::u128"
-        },
-        {
-          "name": "chamber_id",
-          "type": "core::integer::u32"
-        },
-        {
-          "name": "in_combat",
-          "type": "core::bool"
-        },
-        {
-          "name": "combat_monster_id",
-          "type": "core::integer::u32"
-        }
-      ]
-    },
-    {
-      "type": "struct",
-      "name": "d20::models::explorer::ExplorerPositionValue",
-      "members": [
-        {
-          "name": "temple_id",
-          "type": "core::integer::u128"
-        },
-        {
-          "name": "chamber_id",
-          "type": "core::integer::u32"
-        },
-        {
-          "name": "in_combat",
-          "type": "core::bool"
-        },
-        {
-          "name": "combat_monster_id",
-          "type": "core::integer::u32"
-        }
-      ]
-    },
-    {
-      "type": "struct",
-      "name": "d20::models::explorer::ExplorerSkills",
-      "members": [
-        {
-          "name": "explorer_id",
-          "type": "core::integer::u128"
-        },
-        {
-          "name": "skills",
-          "type": "d20::models::explorer::SkillsSet"
-        },
-        {
-          "name": "expertise_1",
-          "type": "d20::types::index::Skill"
-        },
-        {
-          "name": "expertise_2",
-          "type": "d20::types::index::Skill"
-        }
-      ]
-    },
-    {
-      "type": "struct",
-      "name": "d20::models::explorer::ExplorerSkillsValue",
-      "members": [
-        {
-          "name": "skills",
-          "type": "d20::models::explorer::SkillsSet"
-        },
-        {
-          "name": "expertise_1",
-          "type": "d20::types::index::Skill"
-        },
-        {
-          "name": "expertise_2",
-          "type": "d20::types::index::Skill"
-        }
-      ]
-    },
-    {
-      "type": "struct",
-      "name": "d20::models::explorer::ExplorerStats",
-      "members": [
-        {
-          "name": "explorer_id",
-          "type": "core::integer::u128"
-        },
-        {
-          "name": "abilities",
-          "type": "d20::models::explorer::AbilityScore"
-        },
-        {
-          "name": "level",
-          "type": "core::integer::u8"
-        },
-        {
-          "name": "xp",
-          "type": "core::integer::u32"
-        },
-        {
-          "name": "explorer_class",
-          "type": "d20::types::explorer_class::ExplorerClass"
-        },
-        {
-          "name": "temples_conquered",
-          "type": "core::integer::u16"
-        }
-      ]
-    },
-    {
-      "type": "struct",
-      "name": "d20::models::explorer::ExplorerStatsValue",
-      "members": [
-        {
-          "name": "abilities",
-          "type": "d20::models::explorer::AbilityScore"
-        },
-        {
-          "name": "level",
-          "type": "core::integer::u8"
-        },
-        {
-          "name": "xp",
-          "type": "core::integer::u32"
-        },
-        {
-          "name": "explorer_class",
-          "type": "d20::types::explorer_class::ExplorerClass"
-        },
-        {
-          "name": "temples_conquered",
-          "type": "core::integer::u16"
-        }
-      ]
-    },
-    {
-      "type": "struct",
-      "name": "d20::models::explorer::SkillsSet",
-      "members": [
-        {
-          "name": "athletics",
-          "type": "core::bool"
-        },
-        {
-          "name": "stealth",
-          "type": "core::bool"
-        },
-        {
-          "name": "perception",
-          "type": "core::bool"
-        },
-        {
-          "name": "persuasion",
-          "type": "core::bool"
-        },
-        {
-          "name": "arcana",
-          "type": "core::bool"
-        },
-        {
-          "name": "acrobatics",
-          "type": "core::bool"
-        }
-      ]
-    },
-    {
-      "type": "event",
-      "name": "d20::models::explorer::m_ExplorerCombat::Event",
-      "kind": "enum",
-      "variants": []
-    },
-    {
-      "type": "event",
-      "name": "d20::models::explorer::m_ExplorerHealth::Event",
-      "kind": "enum",
-      "variants": []
-    },
-    {
-      "type": "event",
-      "name": "d20::models::explorer::m_ExplorerInventory::Event",
-      "kind": "enum",
-      "variants": []
-    },
-    {
-      "type": "event",
-      "name": "d20::models::explorer::m_ExplorerPosition::Event",
-      "kind": "enum",
-      "variants": []
-    },
-    {
-      "type": "event",
-      "name": "d20::models::explorer::m_ExplorerSkills::Event",
-      "kind": "enum",
-      "variants": []
-    },
-    {
-      "type": "event",
-      "name": "d20::models::explorer::m_ExplorerStats::Event",
-      "kind": "enum",
-      "variants": []
-    },
-    {
-      "type": "struct",
-      "name": "d20::models::temple::Chamber",
-      "members": [
-        {
-          "name": "temple_id",
-          "type": "core::integer::u128"
-        },
-        {
-          "name": "chamber_id",
-          "type": "core::integer::u32"
-        },
-        {
-          "name": "chamber_type",
-          "type": "d20::types::index::ChamberType"
-        },
-        {
-          "name": "yonder",
-          "type": "core::integer::u8"
-        },
-        {
-          "name": "exit_count",
-          "type": "core::integer::u8"
-        },
-        {
-          "name": "is_revealed",
-          "type": "core::bool"
-        },
-        {
-          "name": "treasure_looted",
-          "type": "core::bool"
-        },
-        {
-          "name": "trap_disarmed",
-          "type": "core::bool"
-        },
-        {
-          "name": "trap_dc",
-          "type": "core::integer::u8"
-        }
-      ]
-    },
-    {
-      "type": "struct",
-      "name": "d20::models::temple::ChamberExit",
-      "members": [
-        {
-          "name": "temple_id",
-          "type": "core::integer::u128"
-        },
-        {
-          "name": "from_chamber_id",
-          "type": "core::integer::u32"
-        },
-        {
-          "name": "exit_index",
-          "type": "core::integer::u8"
-        },
-        {
-          "name": "to_chamber_id",
-          "type": "core::integer::u32"
-        },
-        {
-          "name": "is_discovered",
-          "type": "core::bool"
-        }
-      ]
-    },
-    {
-      "type": "struct",
-      "name": "d20::models::temple::ChamberExitValue",
-      "members": [
-        {
-          "name": "to_chamber_id",
-          "type": "core::integer::u32"
-        },
-        {
-          "name": "is_discovered",
-          "type": "core::bool"
-        }
-      ]
-    },
-    {
-      "type": "struct",
-      "name": "d20::models::temple::ChamberFallenCount",
-      "members": [
-        {
-          "name": "temple_id",
-          "type": "core::integer::u128"
-        },
-        {
-          "name": "chamber_id",
-          "type": "core::integer::u32"
-        },
-        {
-          "name": "count",
-          "type": "core::integer::u32"
-        }
-      ]
-    },
-    {
-      "type": "struct",
-      "name": "d20::models::temple::ChamberFallenCountValue",
-      "members": [
-        {
-          "name": "count",
-          "type": "core::integer::u32"
-        }
-      ]
-    },
-    {
-      "type": "struct",
-      "name": "d20::models::temple::ChamberValue",
-      "members": [
-        {
-          "name": "chamber_type",
-          "type": "d20::types::index::ChamberType"
-        },
-        {
-          "name": "yonder",
-          "type": "core::integer::u8"
-        },
-        {
-          "name": "exit_count",
-          "type": "core::integer::u8"
-        },
-        {
-          "name": "is_revealed",
-          "type": "core::bool"
-        },
-        {
-          "name": "treasure_looted",
-          "type": "core::bool"
-        },
-        {
-          "name": "trap_disarmed",
-          "type": "core::bool"
-        },
-        {
-          "name": "trap_dc",
-          "type": "core::integer::u8"
-        }
-      ]
-    },
-    {
-      "type": "struct",
-      "name": "d20::models::temple::ExplorerTempleProgress",
-      "members": [
-        {
-          "name": "explorer_id",
-          "type": "core::integer::u128"
-        },
-        {
-          "name": "temple_id",
-          "type": "core::integer::u128"
-        },
-        {
-          "name": "chambers_explored",
-          "type": "core::integer::u16"
-        },
-        {
-          "name": "xp_earned",
-          "type": "core::integer::u32"
-        }
-      ]
-    },
-    {
-      "type": "struct",
-      "name": "d20::models::temple::ExplorerTempleProgressValue",
-      "members": [
-        {
-          "name": "chambers_explored",
-          "type": "core::integer::u16"
-        },
-        {
-          "name": "xp_earned",
-          "type": "core::integer::u32"
-        }
-      ]
-    },
-    {
-      "type": "struct",
-      "name": "d20::models::temple::FallenExplorer",
-      "members": [
-        {
-          "name": "temple_id",
-          "type": "core::integer::u128"
-        },
-        {
-          "name": "chamber_id",
-          "type": "core::integer::u32"
-        },
-        {
-          "name": "fallen_index",
-          "type": "core::integer::u32"
-        },
-        {
-          "name": "explorer_id",
-          "type": "core::integer::u128"
-        },
-        {
-          "name": "dropped_weapon",
-          "type": "d20::types::items::WeaponType"
-        },
-        {
-          "name": "dropped_armor",
-          "type": "d20::types::items::ArmorType"
-        },
-        {
-          "name": "dropped_gold",
-          "type": "core::integer::u32"
-        },
-        {
-          "name": "dropped_potions",
-          "type": "core::integer::u8"
-        },
-        {
-          "name": "is_looted",
-          "type": "core::bool"
-        }
-      ]
-    },
-    {
-      "type": "struct",
-      "name": "d20::models::temple::FallenExplorerValue",
-      "members": [
-        {
-          "name": "explorer_id",
-          "type": "core::integer::u128"
-        },
-        {
-          "name": "dropped_weapon",
-          "type": "d20::types::items::WeaponType"
-        },
-        {
-          "name": "dropped_armor",
-          "type": "d20::types::items::ArmorType"
-        },
-        {
-          "name": "dropped_gold",
-          "type": "core::integer::u32"
-        },
-        {
-          "name": "dropped_potions",
-          "type": "core::integer::u8"
-        },
-        {
-          "name": "is_looted",
-          "type": "core::bool"
-        }
-      ]
-    },
-    {
-      "type": "struct",
-      "name": "d20::models::temple::MonsterInstance",
-      "members": [
-        {
-          "name": "temple_id",
-          "type": "core::integer::u128"
-        },
-        {
-          "name": "chamber_id",
-          "type": "core::integer::u32"
-        },
-        {
-          "name": "monster_id",
-          "type": "core::integer::u32"
-        },
-        {
-          "name": "monster_type",
-          "type": "d20::types::monster::MonsterType"
-        },
-        {
-          "name": "current_hp",
-          "type": "core::integer::i16"
-        },
-        {
-          "name": "max_hp",
-          "type": "core::integer::u16"
-        },
-        {
-          "name": "is_alive",
-          "type": "core::bool"
-        }
-      ]
-    },
-    {
-      "type": "struct",
-      "name": "d20::models::temple::MonsterInstanceValue",
-      "members": [
-        {
-          "name": "monster_type",
-          "type": "d20::types::monster::MonsterType"
-        },
-        {
-          "name": "current_hp",
-          "type": "core::integer::i16"
-        },
-        {
-          "name": "max_hp",
-          "type": "core::integer::u16"
-        },
-        {
-          "name": "is_alive",
-          "type": "core::bool"
-        }
-      ]
-    },
-    {
-      "type": "struct",
-      "name": "d20::models::temple::TempleState",
-      "members": [
-        {
-          "name": "temple_id",
-          "type": "core::integer::u128"
-        },
-        {
-          "name": "difficulty_tier",
-          "type": "core::integer::u8"
-        },
-        {
-          "name": "next_chamber_id",
-          "type": "core::integer::u32"
-        },
-        {
-          "name": "boss_chamber_id",
-          "type": "core::integer::u32"
-        },
-        {
-          "name": "boss_alive",
-          "type": "core::bool"
-        },
-        {
-          "name": "max_yonder",
-          "type": "core::integer::u8"
-        }
-      ]
-    },
-    {
-      "type": "struct",
-      "name": "d20::models::temple::TempleStateValue",
-      "members": [
-        {
-          "name": "difficulty_tier",
-          "type": "core::integer::u8"
-        },
-        {
-          "name": "next_chamber_id",
-          "type": "core::integer::u32"
-        },
-        {
-          "name": "boss_chamber_id",
-          "type": "core::integer::u32"
-        },
-        {
-          "name": "boss_alive",
-          "type": "core::bool"
-        },
-        {
-          "name": "max_yonder",
-          "type": "core::integer::u8"
-        }
-      ]
-    },
-    {
-      "type": "event",
-      "name": "d20::models::temple::m_Chamber::Event",
-      "kind": "enum",
-      "variants": []
-    },
-    {
-      "type": "event",
-      "name": "d20::models::temple::m_ChamberExit::Event",
-      "kind": "enum",
-      "variants": []
-    },
-    {
-      "type": "event",
-      "name": "d20::models::temple::m_ChamberFallenCount::Event",
-      "kind": "enum",
-      "variants": []
-    },
-    {
-      "type": "event",
-      "name": "d20::models::temple::m_ExplorerTempleProgress::Event",
-      "kind": "enum",
-      "variants": []
-    },
-    {
-      "type": "event",
-      "name": "d20::models::temple::m_FallenExplorer::Event",
-      "kind": "enum",
-      "variants": []
-    },
-    {
-      "type": "event",
-      "name": "d20::models::temple::m_MonsterInstance::Event",
-      "kind": "enum",
-      "variants": []
-    },
-    {
-      "type": "event",
-      "name": "d20::models::temple::m_TempleState::Event",
-      "kind": "enum",
-      "variants": []
-    },
-    {
       "type": "interface",
       "name": "d20::systems::combat_system::ICombatSystem",
       "items": [
@@ -2028,7 +2243,7 @@
           "name": "attack",
           "inputs": [
             {
-              "name": "explorer_id",
+              "name": "character_id",
               "type": "core::integer::u128"
             }
           ],
@@ -2040,12 +2255,12 @@
           "name": "cast_spell",
           "inputs": [
             {
-              "name": "explorer_id",
+              "name": "character_id",
               "type": "core::integer::u128"
             },
             {
               "name": "spell_id",
-              "type": "d20::types::spells::SpellId"
+              "type": "d20::d20::types::spells::SpellId"
             }
           ],
           "outputs": [],
@@ -2056,12 +2271,12 @@
           "name": "use_item",
           "inputs": [
             {
-              "name": "explorer_id",
+              "name": "character_id",
               "type": "core::integer::u128"
             },
             {
               "name": "item_type",
-              "type": "d20::types::index::ItemType"
+              "type": "d20::d20::types::items::ItemType"
             }
           ],
           "outputs": [],
@@ -2072,7 +2287,7 @@
           "name": "flee",
           "inputs": [
             {
-              "name": "explorer_id",
+              "name": "character_id",
               "type": "core::integer::u128"
             }
           ],
@@ -2084,7 +2299,7 @@
           "name": "second_wind",
           "inputs": [
             {
-              "name": "explorer_id",
+              "name": "character_id",
               "type": "core::integer::u128"
             }
           ],
@@ -2096,7 +2311,7 @@
           "name": "cunning_action",
           "inputs": [
             {
-              "name": "explorer_id",
+              "name": "character_id",
               "type": "core::integer::u128"
             }
           ],
@@ -2119,6 +2334,11 @@
           "name": "WorldProviderEvent",
           "type": "dojo::contract::components::world_provider::world_provider_cpt::Event",
           "kind": "nested"
+        },
+        {
+          "name": "CombatEvent",
+          "type": "d20::d20::components::combat_component::CombatComponent::Event",
+          "kind": "nested"
         }
       ]
     },
@@ -2131,8 +2351,8 @@
           "name": "mint_explorer",
           "inputs": [
             {
-              "name": "explorer_class",
-              "type": "d20::types::explorer_class::ExplorerClass"
+              "name": "character_class",
+              "type": "d20::d20::types::character_class::CharacterClass"
             }
           ],
           "outputs": [
@@ -2147,7 +2367,7 @@
           "name": "rest",
           "inputs": [
             {
-              "name": "explorer_id",
+              "name": "character_id",
               "type": "core::integer::u128"
             }
           ],
@@ -2185,6 +2405,11 @@
           "name": "ERC721ComboEvent",
           "type": "nft_combo::erc721::erc721_combo::ERC721ComboComponent::Event",
           "kind": "flat"
+        },
+        {
+          "name": "CharacterEvent",
+          "type": "d20::d20::components::character_component::CharacterComponent::Event",
+          "kind": "nested"
         }
       ]
     },
@@ -2213,11 +2438,11 @@
           "name": "enter_temple",
           "inputs": [
             {
-              "name": "explorer_id",
+              "name": "character_id",
               "type": "core::integer::u128"
             },
             {
-              "name": "temple_id",
+              "name": "dungeon_id",
               "type": "core::integer::u128"
             }
           ],
@@ -2229,7 +2454,7 @@
           "name": "exit_temple",
           "inputs": [
             {
-              "name": "explorer_id",
+              "name": "character_id",
               "type": "core::integer::u128"
             }
           ],
@@ -2241,7 +2466,7 @@
           "name": "open_exit",
           "inputs": [
             {
-              "name": "explorer_id",
+              "name": "character_id",
               "type": "core::integer::u128"
             },
             {
@@ -2257,7 +2482,7 @@
           "name": "move_to_chamber",
           "inputs": [
             {
-              "name": "explorer_id",
+              "name": "character_id",
               "type": "core::integer::u128"
             },
             {
@@ -2273,7 +2498,7 @@
           "name": "disarm_trap",
           "inputs": [
             {
-              "name": "explorer_id",
+              "name": "character_id",
               "type": "core::integer::u128"
             }
           ],
@@ -2285,7 +2510,7 @@
           "name": "loot_treasure",
           "inputs": [
             {
-              "name": "explorer_id",
+              "name": "character_id",
               "type": "core::integer::u128"
             }
           ],
@@ -2297,7 +2522,7 @@
           "name": "loot_fallen",
           "inputs": [
             {
-              "name": "explorer_id",
+              "name": "character_id",
               "type": "core::integer::u128"
             },
             {
@@ -2339,280 +2564,11 @@
           "name": "ERC721ComboEvent",
           "type": "nft_combo::erc721::erc721_combo::ERC721ComboComponent::Event",
           "kind": "flat"
-        }
-      ]
-    },
-    {
-      "type": "enum",
-      "name": "d20::types::explorer_class::ExplorerClass",
-      "variants": [
-        {
-          "name": "None",
-          "type": "()"
         },
         {
-          "name": "Fighter",
-          "type": "()"
-        },
-        {
-          "name": "Rogue",
-          "type": "()"
-        },
-        {
-          "name": "Wizard",
-          "type": "()"
-        }
-      ]
-    },
-    {
-      "type": "enum",
-      "name": "d20::types::index::ChamberType",
-      "variants": [
-        {
-          "name": "None",
-          "type": "()"
-        },
-        {
-          "name": "Entrance",
-          "type": "()"
-        },
-        {
-          "name": "Empty",
-          "type": "()"
-        },
-        {
-          "name": "Monster",
-          "type": "()"
-        },
-        {
-          "name": "Treasure",
-          "type": "()"
-        },
-        {
-          "name": "Trap",
-          "type": "()"
-        },
-        {
-          "name": "Boss",
-          "type": "()"
-        }
-      ]
-    },
-    {
-      "type": "enum",
-      "name": "d20::types::index::CombatAction",
-      "variants": [
-        {
-          "name": "None",
-          "type": "()"
-        },
-        {
-          "name": "Attack",
-          "type": "()"
-        },
-        {
-          "name": "CastSpell",
-          "type": "()"
-        },
-        {
-          "name": "UseItem",
-          "type": "()"
-        },
-        {
-          "name": "Flee",
-          "type": "()"
-        },
-        {
-          "name": "Dodge",
-          "type": "()"
-        },
-        {
-          "name": "SecondWind",
-          "type": "()"
-        },
-        {
-          "name": "CunningAction",
-          "type": "()"
-        }
-      ]
-    },
-    {
-      "type": "enum",
-      "name": "d20::types::index::ItemType",
-      "variants": [
-        {
-          "name": "None",
-          "type": "()"
-        },
-        {
-          "name": "HealthPotion",
-          "type": "()"
-        }
-      ]
-    },
-    {
-      "type": "enum",
-      "name": "d20::types::index::Skill",
-      "variants": [
-        {
-          "name": "None",
-          "type": "()"
-        },
-        {
-          "name": "Athletics",
-          "type": "()"
-        },
-        {
-          "name": "Stealth",
-          "type": "()"
-        },
-        {
-          "name": "Perception",
-          "type": "()"
-        },
-        {
-          "name": "Persuasion",
-          "type": "()"
-        },
-        {
-          "name": "Arcana",
-          "type": "()"
-        },
-        {
-          "name": "Acrobatics",
-          "type": "()"
-        }
-      ]
-    },
-    {
-      "type": "enum",
-      "name": "d20::types::items::ArmorType",
-      "variants": [
-        {
-          "name": "None",
-          "type": "()"
-        },
-        {
-          "name": "Leather",
-          "type": "()"
-        },
-        {
-          "name": "ChainMail",
-          "type": "()"
-        }
-      ]
-    },
-    {
-      "type": "enum",
-      "name": "d20::types::items::WeaponType",
-      "variants": [
-        {
-          "name": "None",
-          "type": "()"
-        },
-        {
-          "name": "Longsword",
-          "type": "()"
-        },
-        {
-          "name": "Dagger",
-          "type": "()"
-        },
-        {
-          "name": "Shortbow",
-          "type": "()"
-        },
-        {
-          "name": "Greataxe",
-          "type": "()"
-        },
-        {
-          "name": "Staff",
-          "type": "()"
-        }
-      ]
-    },
-    {
-      "type": "enum",
-      "name": "d20::types::monster::MonsterType",
-      "variants": [
-        {
-          "name": "None",
-          "type": "()"
-        },
-        {
-          "name": "PoisonousSnake",
-          "type": "()"
-        },
-        {
-          "name": "Skeleton",
-          "type": "()"
-        },
-        {
-          "name": "Shadow",
-          "type": "()"
-        },
-        {
-          "name": "AnimatedArmor",
-          "type": "()"
-        },
-        {
-          "name": "Gargoyle",
-          "type": "()"
-        },
-        {
-          "name": "Mummy",
-          "type": "()"
-        },
-        {
-          "name": "Wraith",
-          "type": "()"
-        }
-      ]
-    },
-    {
-      "type": "enum",
-      "name": "d20::types::spells::SpellId",
-      "variants": [
-        {
-          "name": "None",
-          "type": "()"
-        },
-        {
-          "name": "FireBolt",
-          "type": "()"
-        },
-        {
-          "name": "MageHand",
-          "type": "()"
-        },
-        {
-          "name": "Light",
-          "type": "()"
-        },
-        {
-          "name": "MagicMissile",
-          "type": "()"
-        },
-        {
-          "name": "ShieldSpell",
-          "type": "()"
-        },
-        {
-          "name": "Sleep",
-          "type": "()"
-        },
-        {
-          "name": "ScorchingRay",
-          "type": "()"
-        },
-        {
-          "name": "MistyStep",
-          "type": "()"
-        },
-        {
-          "name": "Fireball",
-          "type": "()"
+          "name": "DungeonEvent",
+          "type": "d20::d20::components::dungeon_component::DungeonComponent::Event",
+          "kind": "nested"
         }
       ]
     },
@@ -4296,7 +4252,7 @@
       "inputs": [
         {
           "name": "event",
-          "type": "d20::events::LevelUp"
+          "type": "d20::d20::models::events::LevelUp"
         }
       ],
       "outputs": [],
@@ -4315,7 +4271,7 @@
       "inputs": [
         {
           "name": "value",
-          "type": "d20::events::LevelUpValue"
+          "type": "d20::d20::models::events::LevelUpValue"
         }
       ],
       "outputs": [],

@@ -2,12 +2,12 @@
 
 This document provides a detailed technical reference for the game's systems and public interfaces. It is intended for both human players and autonomous agents who need to understand the underlying contract methods.
 
-## Current deployment
+## Current deployments
 
-- [online] Katana RPC: https://api.cartridge.gg/x/d20-katana/katana
-- [online] Katana Torii: https://api.cartridge.gg/x/d20-katana/torii
-- [offline] Sepolia RPC: https://api.cartridge.gg/x/starknet/sepolia/rpc/v0_9
-- [offline] Sepolia Torii: https://api.cartridge.gg/x/d20-sepolia/torii
+- ❌ [offline] Katana RPC: https://api.cartridge.gg/x/d20-katana/katana
+- ❌ [offline] Katana Torii: https://api.cartridge.gg/x/d20-katana/torii
+- ✅ [online] Sepolia RPC: https://api.cartridge.gg/x/starknet/sepolia/rpc/v0_9
+- ✅ [online] Sepolia Torii: https://api.cartridge.gg/x/d20-sepolia/torii
 - Contracts:
   - World: `0x0019ad793d43e25c705789ebafaf845727f4ba1ac8185af701472b2b4ecc93d0`
   - Combat: `0x07f2edad319105e48cd554dfbf69b4194893cffe2a1c524b734de213f1e92861`
