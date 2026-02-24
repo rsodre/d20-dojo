@@ -25,7 +25,7 @@ mod tests {
     use d20::d20::models::dungeon::{
         MonsterInstance,
         FallenCharacter,
-        ChamberFallenCount,
+        Chamber,
     };
     use d20::d20::types::items::{WeaponType, ArmorType, ItemType};
     use d20::d20::types::character_class::CharacterClass;
@@ -48,7 +48,7 @@ mod tests {
                 TestResource::Model(d20::d20::models::character::m_CharacterSkills::TEST_CLASS_HASH),
                 TestResource::Model(d20::d20::models::dungeon::m_MonsterInstance::TEST_CLASS_HASH),
                 TestResource::Model(d20::d20::models::dungeon::m_FallenCharacter::TEST_CLASS_HASH),
-                TestResource::Model(d20::d20::models::dungeon::m_ChamberFallenCount::TEST_CLASS_HASH),
+                TestResource::Model(d20::d20::models::dungeon::m_Chamber::TEST_CLASS_HASH),
                 TestResource::Model(d20::d20::models::dungeon::m_DungeonState::TEST_CLASS_HASH),
                 TestResource::Model(d20::d20::models::dungeon::m_CharacterDungeonProgress::TEST_CLASS_HASH),
                 TestResource::Event(d20::d20::models::events::e_CharacterMinted::TEST_CLASS_HASH),
@@ -117,7 +117,7 @@ mod tests {
     /// Validates all invariants that must hold after an explorer dies:
     /// - is_dead flag set, HP at 0, not in combat
     /// - FallenCharacter record created in the correct chamber
-    /// - ChamberFallenCount incremented
+    /// - Chamber.fallen_count incremented
     /// - Inventory gold and potions zeroed (dropped as loot)
     fn assert_explorer_dead(
         ref world: dojo::world::WorldStorage,
@@ -132,11 +132,11 @@ mod tests {
         let pos: CharacterPosition = world.read_model(character_id);
         assert(!pos.in_combat, 'dead character not in combat');
 
-        let fallen_count: ChamberFallenCount = world.read_model((dungeon_id, chamber_id));
-        assert(fallen_count.count >= 1, 'fallen count should be >= 1');
+        let chamber: Chamber = world.read_model((dungeon_id, chamber_id));
+        assert(chamber.fallen_count >= 1, 'fallen count should be >= 1');
 
         let fallen: FallenCharacter = world.read_model(
-            (dungeon_id, chamber_id, fallen_count.count - 1)
+            (dungeon_id, chamber_id, chamber.fallen_count - 1)
         );
         assert(fallen.character_id == character_id, 'fallen explorer id mismatch');
         assert(!fallen.is_looted, 'fallen should not be looted');
@@ -642,9 +642,9 @@ mod tests {
             assert_explorer_dead(ref world, character_id, 10_u128, 5_u32);
 
             // Verify loot values recorded in the FallenCharacter record
-            let fallen_count: ChamberFallenCount = world.read_model((10_u128, 5_u32));
+            let chamber: Chamber = world.read_model((10_u128, 5_u32));
             let fallen: FallenCharacter = world.read_model(
-                (10_u128, 5_u32, fallen_count.count - 1)
+                (10_u128, 5_u32, chamber.fallen_count - 1)
             );
             assert(fallen.dropped_gold == 50, 'dropped gold = 50');
             assert(fallen.dropped_potions == 2, 'dropped potions = 2');
@@ -653,7 +653,7 @@ mod tests {
     }
 
     // ═══════════════════════════════════════════════════════════════════════
-    // ChamberFallenCount model
+    // Chamber.fallen_count field
     // ═══════════════════════════════════════════════════════════════════════
 
     #[test]
@@ -663,8 +663,8 @@ mod tests {
 
         let (world, _token, _combat) = setup_world();
 
-        let count: ChamberFallenCount = world.read_model((99_u128, 1_u32));
-        assert(count.count == 0, 'initial count should be 0');
+        let chamber: Chamber = world.read_model((99_u128, 1_u32));
+        assert(chamber.fallen_count == 0, 'initial count should be 0');
     }
 
     #[test]
@@ -672,12 +672,21 @@ mod tests {
         let caller: ContractAddress = 'fallentest'.try_into().unwrap();
         starknet::testing::set_contract_address(caller);
 
+        use d20::d20::types::index::ChamberType;
+
         let (mut world, _token, _combat) = setup_world();
 
-        world.write_model_test(@ChamberFallenCount {
+        world.write_model_test(@Chamber {
             dungeon_id: 99,
             chamber_id: 1,
-            count: 3,
+            chamber_type: ChamberType::None,
+            depth: 0,
+            exit_count: 0,
+            is_revealed: false,
+            treasure_looted: false,
+            trap_disarmed: false,
+            trap_dc: 0,
+            fallen_count: 3,
         });
 
         world.write_model_test(@FallenCharacter {
@@ -692,8 +701,8 @@ mod tests {
             is_looted: false,
         });
 
-        let count: ChamberFallenCount = world.read_model((99_u128, 1_u32));
-        assert(count.count == 3, 'count should be 3');
+        let chamber: Chamber = world.read_model((99_u128, 1_u32));
+        assert(chamber.fallen_count == 3, 'count should be 3');
 
         let fallen: FallenCharacter = world.read_model((99_u128, 1_u32, 3_u32));
         assert(fallen.character_id == 999, 'fallen id should be 999');

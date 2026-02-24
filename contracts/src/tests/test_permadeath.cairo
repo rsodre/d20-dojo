@@ -9,8 +9,9 @@ mod tests {
     };
     use d20::d20::models::dungeon::{
         MonsterInstance,
-        FallenCharacter, ChamberFallenCount
+        FallenCharacter, Chamber,
     };
+    use d20::d20::types::index::ChamberType;
     use d20::d20::types::items::{WeaponType, ArmorType, ItemType};
     use d20::d20::models::monster::MonsterType;
     use d20::tests::tester::{
@@ -34,10 +35,17 @@ mod tests {
         let dungeon_id = temple.mint_temple(1_u8);
 
         // Place a fallen explorer body in chamber 2
-        world.write_model_test(@ChamberFallenCount {
+        world.write_model_test(@Chamber {
             dungeon_id,
             chamber_id: 2,
-            count: 1,
+            chamber_type: ChamberType::None,
+            depth: 0,
+            exit_count: 0,
+            is_revealed: false,
+            treasure_looted: false,
+            trap_disarmed: false,
+            trap_dc: 0,
+            fallen_count: 1,
         });
         world.write_model_test(@FallenCharacter {
             dungeon_id,
@@ -92,10 +100,17 @@ mod tests {
         let character_id = mint_fighter(token);
         let dungeon_id = temple.mint_temple(1_u8);
 
-        world.write_model_test(@ChamberFallenCount {
+        world.write_model_test(@Chamber {
             dungeon_id,
             chamber_id: 2,
-            count: 1,
+            chamber_type: ChamberType::None,
+            depth: 0,
+            exit_count: 0,
+            is_revealed: false,
+            treasure_looted: false,
+            trap_disarmed: false,
+            trap_dc: 0,
+            fallen_count: 1,
         });
         world.write_model_test(@FallenCharacter {
             dungeon_id,
@@ -130,7 +145,7 @@ mod tests {
         let character_id = mint_fighter(token);
         let dungeon_id = temple.mint_temple(1_u8);
 
-        world.write_model_test(@ChamberFallenCount { dungeon_id, chamber_id: 2, count: 1 });
+        world.write_model_test(@Chamber { dungeon_id, chamber_id: 2, chamber_type: ChamberType::None, depth: 0, exit_count: 0, is_revealed: false, treasure_looted: false, trap_disarmed: false, trap_dc: 0, fallen_count: 1 });
         world.write_model_test(@FallenCharacter { dungeon_id, chamber_id: 2, fallen_index: 0, character_id: 9999, dropped_weapon: WeaponType::Dagger, dropped_armor: ArmorType::Leather, dropped_gold: 50, dropped_potions: 1, is_looted: true });
         world.write_model_test(@CharacterPosition { character_id, dungeon_id, chamber_id: 2, in_combat: false, combat_monster_id: 0 });
 
@@ -148,7 +163,7 @@ mod tests {
         let character_id = mint_fighter(token);
         let dungeon_id = temple.mint_temple(1_u8);
 
-        world.write_model_test(@ChamberFallenCount { dungeon_id, chamber_id: 2, count: 0 });
+        world.write_model_test(@Chamber { dungeon_id, chamber_id: 2, chamber_type: ChamberType::None, depth: 0, exit_count: 0, is_revealed: false, treasure_looted: false, trap_disarmed: false, trap_dc: 0, fallen_count: 0 });
         world.write_model_test(@CharacterPosition { character_id, dungeon_id, chamber_id: 2, in_combat: false, combat_monster_id: 0 });
 
         temple.loot_fallen(character_id, 0);
@@ -165,7 +180,7 @@ mod tests {
         let character_id = mint_fighter(token);
         let dungeon_id = temple.mint_temple(1_u8);
 
-        world.write_model_test(@ChamberFallenCount { dungeon_id, chamber_id: 2, count: 1 });
+        world.write_model_test(@Chamber { dungeon_id, chamber_id: 2, chamber_type: ChamberType::None, depth: 0, exit_count: 0, is_revealed: false, treasure_looted: false, trap_disarmed: false, trap_dc: 0, fallen_count: 1 });
         world.write_model_test(@FallenCharacter { dungeon_id, chamber_id: 2, fallen_index: 0, character_id: 9999, dropped_weapon: WeaponType::Dagger, dropped_armor: ArmorType::Leather, dropped_gold: 50, dropped_potions: 1, is_looted: false });
         world.write_model_test(@CharacterPosition { character_id, dungeon_id, chamber_id: 2, in_combat: true, combat_monster_id: 1 });
 
@@ -199,8 +214,8 @@ mod tests {
         let health_a: CharacterStats = world.read_model(explorer_a);
         if !health_a.is_dead { return; }
 
-        let fallen_count: ChamberFallenCount = world.read_model((dungeon_id, 1_u32));
-        assert(fallen_count.count >= 1, 'should have at least 1 body');
+        let chamber: Chamber = world.read_model((dungeon_id, 1_u32));
+        assert(chamber.fallen_count >= 1, 'should have at least 1 body');
 
         let fallen: FallenCharacter = world.read_model((dungeon_id, 1_u32, 0_u32));
         assert(fallen.character_id == explorer_a, 'body is explorer A');
@@ -236,12 +251,12 @@ mod tests {
         let dungeon_id: u128 = 50;
         let chamber_id: u32 = 3;
 
-        world.write_model_test(@ChamberFallenCount { dungeon_id, chamber_id, count: 2 });
+        world.write_model_test(@Chamber { dungeon_id, chamber_id, chamber_type: ChamberType::None, depth: 0, exit_count: 0, is_revealed: false, treasure_looted: false, trap_disarmed: false, trap_dc: 0, fallen_count: 2 });
         world.write_model_test(@FallenCharacter { dungeon_id, chamber_id, fallen_index: 0, character_id: 100, dropped_weapon: WeaponType::Longsword, dropped_armor: ArmorType::ChainMail, dropped_gold: 30, dropped_potions: 1, is_looted: false });
         world.write_model_test(@FallenCharacter { dungeon_id, chamber_id, fallen_index: 1, character_id: 200, dropped_weapon: WeaponType::Dagger, dropped_armor: ArmorType::Leather, dropped_gold: 15, dropped_potions: 0, is_looted: false });
 
-        let count: ChamberFallenCount = world.read_model((dungeon_id, chamber_id));
-        assert(count.count == 2, 'two bodies in chamber');
+        let chamber: Chamber = world.read_model((dungeon_id, chamber_id));
+        assert(chamber.fallen_count == 2, 'two bodies in chamber');
 
         let body0: FallenCharacter = world.read_model((dungeon_id, chamber_id, 0_u32));
         assert(body0.character_id == 100, 'body 0 is explorer 100');
@@ -282,7 +297,7 @@ mod tests {
         let dungeon_id = temple.mint_temple(1_u8);
         temple.enter_temple(character_id, dungeon_id);
 
-        world.write_model_test(@ChamberFallenCount { dungeon_id, chamber_id: 1, count: 1 });
+        world.write_model_test(@Chamber { dungeon_id, chamber_id: 1, chamber_type: ChamberType::None, depth: 0, exit_count: 0, is_revealed: false, treasure_looted: false, trap_disarmed: false, trap_dc: 0, fallen_count: 1 });
         world.write_model_test(@FallenCharacter { dungeon_id, chamber_id: 1, fallen_index: 0, character_id: 9999, dropped_weapon: WeaponType::Dagger, dropped_armor: ArmorType::None, dropped_gold: 10, dropped_potions: 0, is_looted: false });
         let mut stats: CharacterStats = world.read_model(character_id);
         stats.current_hp = 0;
@@ -350,7 +365,7 @@ mod tests {
         let dungeon_id = temple.mint_temple(1_u8);
 
         world.write_model_test(@CharacterPosition { character_id, dungeon_id, chamber_id: 2, in_combat: false, combat_monster_id: 0 });
-        world.write_model_test(@ChamberFallenCount { dungeon_id, chamber_id: 2, count: 2 });
+        world.write_model_test(@Chamber { dungeon_id, chamber_id: 2, chamber_type: ChamberType::None, depth: 0, exit_count: 0, is_revealed: false, treasure_looted: false, trap_disarmed: false, trap_dc: 0, fallen_count: 2 });
         world.write_model_test(@FallenCharacter { dungeon_id, chamber_id: 2, fallen_index: 0, character_id: 8888, dropped_weapon: WeaponType::Longsword, dropped_armor: ArmorType::ChainMail, dropped_gold: 100, dropped_potions: 5, is_looted: true });
         world.write_model_test(@FallenCharacter { dungeon_id, chamber_id: 2, fallen_index: 1, character_id: 7777, dropped_weapon: WeaponType::Dagger, dropped_armor: ArmorType::Leather, dropped_gold: 20, dropped_potions: 1, is_looted: false });
         world.write_model_test(@CharacterInventory { character_id, primary_weapon: WeaponType::None, secondary_weapon: WeaponType::None, armor: ArmorType::None, has_shield: false, gold: 0, potions: 0 });

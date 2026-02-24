@@ -155,7 +155,7 @@ mod tests {
     };
     use d20::d20::models::dungeon::{
         DungeonState, Chamber, ChamberExit, MonsterInstance,
-        FallenCharacter, ChamberFallenCount, CharacterDungeonProgress
+        FallenCharacter, CharacterDungeonProgress
     };
     use d20::d20::types::index::{ChamberType};
     use d20::d20::types::items::{WeaponType, ArmorType};

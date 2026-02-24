@@ -102,13 +102,6 @@ export interface ChamberExit {
 	is_discovered: boolean;
 }
 
-// Type definition for `d20::d20::models::dungeon::ChamberFallenCount` struct
-export interface ChamberFallenCount {
-	dungeon_id: BigNumberish;
-	chamber_id: BigNumberish;
-	count: BigNumberish;
-}
-
 // Type definition for `d20::d20::models::dungeon::CharacterDungeonProgress` struct
 export interface CharacterDungeonProgress {
 	character_id: BigNumberish;
@@ -351,7 +344,6 @@ export interface SchemaType extends ISchemaType {
 		SkillsSet: SkillsSet,
 		Chamber: Chamber,
 		ChamberExit: ChamberExit,
-		ChamberFallenCount: ChamberFallenCount,
 		CharacterDungeonProgress: CharacterDungeonProgress,
 		FallenCharacter: FallenCharacter,
 		MonsterInstance: MonsterInstance,
@@ -490,11 +482,6 @@ export const schema: SchemaType = {
 			exit_index: 0,
 			to_chamber_id: 0,
 			is_discovered: false,
-		},
-		ChamberFallenCount: {
-			dungeon_id: 0,
-			chamber_id: 0,
-			count: 0,
 		},
 		CharacterDungeonProgress: {
 			character_id: 0,
@@ -652,7 +639,6 @@ export enum ModelsMapping {
 	SkillsSet = 'd20-SkillsSet',
 	Chamber = 'd20-Chamber',
 	ChamberExit = 'd20-ChamberExit',
-	ChamberFallenCount = 'd20-ChamberFallenCount',
 	CharacterDungeonProgress = 'd20-CharacterDungeonProgress',
 	FallenCharacter = 'd20-FallenCharacter',
 	MonsterInstance = 'd20-MonsterInstance',

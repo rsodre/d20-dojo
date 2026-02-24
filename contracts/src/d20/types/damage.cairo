@@ -2,7 +2,7 @@ use dojo::model::ModelStorage;
 use dojo::event::EventStorage;
 use dojo::world::WorldStorage;
 use d20::d20::models::character::{CharacterStats, CharacterPosition, CharacterInventory};
-use d20::d20::models::dungeon::{FallenCharacter, ChamberFallenCount};
+use d20::d20::models::dungeon::{FallenCharacter, Chamber};
 use d20::d20::models::events::CharacterDied;
 use d20::d20::models::monster::MonsterType;
 
@@ -70,7 +70,7 @@ pub impl DamageImpl of DamageTrait {
     ///   1. Set is_dead on CharacterStats, clear HP to 0.
     ///   2. Clear combat state on CharacterPosition.
     ///   3. Read inventory and create FallenCharacter with dropped loot.
-    ///   4. Increment ChamberFallenCount.
+    ///   4. Increment Chamber.fallen_count.
     ///   5. Zero out inventory (items are now on the ground).
     ///   6. Emit CharacterDied event.
     fn handle_death(
@@ -98,11 +98,11 @@ pub impl DamageImpl of DamageTrait {
         // 3. Read inventory for loot drop
         let inventory: CharacterInventory = world.read_model(character_id);
 
-        // 4. Determine fallen_index from ChamberFallenCount (read-then-increment)
-        let fallen_count: ChamberFallenCount = world.read_model(
+        // 4. Determine fallen_index from Chamber.fallen_count (read-then-increment)
+        let mut chamber: Chamber = world.read_model(
             (position.dungeon_id, position.chamber_id)
         );
-        let fallen_index: u32 = fallen_count.count;
+        let fallen_index: u32 = chamber.fallen_count;
 
         // 5. Create FallenCharacter loot record
         world.write_model(@FallenCharacter {
@@ -117,12 +117,9 @@ pub impl DamageImpl of DamageTrait {
             is_looted: false,
         });
 
-        // 6. Increment ChamberFallenCount
-        world.write_model(@ChamberFallenCount {
-            dungeon_id: position.dungeon_id,
-            chamber_id: position.chamber_id,
-            count: fallen_count.count + 1,
-        });
+        // 6. Increment Chamber.fallen_count
+        chamber.fallen_count += 1;
+        world.write_model(@chamber);
 
         // 7. Zero out explorer inventory (loot is now on the ground)
         world.write_model(@CharacterInventory {

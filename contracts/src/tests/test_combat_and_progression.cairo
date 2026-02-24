@@ -41,6 +41,7 @@ mod tests {
             treasure_looted: false,
             trap_disarmed: false,
             trap_dc: 0,
+            fallen_count: 0,
         });
         world.write_model_test(@ChamberExit {
             dungeon_id,
@@ -59,6 +60,7 @@ mod tests {
             treasure_looted: false,
             trap_disarmed: false,
             trap_dc: 0,
+            fallen_count: 0,
         });
         world.write_model_test(@MonsterInstance {
             dungeon_id,

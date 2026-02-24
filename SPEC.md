@@ -467,6 +467,7 @@ pub struct Chamber {
     pub treasure_looted: bool,
     pub trap_disarmed: bool,
     pub trap_dc: u8,              // 0 if no trap
+    pub fallen_count: u32,
 }
 
 // Separate model for monster instances in chambers.
@@ -519,17 +520,6 @@ pub struct FallenCharacter {
     pub dropped_gold: u32,
     pub dropped_potions: u8,
     pub is_looted: bool,          // true once another explorer picks up the loot
-}
-
-// Counter for how many explorers have fallen in a chamber
-#[derive(Copy, Drop, Serde)]
-#[dojo::model]
-pub struct ChamberFallenCount {
-    #[key]
-    pub dungeon_id: u128,
-    #[key]
-    pub chamber_id: u32,
-    pub count: u32,
 }
 
 #[derive(Copy, Drop, Serde)]
@@ -693,8 +683,8 @@ Systems are `#[dojo::contract]` modules, not free functions. Each contract has a
 | Contract | Tag | Writes to |
 |----------|-----|-----------|
 | `explorer_token` | `d20_0_1-explorer_token` | CharacterStats, CharacterCombat, CharacterInventory, CharacterSkills |
-| `combat_system` | `d20_0_1-combat_system` | CharacterCombat, CharacterInventory, CharacterPosition, MonsterInstance, FallenCharacter, ChamberFallenCount |
-| `temple_token` | `d20_0_1-temple_token` | CharacterPosition, CharacterDungeonProgress, CharacterStats, CharacterInventory, DungeonState, Chamber, MonsterInstance, ChamberExit, FallenCharacter, ChamberFallenCount |
+| `combat_system` | `d20_0_1-combat_system` | CharacterCombat, CharacterInventory, CharacterPosition, MonsterInstance, FallenCharacter |
+| `temple_token` | `d20_0_1-temple_token` | CharacterPosition, CharacterDungeonProgress, CharacterStats, CharacterInventory, DungeonState, Chamber, MonsterInstance, ChamberExit, FallenCharacter |
 
 ```cairo
 // ──────────────────────────────────────────────
@@ -744,7 +734,7 @@ trait ICombatSystem<T> {
 // Death logic is an internal function called when HP reaches 0:
 // - sets is_dead = true on CharacterStats
 // - creates FallenCharacter with dropped loot in current chamber
-// - increments ChamberFallenCount
+// - increments Chamber.fallen_count
 // - emits CharacterDied event
 
 // ──────────────────────────────────────────────
@@ -935,7 +925,7 @@ let is_boss: bool = roll < prob_bps;
 **Death is permanent.** When an explorer reaches 0 HP:
 
 1. **Explorer dies forever.** The `is_dead` flag is set to true. The Explorer NFT remains on-chain as a permanent record but can never take another action.
-2. **Loot drops.** A `FallenCharacter` record is created in the current chamber, containing the character's weapon, armor, gold, and potions. The `ChamberFallenCount` is incremented.
+2. **Loot drops.** A `FallenCharacter` record is created in the current chamber, containing the character's weapon, armor, gold, and potions. The `Chamber.fallen_count` is incremented.
 3. **The body remains.** Other explorers entering the chamber can see the fallen explorer's body. The AI narrator describes them and their dropped loot.
 4. **Loot is first-come-first-served.** Any living explorer in the chamber can call `loot_fallen(character_id, fallen_index)` to pick up items. Once looted, `is_looted` is set to true.
 5. **Multiple bodies can accumulate.** A particularly deadly chamber might have many fallen explorers, each with their own loot. This creates "loot graveyards" that attract other explorers.

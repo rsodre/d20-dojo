@@ -40,6 +40,7 @@ mod tests {
             treasure_looted: false,
             trap_disarmed: false,
             trap_dc: 0,
+            fallen_count: 0,
         });
         world.write_model_test(@ChamberExit {
             dungeon_id,
@@ -59,6 +60,7 @@ mod tests {
             treasure_looted: false,
             trap_disarmed: false,
             trap_dc: 21,
+            fallen_count: 0,
         });
 
         // 1 HP explorer with DEX 10 (modifier 0) — any damage is fatal
@@ -107,6 +109,7 @@ mod tests {
             treasure_looted: false,
             trap_disarmed: false,
             trap_dc: 21,
+            fallen_count: 0,
         });
         world.write_model_test(@CharacterPosition {
             character_id,
@@ -166,6 +169,7 @@ mod tests {
             treasure_looted: false,
             trap_disarmed: false,
             trap_dc: 10,
+            fallen_count: 0,
         });
         world.write_model_test(@CharacterPosition {
             character_id,
@@ -213,6 +217,7 @@ mod tests {
             treasure_looted: false,
             trap_disarmed: false,
             trap_dc: 0,
+            fallen_count: 0,
         });
         world.write_model_test(@CharacterPosition {
             character_id,
@@ -246,6 +251,7 @@ mod tests {
             treasure_looted: false,
             trap_disarmed: true,
             trap_dc: 10,
+            fallen_count: 0,
         });
         world.write_model_test(@CharacterPosition {
             character_id,
@@ -274,7 +280,7 @@ mod tests {
         stats.max_hp = 11;
         stats.is_dead = true;
         world.write_model_test(@stats);
-        world.write_model_test(@Chamber { dungeon_id, chamber_id: 3, chamber_type: ChamberType::Trap, depth: 2, exit_count: 1, is_revealed: true, treasure_looted: false, trap_disarmed: false, trap_dc: 10 });
+        world.write_model_test(@Chamber { dungeon_id, chamber_id: 3, chamber_type: ChamberType::Trap, depth: 2, exit_count: 1, is_revealed: true, treasure_looted: false, trap_disarmed: false, trap_dc: 10, fallen_count: 0 });
         world.write_model_test(@CharacterPosition { character_id, dungeon_id, chamber_id: 3, in_combat: false, combat_monster_id: 0 });
 
         temple.disarm_trap(character_id);
@@ -291,7 +297,7 @@ mod tests {
         let character_id = mint_fighter(token);
         let dungeon_id = temple.mint_temple(1_u8);
 
-        world.write_model_test(@Chamber { dungeon_id, chamber_id: 3, chamber_type: ChamberType::Trap, depth: 2, exit_count: 1, is_revealed: true, treasure_looted: false, trap_disarmed: false, trap_dc: 10 });
+        world.write_model_test(@Chamber { dungeon_id, chamber_id: 3, chamber_type: ChamberType::Trap, depth: 2, exit_count: 1, is_revealed: true, treasure_looted: false, trap_disarmed: false, trap_dc: 10, fallen_count: 0 });
         world.write_model_test(@CharacterPosition { character_id, dungeon_id, chamber_id: 3, in_combat: true, combat_monster_id: 1 });
 
         temple.disarm_trap(character_id);
@@ -307,9 +313,9 @@ mod tests {
         let character_id = mint_fighter(token);
         let dungeon_id = temple.mint_temple(1_u8);
 
-        world.write_model_test(@Chamber { dungeon_id, chamber_id: 1, chamber_type: ChamberType::Entrance, depth: 0, exit_count: 1, is_revealed: true, treasure_looted: false, trap_disarmed: false, trap_dc: 0 });
+        world.write_model_test(@Chamber { dungeon_id, chamber_id: 1, chamber_type: ChamberType::Entrance, depth: 0, exit_count: 1, is_revealed: true, treasure_looted: false, trap_disarmed: false, trap_dc: 0, fallen_count: 0 });
         world.write_model_test(@ChamberExit { dungeon_id, from_chamber_id: 1, exit_index: 0, to_chamber_id: 2, is_discovered: true });
-        world.write_model_test(@Chamber { dungeon_id, chamber_id: 2, chamber_type: ChamberType::Trap, depth: 4, exit_count: 0, is_revealed: true, treasure_looted: false, trap_disarmed: false, trap_dc: 25 });
+        world.write_model_test(@Chamber { dungeon_id, chamber_id: 2, chamber_type: ChamberType::Trap, depth: 4, exit_count: 0, is_revealed: true, treasure_looted: false, trap_disarmed: false, trap_dc: 25, fallen_count: 0 });
 
         temple.enter_temple(character_id, dungeon_id);
         let mut stats: CharacterStats = world.read_model(character_id);
@@ -334,9 +340,9 @@ mod tests {
         let character_id = mint_fighter(token);
         let dungeon_id = temple.mint_temple(1_u8);
 
-        world.write_model_test(@Chamber { dungeon_id, chamber_id: 1, chamber_type: ChamberType::Entrance, depth: 0, exit_count: 1, is_revealed: true, treasure_looted: false, trap_disarmed: false, trap_dc: 0 });
+        world.write_model_test(@Chamber { dungeon_id, chamber_id: 1, chamber_type: ChamberType::Entrance, depth: 0, exit_count: 1, is_revealed: true, treasure_looted: false, trap_disarmed: false, trap_dc: 0, fallen_count: 0 });
         world.write_model_test(@ChamberExit { dungeon_id, from_chamber_id: 1, exit_index: 0, to_chamber_id: 2, is_discovered: true });
-        world.write_model_test(@Chamber { dungeon_id, chamber_id: 2, chamber_type: ChamberType::Trap, depth: 1, exit_count: 0, is_revealed: true, treasure_looted: false, trap_disarmed: true, trap_dc: 15 });
+        world.write_model_test(@Chamber { dungeon_id, chamber_id: 2, chamber_type: ChamberType::Trap, depth: 1, exit_count: 0, is_revealed: true, treasure_looted: false, trap_disarmed: true, trap_dc: 15, fallen_count: 0 });
 
         temple.enter_temple(character_id, dungeon_id);
         let stats_before: CharacterStats = world.read_model(character_id);

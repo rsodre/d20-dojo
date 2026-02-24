@@ -16,7 +16,7 @@ use d20::models::config::m_Config;
 use d20::d20::models::character::{
     CharacterStats, CharacterInventory, CharacterPosition,
 };
-use d20::d20::models::dungeon::{FallenCharacter, ChamberFallenCount};
+use d20::d20::models::dungeon::{FallenCharacter, Chamber};
 use d20::d20::types::character_class::CharacterClass;
 use d20::tests::mock_vrf::MockVrf;
 
@@ -40,7 +40,6 @@ pub fn namespace_def() -> NamespaceDef {
             TestResource::Model(d20::d20::models::dungeon::m_MonsterInstance::TEST_CLASS_HASH),
             TestResource::Model(d20::d20::models::dungeon::m_ChamberExit::TEST_CLASS_HASH),
             TestResource::Model(d20::d20::models::dungeon::m_FallenCharacter::TEST_CLASS_HASH),
-            TestResource::Model(d20::d20::models::dungeon::m_ChamberFallenCount::TEST_CLASS_HASH),
             TestResource::Model(d20::d20::models::dungeon::m_CharacterDungeonProgress::TEST_CLASS_HASH),
             // Events
             TestResource::Event(d20::d20::models::events::e_CharacterMinted::TEST_CLASS_HASH),
@@ -119,7 +118,7 @@ pub fn mint_wizard(token: IExplorerTokenDispatcher) -> u128 {
 /// Validates all invariants that must hold after an explorer dies:
 /// - is_dead flag set, HP at 0, not in combat
 /// - FallenCharacter record created in the correct chamber
-/// - ChamberFallenCount incremented
+/// - Chamber.fallen_count incremented
 /// - Inventory gold and potions zeroed (dropped as loot)
 pub fn assert_explorer_dead(
     ref world: dojo::world::WorldStorage,
@@ -134,11 +133,11 @@ pub fn assert_explorer_dead(
     let pos: CharacterPosition = world.read_model(character_id);
     assert(!pos.in_combat, 'dead character not in combat');
 
-    let fallen_count: ChamberFallenCount = world.read_model((dungeon_id, chamber_id));
-    assert(fallen_count.count >= 1, 'fallen count should be >= 1');
+    let chamber: Chamber = world.read_model((dungeon_id, chamber_id));
+    assert(chamber.fallen_count >= 1, 'fallen count should be >= 1');
 
     let fallen: FallenCharacter = world.read_model(
-        (dungeon_id, chamber_id, fallen_count.count - 1)
+        (dungeon_id, chamber_id, chamber.fallen_count - 1)
     );
     assert(fallen.character_id == character_id, 'fallen explorer id mismatch');
     assert(!fallen.is_looted, 'fallen should not be looted');

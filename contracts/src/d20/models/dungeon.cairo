@@ -28,6 +28,7 @@ pub struct Chamber {
     pub treasure_looted: bool,
     pub trap_disarmed: bool,
     pub trap_dc: u8,
+    pub fallen_count: u32,
 }
 
 #[derive(Copy, Drop, Serde)]
@@ -74,16 +75,6 @@ pub struct FallenCharacter {
     pub dropped_gold: u32,
     pub dropped_potions: u8,
     pub is_looted: bool,
-}
-
-#[derive(Copy, Drop, Serde)]
-#[dojo::model]
-pub struct ChamberFallenCount {
-    #[key]
-    pub dungeon_id: u128,
-    #[key]
-    pub chamber_id: u32,
-    pub count: u32,
 }
 
 #[derive(Copy, Drop, Serde)]

@@ -10,7 +10,7 @@ mod tests {
     };
     use d20::d20::models::dungeon::{
         DungeonState, Chamber, ChamberExit, MonsterInstance,
-        FallenCharacter, ChamberFallenCount, CharacterDungeonProgress
+        FallenCharacter, CharacterDungeonProgress
     };
     use d20::d20::types::index::{ChamberType};
     use d20::d20::types::items::{WeaponType, ArmorType};
@@ -45,6 +45,7 @@ mod tests {
             treasure_looted: false,
             trap_disarmed: false,
             trap_dc: 0,
+            fallen_count: 0,
         });
         world.write_model_test(@ChamberExit {
             dungeon_id,
@@ -110,6 +111,7 @@ mod tests {
             treasure_looted: false,
             trap_disarmed: false,
             trap_dc: 0,
+            fallen_count: 0,
         });
         world.write_model_test(@ChamberExit {
             dungeon_id,
@@ -129,6 +131,7 @@ mod tests {
             treasure_looted: false,
             trap_disarmed: false,
             trap_dc: 0,
+            fallen_count: 0,
         });
         world.write_model_test(@ChamberExit {
             dungeon_id,
@@ -189,6 +192,7 @@ mod tests {
             treasure_looted: false,
             trap_disarmed: false,
             trap_dc: 0,
+            fallen_count: 0,
         });
         // Give A high WIS for guaranteed perception
         let mut stats_a: CharacterStats = world.read_model(explorer_a);
@@ -244,6 +248,7 @@ mod tests {
             treasure_looted: false,
             trap_disarmed: false,
             trap_dc: 0,
+            fallen_count: 0,
         });
         world.write_model_test(@ChamberExit {
             dungeon_id,
@@ -263,6 +268,7 @@ mod tests {
             treasure_looted: false,
             trap_disarmed: false,
             trap_dc: 1,
+            fallen_count: 0,
         });
         world.write_model_test(@ChamberExit {
             dungeon_id,
@@ -387,6 +393,7 @@ mod tests {
             treasure_looted: false,
             trap_disarmed: false,
             trap_dc: 0,
+            fallen_count: 0,
         });
         world.write_model_test(@ChamberExit {
             dungeon_id,
@@ -495,9 +502,9 @@ mod tests {
         let explorer_b = mint_fighter(token);
         temple.enter_temple(explorer_b, dungeon_id);
 
-        // B reads shared ChamberFallenCount — should see A's body
-        let fallen_count: ChamberFallenCount = world.read_model((dungeon_id, 1_u32));
-        assert(fallen_count.count >= 1, 'B sees fallen count');
+        // B reads shared Chamber.fallen_count — should see A's body
+        let chamber: Chamber = world.read_model((dungeon_id, 1_u32));
+        assert(chamber.fallen_count >= 1, 'B sees fallen count');
 
         let fallen: FallenCharacter = world.read_model((dungeon_id, 1_u32, 0_u32));
         assert(fallen.character_id == explorer_a, 'body is A');
@@ -538,6 +545,7 @@ mod tests {
             treasure_looted: false,
             trap_disarmed: false,
             trap_dc: 0,
+            fallen_count: 0,
         });
         world.write_model_test(@ChamberExit {
             dungeon_id,

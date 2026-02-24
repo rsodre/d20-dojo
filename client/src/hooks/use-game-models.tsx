@@ -20,7 +20,6 @@ export function useGameModels() {
     model("CharacterSkills"),
     model("DungeonState"),
     model("Chamber"),
-    model("ChamberFallenCount"),
     model("MonsterInstance"),
     model("ChamberExit"),
     model("FallenCharacter"),

@@ -11,7 +11,7 @@ pub mod DungeonComponent {
     use d20::d20::models::monster::{MonsterType, MonsterTypeTrait};
     use d20::d20::models::dungeon::{
         DungeonState, Chamber, MonsterInstance, ChamberExit, CharacterDungeonProgress,
-        FallenCharacter, ChamberFallenCount,
+        FallenCharacter,
     };
     use d20::d20::models::character::{
         CharacterStats, CharacterPosition, CharacterInventory,
@@ -69,6 +69,7 @@ pub mod DungeonComponent {
                 treasure_looted: false,
                 trap_disarmed: false,
                 trap_dc: 0,
+            fallen_count: 0,
             });
 
             // Write undiscovered exit stubs so open_exit can validate bounds
@@ -367,6 +368,7 @@ pub mod DungeonComponent {
                     treasure_looted: chamber.treasure_looted,
                     trap_disarmed: true,
                     trap_dc: chamber.trap_dc,
+                    fallen_count: chamber.fallen_count,
                 });
             } else {
                 // ── Failure: trap fires — DEX save or take damage ────────────
@@ -460,6 +462,7 @@ pub mod DungeonComponent {
                     treasure_looted: true,
                     trap_disarmed: chamber.trap_disarmed,
                     trap_dc: chamber.trap_dc,
+                    fallen_count: chamber.fallen_count,
                 });
             }
             // On failed check: nothing found, can retry next turn
@@ -484,8 +487,8 @@ pub mod DungeonComponent {
             let chamber_id = position.chamber_id;
 
             // ── Validate fallen_index is in range ────────────────────────────
-            let fallen_count: ChamberFallenCount = world.read_model((dungeon_id, chamber_id));
-            assert(fallen_index < fallen_count.count, 'no body at that index');
+            let chamber: Chamber = world.read_model((dungeon_id, chamber_id));
+            assert(fallen_index < chamber.fallen_count, 'no body at that index');
 
             // ── Read the FallenCharacter record ─────────────────────────────
             let fallen: FallenCharacter = world.read_model((dungeon_id, chamber_id, fallen_index));
@@ -659,6 +662,7 @@ pub mod DungeonComponent {
             treasure_looted: false,
             trap_disarmed: false,
             trap_dc,
+            fallen_count: 0,
         });
 
         // ── Write MonsterInstance if needed ──────────────────────────────────
