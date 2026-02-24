@@ -9,9 +9,8 @@ mod tests {
         CharacterPosition,
     };
     use d20::d20::models::dungeon::{
-        Chamber,
+        Chamber, ChamberType,
     };
-    use d20::d20::types::index::{ChamberType};
     use d20::tests::tester::{
         setup_world, mint_fighter,
     };

@@ -9,9 +9,8 @@ mod tests {
     };
     use d20::d20::models::dungeon::{
         MonsterInstance,
-        FallenCharacter, Chamber,
+        FallenCharacter, Chamber, ChamberType,
     };
-    use d20::d20::types::index::ChamberType;
     use d20::d20::types::items::{WeaponType, ArmorType, ItemType};
     use d20::d20::models::monster::MonsterType;
     use d20::tests::tester::{

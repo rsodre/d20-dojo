@@ -1,7 +1,8 @@
 use starknet::ContractAddress;
-use d20::d20::types::index::{CombatAction, ChamberType};
+use d20::d20::types::combat::{CombatAction};
 use d20::d20::types::character_class::CharacterClass;
 use d20::d20::models::monster::MonsterType;
+use d20::d20::models::dungeon::ChamberType;
 
 #[derive(Copy, Drop, Serde)]
 #[dojo::event]

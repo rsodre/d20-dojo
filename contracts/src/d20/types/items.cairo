@@ -24,6 +24,54 @@ pub enum ItemType {
     HealthPotion,
 }
 
+use dojo::world::WorldStorage;
+use dojo::model::ModelStorage;
+use d20::d20::models::character::{CharacterStats, CharacterInventory};
+use d20::utils::dice::roll_dice;
+use d20::utils::seeder::Seeder;
+
+#[generate_trait]
+pub impl ItemTypeImpl of ItemTypeTrait {
+    fn resolve(
+        self: ItemType,
+        ref world: WorldStorage,
+        ref seeder: Seeder,
+        character_id: u128,
+        stats: CharacterStats,
+    ) -> u8 {
+        match self {
+            ItemType::None => {
+                assert(false, 'no item specified');
+                0
+            },
+            ItemType::HealthPotion => {
+                let mut inventory: CharacterInventory = world.read_model(character_id);
+                assert(inventory.potions > 0, 'no potions remaining');
+                inventory.potions -= 1;
+                world.write_model(@inventory);
+
+                // Heal 2d4+2
+                let raw_heal: u16 = roll_dice(ref seeder, 4, 2);
+                let heal_total: u16 = raw_heal + 2;
+
+                let new_hp_i16: i16 = stats.current_hp + heal_total.try_into().unwrap();
+                let new_hp: i16 = if new_hp_i16 > stats.max_hp.try_into().unwrap() {
+                    stats.max_hp.try_into().unwrap()
+                } else {
+                    new_hp_i16
+                };
+
+                let mut healed_stats = stats;
+                healed_stats.current_hp = new_hp;
+                healed_stats.is_dead = false;
+                world.write_model(@healed_stats);
+
+                raw_heal.try_into().unwrap()
+            },
+        }
+    }
+}
+
 #[generate_trait]
 pub impl WeaponTypeImpl of WeaponTypeTrait {
     fn damage_sides(self: WeaponType) -> u8 {

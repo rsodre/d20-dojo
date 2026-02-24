@@ -14,7 +14,7 @@ pub mod d20 {
         pub mod character_class;
         pub mod attributes;
         pub mod damage;
-        pub mod index;
+        pub mod combat;
         pub mod items;
         pub mod spells;
     }

@@ -9,10 +9,9 @@ mod tests {
         CharacterPosition,
     };
     use d20::d20::models::dungeon::{
-        Chamber, ChamberExit,
+        Chamber, ChamberType, ChamberExit,
     };
     use d20::d20::types::items::{WeaponType, ArmorType};
-    use d20::d20::types::index::{ChamberType};
     use d20::tests::tester::{
         setup_world, mint_fighter, mint_rogue, assert_explorer_dead,
     };

@@ -221,7 +221,7 @@ pub mod temple_token {
             let dungeon_id: u128 = token_id.low;
 
             // Initialize dungeon state for this temple
-            self.dungeon.init_temple(ref world, dungeon_id, difficulty);
+            self.dungeon.init_dungeon(ref world, dungeon_id, difficulty);
 
             dungeon_id
         }
@@ -232,7 +232,7 @@ pub mod temple_token {
             let explorer_token = world.explorer_token_dispatcher();
             assert(explorer_token.owner_of(character_id.into()) == get_caller_address(), 'not owner');
             // Execute action
-            self.dungeon.enter_temple(ref world, character_id, dungeon_id);
+            self.dungeon.enter_dungeon(ref world, character_id, dungeon_id);
         }
 
         fn exit_temple(ref self: ContractState, character_id: u128) {
@@ -241,7 +241,7 @@ pub mod temple_token {
             let explorer_token = world.explorer_token_dispatcher();
             assert(explorer_token.owner_of(character_id.into()) == get_caller_address(), 'not owner');
             // Execute action
-            self.dungeon.exit_temple(ref world, character_id);
+            self.dungeon.exit_dungeon(ref world, character_id);
         }
 
         fn open_exit(ref self: ContractState, character_id: u128, exit_index: u8) {
@@ -327,14 +327,14 @@ pub mod temple_token {
             let mut world = s.world_default();
             let dungeon_id: u128 = token_id.low;
 
-            let temple: DungeonState = world.read_model(dungeon_id);
+            let dungeon: DungeonState = world.read_model(dungeon_id);
 
-            let status: ByteArray = if temple.boss_alive { "Active" } else { "Conquered" };
+            let status: ByteArray = if dungeon.boss_alive { "Active" } else { "Conquered" };
 
             let attributes: Array<Attribute> = array![
-                Attribute { key: "Difficulty", value: format!("{}", temple.difficulty_tier) },
+                Attribute { key: "Difficulty", value: format!("{}", dungeon.difficulty_tier) },
                 Attribute { key: "Status", value: status },
-                Attribute { key: "Boss Chamber", value: format!("{}", temple.boss_chamber_id) },
+                Attribute { key: "Boss Chamber", value: format!("{}", dungeon.boss_chamber_id) },
             ];
 
             let metadata = TokenMetadata {

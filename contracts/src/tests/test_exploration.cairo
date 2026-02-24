@@ -8,10 +8,9 @@ mod tests {
         CharacterStats, CharacterPosition,
     };
     use d20::d20::models::dungeon::{
-        DungeonState, Chamber, ChamberExit,
+        DungeonState, Chamber, ChamberType, ChamberExit,
         CharacterDungeonProgress
     };
-    use d20::d20::types::index::{ChamberType};
     use d20::tests::tester::{
         setup_world, mint_fighter,
     };

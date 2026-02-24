@@ -1,4 +1,3 @@
-use d20::d20::types::index::ChamberType;
 use d20::d20::types::items::{WeaponType, ArmorType};
 use d20::d20::models::monster::MonsterType;
 
@@ -29,6 +28,18 @@ pub struct Chamber {
     pub trap_disarmed: bool,
     pub trap_dc: u8,
     pub fallen_count: u32,
+}
+
+#[derive(Serde, Copy, Drop, Introspect, PartialEq, Debug, DojoStore, Default)]
+pub enum ChamberType {
+    #[default]
+    None,
+    Entrance,
+    Empty,
+    Monster,
+    Treasure,
+    Trap,
+    Boss,
 }
 
 #[derive(Copy, Drop, Serde)]

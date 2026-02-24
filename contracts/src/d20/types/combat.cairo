@@ -12,14 +12,3 @@ pub enum CombatAction {
     CunningAction,
 }
 
-#[derive(Serde, Copy, Drop, Introspect, PartialEq, Debug, DojoStore, Default)]
-pub enum ChamberType {
-    #[default]
-    None,
-    Entrance,
-    Empty,
-    Monster,
-    Treasure,
-    Trap,
-    Boss,
-}

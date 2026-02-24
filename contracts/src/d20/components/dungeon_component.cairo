@@ -5,12 +5,12 @@ pub mod DungeonComponent {
     use dojo::model::ModelStorage;
     use dojo::event::EventStorage;
 
-    use d20::d20::types::index::ChamberType;
     use d20::d20::types::character_class::CharacterClass;
     use d20::d20::types::items::{WeaponType, ArmorType};
     use d20::d20::models::monster::{MonsterType, MonsterTypeTrait};
     use d20::d20::models::dungeon::{
-        DungeonState, Chamber, MonsterInstance, ChamberExit, CharacterDungeonProgress,
+        DungeonState, Chamber, ChamberType,
+        MonsterInstance, ChamberExit, CharacterDungeonProgress,
         FallenCharacter,
     };
     use d20::d20::models::character::{
@@ -40,8 +40,8 @@ pub mod DungeonComponent {
     pub impl InternalImpl<
         TContractState, +HasComponent<TContractState>
     > of InternalTrait<TContractState> {
-        /// Initialize DungeonState, entrance Chamber, and exit stubs for a newly minted temple.
-        fn init_temple(
+        /// Initialize DungeonState, entrance Chamber, and exit stubs for a newly minted dungeon.
+        fn init_dungeon(
             ref self: ComponentState<TContractState>,
             ref world: WorldStorage,
             dungeon_id: u128,
@@ -86,16 +86,16 @@ pub mod DungeonComponent {
             };
         }
 
-        /// Place an character at the temple's entrance chamber.
-        fn enter_temple(
+        /// Place an character at the dungeon's entrance chamber.
+        fn enter_dungeon(
             ref self: ComponentState<TContractState>,
             ref world: WorldStorage,
             character_id: u128,
             dungeon_id: u128,
         ) {
-            // Validate temple exists
-            let temple: DungeonState = world.read_model(dungeon_id);
-            assert(temple.difficulty_tier >= 1, 'temple does not exist');
+            // Validate dungeon exists
+            let dungeon: DungeonState = world.read_model(dungeon_id);
+            assert(dungeon.difficulty_tier >= 1, 'dungeon does not exist');
 
             // Validate character is alive
             let stats: CharacterStats = world.read_model(character_id);
@@ -105,7 +105,7 @@ pub mod DungeonComponent {
             let position: CharacterPosition = world.read_model(character_id);
             assert(!position.in_combat, 'character is in combat');
 
-            // Place character at entrance chamber (overwrites any previous temple position)
+            // Place character at entrance chamber (overwrites any previous dungeon position)
             world.write_model(@CharacterPosition {
                 character_id,
                 dungeon_id,
@@ -114,7 +114,7 @@ pub mod DungeonComponent {
                 combat_monster_id: 0,
             });
 
-            // Initialize CharacterDungeonProgress for this temple visit
+            // Initialize CharacterDungeonProgress for this dungeon visit
             // (only write if not previously set — existing chambers_explored/xp_earned carry over
             //  from prior visits, so we only initialize on a fresh record)
             let progress: CharacterDungeonProgress = world.read_model((character_id, dungeon_id));
@@ -128,18 +128,18 @@ pub mod DungeonComponent {
             }
         }
 
-        /// Remove an character from the temple (set dungeon_id=0, chamber_id=0).
-        fn exit_temple(
+        /// Remove an character from the dungeon (set dungeon_id=0, chamber_id=0).
+        fn exit_dungeon(
             ref self: ComponentState<TContractState>,
             ref world: WorldStorage,
             character_id: u128,
         ) {
-            // Validate character is in a temple
+            // Validate character is in a dungeon
             let position: CharacterPosition = world.read_model(character_id);
-            assert(position.dungeon_id != 0, 'not inside any temple');
+            assert(position.dungeon_id != 0, 'not inside any dungeon');
             assert(!position.in_combat, 'cannot exit during combat');
 
-            // Clear temple/chamber position — stats, inventory, XP, and
+            // Clear dungeon/chamber position — stats, inventory, XP, and
             // CharacterDungeonProgress are all untouched (persisted on-chain).
             world.write_model(@CharacterPosition {
                 character_id,
@@ -164,7 +164,7 @@ pub mod DungeonComponent {
             assert(!stats.is_dead, 'dead characters cannot explore');
 
             let position: CharacterPosition = world.read_model(character_id);
-            assert(position.dungeon_id != 0, 'not inside any temple');
+            assert(position.dungeon_id != 0, 'not inside any dungeon');
             assert(!position.in_combat, 'cannot open exit in combat');
 
             let dungeon_id = position.dungeon_id;
@@ -179,10 +179,10 @@ pub mod DungeonComponent {
             assert(!exit.is_discovered, 'exit already discovered');
 
             // ── Allocate new chamber ID ──────────────────────────────────────
-            let mut temple: DungeonState = world.read_model(dungeon_id);
-            let new_chamber_id: u32 = temple.next_chamber_id;
-            temple.next_chamber_id = new_chamber_id + 1;
-            world.write_model(@temple);
+            let mut dungeon: DungeonState = world.read_model(dungeon_id);
+            let new_chamber_id: u32 = dungeon.next_chamber_id;
+            dungeon.next_chamber_id = new_chamber_id + 1;
+            world.write_model(@dungeon);
 
             // ── Read progress for boss probability ───────────────────────────
             let progress: CharacterDungeonProgress = world.read_model((character_id, dungeon_id));
@@ -198,9 +198,9 @@ pub mod DungeonComponent {
                 new_depth,
                 character_id,
                 character_id, // revealed_by
-                temple.difficulty_tier,
+                dungeon.difficulty_tier,
                 progress.xp_earned,
-                temple.max_depth,
+                dungeon.max_depth,
             );
 
             // ── Create bidirectional ChamberExit links ───────────────────────
@@ -244,7 +244,7 @@ pub mod DungeonComponent {
             assert(!stats.is_dead, 'dead characters cannot move');
 
             let position: CharacterPosition = world.read_model(character_id);
-            assert(position.dungeon_id != 0, 'not inside any temple');
+            assert(position.dungeon_id != 0, 'not inside any dungeon');
             assert(!position.in_combat, 'cannot move during combat');
 
             let dungeon_id = position.dungeon_id;
@@ -317,7 +317,7 @@ pub mod DungeonComponent {
             assert(!stats.is_dead, 'dead characters cannot disarm');
 
             let position: CharacterPosition = world.read_model(character_id);
-            assert(position.dungeon_id != 0, 'not inside any temple');
+            assert(position.dungeon_id != 0, 'not inside any dungeon');
             assert(!position.in_combat, 'cannot disarm during combat');
 
             let dungeon_id = position.dungeon_id;
@@ -401,7 +401,7 @@ pub mod DungeonComponent {
             assert(!stats.is_dead, 'dead characters cannot loot');
 
             let position: CharacterPosition = world.read_model(character_id);
-            assert(position.dungeon_id != 0, 'not inside any temple');
+            assert(position.dungeon_id != 0, 'not inside any dungeon');
             assert(!position.in_combat, 'cannot loot during combat');
 
             let dungeon_id = position.dungeon_id;
@@ -432,10 +432,10 @@ pub mod DungeonComponent {
                 // ── Success: award gold and possibly a potion ─────────────────
                 // Gold: 1d6 × (depth + 1) × difficulty
                 let gold_roll: u32 = roll_dice(ref seeder, 6, 1).into();
-                let temple: DungeonState = world.read_model(dungeon_id);
+                let dungeon: DungeonState = world.read_model(dungeon_id);
                 let gold_found: u32 = gold_roll
                     * (chamber.depth.into() + 1)
-                    * temple.difficulty_tier.into();
+                    * dungeon.difficulty_tier.into();
 
                 // Potion found on total roll >= 15
                 let potion_found: u8 = if roll >= 15 { 1 } else { 0 };
@@ -480,7 +480,7 @@ pub mod DungeonComponent {
             assert(!stats.is_dead, 'dead characters cannot loot');
 
             let position: CharacterPosition = world.read_model(character_id);
-            assert(position.dungeon_id != 0, 'not inside any temple');
+            assert(position.dungeon_id != 0, 'not inside any dungeon');
             assert(!position.in_combat, 'cannot loot during combat');
 
             let dungeon_id = position.dungeon_id;
@@ -588,7 +588,7 @@ pub mod DungeonComponent {
         }
     }
 
-    /// Creates a new chamber model derived from the temple seed + parent chamber.
+    /// Creates a new chamber model derived from the dungeon seed + parent chamber.
     fn generate_chamber(
         ref world: WorldStorage,
         ref seeder: Seeder,
@@ -696,14 +696,14 @@ pub mod DungeonComponent {
         // ── Update DungeonState: record boss chamber and max_depth ───────────
         // (next_chamber_id already incremented by caller before this call)
         if is_boss || depth > current_max_depth {
-            let mut temple: DungeonState = world.read_model(dungeon_id);
+            let mut dungeon: DungeonState = world.read_model(dungeon_id);
             if is_boss {
-                temple.boss_chamber_id = new_chamber_id;
+                dungeon.boss_chamber_id = new_chamber_id;
             }
             if depth > current_max_depth {
-                temple.max_depth = depth;
+                dungeon.max_depth = depth;
             }
-            world.write_model(@temple);
+            world.write_model(@dungeon);
         }
 
         // ── Emit ChamberRevealed event ───────────────────────────────────────

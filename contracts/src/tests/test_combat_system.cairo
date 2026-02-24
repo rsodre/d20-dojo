@@ -672,7 +672,7 @@ mod tests {
         let caller: ContractAddress = 'fallentest'.try_into().unwrap();
         starknet::testing::set_contract_address(caller);
 
-        use d20::d20::types::index::ChamberType;
+        use d20::d20::models::dungeon::ChamberType;
 
         let (mut world, _token, _combat) = setup_world();
 
