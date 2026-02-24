@@ -1,6 +1,6 @@
 import { DojoProvider, DojoCall } from "@dojoengine/core";
-import { Account, AccountInterface, BigNumberish, CairoCustomEnum } from "starknet";
-// import * as models from "./models.gen";
+import { Account, AccountInterface, BigNumberish, CairoOption, CairoCustomEnum } from "starknet";
+import * as models from "./models.gen";
 
 export function setupWorld(provider: DojoProvider) {
 

@@ -11,7 +11,7 @@ default = "d20_0_2"
 [env]
 rpc_url = "https://api.cartridge.gg/x/d20-katana/katana"
 # Default account for katana with seed = 0
-world_address = "0x0400feed25cca789d09cfdc33debcc94c11703995cb3eb3dae2501fd215d1b3a"
+world_address = "0x0019ad793d43e25c705789ebafaf845727f4ba1ac8185af701472b2b4ecc93d0"
 account_address = "0x127fd5f1fe78a71f8bcd1fec63e3fe2f0486b6ecd5c86a0466c3a21fa5cfcec"
 private_key = "0xc5b2fcab997346f3ea1c00b002ecf6f382c5f9c9659a3894eb783c5320f912"
 

@@ -85,6 +85,7 @@ export interface Chamber {
 	treasure_looted: boolean;
 	trap_disarmed: boolean;
 	trap_dc: BigNumberish;
+	fallen_count: BigNumberish;
 }
 
 // Type definition for `d20::d20::models::dungeon::ChamberExit` struct
@@ -236,6 +237,19 @@ export const skill = [
 export type Skill = { [key in typeof skill[number]]: string };
 export type SkillEnum = CairoCustomEnum;
 
+// Type definition for `d20::d20::models::dungeon::ChamberType` enum
+export const chamberType = [
+	'None',
+	'Entrance',
+	'Empty',
+	'Monster',
+	'Treasure',
+	'Trap',
+	'Boss',
+] as const;
+export type ChamberType = { [key in typeof chamberType[number]]: string };
+export type ChamberTypeEnum = CairoCustomEnum;
+
 // Type definition for `d20::d20::models::monster::MonsterType` enum
 export const monsterType = [
 	'None',
@@ -260,19 +274,6 @@ export const characterClass = [
 export type CharacterClass = { [key in typeof characterClass[number]]: string };
 export type CharacterClassEnum = CairoCustomEnum;
 
-// Type definition for `d20::d20::types::index::ChamberType` enum
-export const chamberType = [
-	'None',
-	'Entrance',
-	'Empty',
-	'Monster',
-	'Treasure',
-	'Trap',
-	'Boss',
-] as const;
-export type ChamberType = { [key in typeof chamberType[number]]: string };
-export type ChamberTypeEnum = CairoCustomEnum;
-
 // Type definition for `d20::d20::types::items::ArmorType` enum
 export const armorType = [
 	'None',
@@ -294,7 +295,7 @@ export const weaponType = [
 export type WeaponType = { [key in typeof weaponType[number]]: string };
 export type WeaponTypeEnum = CairoCustomEnum;
 
-// Type definition for `d20::d20::types::index::CombatAction` enum
+// Type definition for `d20::d20::types::combat::CombatAction` enum
 export const combatAction = [
 	'None',
 	'Attack',
@@ -471,6 +472,7 @@ export const schema: SchemaType = {
 			treasure_looted: false,
 			trap_disarmed: false,
 			trap_dc: 0,
+			fallen_count: 0,
 		},
 		ChamberExit: {
 			dungeon_id: 0,
@@ -639,13 +641,13 @@ export enum ModelsMapping {
 	SkillsSet = 'd20-SkillsSet',
 	Chamber = 'd20-Chamber',
 	ChamberExit = 'd20-ChamberExit',
+	ChamberType = 'd20-ChamberType',
 	CharacterDungeonProgress = 'd20-CharacterDungeonProgress',
 	DungeonState = 'd20-DungeonState',
 	FallenCharacter = 'd20-FallenCharacter',
 	MonsterInstance = 'd20-MonsterInstance',
 	MonsterType = 'd20-MonsterType',
 	CharacterClass = 'd20-CharacterClass',
-	ChamberType = 'd20-ChamberType',
 	ArmorType = 'd20-ArmorType',
 	WeaponType = 'd20-WeaponType',
 	Config = 'd20-Config',

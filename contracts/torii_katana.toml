@@ -1,7 +1,7 @@
 #
 # torii config for profile [dev]
 #
-world_address = "0x0400feed25cca789d09cfdc33debcc94c11703995cb3eb3dae2501fd215d1b3a"
+world_address = "0x0019ad793d43e25c705789ebafaf845727f4ba1ac8185af701472b2b4ecc93d0"
 rpc = "https://api.cartridge.gg/x/d20-katana/katana"
 
 [events]
@@ -12,8 +12,8 @@ raw = true
 # controllers = true
 pending = true
 contracts = [
-  "erc721:0x0468d3fbf587e6099286aee2e42f4e8e37bf3f95d0dec368f53b2479f51e882f", # explorer_token
-  "erc721:0x027c7a362ba89a2292673d1eb84d37f0b66416b7d1cc43449139f89d45230b9f", # temple_token
+  "erc721:0x0276a9e7e606febaa5240e35198236826049d06d8b58f0589c334fe6525fb8a3", # explorer_token
+  "erc721:0x0549d301eef0341da7a293a76639421429a2c38b65ec0887d29e582def92a9a6", # temple_token
 ]
 
 # [sql]

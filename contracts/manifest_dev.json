@@ -1,8 +1,8 @@
 {
   "world": {
     "class_hash": "0x613551abceb2b37073b1149bb862ea70cf029981ce1ca47e9dd7c7ab97cb65d",
-    "address": "0x400feed25cca789d09cfdc33debcc94c11703995cb3eb3dae2501fd215d1b3a",
-    "seed": "d20_0_1",
+    "address": "0x19ad793d43e25c705789ebafaf845727f4ba1ac8185af701472b2b4ecc93d0",
+    "seed": "d20_0_2",
     "name": "D20 On-Chain",
     "entrypoints": [
       "uuid",
@@ -33,13 +33,13 @@
   },
   "contracts": [
     {
-      "address": "0x7c15e0593e9339cc4264112d67acd5b9e330159133d127155adc85b8c331d7c",
-      "class_hash": "0x188438aef814b23757d69a7e452d2489e56cb157886583d8cdb0cd9c40dc33a",
+      "address": "0x7f2edad319105e48cd554dfbf69b4194893cffe2a1c524b734de213f1e92861",
+      "class_hash": "0x735271820d66555f93a0b0436e35ddf10713ad205e591af911403b6544c62cc",
       "init_calldata": [
         "0x051fea4450da9d6aee758bdeba88b2f665bcbf549d2c61421aa724e9ac0ced8f"
       ],
-      "tag": "d20_0_1-combat_system",
-      "selector": "0x3c1af41041bccafdf2c2a36dc7549784a6ba6727a8f2bc30be877b47098a471",
+      "tag": "d20_0_2-combat_system",
+      "selector": "0x5e385e8f5d6096ecba39753086f744474519fb8861ed69c942b41dfe6cfa79e",
       "systems": [
         "dojo_init",
         "attack",
@@ -52,13 +52,13 @@
       ]
     },
     {
-      "address": "0x611d85deb23e91e3757e3f2e5a00716c2c4b4c4f9b934acf687b85eec33c806",
-      "class_hash": "0x256809403d5c5f44b38fbef4a8c4c98e747479a7bc8e24b89279e7981830bf6",
+      "address": "0x276a9e7e606febaa5240e35198236826049d06d8b58f0589c334fe6525fb8a3",
+      "class_hash": "0x2bf0903fc0da75d73f55ed8054f1201dd9b41ea54c692ba433d732874a9a689",
       "init_calldata": [
         "0x051fea4450da9d6aee758bdeba88b2f665bcbf549d2c61421aa724e9ac0ced8f"
       ],
-      "tag": "d20_0_1-explorer_token",
-      "selector": "0x3eadb251441261436cc41b718569b5c2c6236330e126f426b30f93c8f4ff6a1",
+      "tag": "d20_0_2-explorer_token",
+      "selector": "0x2250281834bff233fcc34da911bf91c67d9fd353e9b8b1db02460c1fb1168d7",
       "systems": [
         "dojo_init",
         "mint_explorer",
@@ -74,11 +74,11 @@
       ]
     },
     {
-      "address": "0x74e64a401f52a409875ae9cff5065247ef773489c41fffa786e8faa53a7d445",
-      "class_hash": "0x1c4bdd8d2eda620a6680074ccb480e5462191a9709d4c5c9e98fca4f0e84708",
+      "address": "0x549d301eef0341da7a293a76639421429a2c38b65ec0887d29e582def92a9a6",
+      "class_hash": "0x4f5db01eb306dd6d53caabe4720e8d7e8d20e272f789693f3a40154382b276e",
       "init_calldata": [],
-      "tag": "d20_0_1-temple_token",
-      "selector": "0x6c84dcfaf0c2645d94dd633dd2b6d079f91d09ec7e63c865482860da03b0de5",
+      "tag": "d20_0_2-temple_token",
+      "selector": "0xa5ade648a6eb59c5321ab94e4fa442832b0f5f2e687bcfa930ccfbc38aa913",
       "systems": [
         "dojo_init",
         "mint_temple",
@@ -116,7 +116,7 @@
         },
         {
           "name": "chamber_type",
-          "type": "d20::d20::types::index::ChamberType",
+          "type": "d20::d20::models::dungeon::ChamberType",
           "key": false
         },
         {
@@ -148,11 +148,16 @@
           "name": "trap_dc",
           "type": "core::integer::u8",
           "key": false
+        },
+        {
+          "name": "fallen_count",
+          "type": "core::integer::u32",
+          "key": false
         }
       ],
-      "class_hash": "0x3b9c4f91cd8a4dff3113d29d87c040e49ee6289e26398c90b899c7c0bea4bc8",
-      "tag": "d20_0_1-Chamber",
-      "selector": "0x68d8f1994339c90a1e871d77925683a4019478b3dcc14f6f8bbfa042d93b63f"
+      "class_hash": "0x6aceaad98c3c7db0fd6297205ef8e58525c1c88f18e28a52341eabbebe7fd95",
+      "tag": "d20_0_2-Chamber",
+      "selector": "0x3ea6e635aaa4d8e05e8dcafae28910702674be504f64f48fd75bc4f40b2d94c"
     },
     {
       "members": [
@@ -183,30 +188,8 @@
         }
       ],
       "class_hash": "0x23d81f50e8ff27071c342e83908925decc9ec3f64c79e1ff828a52fc0d4d5f",
-      "tag": "d20_0_1-ChamberExit",
-      "selector": "0x12d79515b3da7c7ee98aaa3bc679fc281d58afece629b46a35aa2d7aea59a95"
-    },
-    {
-      "members": [
-        {
-          "name": "dungeon_id",
-          "type": "core::integer::u128",
-          "key": true
-        },
-        {
-          "name": "chamber_id",
-          "type": "core::integer::u32",
-          "key": true
-        },
-        {
-          "name": "count",
-          "type": "core::integer::u32",
-          "key": false
-        }
-      ],
-      "class_hash": "0x2a47e3159684c4298cf629400e23c315165c3931bb8509ef890990973f5dfaf",
-      "tag": "d20_0_1-ChamberFallenCount",
-      "selector": "0x333781756799054cd742c7f285e0d57b1034e5c9124914ac41a2f67f1d8b072"
+      "tag": "d20_0_2-ChamberExit",
+      "selector": "0x56296714778fa0b0c94d33355abd86337b9addd495a4e2d7a65ce7f5301fcf1"
     },
     {
       "members": [
@@ -247,8 +230,8 @@
         }
       ],
       "class_hash": "0x21e862e07326ac0d4ac79c150dd815d6ca87cee5677f3fa3ac745615470f252",
-      "tag": "d20_0_1-CharacterCombat",
-      "selector": "0x26bdcf6d894085eda78097e1e7573c12039a04a233392a4efe62e98881ecfbe"
+      "tag": "d20_0_2-CharacterCombat",
+      "selector": "0x42c7bf9be2834d739ef081d91d6ae542e4b3965563b9b8b3888d84f97f544a4"
     },
     {
       "members": [
@@ -274,35 +257,8 @@
         }
       ],
       "class_hash": "0x708dd1fd6f3f9894193109609f1490abe352f9870592b4da3ff09dec27a2d38",
-      "tag": "d20_0_1-CharacterDungeonProgress",
-      "selector": "0x7dd5560f3250bbcae57fb632dc6edc5e412e18f81e424a59347f3f1d80aaae4"
-    },
-    {
-      "members": [
-        {
-          "name": "character_id",
-          "type": "core::integer::u128",
-          "key": true
-        },
-        {
-          "name": "current_hp",
-          "type": "core::integer::i16",
-          "key": false
-        },
-        {
-          "name": "max_hp",
-          "type": "core::integer::u16",
-          "key": false
-        },
-        {
-          "name": "is_dead",
-          "type": "core::bool",
-          "key": false
-        }
-      ],
-      "class_hash": "0x16fce1268d54b880bfd4ea5492695b0e39b5aa86ee891935702309ba143de09",
-      "tag": "d20_0_1-CharacterHealth",
-      "selector": "0x65c1777ae0e0fd6688ef215de919a6c019dc946d38b80491a28c9910e03d862"
+      "tag": "d20_0_2-CharacterDungeonProgress",
+      "selector": "0x10d887f1c06cad399914e60bf12758bba8da1f0666db1ff8e4cd28c7373696b"
     },
     {
       "members": [
@@ -343,8 +299,8 @@
         }
       ],
       "class_hash": "0x6b465487e8b719f4430579ff2bf9f50f4d9e838ea6cd93639b456c689cd660a",
-      "tag": "d20_0_1-CharacterInventory",
-      "selector": "0x556a6d1f70f1ccc91efcea0256154c92810e4dfcc6deb0118419ec6a19452b"
+      "tag": "d20_0_2-CharacterInventory",
+      "selector": "0x3495205f506b63822c8d40c05b62e8803575bc83a34a241c0aca610a4b093d0"
     },
     {
       "members": [
@@ -375,8 +331,8 @@
         }
       ],
       "class_hash": "0x64ddf246f23572a05d59023914ec53d41881f3636642acf6b77772549687ccb",
-      "tag": "d20_0_1-CharacterPosition",
-      "selector": "0x3e18cf4630172c87bc66c17ae33cda3dba3aaf4ec1525067b561c7f6b8f9429"
+      "tag": "d20_0_2-CharacterPosition",
+      "selector": "0x319070391521164a7fa170ccd1ba50cb39439eee40227f0a2f7b4760abd2a20"
     },
     {
       "members": [
@@ -402,8 +358,8 @@
         }
       ],
       "class_hash": "0x663c01c4d19c900350ce54827112d1085fd839caa69da8c9662120086cc1aa4",
-      "tag": "d20_0_1-CharacterSkills",
-      "selector": "0x6303762c3f56d0c3db7dd404a6c057bbd262e5e1d7b99f4791eb9512f2bf39b"
+      "tag": "d20_0_2-CharacterSkills",
+      "selector": "0x43a9604e39441b6f47c5c7b7ffb18ff2f9d49496bd744d033fd6c3573bcc087"
     },
     {
       "members": [
@@ -436,11 +392,26 @@
           "name": "dungeons_conquered",
           "type": "core::integer::u16",
           "key": false
+        },
+        {
+          "name": "current_hp",
+          "type": "core::integer::i16",
+          "key": false
+        },
+        {
+          "name": "max_hp",
+          "type": "core::integer::u16",
+          "key": false
+        },
+        {
+          "name": "is_dead",
+          "type": "core::bool",
+          "key": false
         }
       ],
-      "class_hash": "0x5b8bf3d316ff2cd7e5a20691eba6a2608da0dd1ceaee7ad31e9851fc63f50f0",
-      "tag": "d20_0_1-CharacterStats",
-      "selector": "0x1695b82cf70bec067adeadeeb769b19b275d61c9ac401916526f59f4d0ec00d"
+      "class_hash": "0x702905f9004f18d3dba830462f3d942abae4f2b5c154d19a04a7b12e8e4791a",
+      "tag": "d20_0_2-CharacterStats",
+      "selector": "0x289bb1209ed31b81de52cab3d3ed23f8df02734ae6e83a28c4f4392f3208412"
     },
     {
       "members": [
@@ -456,8 +427,8 @@
         }
       ],
       "class_hash": "0x37685c10b9638bd236eb44d0ed5eb5c09fb19270e5a3f2b3991b36445588da5",
-      "tag": "d20_0_1-Config",
-      "selector": "0x57e4837fe6a3772d98f1d54cb2641b841d582ac94d91b769a5e690618a446e5"
+      "tag": "d20_0_2-Config",
+      "selector": "0xb130fb81f3e8fdf4a553de8e5c215ee7c91dc6c5b3fa0ee1d11fc215e3ac2d"
     },
     {
       "members": [
@@ -493,8 +464,8 @@
         }
       ],
       "class_hash": "0x3a148262189ebffd7b40d43d2d39aa98309668151464d8c1b2ecf300d0dc367",
-      "tag": "d20_0_1-DungeonState",
-      "selector": "0x24ddce95fbb41189c4a3687721641b200939c5fd105a63fd069e3dba4edb419"
+      "tag": "d20_0_2-DungeonState",
+      "selector": "0x5797e2da21652ceacdde52130bb8fc3c88276e3ce82cc203249d7ceba85a962"
     },
     {
       "members": [
@@ -545,8 +516,8 @@
         }
       ],
       "class_hash": "0x223e960258c4e136547bdf73fcd5dd5c9cbbb7f9b056fee82e91c1e1d97c2be",
-      "tag": "d20_0_1-FallenCharacter",
-      "selector": "0x429c82ac3e164aa27f526df64fa0ed2fac8baf2b48c95d139661300105b144f"
+      "tag": "d20_0_2-FallenCharacter",
+      "selector": "0x397815e1e754a4fdbacfe9e975276db813bb4792f8630d5161b3c8f22dfe06e"
     },
     {
       "members": [
@@ -587,8 +558,8 @@
         }
       ],
       "class_hash": "0x166572935dde3ca9b0c8d1a28f728bd598cb2006f0191cbaa0083dc730961f",
-      "tag": "d20_0_1-MonsterInstance",
-      "selector": "0x2a3db4f1190413a521f9f383c18f6ebfa7048715341f1c9a6188bdcba52c5be"
+      "tag": "d20_0_2-MonsterInstance",
+      "selector": "0x3699717650445b25a038288a1bb2742b7c12792a123a8319dc6745d7f3c57d3"
     }
   ],
   "events": [
@@ -611,8 +582,8 @@
         }
       ],
       "class_hash": "0x34701772706a617d31d6f35691dce7329b55ab29bb893d787b3155eb6fe3571",
-      "tag": "d20_0_1-BossDefeated",
-      "selector": "0x32fada6b6297ab12527854ac8b9c624a4a040ac0dcddbd0f58c5276da43bfe6"
+      "tag": "d20_0_2-BossDefeated",
+      "selector": "0x33339219ce17df5d6403bdf42a779c921b888951e667bd2d0e0052793f0e6fd"
     },
     {
       "members": [
@@ -628,7 +599,7 @@
         },
         {
           "name": "chamber_type",
-          "type": "d20::d20::types::index::ChamberType",
+          "type": "d20::d20::models::dungeon::ChamberType",
           "key": false
         },
         {
@@ -642,9 +613,9 @@
           "key": false
         }
       ],
-      "class_hash": "0x64d42e1765b6de481b6407d186f899af8a21eef312fa928ba2ee9c10fde52d3",
-      "tag": "d20_0_1-ChamberRevealed",
-      "selector": "0x7e23ba3c186dd0c96ba31ac0a725c172c29391ad79c8274b682414a9ed31d11"
+      "class_hash": "0x28789441d1a57e1d93ee07bc407696b22dfc8dea839d6290f7fe2998fd795ef",
+      "tag": "d20_0_2-ChamberRevealed",
+      "selector": "0x36cb470e9e68be5bb6e22f2a1b6d8f7810d69160ec7e768f8139d8c745491e4"
     },
     {
       "members": [
@@ -670,8 +641,8 @@
         }
       ],
       "class_hash": "0x1261f5b6210ec75a0990284cdc1f25d3106dd53a3bc8f27511a3d8016967ff6",
-      "tag": "d20_0_1-CharacterDied",
-      "selector": "0x5ff22d0965e611470b0dc1ae05e995a187c37857f6b60056852150c761a261"
+      "tag": "d20_0_2-CharacterDied",
+      "selector": "0x631f5784f64d1eceba8fc00df6600cff3886268a019954b1d53da70d2aba3c6"
     },
     {
       "members": [
@@ -692,8 +663,8 @@
         }
       ],
       "class_hash": "0x2365445913a7779149c2a776210ae038e1b3d8061cca146dfc7bbf8ca504bd8",
-      "tag": "d20_0_1-CharacterMinted",
-      "selector": "0x7d897d93d67f0d58ed90962e71bc0bd4037aa076dd4afd33936392e5b61e2c1"
+      "tag": "d20_0_2-CharacterMinted",
+      "selector": "0x7b6797e3e50dc5f2bb6a5f71cdd4c65ace825b1fcd6f84092dd36b4b176675a"
     },
     {
       "members": [
@@ -704,7 +675,7 @@
         },
         {
           "name": "action",
-          "type": "d20::d20::types::index::CombatAction",
+          "type": "d20::d20::types::combat::CombatAction",
           "key": false
         },
         {
@@ -728,9 +699,9 @@
           "key": false
         }
       ],
-      "class_hash": "0xd04309b1c84714fe856f955f20966b13c5cc3900706f0c5a3d11346a47fa78",
-      "tag": "d20_0_1-CombatResult",
-      "selector": "0x3328d6cb8bd693e743d282e30140f45a611afc55fa98d6b99802b20ac37cdb5"
+      "class_hash": "0x756e622093f3bdb4e5a55eb955b35de1eac1b4b89a56a6d35affb9ac6e3d0b8",
+      "tag": "d20_0_2-CombatResult",
+      "selector": "0xefdfb40ea900d110442e2898d64a4a37bfb668453f85560f3f4d9fe7308cfe"
     },
     {
       "members": [
@@ -746,8 +717,8 @@
         }
       ],
       "class_hash": "0x7c55ea963c85f4a4ff2ce40508c3f27f33c777417589df70ee06872565ad56a",
-      "tag": "d20_0_1-LevelUp",
-      "selector": "0x706b353497cc568c5c266e31a0ee67c9a9d6d8b33107303985323a376aa9be0"
+      "tag": "d20_0_2-LevelUp",
+      "selector": "0x3c11fd996e448aa9dbb4fda508c68ebb43c3be830d9550acf25dc1a4835853b"
     }
   ],
   "external_contracts": [],
@@ -1021,46 +992,6 @@
     },
     {
       "type": "struct",
-      "name": "d20::d20::models::character::CharacterHealth",
-      "members": [
-        {
-          "name": "character_id",
-          "type": "core::integer::u128"
-        },
-        {
-          "name": "current_hp",
-          "type": "core::integer::i16"
-        },
-        {
-          "name": "max_hp",
-          "type": "core::integer::u16"
-        },
-        {
-          "name": "is_dead",
-          "type": "core::bool"
-        }
-      ]
-    },
-    {
-      "type": "struct",
-      "name": "d20::d20::models::character::CharacterHealthValue",
-      "members": [
-        {
-          "name": "current_hp",
-          "type": "core::integer::i16"
-        },
-        {
-          "name": "max_hp",
-          "type": "core::integer::u16"
-        },
-        {
-          "name": "is_dead",
-          "type": "core::bool"
-        }
-      ]
-    },
-    {
-      "type": "struct",
       "name": "d20::d20::models::character::CharacterInventory",
       "members": [
         {
@@ -1238,6 +1169,18 @@
         {
           "name": "dungeons_conquered",
           "type": "core::integer::u16"
+        },
+        {
+          "name": "current_hp",
+          "type": "core::integer::i16"
+        },
+        {
+          "name": "max_hp",
+          "type": "core::integer::u16"
+        },
+        {
+          "name": "is_dead",
+          "type": "core::bool"
         }
       ]
     },
@@ -1264,6 +1207,18 @@
         {
           "name": "dungeons_conquered",
           "type": "core::integer::u16"
+        },
+        {
+          "name": "current_hp",
+          "type": "core::integer::i16"
+        },
+        {
+          "name": "max_hp",
+          "type": "core::integer::u16"
+        },
+        {
+          "name": "is_dead",
+          "type": "core::bool"
         }
       ]
     },
@@ -1339,12 +1294,6 @@
     },
     {
       "type": "event",
-      "name": "d20::d20::models::character::m_CharacterHealth::Event",
-      "kind": "enum",
-      "variants": []
-    },
-    {
-      "type": "event",
       "name": "d20::d20::models::character::m_CharacterInventory::Event",
       "kind": "enum",
       "variants": []
@@ -1381,7 +1330,7 @@
         },
         {
           "name": "chamber_type",
-          "type": "d20::d20::types::index::ChamberType"
+          "type": "d20::d20::models::dungeon::ChamberType"
         },
         {
           "name": "depth",
@@ -1406,6 +1355,10 @@
         {
           "name": "trap_dc",
           "type": "core::integer::u8"
+        },
+        {
+          "name": "fallen_count",
+          "type": "core::integer::u32"
         }
       ]
     },
@@ -1450,30 +1403,36 @@
       ]
     },
     {
-      "type": "struct",
-      "name": "d20::d20::models::dungeon::ChamberFallenCount",
-      "members": [
+      "type": "enum",
+      "name": "d20::d20::models::dungeon::ChamberType",
+      "variants": [
         {
-          "name": "dungeon_id",
-          "type": "core::integer::u128"
+          "name": "None",
+          "type": "()"
         },
         {
-          "name": "chamber_id",
-          "type": "core::integer::u32"
+          "name": "Entrance",
+          "type": "()"
         },
         {
-          "name": "count",
-          "type": "core::integer::u32"
-        }
-      ]
-    },
-    {
-      "type": "struct",
-      "name": "d20::d20::models::dungeon::ChamberFallenCountValue",
-      "members": [
+          "name": "Empty",
+          "type": "()"
+        },
         {
-          "name": "count",
-          "type": "core::integer::u32"
+          "name": "Monster",
+          "type": "()"
+        },
+        {
+          "name": "Treasure",
+          "type": "()"
+        },
+        {
+          "name": "Trap",
+          "type": "()"
+        },
+        {
+          "name": "Boss",
+          "type": "()"
         }
       ]
     },
@@ -1483,7 +1442,7 @@
       "members": [
         {
           "name": "chamber_type",
-          "type": "d20::d20::types::index::ChamberType"
+          "type": "d20::d20::models::dungeon::ChamberType"
         },
         {
           "name": "depth",
@@ -1508,6 +1467,10 @@
         {
           "name": "trap_dc",
           "type": "core::integer::u8"
+        },
+        {
+          "name": "fallen_count",
+          "type": "core::integer::u32"
         }
       ]
     },
@@ -1689,12 +1652,6 @@
     },
     {
       "type": "event",
-      "name": "d20::d20::models::dungeon::m_ChamberFallenCount::Event",
-      "kind": "enum",
-      "variants": []
-    },
-    {
-      "type": "event",
       "name": "d20::d20::models::dungeon::m_CharacterDungeonProgress::Event",
       "kind": "enum",
       "variants": []
@@ -1757,7 +1714,7 @@
         },
         {
           "name": "chamber_type",
-          "type": "d20::d20::types::index::ChamberType"
+          "type": "d20::d20::models::dungeon::ChamberType"
         },
         {
           "name": "depth",
@@ -1779,7 +1736,7 @@
         },
         {
           "name": "chamber_type",
-          "type": "d20::d20::types::index::ChamberType"
+          "type": "d20::d20::models::dungeon::ChamberType"
         },
         {
           "name": "depth",
@@ -1873,7 +1830,7 @@
         },
         {
           "name": "action",
-          "type": "d20::d20::types::index::CombatAction"
+          "type": "d20::d20::types::combat::CombatAction"
         },
         {
           "name": "roll",
@@ -1899,7 +1856,7 @@
       "members": [
         {
           "name": "action",
-          "type": "d20::d20::types::index::CombatAction"
+          "type": "d20::d20::types::combat::CombatAction"
         },
         {
           "name": "roll",
@@ -2103,41 +2060,7 @@
     },
     {
       "type": "enum",
-      "name": "d20::d20::types::index::ChamberType",
-      "variants": [
-        {
-          "name": "None",
-          "type": "()"
-        },
-        {
-          "name": "Entrance",
-          "type": "()"
-        },
-        {
-          "name": "Empty",
-          "type": "()"
-        },
-        {
-          "name": "Monster",
-          "type": "()"
-        },
-        {
-          "name": "Treasure",
-          "type": "()"
-        },
-        {
-          "name": "Trap",
-          "type": "()"
-        },
-        {
-          "name": "Boss",
-          "type": "()"
-        }
-      ]
-    },
-    {
-      "type": "enum",
-      "name": "d20::d20::types::index::CombatAction",
+      "name": "d20::d20::types::combat::CombatAction",
       "variants": [
         {
           "name": "None",

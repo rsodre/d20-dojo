@@ -4,13 +4,15 @@ This document provides a detailed technical reference for the game's systems and
 
 ## Current deployment
 
-- RPC: https://api.cartridge.gg/x/starknet/sepolia/rpc/v0_9
-- Torii: https://api.cartridge.gg/x/d20-sepolia/torii
+- [online] Katana RPC: https://api.cartridge.gg/x/d20-katana/katana
+- [online] Katana Torii: https://api.cartridge.gg/x/d20-katana/torii
+- [offline] Sepolia RPC: https://api.cartridge.gg/x/starknet/sepolia/rpc/v0_9
+- [offline] Sepolia Torii: https://api.cartridge.gg/x/d20-sepolia/torii
 - Contracts:
-  - World: `0x0400feed25cca789d09cfdc33debcc94c11703995cb3eb3dae2501fd215d1b3a`
-  - Combat: `0x05c6a7b7e245f1bcb01b43966d9fd2c24186b1e8184a54f52e23a9dc1163d780`
-  - Explorer: `0x0468d3fbf587e6099286aee2e42f4e8e37bf3f95d0dec368f53b2479f51e882f`
-  - Temple: `0x027c7a362ba89a2292673d1eb84d37f0b66416b7d1cc43449139f89d45230b9f`
+  - World: `0x0019ad793d43e25c705789ebafaf845727f4ba1ac8185af701472b2b4ecc93d0`
+  - Combat: `0x07f2edad319105e48cd554dfbf69b4194893cffe2a1c524b734de213f1e92861`
+  - Explorer: `0x0276a9e7e606febaa5240e35198236826049d06d8b58f0589c334fe6525fb8a3`
+  - Temple: `0x0549d301eef0341da7a293a76639421429a2c38b65ec0887d29e582def92a9a6`
   - VRF: `0x051fea4450da9d6aee758bdeba88b2f665bcbf549d2c61421aa724e9ac0ced8f`
 - Dojo namespace: `d20_0_2`
 
