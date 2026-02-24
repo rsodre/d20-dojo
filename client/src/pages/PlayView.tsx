@@ -7,6 +7,7 @@ import { useAccount } from "@starknet-react/core";
 import { useExplorerModels } from "@/hooks/use-explorer-state";
 import { useChambers, useChamberExits, useFallenCharacters, useMonsterInstances } from "@/hooks/use-chambers";
 import { useTempleModels } from "@/hooks/use-temple-state";
+import { useRoomImagePrompt } from "@/hooks/use-room-image-prompt";
 import { useDojoConfig } from "@/contexts/dojo-config-provider";
 import { useVrfCall } from "@/hooks/use-vrf";
 import { getAvailableActions, enumVariant, type Action, type GameActionContext } from "@/utils/get-available-actions";
@@ -360,9 +361,24 @@ export function PlayView() {
   const { profileConfig } = useDojoConfig();
   const { stats, combat, inventory, position } = useExplorerModels(characterIdNum ?? 0n);
   const temple = useTempleModels(dungeonIdNum ?? 0n);
-  const exits = useChamberExits(dungeonIdNum ?? 0n, position ? BigInt(position.chamber_id) : 0n);
-  const fallen = useFallenCharacters(dungeonIdNum ?? 0n, position ? BigInt(position.chamber_id) : 0n);
+  const chamberId = position ? BigInt(position.chamber_id) : 0n;
+  const exits = useChamberExits(dungeonIdNum ?? 0n, chamberId);
+  const fallen = useFallenCharacters(dungeonIdNum ?? 0n, chamberId);
   const chambers = useChambers(dungeonIdNum ?? 0n);
+  const monsters = useMonsterInstances(dungeonIdNum ?? 0n);
+
+  const chamber = chambers.find((c) => BigInt(c.chamber_id) === chamberId);
+  const monster = monsters.find((m) => BigInt(m.chamber_id) === chamberId);
+
+  const imagePrompt = useRoomImagePrompt({
+    chamber,
+    monster,
+    exits,
+    fallen,
+    stats,
+    inventory,
+    dungeonState: temple?.state,
+  });
 
   if (!dungeonIdNum || !characterIdNum) {
     return (
@@ -376,8 +392,6 @@ export function PlayView() {
   const explorerClass = enumVariant(stats?.character_class);
   const isDead = stats?.is_dead ?? false;
   const inCombat = position?.in_combat ?? false;
-  const chamberId = position ? BigInt(position.chamber_id) : 0n;
-  const chamber = chambers.find((c) => BigInt(c.chamber_id) === chamberId);
 
   const ctx: GameActionContext = {
     characterId: characterIdNum,
@@ -453,6 +467,27 @@ export function PlayView() {
         </Card>
       ) : (
         <ActionPanel ctx={ctx} />
+      )}
+
+      {/* Image generation prompt */}
+      {imagePrompt && (
+        <Card>
+          <Flex direction="column" gap="2">
+            <Text size="1" color="gray" weight="bold">IMAGE PROMPT</Text>
+            <Text
+              size="1"
+              style={{
+                fontFamily: "monospace",
+                whiteSpace: "pre-wrap",
+                wordBreak: "break-word",
+                color: "var(--gray-11)",
+                lineHeight: "1.6",
+              }}
+            >
+              {imagePrompt}
+            </Text>
+          </Flex>
+        </Card>
       )}
     </Flex>
   );
