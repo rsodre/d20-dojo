@@ -7,6 +7,9 @@ import { resolve } from "path";
 
 export default defineConfig({
   plugins: [react(), tailwindcss(), mkcert(), wasm()],
+  build: {
+    target: "esnext",
+  },
   resolve: {
     alias: {
       "@": resolve(__dirname, "./src"),
