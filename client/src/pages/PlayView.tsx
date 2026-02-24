@@ -8,7 +8,8 @@ import { useExplorerModels } from "@/hooks/use-explorer-state";
 import { useChambers, useChamberExits, useFallenCharacters, useMonsterInstances } from "@/hooks/use-chambers";
 import { useTempleModels } from "@/hooks/use-temple-state";
 import { useRoomImagePrompt } from "@/hooks/use-room-image-prompt";
-import { useRoomImage, type RoomImageState } from "@/hooks/use-room-image";
+// import { useRoomImage, type RoomImageState } from "@/hooks/use-room-image-vercel";
+import { useRoomImage, type RoomImageState } from "@/hooks/use-room-image-google";
 import { useDojoConfig } from "@/contexts/dojo-config-provider";
 import { useVrfCall } from "@/hooks/use-vrf";
 import { getAvailableActions, enumVariant, type Action, type GameActionContext } from "@/utils/get-available-actions";
@@ -583,13 +584,14 @@ export function PlayView() {
           <Flex direction="column" gap="2">
             <Text size="1" color="gray" weight="bold">IMAGE PROMPT</Text>
             <Text
-              size="1"
+              // size="1"
               style={{
                 fontFamily: "monospace",
                 whiteSpace: "pre-wrap",
                 wordBreak: "break-word",
                 color: "var(--gray-11)",
                 lineHeight: "1.6",
+                fontSize: "10px",
               }}
             >
               {imagePrompt}
