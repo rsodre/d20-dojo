@@ -2,11 +2,14 @@
 
 Cartridge AI Hackathon Project
 
+![Entrance](images/01.png)
+
 ## Features
 
 - **On-chain D&D Combat & Mechanics**: Implements core D20 systems including standard ability scores, proficiency bonuses, Armor Class (AC), attack/damage rolls, and saving throws.
-- **Three Playable Classes**: Choose between Fighter (Second Wind, Extra Attack), Rogue (Sneak Attack, Cunning Action, precise trap disarming), and Wizard (Spellcasting with 1st-3rd level spells).
 - **Procedurally Generated Dungeons (Temples)**: Deterministic chamber generation using Verifiable Randomness (VRF), featuring empty rooms, traps, treasures, regular monsters, and bosses.
+- **AI Generated Screens**: Every room is generated using vertex AI or Google Nano Banana.
+- **Three Playable Classes**: Choose between Fighter (Second Wind, Extra Attack), Rogue (Sneak Attack, Cunning Action, precise trap disarming), and Wizard (Spellcasting with 1st-3rd level spells).
 - **Multiplayer & Shared State**: Multiple players can explore the same temple simultaneously. Discovered chambers, defeated monsters, and triggered traps are shared globally.
 - **Permadeath & Corpse Looting**: When an explorer falls in combat, their items and equipment remain in the chamber. Other players can discover and loot fallen characters.
 - **ERC-721 Integration**: Both Explorers and Temples are fully on-chain NFTs, maintaining progress, stats, and loot transparently.
@@ -21,6 +24,33 @@ Cartridge AI Hackathon Project
 5. **Boss Battles**: The deeper you delve into a temple and the more XP you earn, the higher the probability of generating a Boss chamber. Defeating the boss conquers the temple.
 6. **Survival**: HP and spell slots do not regenerate automatically. You must consume health potions or exit the temple to safely rest, resetting your vital resources for the next run.
 
+
+## Client setup
+
+> Use image generators on local only. Running in a server will expose your API keys.
+
+Edit `.env`:
+
+```bash
+# VITE_PROFILE=dev
+# VITE_PROFILE=katana
+VITE_PROFILE=sepolia
+
+# ── Image generation (Vercel AI Gateway) ──────────────────────────────────────
+# Vercel AI Gateway key — REQUIRED for image generation.
+# Get one at https://vercel.com/[team]/~/ai-gateway/api-keys
+VITE_AI_GATEWAY_API_KEY=
+
+# Google key → selects Nano Banana Pro (google/gemini-3-pro-image). Preferred.
+# Used as BYOK so requests bill to your Google account.
+# Get one at https://aistudio.google.com/app/apikey
+VITE_GOOGLE_AI_API_KEY=
+
+# OpenAI key → selects DALL-E 3. Used when Google key is absent.
+# Used as BYOK so requests bill to your OpenAI account.
+# Get one at https://platform.openai.com/api-keys
+VITE_OPENAI_API_KEY=
+```
 
 ## Task Log
 
