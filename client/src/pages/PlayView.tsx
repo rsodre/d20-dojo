@@ -483,7 +483,7 @@ export function PlayView() {
     dungeonState: temple?.state,
   });
 
-  const roomImage = useRoomImage(imagePrompt, chamberId);
+  const roomImage = useRoomImage(imagePrompt, dungeonIdNum, chamberId);
 
   if (!dungeonIdNum || !characterIdNum) {
     return (

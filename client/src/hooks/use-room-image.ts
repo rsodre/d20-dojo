@@ -68,6 +68,11 @@ async function generateWithDallE(
   return { base64: image.base64, mimeType: image.mediaType ?? "image/png" };
 }
 
+// ─── Session cache ────────────────────────────────────────────────────────────
+
+// Keyed by "dungeonId:chamberId". Lives for the browser session.
+const imageCache = new Map<string, { base64: string; mimeType: string }>();
+
 // ─── Hook ─────────────────────────────────────────────────────────────────────
 
 export interface RoomImageState {
@@ -79,29 +84,45 @@ export interface RoomImageState {
 
 /**
  * Generates a room image whenever the explorer enters a new chamber.
+ * Generated images are cached by dungeonId:chamberId for the browser session,
+ * so re-entering a chamber reuses the existing image without a new API call.
  *
  * Model selection (requires VITE_AI_GATEWAY_API_KEY):
  *   - Google key set → Nano Banana Pro (google/gemini-3-pro-image)  [preferred]
  *   - OpenAI key set → DALL-E 3 (openai/dall-e-3)                  [fallback]
  *   - Neither key   → Nano Banana Pro via gateway system credentials
  */
-export function useRoomImage(prompt: string, chamberId: bigint): RoomImageState {
-  const [state, setState] = useState<RoomImageState>({
-    base64: null,
-    mimeType: "image/png",
-    isGenerating: false,
-    error: null,
-  });
+export function useRoomImage(
+  prompt: string,
+  dungeonId: bigint,
+  chamberId: bigint,
+): RoomImageState {
+  const cacheKey = `${dungeonId}:${chamberId}`;
+  const cached = chamberId !== 0n ? imageCache.get(cacheKey) : undefined;
 
-  const lastChamberRef = useRef<bigint | null>(null);
+  const [state, setState] = useState<RoomImageState>(() =>
+    cached
+      ? { base64: cached.base64, mimeType: cached.mimeType, isGenerating: false, error: null }
+      : { base64: null, mimeType: "image/png", isGenerating: false, error: null },
+  );
+
+  const lastKeyRef = useRef<string | null>(cached ? cacheKey : null);
   const promptRef = useRef(prompt);
   useEffect(() => { promptRef.current = prompt; });
 
   useEffect(() => {
     if (chamberId === 0n || !prompt) return;
-    if (lastChamberRef.current === chamberId) return;
+    if (lastKeyRef.current === cacheKey) return; // already generating or done for this chamber
 
-    lastChamberRef.current = chamberId;
+    // Check cache first (handles re-renders where cached value arrived after initial render)
+    const hit = imageCache.get(cacheKey);
+    if (hit) {
+      lastKeyRef.current = cacheKey;
+      setState({ base64: hit.base64, mimeType: hit.mimeType, isGenerating: false, error: null });
+      return;
+    }
+
+    lastKeyRef.current = cacheKey;
     let cancelled = false;
     setState({ base64: null, mimeType: "image/png", isGenerating: true, error: null });
 
@@ -112,15 +133,18 @@ export function useRoomImage(prompt: string, chamberId: bigint): RoomImageState 
 
     generate
       .then(({ base64, mimeType }) => {
+        imageCache.set(cacheKey, { base64, mimeType });
         if (!cancelled) setState({ base64, mimeType, isGenerating: false, error: null });
       })
       .catch((err: unknown) => {
+        // On error, allow retry next time by clearing the key
+        if (lastKeyRef.current === cacheKey) lastKeyRef.current = null;
         if (!cancelled)
           setState({ base64: null, mimeType: "image/png", isGenerating: false, error: String(err) });
       });
 
     return () => { cancelled = true; };
-  }, [chamberId, prompt]);
+  }, [cacheKey, chamberId, prompt]);
 
   return state;
 }
