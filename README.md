@@ -52,6 +52,14 @@ VITE_GOOGLE_AI_API_KEY=
 VITE_OPENAI_API_KEY=
 ```
 
+Run the client locally:
+
+```bash
+cd client
+pnpm i
+pnpm run dev
+```
+
 ## Task Log
 
 The agents were instructed to log here all [TASKS](TASKS.md) they complete. Tasks that are skipped were executed by myself.
